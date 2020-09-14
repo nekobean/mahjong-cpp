@@ -4,6 +4,8 @@
 
 麻雀関係のプログラム置き場
 
+Miscellaneous programs about Japanese Mahjong
+
 ## 内容
 
 * [x] 向聴数計算
