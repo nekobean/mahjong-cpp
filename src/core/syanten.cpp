@@ -90,7 +90,7 @@ int SyantenCalculator::calc_normal(Tehai &tehai, int n_fuuro)
         if ((tehai.manzu & Tile::mask[i]) >= Tile::hai2[i]) {
             // 萬子 i を雀頭とした場合
             int manzu = tehai.manzu - Tile::hai2[i]; // 雀頭とした2枚を手牌から減らす
-            // 雀頭として変化する部分は萬子の部分だけなので、以下のように計算する。
+            // 雀頭2枚を抜いた結果、変化する部分は萬子の面子数、面子候補数だけなので、以下のように差分だけ調整する。
             // (m + p + s + z + f) + (m' - m) = m' + p + s + z + f
             int n_mentsu2 = n_mentsu + s_tbl_[manzu].n_mentsu - s_tbl_[tehai.manzu].n_mentsu;
             int n_kouho2 = n_kouho + s_tbl_[manzu].n_kouho - s_tbl_[tehai.manzu].n_kouho;
@@ -137,6 +137,8 @@ int SyantenCalculator::calc_normal(Tehai &tehai, int n_fuuro)
  *
  * @param[in] tehai 手牌
  * @return int 向聴数
+ * 
+ * @todo できればビット演算に置き換える
  */
 int SyantenCalculator::calc_tiitoi(const Tehai &tehai)
 {
@@ -165,6 +167,8 @@ int SyantenCalculator::calc_tiitoi(const Tehai &tehai)
  *
  * @param[in] tehai 手牌
  * @return int 向聴数
+ * 
+ * @todo できればビット演算に置き換える
  */
 int SyantenCalculator::calc_kokushi(const Tehai &tehai)
 {

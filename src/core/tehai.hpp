@@ -93,10 +93,13 @@ public:
     friend std::ostream &operator<<(std::ostream &os, const Tehai &tehai);
 
 public:
-    /* 手牌 */
+    /*! 手牌 */
     std::vector<int> tiles;
 
-    /* ビット列にした手牌 */
+    /*! ビット列にした手牌
+     *  例: [0, 2, 0, 2, 2, 1, 1, 1, 4] -> 69510160 (00|000|100|001|001|001|010|010|000|010|000)
+     *                                                      牌9 牌8 牌7 牌6 牌5 牌4 牌3 牌2 牌1
+     */
     int manzu;
     int pinzu;
     int souzu;
