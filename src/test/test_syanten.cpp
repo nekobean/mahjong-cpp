@@ -31,6 +31,7 @@ int main(int, char **)
     // 形式は <14枚の牌> <一般手の向聴数> <国士の向聴数> <七対子の向聴数>
     std::vector<Tehai> tehais;
     std::vector<std::tuple<int, int, int>> results;
+
     std::string line;
     while (std::getline(ifs, line)) {
         std::vector<std::string> tokens;
@@ -42,6 +43,22 @@ int main(int, char **)
 
         tehais.emplace_back(tiles);
         results.emplace_back(std::stoi(tokens[14]), std::stoi(tokens[15]), std::stoi(tokens[16]));
+    }
+
+    {
+        std::vector<Tehai> tehais;
+        tehais.reserve(1000000);
+        auto begin = std::chrono::steady_clock::now();
+        std::vector<int> tiles = {0, 0, 6, 8, 8, 27, 27, 28, 31, 31, 31, 31, 32, 33};
+        Tehai tehai(tiles);
+        int cnt = 0;
+        for (int i = 0; i < 1000000; ++i)
+            if (tehai.to_kanji_string() != "一萬一萬七萬九萬九萬 東東南白白白白發中")
+                cnt++;
+
+        auto end = std::chrono::steady_clock::now();
+        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count();
+        spdlog::info("total time: {}ms", elapsed);
     }
 
     // 一般手

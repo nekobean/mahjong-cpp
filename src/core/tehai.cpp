@@ -68,54 +68,12 @@ const std::vector<int> Tile::Yaochuhai = {
     Tile::Nan,    Tile::Sya,    Tile::Pei,    Tile::Haku,   Tile::Hatsu,  Tile::Tyun,
 };
 
-/**
- * @brief マスク
- */
-const std::vector<int> Tile::mask = {
-    7, 7 << 3, 7 << 6, 7 << 9, 7 << 12, 7 << 15, 7 << 18, 7 << 21, 7 << 24,
-};
-
-/**
- * @brief 1枚の牌
- */
-const std::vector<int> Tile::hai1 = {
-    1, 1 << 3, 1 << 6, 1 << 9, 1 << 12, 1 << 15, 1 << 18, 1 << 21, 1 << 24,
-};
-
-/**
- * @brief 2枚の牌
- */
-const std::vector<int> Tile::hai2 = {
-    2, 2 << 3, 2 << 6, 2 << 9, 2 << 12, 2 << 15, 2 << 18, 2 << 21, 2 << 24,
-};
-
-/**
- * @brief 3枚の牌
- */
-const std::vector<int> Tile::hai3 = {
-    3, 3 << 3, 3 << 6, 3 << 9, 3 << 12, 3 << 15, 3 << 18, 3 << 21, 3 << 24,
-};
-
-/**
- * @brief 4枚の牌
- */
-const std::vector<int> Tile::hai4 = {
-    4, 4 << 3, 4 << 6, 4 << 9, 4 << 12, 4 << 15, 4 << 18, 4 << 21, 4 << 24,
-};
-
-/**
- * @brief 2枚以上かどうかを調べるときに使うマスク
- */
-const std::vector<int> Tile::ge2 = {
-    6, 6 << 3, 6 << 6, 6 << 9, 6 << 12, 6 << 15, 6 << 18, 6 << 21, 6 << 24,
-};
-
 ////////////////////////////////////////////////////////////////////////////////
 
 /**
  * @brief 手牌オブジェクトを作成する。
  */
-Tehai::Tehai() : tiles(Tile::Length), manzu(0), pinzu(0), souzu(0), zihai(0)
+Tehai::Tehai() : manzu(0), pinzu(0), souzu(0), zihai(0)
 {
 }
 
@@ -124,32 +82,35 @@ Tehai::Tehai() : tiles(Tile::Length), manzu(0), pinzu(0), souzu(0), zihai(0)
  * 
  * @param[in] tehai 手牌の一覧
  */
-Tehai::Tehai(const std::vector<int> &tehai)
-    : tiles(Tile::Length), manzu(0), pinzu(0), souzu(0), zihai(0)
+Tehai::Tehai(const std::vector<int> &tehai) : manzu(0), pinzu(0), souzu(0), zihai(0)
 {
-    for (auto hai : tehai)
-        tiles[hai]++;
-
 #ifdef CHECK_ARGUMENT
-    for (int i = 0; i < Tile::Length; ++i) {
-        if (tiles[i] < 0 || tiles[i] > 4)
+    std::map<int, int> tiles;
+    int n_tiles = 0;
+    for (auto hai : tehai) {
+        tiles[hai]++;
+        n_tiles++;
+    }
+
+    for (const auto &[hai, n] : tiles) {
+        if (n < 0 || n > 4)
             return;
     }
 
-    if (tehai.empty() || tehai.size() > 14)
+    if (n_tiles < 1 || n_tiles > 14)
         return; // 手牌の最小枚数は裸単騎の1枚、最大枚数は打牌前の14枚
 #endif
 
     // ビット列にする
     for (auto hai : tehai) {
         if (Tile::Manzu1 <= hai && hai <= Tile::Manzu9)
-            manzu += Tile::hai1[hai];
+            manzu += Bit::hai1[hai];
         if (Tile::Pinzu1 <= hai && hai <= Tile::Pinzu9)
-            pinzu += Tile::hai1[hai - 9];
+            pinzu += Bit::hai1[hai - 9];
         if (Tile::Souzu1 <= hai && hai <= Tile::Souzu9)
-            souzu += Tile::hai1[hai - 18];
+            souzu += Bit::hai1[hai - 18];
         if (Tile::Ton <= hai && hai <= Tile::Tyun)
-            zihai += Tile::hai1[hai - 27];
+            zihai += Bit::hai1[hai - 27];
     }
 }
 
@@ -172,7 +133,7 @@ std::string Tehai::to_kanji_string() const
 
     // 萬子
     for (int i = 0; i < 9; ++i) {
-        int n = (manzu & Tile::mask[i]) >> 3 * i;
+        int n = Bit::get_n_tile(manzu, i);
         for (int j = 0; j < n; ++j)
             s += Tile::KANJI_NAMES[i];
     }
@@ -181,7 +142,7 @@ std::string Tehai::to_kanji_string() const
     if (!s.empty() && pinzu)
         s += " ";
     for (int i = 0; i < 9; ++i) {
-        int n = (pinzu & Tile::mask[i]) >> 3 * i;
+        int n = Bit::get_n_tile(pinzu, i);
         for (int j = 0; j < n; ++j)
             s += Tile::KANJI_NAMES[9 + i];
     }
@@ -190,7 +151,7 @@ std::string Tehai::to_kanji_string() const
     if (!s.empty() && souzu)
         s += " ";
     for (int i = 0; i < 9; ++i) {
-        int n = (souzu & Tile::mask[i]) >> 3 * i;
+        int n = Bit::get_n_tile(souzu, i);
         for (int j = 0; j < n; ++j)
             s += Tile::KANJI_NAMES[18 + i];
     }
@@ -199,7 +160,7 @@ std::string Tehai::to_kanji_string() const
     if (!s.empty() && zihai)
         s += " ";
     for (int i = 0; i < 9; ++i) {
-        int n = (zihai & Tile::mask[i]) >> 3 * i;
+        int n = Bit::get_n_tile(zihai, i);
         for (int j = 0; j < n; ++j)
             s += Tile::KANJI_NAMES[27 + i];
     }
@@ -219,7 +180,7 @@ std::string Tehai::to_mps_string() const
 
     // 萬子
     for (int i = 0; i < 9; ++i) {
-        int n = (manzu & Tile::mask[i]) >> 3 * i;
+        int n = Bit::get_n_tile(manzu, i);
         for (int j = 0; j < n; ++j)
             s += std::to_string(i + 1);
     }
@@ -230,7 +191,7 @@ std::string Tehai::to_mps_string() const
     if (!s.empty() && pinzu)
         s += " ";
     for (int i = 0; i < 9; ++i) {
-        int n = (pinzu & Tile::mask[i]) >> 3 * i;
+        int n = Bit::get_n_tile(pinzu, i);
         for (int j = 0; j < n; ++j)
             s += std::to_string(i + 1);
     }
@@ -241,7 +202,7 @@ std::string Tehai::to_mps_string() const
     if (!s.empty() && souzu)
         s += " ";
     for (int i = 0; i < 9; ++i) {
-        int n = (souzu & Tile::mask[i]) >> 3 * i;
+        int n = Bit::get_n_tile(souzu, i);
         for (int j = 0; j < n; ++j)
             s += std::to_string(i + 1);
     }
@@ -252,7 +213,7 @@ std::string Tehai::to_mps_string() const
     if (!s.empty() && zihai)
         s += " ";
     for (int i = 0; i < 9; ++i) {
-        int n = (zihai & Tile::mask[i]) >> 3 * i;
+        int n = Bit::get_n_tile(zihai, i);
         for (int j = 0; j < n; ++j)
             s += Tile::KANJI_NAMES[27 + i];
     }
@@ -291,14 +252,22 @@ void Tehai::print_num_tiles() const
 {
     // デバッグ用
     std::cout << *this << std::endl;
-    for (size_t i = 0; i < 9; ++i)
-        std::cout << tiles[i] << (i != 8 ? ", " : "|");
-    for (size_t i = 9; i < 18; ++i)
-        std::cout << tiles[i] << (i != 17 ? ", " : "|");
-    for (size_t i = 18; i < 27; ++i)
-        std::cout << tiles[i] << (i != 26 ? ", " : "|");
-    for (size_t i = 27; i < 34; ++i)
-        std::cout << tiles[i] << (i != 33 ? ", " : "");
+
+    // 萬子
+    for (int i = 0; i < 9; ++i)
+        std::cout << Bit::get_n_tile(manzu, i) << (i != 8 ? ", " : "|");
+
+    // 筒子
+    for (int i = 0; i < 9; ++i)
+        std::cout << Bit::get_n_tile(pinzu, i) << (i != 8 ? ", " : "|");
+
+    // 索子
+    for (int i = 0; i < 9; ++i)
+        std::cout << Bit::get_n_tile(souzu, i) << (i != 8 ? ", " : "|");
+
+    // 字牌
+    for (int i = 0; i < 7; ++i)
+        std::cout << Bit::get_n_tile(zihai, i) << (i != 6 ? ", " : "");
     std::cout << std::endl;
 }
 

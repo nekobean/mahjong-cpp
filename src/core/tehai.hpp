@@ -6,6 +6,8 @@
 #include <string>
 #include <vector>
 
+#include "bitutils.hpp"
+
 namespace mahjong
 {
 /**
@@ -61,17 +63,10 @@ struct Tile {
     static const std::vector<int> Routouhai;
     static const std::vector<int> Zihai;
     static const std::vector<int> Yaochuhai;
-    static const std::vector<int> mask;
-    static const std::vector<int> hai1;
-    static const std::vector<int> hai2;
-    static const std::vector<int> hai3;
-    static const std::vector<int> hai4;
-    static const std::vector<int> ge2;
 };
 
 /**
  * @brief 手牌
- * 
  */
 class Tehai
 {
@@ -93,9 +88,6 @@ public:
     friend std::ostream &operator<<(std::ostream &os, const Tehai &tehai);
 
 public:
-    /*! 手牌 */
-    std::vector<int> tiles;
-
     /*! ビット列にした手牌
      *  例: [0, 2, 0, 2, 2, 1, 1, 1, 4] -> 69510160 (00|000|100|001|001|001|010|010|000|010|000)
      *                                                      牌9 牌8 牌7 牌6 牌5 牌4 牌3 牌2 牌1
