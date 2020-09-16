@@ -137,8 +137,6 @@ int SyantenCalculator::calc_normal(Tehai &tehai, int n_fuuro)
  *
  * @param[in] tehai 手牌
  * @return int 向聴数
- * 
- * @todo できればビット演算に置き換える
  */
 int SyantenCalculator::calc_tiitoi(const Tehai &tehai)
 {
@@ -161,8 +159,6 @@ int SyantenCalculator::calc_tiitoi(const Tehai &tehai)
  *
  * @param[in] tehai 手牌
  * @return int 向聴数
- * 
- * @todo できればビット演算に置き換える
  */
 int SyantenCalculator::calc_kokushi(const Tehai &tehai)
 {
