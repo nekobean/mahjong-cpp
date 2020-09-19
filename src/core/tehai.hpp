@@ -7,63 +7,10 @@
 #include <vector>
 
 #include "bitutils.hpp"
+#include "types.hpp"
 
 namespace mahjong
 {
-/**
- * @brief 牌
- */
-struct Tile {
-    enum Type {
-        Manzu1,    /*! 一萬 */
-        Manzu2,    /*! 二萬 */
-        Manzu3,    /*! 三萬 */
-        Manzu4,    /*! 四萬 */
-        Manzu5,    /*! 五萬 */
-        Manzu6,    /*! 六萬 */
-        Manzu7,    /*! 七萬 */
-        Manzu8,    /*! 八萬 */
-        Manzu9,    /*! 九萬 */
-        Pinzu1,    /*! 一筒 */
-        Pinzu2,    /*! 二筒 */
-        Pinzu3,    /*! 三筒 */
-        Pinzu4,    /*! 四筒 */
-        Pinzu5,    /*! 五筒 */
-        Pinzu6,    /*! 六筒 */
-        Pinzu7,    /*! 七筒 */
-        Pinzu8,    /*! 八筒 */
-        Pinzu9,    /*! 九筒 */
-        Souzu1,    /*! 一索 */
-        Souzu2,    /*! 二索 */
-        Souzu3,    /*! 三索 */
-        Souzu4,    /*! 四索 */
-        Souzu5,    /*! 五索 */
-        Souzu6,    /*! 六索 */
-        Souzu7,    /*! 七索 */
-        Souzu8,    /*! 八索 */
-        Souzu9,    /*! 九索 */
-        Ton,       /*! 東 */
-        Nan,       /*! 南 */
-        Sya,       /*! 西 */
-        Pei,       /*! 北 */
-        Haku,      /*! 泊 */
-        Hatsu,     /*! 発 */
-        Tyun,      /*! 中 */
-        RedManzu5, /*! 赤五萬 */
-        RedPinzu5, /*! 赤五筒 */
-        RedSouzu5, /*! 赤五索 */
-    };
-
-    static const int Length = 34;
-    static const std::vector<std::string> KANJI_NAMES;
-    static const std::vector<int> All;
-    static const std::vector<int> Manzu;
-    static const std::vector<int> Pinzu;
-    static const std::vector<int> Souzu;
-    static const std::vector<int> Routouhai;
-    static const std::vector<int> Zihai;
-    static const std::vector<int> Yaochuhai;
-};
 
 /**
  * @brief 手牌
@@ -88,13 +35,15 @@ public:
     friend std::ostream &operator<<(std::ostream &os, const Tehai &tehai);
 
 public:
+    std::vector<int> tiles;
+
     /*! ビット列にした手牌
      *  例: [0, 2, 0, 2, 2, 1, 1, 1, 4] -> 69510160 (00|000|100|001|001|001|010|010|000|010|000)
      *                                                      牌9 牌8 牌7 牌6 牌5 牌4 牌3 牌2 牌1
      */
     int manzu;
     int pinzu;
-    int souzu;
+    int sozu;
     int zihai;
 };
 

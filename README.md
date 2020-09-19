@@ -10,6 +10,7 @@ Miscellaneous programs about Japanese Mahjong
 
 * [x] 向聴数計算
 * [ ] 有効牌計算
+* [ ] 点数計算
 * [ ] 期待値計算
 * [ ] 牌譜解析スクリプト
 

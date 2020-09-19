@@ -79,9 +79,9 @@ int SyantenCalculator::calc_normal(Tehai &tehai, int n_fuuro)
     // 面子数 * 2 + 候補, 面子 + 候補 <= 4 の最大値を計算する。
 
     int n_mentsu = n_fuuro + s_tbl_[tehai.manzu].n_mentsu + s_tbl_[tehai.pinzu].n_mentsu +
-                   s_tbl_[tehai.souzu].n_mentsu + z_tbl_[tehai.zihai].n_mentsu;
+                   s_tbl_[tehai.sozu].n_mentsu + z_tbl_[tehai.zihai].n_mentsu;
     int n_kouho = s_tbl_[tehai.manzu].n_kouho + s_tbl_[tehai.pinzu].n_kouho +
-                  s_tbl_[tehai.souzu].n_kouho + z_tbl_[tehai.zihai].n_kouho;
+                  s_tbl_[tehai.sozu].n_kouho + z_tbl_[tehai.zihai].n_kouho;
 
     // 雀頭なしと仮定して計算
     int max = n_mentsu * 2 + std::min(4 - n_mentsu, n_kouho);
@@ -107,11 +107,11 @@ int SyantenCalculator::calc_normal(Tehai &tehai, int n_fuuro)
             max = std::max(max, n_mentsu2 * 2 + std::min(4 - n_mentsu2, n_kouho2) + 1);
         }
 
-        if ((tehai.souzu & Bit::mask[i]) >= Bit::hai2[i]) {
+        if ((tehai.sozu & Bit::mask[i]) >= Bit::hai2[i]) {
             // 索子 i を雀頭とした場合
-            int souzu = tehai.souzu - Bit::hai2[i];
-            int n_mentsu2 = n_mentsu + s_tbl_[souzu].n_mentsu - s_tbl_[tehai.souzu].n_mentsu;
-            int n_kouho2 = n_kouho + s_tbl_[souzu].n_kouho - s_tbl_[tehai.souzu].n_kouho;
+            int sozu = tehai.sozu - Bit::hai2[i];
+            int n_mentsu2 = n_mentsu + s_tbl_[sozu].n_mentsu - s_tbl_[tehai.sozu].n_mentsu;
+            int n_kouho2 = n_kouho + s_tbl_[sozu].n_kouho - s_tbl_[tehai.sozu].n_kouho;
 
             max = std::max(max, n_mentsu2 * 2 + std::min(4 - n_mentsu2, n_kouho2) + 1);
         }
@@ -142,10 +142,10 @@ int SyantenCalculator::calc_tiitoi(const Tehai &tehai)
 {
     // 牌の種類 (1枚以上の牌) を数える。
     int n_types = Bit::count_ge1(tehai.manzu) + Bit::count_ge1(tehai.pinzu) +
-                  Bit::count_ge1(tehai.souzu) + Bit::count_ge1(tehai.zihai);
+                  Bit::count_ge1(tehai.sozu) + Bit::count_ge1(tehai.zihai);
     // 対子の数 (2枚以上の牌) を数える。
     int n_toitsu = Bit::count_ge2(tehai.manzu) + Bit::count_ge2(tehai.pinzu) +
-                   Bit::count_ge2(tehai.souzu) + Bit::count_ge2(tehai.zihai);
+                   Bit::count_ge2(tehai.sozu) + Bit::count_ge2(tehai.zihai);
 
     int syanten = 6 - n_toitsu;
     if (n_types < 7)
@@ -165,16 +165,16 @@ int SyantenCalculator::calc_kokushi(const Tehai &tehai)
     // 老頭牌を抽出する。
     int manzu19 = tehai.manzu & Bit::ROUTOUHAI_MASK;
     int pinzu19 = tehai.pinzu & Bit::ROUTOUHAI_MASK;
-    int souzu19 = tehai.souzu & Bit::ROUTOUHAI_MASK;
+    int sozu19 = tehai.sozu & Bit::ROUTOUHAI_MASK;
 
     // 幺九牌の種類 (1枚以上の牌) を数える。
-    int n_yaochuhai = Bit::count_ge1(manzu19) + Bit::count_ge1(pinzu19) + Bit::count_ge1(souzu19) +
+    int n_yaochuhai = Bit::count_ge1(manzu19) + Bit::count_ge1(pinzu19) + Bit::count_ge1(sozu19) +
                       Bit::count_ge1(tehai.zihai);
 
     // 幺九牌の対子があるかどうか
     int toitsu_flag = ((manzu19 & 0b110'000'000'000'000'000'000'000'110) |
                        (pinzu19 & 0b110'000'000'000'000'000'000'000'110) |
-                       (souzu19 & 0b110'000'000'000'000'000'000'000'110) |
+                       (sozu19 & 0b110'000'000'000'000'000'000'000'110) |
                        (tehai.zihai & 0b110'110'110'110'110'110'110)) > 0;
 
     return 13 - toitsu_flag - n_yaochuhai;
