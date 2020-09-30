@@ -1,7 +1,7 @@
 #ifndef MAHJONG_CPP_SYANTEN
 #define MAHJONG_CPP_SYANTEN
 
-#include "tehai.hpp"
+#include "types.hpp"
 
 namespace mahjong
 {
@@ -35,23 +35,32 @@ class SyantenCalculator
         char n_mentsu;
         /*! 面子候補の数 */
         char n_kouho;
+        /*! 1枚以上の数 */
+        char n_ge1;
+        /*! 2枚以上の数 */
+        char n_ge2;
+        /*! 3枚以上の数 */
+        char n_ge3;
+        /*! 4枚以上の数 */
+        char n_ge4;
     };
 
 public:
-    static int calc(Tehai &tehai, int n_fuuro = 0,
+    static int calc(const Tehai &tehai, int n_fuuro = 0,
                     int type = SyantenType::Normal | SyantenType::Tiitoi | SyantenType::Kokushi);
     static bool initialize();
-    static int calc_normal(Tehai &tehai, int n_fuuro = 0);
+    static int calc_normal(const Tehai &tehai, int n_fuuro = 0);
     static int calc_tiitoi(const Tehai &tehai);
-    static int calc_kokushi(const Tehai &tehai);
-
-private:
-    static bool make_table(const std::string &path, std::vector<Pattern> &table);
+    static int calc_kokusi(const Tehai &tehai);
 
     /*! 数牌のテーブル */
     static std::vector<Pattern> s_tbl_;
     /*! 字牌のテーブル */
     static std::vector<Pattern> z_tbl_;
+
+private:
+    static bool make_table(const std::string &path, std::vector<Pattern> &table);
+
     /*! 数牌のテーブルサイズ */
     static const int ShuupaiTableSize = 76611584 + 1; // ハッシュ値の最大値 + 1
     /*! 字牌のテーブルサイズ */

@@ -1,19 +1,26 @@
-
-#include "syanten.hpp"
-
 #include <fstream>
+#include <iostream>
 
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/dll.hpp>
-#include <spdlog/spdlog.h>
+#define CATCH_CONFIG_MAIN
+#define CATCH_CONFIG_ENABLE_BENCHMARKING
+#include <catch2/catch.hpp>
+
+#include "syanten.hpp"
 
 using namespace mahjong;
 
-int main(int, char **)
+/**
+ * @brief テストケースを読み込む。
+ * 
+ * @param[out] cases テストケース
+ * @return 読み込みに成功した場合は true、そうでない場合は false を返す。
+ */
+bool load_syanten_case(std::vector<std::tuple<Tehai, int, int, int>> &cases)
 {
-    // 初期化が必要
-    SyantenCalculator::initialize();
+    cases.clear();
 
     boost::filesystem::path path =
         boost::dll::program_location().parent_path() / "test_syanten.txt";
@@ -21,17 +28,12 @@ int main(int, char **)
     // ファイルを開く。
     std::ifstream ifs(path.string());
     if (!ifs) {
-        spdlog::error("Failed to open {}.", path.string());
-        return 1;
+        std::cerr << "Failed to open " << path.string() << "." << std::endl;
+        return false;
     }
 
-    const int N = 100;
-
     // ファイルを読み込む。
-    // 形式は <14枚の牌> <一般手の向聴数> <国士の向聴数> <七対子の向聴数>
-    std::vector<Tehai> tehais;
-    std::vector<std::tuple<int, int, int>> results;
-
+    // 形式は <14枚の牌> <一般手の向聴数> <国士無双手の向聴数> <七対子手の向聴数>
     std::string line;
     while (std::getline(ifs, line)) {
         std::vector<std::string> tokens;
@@ -41,91 +43,101 @@ int main(int, char **)
         for (int i = 0; i < 14; ++i)
             tiles[i] = std::stoi(tokens[i]);
 
-        tehais.emplace_back(tiles);
-        results.emplace_back(std::stoi(tokens[14]), std::stoi(tokens[15]), std::stoi(tokens[16]));
+        cases.emplace_back(Tehai(tiles), std::stoi(tokens[14]), std::stoi(tokens[15]),
+                           std::stoi(tokens[16]));
     }
 
+    return true;
+}
+
+TEST_CASE("Calculate Normal Syanten")
+{
+    std::vector<std::tuple<Tehai, int, int, int>> cases;
+    if (!load_syanten_case(cases))
+        return;
+
+    SyantenCalculator::initialize();
+
+    SECTION("Normal Syanten")
     {
-        std::vector<Tehai> tehais;
-        tehais.reserve(1000000);
-        auto begin = std::chrono::steady_clock::now();
-        std::vector<int> tiles = {0, 0, 6, 8, 8, 27, 27, 28, 31, 31, 31, 31, 32, 33};
-        Tehai tehai(tiles);
-        int cnt = 0;
-        for (int i = 0; i < 1000000; ++i)
-            if (tehai.to_kanji_string() != "一萬一萬七萬九萬九萬 東東南白白白白發中")
-                cnt++;
+        for (auto &[tehai, normal, kokusi, tiitoi] : cases)
+            REQUIRE(SyantenCalculator::calc_normal(tehai) == normal);
+    };
 
-        auto end = std::chrono::steady_clock::now();
-        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count();
-        spdlog::info("total time: {}ms", elapsed);
-    }
-
-    // 一般手
-    ///////////////////////////////////
-
+    BENCHMARK("Normal Syanten")
     {
-        auto begin = std::chrono::steady_clock::now();
-        int actual, expected;
-        for (int i = 0; i < N; ++i) {
-            for (size_t i = 0; i < tehais.size(); ++i) {
-                actual = SyantenCalculator::calc_normal(tehais[i]);
-                expected = std::get<0>(results[i]);
+        for (auto &[tehai, normal, kokusi, tiitoi] : cases)
+            SyantenCalculator::calc_normal(tehai);
+    };
+}
 
-                if (actual != expected)
-                    spdlog::warn("wrong result found. tehai: {}, expected: {}, actual: {}",
-                                 tehais[i].to_string(), expected, actual);
-            }
-        }
-        auto end = std::chrono::steady_clock::now();
-        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count();
-        spdlog::info("[Normal Syanten] N: {}, total time: {}ms, time/N: {:.6f}ms",
-                     tehais.size() * N, elapsed, double(elapsed) / (tehais.size() * N));
-    }
+TEST_CASE("Calculate Tiitoi Syanten")
+{
+    std::vector<std::tuple<Tehai, int, int, int>> cases;
+    if (!load_syanten_case(cases))
+        return;
 
-    // 七対子手
-    ///////////////////////////////////
+    SyantenCalculator::initialize();
 
+    SECTION("Tiitoi Syanten")
     {
-        auto begin = std::chrono::steady_clock::now();
-        int actual, expected;
-        for (int i = 0; i < N; ++i) {
-            for (size_t i = 0; i < tehais.size(); ++i) {
-                actual = SyantenCalculator::calc_tiitoi(tehais[i]);
-                expected = std::get<2>(results[i]);
+        for (auto &[tehai, normal, kokusi, tiitoi] : cases)
+            REQUIRE(SyantenCalculator::calc_tiitoi(tehai) == tiitoi);
+    };
 
-                if (actual != expected)
-                    spdlog::warn("wrong result found. tehai: {}, expected: {}, actual: {}",
-                                 tehais[i].to_string(), expected, actual);
-            }
-        }
-        auto end = std::chrono::steady_clock::now();
-        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count();
-        spdlog::info("[Tiitoi Synten] N: {}, total time: {}ms, time/N: {:.6f}ms", tehais.size() * N,
-                     elapsed, double(elapsed) / (tehais.size() * N));
-    }
-
-    // 国士手
-    ///////////////////////////////////
-
+    BENCHMARK("Tiitoi Syanten")
     {
-        auto begin = std::chrono::steady_clock::now();
-        int actual, expected;
-        for (int i = 0; i < N; ++i) {
-            for (size_t i = 0; i < tehais.size(); ++i) {
-                actual = SyantenCalculator::calc_kokushi(tehais[i]);
-                expected = std::get<1>(results[i]);
+        for (auto &[tehai, normal, kokusi, tiitoi] : cases)
+            SyantenCalculator::calc_tiitoi(tehai);
+    };
+}
 
-                if (actual != expected)
-                    spdlog::warn("wrong result found. tehai: {}, expected: {}, actual: {}",
-                                 tehais[i].to_string(), expected, actual);
-            }
-        }
-        auto end = std::chrono::steady_clock::now();
-        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count();
-        spdlog::info("[Kokushi Synten] N: {}, total time: {}ms, time/N: {:.6f}ms",
-                     tehais.size() * N, elapsed, double(elapsed) / (tehais.size() * N));
-    }
+TEST_CASE("Calculate Kokusi Syanten")
+{
+    std::vector<std::tuple<Tehai, int, int, int>> cases;
+    if (!load_syanten_case(cases))
+        return;
 
-    return 0;
+    SyantenCalculator::initialize();
+
+    SECTION("Kokusi Syanten")
+    {
+        for (auto &[tehai, normal, kokusi, tiitoi] : cases)
+            REQUIRE(SyantenCalculator::calc_kokusi(tehai) == kokusi);
+    };
+
+    BENCHMARK("Kokusi Syanten")
+    {
+        for (auto &[tehai, normal, kokusi, tiitoi] : cases)
+            SyantenCalculator::calc_kokusi(tehai);
+    };
+}
+
+TEST_CASE("Calculate All Syanten")
+{
+    std::vector<std::tuple<Tehai, int, int, int>> cases;
+    if (!load_syanten_case(cases))
+        return;
+
+    SyantenCalculator::initialize();
+
+    SECTION("All Syanten")
+    {
+        for (auto &[tehai, normal, kokusi, tiitoi] : cases)
+            REQUIRE(SyantenCalculator::calc(tehai) == std::min({normal, kokusi, tiitoi}));
+    };
+
+    BENCHMARK("All Syanten")
+    {
+        for (auto &[tehai, normal, kokusi, tiitoi] : cases)
+            SyantenCalculator::calc(tehai);
+    };
+}
+
+TEST_CASE("Initialize Syanten Table")
+{
+    BENCHMARK("Syantan table initialization")
+    {
+        return SyantenCalculator::initialize();
+    };
 }

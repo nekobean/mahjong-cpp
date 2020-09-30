@@ -1,6 +1,7 @@
 #ifndef MAHJONG_CPP_BITUTILS
 #define MAHJONG_CPP_BITUTILS
 
+#include <bitset>
 #include <iostream>
 #include <vector>
 
@@ -19,6 +20,11 @@ public:
     static const std::vector<int> hai3;
     static const std::vector<int> hai4;
     static const std::vector<int> ge2;
+
+    static void print(int x)
+    {
+        std::cout << std::bitset<27>(x) << std::endl;
+    }
 
     /**
      * @brief ビット列から i 要素目の牌の枚数を取得する。
@@ -74,17 +80,54 @@ public:
         return cnt;
     }
 
+    /**
+     * @brief 牌の合計数を数える。
+     * 
+     * @param[in] x ビット列
+     * @return int 牌の合計数
+     */
+    static int sum(int x)
+    {
+        int cnt = (x >> 3 & 07070707) + (x & 07070707);
+        cnt = (cnt >> 6 & 0170017) + (cnt & 0170017);
+        cnt = (cnt >> 12 & 037) + (cnt & 037);
+        cnt += x >> 24;
+
+        return cnt;
+    }
+
+    /**
+     * @brief 3枚の牌の種類を取得する。
+     * 
+     * @param[in] x ビット列
+     * @return int 3枚の牌の種類
+     */
+    static int count_eq3(int x)
+    {
+        int cnt = x ^ 0555555555;
+        cnt &= cnt >> 2 & cnt >> 1;
+        cnt = (cnt >> 3 & 01010101) + (cnt & 01010101) + (cnt >> 24);
+        cnt = (cnt >> 6 & 030003) + (cnt & 030003);
+        cnt = (cnt >> 12 & 7) + (cnt & 7);
+
+        return cnt;
+    }
+
     // 老頭牌のマスク
-    //                                 | 8 | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
-    static const int ROUTOUHAI_MASK = 0b111'000'000'000'000'000'000'000'111;
+    //                              | 9 | 8 | 7 | 6 | 5 | 4 | 3 | 2 | 1 |
+    static const int RotohaiMask = 0b111'000'000'000'000'000'000'000'111;
+
+    // 断幺九牌のマスク
+    //                             | 9 | 8 | 7 | 6 | 5 | 4 | 3 | 2 | 1 |
+    static const int TanyaoMask = 0b000'111'111'111'111'111'111'111'000;
 
     // 三元牌のマスク
-    //                                 |中|發|白| 4 | 3 | 2 | 1 |
-    static const int SANGENHAI_MASK = 0b111'111'111'000'000'000'000;
+    //                                |Tyu|Hat|Hak|Pe |Sya|Nan|Ton|
+    static const int SangenhaiMask = 0b111'111'111'000'000'000'000;
 
     // 風牌のマスク
-    //                                   | 7 | 6 | 5 |北|西|南|東|
-    static const int KAZEHAI_MASK = 0b000'000'000'111'111'111'111;
+    //                              |Tyu|Hat|Hak|Pe |Sya|Nan|Ton|
+    static const int KazehaiMask = 0b000'000'000'111'111'111'111;
 };
 
 } // namespace mahjong

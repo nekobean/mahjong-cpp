@@ -36,9 +36,5 @@ configure_file(data/test_syanten.txt ${CMAKE_BINARY_DIR}/Release)
 # テスト
 option(BUILD_TEST "build test program." ON)
 if(BUILD_TEST)
-  add_executable(test_syanten ${SRC_FILES} src/test/test_syanten.cpp)
-  target_link_libraries(test_syanten
-    spdlog
-    ${Boost_LIBRARIES}
-  )
+  add_subdirectory(src/test)
 endif()

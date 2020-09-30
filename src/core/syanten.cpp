@@ -6,6 +6,8 @@
 #include <chrono>
 #include <fstream>
 
+#include "bitutils.hpp"
+
 namespace mahjong
 {
 
@@ -20,7 +22,7 @@ std::vector<SyantenCalculator::Pattern> SyantenCalculator::z_tbl_;
  * @param[in] type 計算対象の向聴数の種類
  * @return int 向聴数
  */
-int SyantenCalculator::calc(Tehai &tehai, int n_fuuro, int type)
+int SyantenCalculator::calc(const Tehai &tehai, int n_fuuro, int type)
 {
     if (SyantenCalculator::s_tbl_.empty())
         initialize();
@@ -43,7 +45,7 @@ int SyantenCalculator::calc(Tehai &tehai, int n_fuuro, int type)
     if (type & SyantenType::Tiitoi)
         ret = std::min(ret, calc_tiitoi(tehai));
     if (type & SyantenType::Kokushi)
-        ret = std::min(ret, calc_kokushi(tehai));
+        ret = std::min(ret, calc_kokusi(tehai));
 
     return ret;
 }
@@ -74,7 +76,7 @@ bool SyantenCalculator::initialize()
  * @param[in] n_fuuro 副露数
  * @return int 向聴数
  */
-int SyantenCalculator::calc_normal(Tehai &tehai, int n_fuuro)
+int SyantenCalculator::calc_normal(const Tehai &tehai, int n_fuuro)
 {
     // 面子数 * 2 + 候補, 面子 + 候補 <= 4 の最大値を計算する。
 
@@ -141,11 +143,11 @@ int SyantenCalculator::calc_normal(Tehai &tehai, int n_fuuro)
 int SyantenCalculator::calc_tiitoi(const Tehai &tehai)
 {
     // 牌の種類 (1枚以上の牌) を数える。
-    int n_types = Bit::count_ge1(tehai.manzu) + Bit::count_ge1(tehai.pinzu) +
-                  Bit::count_ge1(tehai.sozu) + Bit::count_ge1(tehai.zihai);
+    int n_types = s_tbl_[tehai.manzu].n_ge1 + s_tbl_[tehai.pinzu].n_ge1 + s_tbl_[tehai.sozu].n_ge1 +
+                  z_tbl_[tehai.zihai].n_ge1;
     // 対子の数 (2枚以上の牌) を数える。
-    int n_toitsu = Bit::count_ge2(tehai.manzu) + Bit::count_ge2(tehai.pinzu) +
-                   Bit::count_ge2(tehai.sozu) + Bit::count_ge2(tehai.zihai);
+    int n_toitsu = s_tbl_[tehai.manzu].n_ge2 + s_tbl_[tehai.pinzu].n_ge2 +
+                   s_tbl_[tehai.sozu].n_ge2 + z_tbl_[tehai.zihai].n_ge2;
 
     int syanten = 6 - n_toitsu;
     if (n_types < 7)
@@ -160,16 +162,16 @@ int SyantenCalculator::calc_tiitoi(const Tehai &tehai)
  * @param[in] tehai 手牌
  * @return int 向聴数
  */
-int SyantenCalculator::calc_kokushi(const Tehai &tehai)
+int SyantenCalculator::calc_kokusi(const Tehai &tehai)
 {
     // 老頭牌を抽出する。
-    int manzu19 = tehai.manzu & Bit::ROUTOUHAI_MASK;
-    int pinzu19 = tehai.pinzu & Bit::ROUTOUHAI_MASK;
-    int sozu19 = tehai.sozu & Bit::ROUTOUHAI_MASK;
+    int manzu19 = tehai.manzu & Bit::RotohaiMask;
+    int pinzu19 = tehai.pinzu & Bit::RotohaiMask;
+    int sozu19 = tehai.sozu & Bit::RotohaiMask;
 
     // 幺九牌の種類 (1枚以上の牌) を数える。
-    int n_yaochuhai = Bit::count_ge1(manzu19) + Bit::count_ge1(pinzu19) + Bit::count_ge1(sozu19) +
-                      Bit::count_ge1(tehai.zihai);
+    int n_yaochuhai = s_tbl_[manzu19].n_ge1 + s_tbl_[pinzu19].n_ge1 + s_tbl_[sozu19].n_ge1 +
+                      z_tbl_[tehai.zihai].n_ge1;
 
     // 幺九牌の対子があるかどうか
     int toitsu_flag = ((manzu19 & 0b110'000'000'000'000'000'000'000'110) |
@@ -189,8 +191,6 @@ int SyantenCalculator::calc_kokushi(const Tehai &tehai)
  */
 bool SyantenCalculator::make_table(const std::string &path, std::vector<Pattern> &table)
 {
-    auto begin = std::chrono::steady_clock::now();
-
     std::ifstream ifs(path);
     if (!ifs) {
         spdlog::error("Failed to open {}.", path);
@@ -213,14 +213,12 @@ bool SyantenCalculator::make_table(const std::string &path, std::vector<Pattern>
 
         // テーブルに格納する。
         table[hash].n_mentsu = line[10] - '0';
-        table[hash].n_kouho = line[12] - '0';
+        table[hash].n_kouho = line[11] - '0';
+        table[hash].n_ge1 = line[12] - '0';
+        table[hash].n_ge2 = line[13] - '0';
+        table[hash].n_ge3 = line[14] - '0';
+        table[hash].n_ge4 = line[15] - '0';
     }
-
-    auto end = std::chrono::steady_clock::now();
-    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count();
-    spdlog::debug("Syanten table initialized successfully. path: {}, size: {} bytes, time: "
-                  "{} ms",
-                  path, sizeof(Pattern) * table.size(), elapsed);
 
     return true;
 }

@@ -3,6 +3,7 @@
 
 #include <spdlog/spdlog.h>
 
+#include "score.hpp"
 #include "syanten.hpp"
 
 using namespace mahjong;
