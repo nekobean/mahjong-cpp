@@ -44,7 +44,7 @@ int SyantenCalculator::calc(const Tehai &tehai, int n_fuuro, int type)
         ret = std::min(ret, calc_normal(tehai, n_fuuro));
     if (type & SyantenType::Tiitoi)
         ret = std::min(ret, calc_tiitoi(tehai));
-    if (type & SyantenType::Kokushi)
+    if (type & SyantenType::Kokusi)
         ret = std::min(ret, calc_kokusi(tehai));
 
     return ret;
@@ -80,13 +80,13 @@ int SyantenCalculator::calc_normal(const Tehai &tehai, int n_fuuro)
 {
     // 面子数 * 2 + 候補, 面子 + 候補 <= 4 の最大値を計算する。
 
-    int n_mentsu = n_fuuro + s_tbl_[tehai.manzu].n_mentsu + s_tbl_[tehai.pinzu].n_mentsu +
-                   s_tbl_[tehai.sozu].n_mentsu + z_tbl_[tehai.zihai].n_mentsu;
+    int n_mentu = n_fuuro + s_tbl_[tehai.manzu].n_mentu + s_tbl_[tehai.pinzu].n_mentu +
+                  s_tbl_[tehai.sozu].n_mentu + z_tbl_[tehai.zihai].n_mentu;
     int n_kouho = s_tbl_[tehai.manzu].n_kouho + s_tbl_[tehai.pinzu].n_kouho +
                   s_tbl_[tehai.sozu].n_kouho + z_tbl_[tehai.zihai].n_kouho;
 
     // 雀頭なしと仮定して計算
-    int max = n_mentsu * 2 + std::min(4 - n_mentsu, n_kouho);
+    int max = n_mentu * 2 + std::min(4 - n_mentu, n_kouho);
 
     for (size_t i = 0; i < 9; ++i) {
         if ((tehai.manzu & Bit::mask[i]) >= Bit::hai2[i]) {
@@ -94,28 +94,28 @@ int SyantenCalculator::calc_normal(const Tehai &tehai, int n_fuuro)
             int manzu = tehai.manzu - Bit::hai2[i]; // 雀頭とした2枚を手牌から減らす
             // 雀頭2枚を抜いた結果、変化する部分は萬子の面子数、面子候補数だけなので、以下のように差分だけ調整する。
             // (m + p + s + z + f) + (m' - m) = m' + p + s + z + f
-            int n_mentsu2 = n_mentsu + s_tbl_[manzu].n_mentsu - s_tbl_[tehai.manzu].n_mentsu;
+            int n_mentu2 = n_mentu + s_tbl_[manzu].n_mentu - s_tbl_[tehai.manzu].n_mentu;
             int n_kouho2 = n_kouho + s_tbl_[manzu].n_kouho - s_tbl_[tehai.manzu].n_kouho;
             // +1 は雀頭分
-            max = std::max(max, n_mentsu2 * 2 + std::min(4 - n_mentsu2, n_kouho2) + 1);
+            max = std::max(max, n_mentu2 * 2 + std::min(4 - n_mentu2, n_kouho2) + 1);
         }
 
         if ((tehai.pinzu & Bit::mask[i]) >= Bit::hai2[i]) {
             // 筒子 i を雀頭とした場合
             int pinzu = tehai.pinzu - Bit::hai2[i];
-            int n_mentsu2 = n_mentsu + s_tbl_[pinzu].n_mentsu - s_tbl_[tehai.pinzu].n_mentsu;
+            int n_mentu2 = n_mentu + s_tbl_[pinzu].n_mentu - s_tbl_[tehai.pinzu].n_mentu;
             int n_kouho2 = n_kouho + s_tbl_[pinzu].n_kouho - s_tbl_[tehai.pinzu].n_kouho;
 
-            max = std::max(max, n_mentsu2 * 2 + std::min(4 - n_mentsu2, n_kouho2) + 1);
+            max = std::max(max, n_mentu2 * 2 + std::min(4 - n_mentu2, n_kouho2) + 1);
         }
 
         if ((tehai.sozu & Bit::mask[i]) >= Bit::hai2[i]) {
             // 索子 i を雀頭とした場合
             int sozu = tehai.sozu - Bit::hai2[i];
-            int n_mentsu2 = n_mentsu + s_tbl_[sozu].n_mentsu - s_tbl_[tehai.sozu].n_mentsu;
+            int n_mentu2 = n_mentu + s_tbl_[sozu].n_mentu - s_tbl_[tehai.sozu].n_mentu;
             int n_kouho2 = n_kouho + s_tbl_[sozu].n_kouho - s_tbl_[tehai.sozu].n_kouho;
 
-            max = std::max(max, n_mentsu2 * 2 + std::min(4 - n_mentsu2, n_kouho2) + 1);
+            max = std::max(max, n_mentu2 * 2 + std::min(4 - n_mentu2, n_kouho2) + 1);
         }
     }
 
@@ -124,10 +124,10 @@ int SyantenCalculator::calc_normal(const Tehai &tehai, int n_fuuro)
         if ((tehai.zihai & Bit::mask[i]) >= Bit::hai2[i]) {
             int zihai = tehai.zihai - Bit::hai2[i];
 
-            int n_mentsu2 = n_mentsu + (z_tbl_[zihai].n_mentsu - z_tbl_[tehai.zihai].n_mentsu);
+            int n_mentu2 = n_mentu + (z_tbl_[zihai].n_mentu - z_tbl_[tehai.zihai].n_mentu);
             int n_kouho2 = n_kouho + (z_tbl_[zihai].n_kouho - z_tbl_[tehai.zihai].n_kouho);
 
-            max = std::max(max, n_mentsu2 * 2 + std::min(4 - n_mentsu2, n_kouho2) + 1);
+            max = std::max(max, n_mentu2 * 2 + std::min(4 - n_mentu2, n_kouho2) + 1);
         }
     }
 
@@ -212,7 +212,7 @@ bool SyantenCalculator::make_table(const std::string &path, std::vector<Pattern>
         assert(table.size() > hash);
 
         // テーブルに格納する。
-        table[hash].n_mentsu = line[10] - '0';
+        table[hash].n_mentu = line[10] - '0';
         table[hash].n_kouho = line[11] - '0';
         table[hash].n_ge1 = line[12] - '0';
         table[hash].n_ge2 = line[13] - '0';

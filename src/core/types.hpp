@@ -46,7 +46,7 @@ struct Tile {
         Sya,    /*! 西 (しゃー) */
         Pe,     /*! 北 (ぺー) */
         Haku,   /*! 白 (はく) */
-        Hatsu,  /*! 発 (はつ) */
+        Hatu,   /*! 発 (はつ) */
         Tyun,   /*! 中 (ちゅん) */
         Length,
         Null,
@@ -114,11 +114,11 @@ public:
 
     bool contains(int hai) const
     {
-        if (Tile::Manzu1 <= hai && hai <= Tile::Manzu9)
+        if (Tile::Manzu1 <= hai)
             return Bit::mask[hai] & manzu;
-        else if (Tile::Pinzu1 <= hai && hai <= Tile::Pinzu9)
+        else if (hai <= Tile::Pinzu9)
             return Bit::mask[hai] & pinzu;
-        else if (Tile::Sozu1 <= hai && hai <= Tile::Sozu9)
+        else if (hai <= Tile::Sozu9)
             return Bit::mask[hai] & sozu;
         else
             return Bit::mask[hai] & zihai;
@@ -159,7 +159,7 @@ struct Block {
         kotu,      /* 刻子 (こーつ) */
         Ankotu,    /* 暗刻子 (あんこーつ) */
         Minkotu,   /* 明刻子 (みんこーつ) */
-        Syuntsu,   /* 順子 (しゅんつ) */
+        Syuntu,    /* 順子 (しゅんつ) */
         Ansyuntu,  /* 暗順子 (あんしゅんつ) */
         Minsyuntu, /* 明順子 (みんしゅんつ) */
         Tatu,      /* 塔子 (たーつ) */
@@ -181,30 +181,30 @@ struct Block {
 struct Yaku {
     enum Type : unsigned long long {
         /* 1翻 */
-        Tumo = 1ull,                 /* 門前清自摸和 (めんぜんつも) */
-        Reach = 1ull << 1,           /* 立直 (りーち) */
-        Ippatu = 1ull << 2,          /* 一発 (いっぱつ) */
-        Tanyao = 1ull << 3,          /* 断幺九 (たんやおちゅー) */
-        Pinhu = 1ull << 4,           /* 平和 (ぴんふ) */
-        Ipeko = 1ull << 5,           /* 一盃口 (いーぺーこー) */
-        Tyankan = 1ull << 6,         /* 槍槓 (ちゃんかん) */
-        Rinsyankaiho = 1ull << 7,    /* 嶺上開花 (りんしゃんかいほー) */
-        Haiteitumo = 1ull << 8,      /* 海底摸月 (はいていらおゆえ) */
-        HouteiRon = 1ull << 9,       /* 河底撈魚 (ほおていらおゆい) */
-        Dora = 1ull << 10,           /* ドラ (どら) */
-        UraDora = 1ull << 11,        /* 裏ドラ (うらどら) */
-        AkaDora = 1ull << 12,        /* 赤ドラ (あかどら) */
-        SangenhaiHaku = 1ull << 13,  /* 三元牌 (白) (やくはい (はく)) */
-        SangenhaiHatsu = 1ull << 14, /* 三元牌 (發) (やくはい (はつ)) */
-        SangenhaiTyun = 1ull << 15,  /* 三元牌 (中) (やくはい (ちゅん)) */
-        ZikazeTon = 1ull << 16,      /* 自風 (東) (じかぜ (とん)) */
-        ZikazeNan = 1ull << 17,      /* 自風 (南) (じかぜ (なん)) */
-        ZikazeSya = 1ull << 18,      /* 自風 (西) (じかぜ (しゃー)) */
-        ZikazePe = 1ull << 19,       /* 自風 (北) (じかぜ (ぺー)) */
-        BakazeTon = 1ull << 20,      /* 場風 (東) (ばかぜ (とん)) */
-        BakazeNan = 1ull << 21,      /* 場風 (南) (ばかぜ (なん)) */
-        BakazeSya = 1ull << 22,      /* 場風 (西) (ばかぜ (しゃー)) */
-        BakazePe = 1ull << 23,       /* 場風 (北) (ばかぜ (ぺー)) */
+        Tumo = 1ull,                /* 門前清自摸和 (めんぜんつも) */
+        Reach = 1ull << 1,          /* 立直 (りーち) */
+        Ippatu = 1ull << 2,         /* 一発 (いっぱつ) */
+        Tanyao = 1ull << 3,         /* 断幺九 (たんやおちゅー) */
+        Pinhu = 1ull << 4,          /* 平和 (ぴんふ) */
+        Ipeko = 1ull << 5,          /* 一盃口 (いーぺーこー) */
+        Tyankan = 1ull << 6,        /* 槍槓 (ちゃんかん) */
+        Rinsyankaiho = 1ull << 7,   /* 嶺上開花 (りんしゃんかいほー) */
+        Haiteitumo = 1ull << 8,     /* 海底摸月 (はいていらおゆえ) */
+        Hoteiron = 1ull << 9,       /* 河底撈魚 (ほおていらおゆい) */
+        Dora = 1ull << 10,          /* ドラ (どら) */
+        UraDora = 1ull << 11,       /* 裏ドラ (うらどら) */
+        AkaDora = 1ull << 12,       /* 赤ドラ (あかどら) */
+        SangenhaiHaku = 1ull << 13, /* 三元牌 (白) (やくはい (はく)) */
+        SangenhaiHatu = 1ull << 14, /* 三元牌 (發) (やくはい (はつ)) */
+        SangenhaiTyun = 1ull << 15, /* 三元牌 (中) (やくはい (ちゅん)) */
+        ZikazeTon = 1ull << 16,     /* 自風 (東) (じかぜ (とん)) */
+        ZikazeNan = 1ull << 17,     /* 自風 (南) (じかぜ (なん)) */
+        ZikazeSya = 1ull << 18,     /* 自風 (西) (じかぜ (しゃー)) */
+        ZikazePe = 1ull << 19,      /* 自風 (北) (じかぜ (ぺー)) */
+        BakazeTon = 1ull << 20,     /* 場風 (東) (ばかぜ (とん)) */
+        BakazeNan = 1ull << 21,     /* 場風 (南) (ばかぜ (なん)) */
+        BakazeSya = 1ull << 22,     /* 場風 (西) (ばかぜ (しゃー)) */
+        BakazePe = 1ull << 23,      /* 場風 (北) (ばかぜ (ぺー)) */
 
         /* 2翻 */
         WReach = 1ull << 24,         /* W 立直 (だぶるりーち) */

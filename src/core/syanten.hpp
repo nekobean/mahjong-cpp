@@ -11,9 +11,9 @@ namespace mahjong
  */
 struct SyantenType {
     enum Type {
-        Normal = 1,  /* 通常手 */
-        Tiitoi = 2,  /* 七対子手 */
-        Kokushi = 4, /* 国士無双手 */
+        Normal = 1, /* 通常手 */
+        Tiitoi = 2, /* 七対子手 */
+        Kokusi = 4, /* 国士無双手 */
     };
 };
 
@@ -23,16 +23,16 @@ class SyantenCalculator
      * @brief テーブルの情報
      */
     struct Pattern {
-        Pattern() : n_mentsu(-1), n_kouho(-1)
+        Pattern() : n_mentu(-1), n_kouho(-1)
         {
         }
 
-        Pattern(char n_mentsu, char n_kouho) : n_mentsu(n_mentsu), n_kouho(n_kouho)
+        Pattern(char n_mentu, char n_kouho) : n_mentu(n_mentu), n_kouho(n_kouho)
         {
         }
 
         /*! 面子の数 */
-        char n_mentsu;
+        char n_mentu;
         /*! 面子候補の数 */
         char n_kouho;
         /*! 1枚以上の数 */
@@ -47,7 +47,7 @@ class SyantenCalculator
 
 public:
     static int calc(const Tehai &tehai, int n_fuuro = 0,
-                    int type = SyantenType::Normal | SyantenType::Tiitoi | SyantenType::Kokushi);
+                    int type = SyantenType::Normal | SyantenType::Tiitoi | SyantenType::Kokusi);
     static bool initialize();
     static int calc_normal(const Tehai &tehai, int n_fuuro = 0);
     static int calc_tiitoi(const Tehai &tehai);
