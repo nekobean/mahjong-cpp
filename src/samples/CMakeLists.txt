@@ -1,0 +1,13 @@
+file(GLOB_RECURSE SRC_FILES ../core/*.cpp)
+file(GLOB ENTRY_FILES ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
+
+foreach(ENTRY_FILE ${ENTRY_FILES})
+  get_filename_component(BASE_NAME ${ENTRY_FILE} NAME_WE)
+
+  add_executable(${BASE_NAME} ${SRC_FILES} ${ENTRY_FILE})
+  target_link_libraries(${BASE_NAME} ${Boost_LIBRARIES} spdlog)
+
+  add_custom_command(TARGET ${BASE_NAME} PRE_BUILD
+                     COMMAND ${CMAKE_COMMAND} -E copy_directory
+                     ${CMAKE_SOURCE_DIR}/data/config/ $<TARGET_FILE_DIR:${BASE_NAME}>)
+endforeach(ENTRY_FILE ${ENTRY_FILES})
