@@ -38,7 +38,7 @@ public:
     check_pattern_yaku(const Hand &tehai, int winning_tile, YakuList flag);
     int calc_hu(const std::vector<Block> &blocks, int winning_tile, bool menzen,
                 bool tumo, bool pinhu) const;
-    Hand merge_tehai(const Hand &tehai) const;
+    Hand merge_hand(const Hand &tehai) const;
     int calc_extra_score() const;
     std::string to_string() const;
     bool is_yakuhai(int hai) const;

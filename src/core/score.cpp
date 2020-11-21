@@ -95,7 +95,7 @@ Result ScoreCalculator::calc(const Hand &tehai, int winning_tile, YakuList flag)
     std::vector<Block> blocks;
 
     // 副露牌を手牌に統合する。
-    Hand merged_tehai = merge_tehai(tehai);
+    Hand merged_tehai = merge_hand(tehai);
 
     // 役満をチェックする。
     yaku_list |= check_yakuman(merged_tehai, winning_tile, flag, syanten_type);
@@ -710,7 +710,7 @@ ScoreCalculator::calc_hu(const std::vector<Block> &blocks, int winning_tile,
 ////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * @brief 赤牌有りかどうかを設定する。
+ * @brief 赤ドラ有りかどうかを設定する。
  * 
  * @param[in] enabled 有効にするかどうか
  */
@@ -1311,7 +1311,7 @@ int ScoreCalculator::count_akadora(const Hand &tehai) const
  * @param[in]  tehai 手牌
  * @return Hand 副露ブロックを統合した手牌
  */
-Hand ScoreCalculator::merge_tehai(const Hand &tehai) const
+Hand ScoreCalculator::merge_hand(const Hand &tehai) const
 {
     Hand merged_tehai = tehai;
 
@@ -1357,7 +1357,7 @@ std::string ScoreCalculator::to_string() const
 {
     std::string s;
 
-    s += fmt::format("[ルール] 赤牌: {}, 喰い断: {}\n",
+    s += fmt::format("[ルール] 赤ドラ: {}, 喰い断: {}\n",
                      akadora_enabled_ ? "あり" : "なし",
                      open_tanyao_enabled_ ? "あり" : "なし");
     s += fmt::format("[場] 場風: {}, 自風: {}, 積み棒の数: {}, 供託棒の数: {}\n",
