@@ -42,7 +42,7 @@ struct Yaku {
         BakazeNan      = 1ull << 21, /* 場風 (南) */
         BakazeSya      = 1ull << 22, /* 場風 (西) */
         BakazePe       = 1ull << 23, /* 場風 (北) */
-        WReach         = 1ull << 24, /* W 立直 */
+        DoubleReach    = 1ull << 24, /* ダブル立直 */
         Tiitoitu       = 1ull << 25, /* 七対子 */
         Toitoiho       = 1ull << 26, /* 対々和 */
         Sananko        = 1ull << 27, /* 三暗刻 */
@@ -89,7 +89,7 @@ struct Yaku {
         Ipeko,         Tyankan,        Rinsyankaiho,  Haiteitumo, Hoteiron,
         SangenhaiHaku, SangenhaiHatu,  SangenhaiTyun, ZikazeTon,  ZikazeNan,
         ZikazeSya,     ZikazePe,       BakazeTon,     BakazeNan,  BakazeSya,
-        BakazePe,      WReach,         Tiitoitu,      Toitoiho,   Sananko,
+        BakazePe,      DoubleReach,    Tiitoitu,      Toitoiho,   Sananko,
         SansyokuDoko,  SansyokuDozyun, Honroto,       IkkiTukan,  Tyanta,
         Syosangen,     Sankantu,       Honiso,        Zyuntyanta, Ryanpeko,
         Tiniso,
@@ -131,7 +131,7 @@ struct Yaku {
         {BakazeNan,      {"場風 (南)",        {1, 1}}},
         {BakazeSya,      {"場風 (西)",        {1, 1}}},
         {BakazePe,       {"場風 (北)",        {1, 1}}},
-        {WReach,         {"ダブル立直",       {2, 0}}},  // 門前限定
+        {DoubleReach,    {"ダブル立直",       {2, 0}}},  // 門前限定
         {Tiitoitu,       {"七対子",           {2, 0}}},  // 門前限定
         {Toitoiho,       {"対々和",           {2, 2}}},
         {Sananko,        {"三暗刻",           {2, 2}}},

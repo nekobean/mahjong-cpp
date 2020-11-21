@@ -10,8 +10,8 @@
 #include "block.hpp"
 #include "hand.hpp"
 #include "meld.hpp"
-#include "result.hpp"
 #include "scoreboard.hpp"
+#include "scoretitle.hpp"
 #include "tile.hpp"
 #include "yaku.hpp"
 
@@ -24,7 +24,7 @@ struct Result {
     // 通常役
     Result(const Hand &tehai, int winning_tile, bool tumo,
            const std::vector<std::tuple<YakuList, int>> &yaku_list,
-           const std::vector<std::tuple<std::string, int>> &hu_list, int score_type,
+           const std::vector<std::tuple<std::string, int>> &hu_list, int score_title,
            int han, int hu, const std::vector<Block> &blocks, int ko2oya_ron,
            int ko2oya_tumo, int ko2ko_tumo, int oya2ko_ron, int oya2ko_tumo)
         : success(true)
@@ -33,7 +33,7 @@ struct Result {
         , tumo(tumo)
         , yaku_list(yaku_list)
         , hu_list(hu_list)
-        , score_type(score_type)
+        , score_title(score_title)
         , han(han)
         , hu(hu)
         , blocks(blocks)
@@ -47,7 +47,7 @@ struct Result {
 
     // 役満、流し満貫
     Result(const Hand &tehai, int winning_tile, bool tumo,
-           const std::vector<std::tuple<YakuList, int>> &yaku_list, int score_type,
+           const std::vector<std::tuple<YakuList, int>> &yaku_list, int score_title,
            int ko2oya_ron, int ko2oya_tumo, int ko2ko_tumo, int oya2ko_ron,
            int oya2ko_tumo)
         : success(true)
@@ -55,7 +55,7 @@ struct Result {
         , winning_tile(winning_tile)
         , tumo(tumo)
         , yaku_list(yaku_list)
-        , score_type(score_type)
+        , score_title(score_title)
         , han(-1)
         , hu(-1)
         , blocks(blocks)
@@ -75,7 +75,7 @@ struct Result {
         , tumo(false)
         , err_msg(err_msg)
         , yaku_list(Yaku::Null)
-        , score_type(Score::Null)
+        , score_title(ScoreTitle::Null)
         , han(-1)
         , hu(-1)
     {
@@ -101,7 +101,7 @@ struct Result {
     std::vector<std::tuple<std::string, int>> hu_list;
 
     /* 点数の種類 */
-    int score_type;
+    int score_title;
 
     /* 飜 */
     int han;
@@ -148,15 +148,15 @@ struct Result {
                 s += fmt::format(" {} {}翻\n", Yaku::Info[yaku].name, n);
 
             s += fmt::format("{}符{}翻\n", Hu::Names[hu], han);
-            if (score_type != Score::Null)
-                s += Score::Names[score_type] + "\n";
+            if (score_title != ScoreTitle::Null)
+                s += ScoreTitle::Names[score_title] + "\n";
         }
         else {
             // 流し満貫、役満
             s += "役:\n";
             for (auto &[yaku, n] : yaku_list)
                 s += fmt::format(" {}\n", Yaku::Info[yaku].name);
-            s += Score::Names[score_type] + "\n";
+            s += ScoreTitle::Names[score_title] + "\n";
         }
 
         s += fmt::format("親のロン: {}点\n", ko2oya_ron);

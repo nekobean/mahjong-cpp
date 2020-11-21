@@ -147,12 +147,12 @@ inline bool Hand::check_arguments(const std::vector<int> &tiles,
     n_tiles += int(melded_blocks.size()) * 3;
     // for (const auto &block : melded_blocks) {
     //     if (block.type & (Block::Kotu | Block::Kantu)) {
-    //         count[block.minhai] += 3;
+    //         count[block.min_tile] += 3;
     //     }
     //     else if (block.type & Block::Syuntu) {
-    //         count[block.minhai]++;
-    //         count[block.minhai + 1]++;
-    //         count[block.minhai + 2]++;
+    //         count[block.min_tile]++;
+    //         count[block.min_tile + 1]++;
+    //         count[block.min_tile + 2]++;
     //     }
     // }
 

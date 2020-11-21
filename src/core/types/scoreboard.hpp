@@ -3,8 +3,6 @@
 
 #include <vector>
 
-#include "result.hpp"
-
 namespace mahjong {
 
 struct ScoreBoard {

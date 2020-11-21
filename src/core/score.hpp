@@ -18,14 +18,14 @@ public:
     Result calc(const Hand &tehai, int winning_tile, YakuList yaku_list = Yaku::Null);
     static bool initialize();
 
-    void enable_akahai(bool enabled);
-    void enable_kuitan(bool enabled);
-    void set_dora(const std::vector<int> &dora_list);
-    void set_uradora(const std::vector<int> &uradora_list);
+    void enable_akadora(bool enabled);
+    void enable_open_tanyao(bool enabled);
+    void set_dora_tiles(const std::vector<int> &dora_list);
+    void set_uradora_tiles(const std::vector<int> &uradora_list);
     void set_bakaze(int bakaze);
     void set_zikaze(int zikaze);
-    void set_tumibo(int n);
-    void set_kyotakubo(int n);
+    void set_num_tumibo(int n);
+    void set_num_kyotakubo(int n);
 
 public:
     bool check_arguments(const Hand &tehai, int winning_tile, YakuList yaku_list,
@@ -36,14 +36,15 @@ public:
                                     int syanten_type) const;
     std::tuple<YakuList, int, std::vector<Block>>
     check_pattern_yaku(const Hand &tehai, int winning_tile, YakuList flag);
-    int calc_hu(const std::vector<Block> &blocks, int winning_tile, bool menzen, bool tumo,
-                bool pinhu) const;
+    int calc_hu(const std::vector<Block> &blocks, int winning_tile, bool menzen,
+                bool tumo, bool pinhu) const;
     Hand merge_tehai(const Hand &tehai) const;
     int calc_extra_score() const;
     std::string to_string() const;
     bool is_yakuhai(int hai) const;
 
-    Result aggregate(const Hand &tehai, int winning_tile, YakuList yaku_list, bool tumo);
+    Result aggregate(const Hand &tehai, int winning_tile, YakuList yaku_list,
+                     bool tumo);
     Result aggregate(const Hand &tehai, int winning_tile, YakuList yaku_list,
                      const std::vector<Block> &blocks, bool tumo);
 
@@ -93,22 +94,22 @@ public:
     int count_akadora(const Hand &tehai) const;
 
 private:
-    /* 赤牌ありかどうか */
-    bool rule_akahai_;
-    /* 喰い断有り */
-    bool rule_kuitan_;
-    /* 場風 */
+    /* 赤ドラありかどうか */
+    bool akadora_enabled_;
+    /* 喰い断有りかどうか */
+    bool open_tanyao_enabled_;
+    /* 場風牌 */
     int bakaze_;
-    /* 自風 */
+    /* 自風牌 */
     int zikaze_;
     /* 積み棒の数 */
     int n_tumibo_;
     /* 供託棒の数 */
     int n_kyotakubo_;
-    /* 表ドラの一覧 */
-    std::vector<int> dora_list_;
-    /*  裏ドラの一覧 */
-    std::vector<int> uradora_list_;
+    /* ドラの一覧 */
+    std::vector<int> dora_tiles_;
+    /* 裏ドラの一覧 */
+    std::vector<int> uradora_tiles_;
 
 private:
     static std::map<int, std::vector<std::vector<Block>>> s_tbl_;

@@ -28,13 +28,13 @@ struct Block {
 
     Block()
         : type(Block::Null)
-        , minhai(Tile::Null)
+        , min_tile(Tile::Null)
     {
     }
 
-    Block(int type, int minhai)
+    Block(int type, int min_tile)
         : type(type)
-        , minhai(minhai)
+        , min_tile(min_tile)
     {
     }
 
@@ -42,58 +42,55 @@ struct Block {
     int type;
 
     /*! 最小の構成牌 */
-    int minhai;
+    int min_tile;
 
-    // clang-format off
     static inline std::map<int, std::string> Names = {
-        {Block::Kotu,   "暗刻子"}, {Block::Kotu | Block::Huro,   "明刻子"},
+        {Block::Kotu, "暗刻子"},   {Block::Kotu | Block::Huro, "明刻子"},
         {Block::Syuntu, "暗順子"}, {Block::Syuntu | Block::Huro, "明順子"},
-        {Block::Kantu,  "暗槓子"}, {Block::Kantu | Block::Huro,  "明槓子"},
-        {Block::Toitu,  "暗対子"}, {Block::Toitu | Block::Huro,  "明対子"},
+        {Block::Kantu, "暗槓子"},  {Block::Kantu | Block::Huro, "明槓子"},
+        {Block::Toitu, "暗対子"},  {Block::Toitu | Block::Huro, "明対子"},
     };
-    // clang-format on
 
-    /**
-     * @brief 文字列に変換する。
-     *
-     * @return std::string ブロックを表す文字列
-     */
-    std::string to_string() const
-    {
-        std::string s;
-
-        s += "[";
-        if (type & Kotu) {
-            for (int i = 0; i < 3; ++i)
-                s += Tile::Names.at(minhai);
-        }
-        else if (type & Syuntu) {
-            for (int i = 0; i < 3; ++i)
-                s += Tile::Names.at(minhai + i);
-        }
-        else if (type & Kantu) {
-            for (int i = 0; i < 4; ++i)
-                s += Tile::Names.at(minhai);
-        }
-        else if (type & Toitu) {
-            for (int i = 0; i < 2; ++i)
-                s += Tile::Names.at(minhai);
-        }
-        s += fmt::format(", {}]", Names[type]);
-
-        return s;
-    }
+    std::string to_string() const;
 };
 
 /**
- * @brief 待ち
+ * @brief 文字列に変換する。
+ *
+ * @return std::string ブロックを表す文字列
  */
-struct Mati {
-    /**
-     * @brief 待ちの種類
-     */
+inline std::string Block::to_string() const
+{
+    std::string s;
+
+    s += "[";
+    if (type & Kotu) {
+        for (int i = 0; i < 3; ++i)
+            s += Tile::Names.at(min_tile);
+    }
+    else if (type & Syuntu) {
+        for (int i = 0; i < 3; ++i)
+            s += Tile::Names.at(min_tile + i);
+    }
+    else if (type & Kantu) {
+        for (int i = 0; i < 4; ++i)
+            s += Tile::Names.at(min_tile);
+    }
+    else if (type & Toitu) {
+        for (int i = 0; i < 2; ++i)
+            s += Tile::Names.at(min_tile);
+    }
+    s += fmt::format(", {}]", Names[type]);
+
+    return s;
+}
+
+/**
+ * @brief 待ちの種類
+ */
+struct WaitType {
     enum Type {
-        Null,
+        Null = -1,
         Ryanmen, /* 両面待ち */
         Pentyan, /* 辺張待ち */
         Kantyan, /* 嵌張待ち */
@@ -101,9 +98,9 @@ struct Mati {
         Tanki,   /* 単騎待ち */
     };
 
-    static inline std::vector<std::string> Name = {
-        "両面待ち", "辺張待ち", "嵌張待ち", "双ポン待ち", "単騎待ち",
-    };
+    static inline const std::map<int, std::string> Names = {
+        {Null, "Null"},        {Ryanmen, "両面待ち"},   {Pentyan, "辺張待ち"},
+        {Kantyan, "嵌張待ち"}, {Syanpon, "双ポン待ち"}, {Tanki, "単騎待ち"}};
 };
 
 /**
@@ -113,42 +110,44 @@ struct Mati {
  * @param[in] winning_tile 和了牌
  * @return int 待ちの種類
  */
-inline int get_mati_type(const std::vector<Block> &blocks, int winning_tile)
+inline int get_wait_type(const std::vector<Block> &blocks, int winning_tile)
 {
     for (const auto &block : blocks) {
-        if ((block.type & Block::Kotu) && block.minhai == winning_tile) {
-            return Mati::Syanpon; // 刻子の場合、双ポン待ち
+        if ((block.type & Block::Kotu) && block.min_tile == winning_tile) {
+            return WaitType::Syanpon; // 刻子の場合、双ポン待ち
         }
         else if (block.type & Block::Syuntu) {
-            if (block.minhai + 1 == winning_tile) {
-                return Mati::Kantyan; // 嵌張待ち
+            if (block.min_tile + 1 == winning_tile) {
+                return WaitType::Kantyan; // 嵌張待ち
             }
-            else if (block.minhai == winning_tile || block.minhai + 2 == winning_tile) {
-                if (block.minhai == Tile::Manzu1 || block.minhai == Tile::Pinzu1 ||
-                    block.minhai == Tile::Sozu1) {
-                    if (block.minhai == winning_tile)
-                        return Mati::Ryanmen; // 123 で和了牌が1の場合、両面待ち
+            else if (block.min_tile == winning_tile ||
+                     block.min_tile + 2 == winning_tile) {
+                if (block.min_tile == Tile::Manzu1 || block.min_tile == Tile::Pinzu1 ||
+                    block.min_tile == Tile::Sozu1) {
+                    if (block.min_tile == winning_tile)
+                        return WaitType::Ryanmen; // 123 で和了牌が1の場合、両面待ち
                     else
-                        return Mati::Pentyan; // 123 で和了牌が3の場合、辺張待ち
+                        return WaitType::Pentyan; // 123 で和了牌が3の場合、辺張待ち
                 }
-                else if (block.minhai == Tile::Manzu7 || block.minhai == Tile::Pinzu7 ||
-                         block.minhai == Tile::Sozu7) {
-                    if (block.minhai == winning_tile)
-                        return Mati::Pentyan; // 789 で和了牌が7の場合、辺張待ち
+                else if (block.min_tile == Tile::Manzu7 ||
+                         block.min_tile == Tile::Pinzu7 ||
+                         block.min_tile == Tile::Sozu7) {
+                    if (block.min_tile == winning_tile)
+                        return WaitType::Pentyan; // 789 で和了牌が7の場合、辺張待ち
                     else
-                        return Mati::Ryanmen; // 789 で和了牌が9の場合、両面待ち
+                        return WaitType::Ryanmen; // 789 で和了牌が9の場合、両面待ち
                 }
                 else {
-                    return Mati::Ryanmen;
+                    return WaitType::Ryanmen;
                 }
             }
         }
-        else if (block.type & Block::Toitu && block.minhai == winning_tile) {
-            return Mati::Tanki; // 対子の場合、単騎待ち
+        else if (block.type & Block::Toitu && block.min_tile == winning_tile) {
+            return WaitType::Tanki; // 対子の場合、単騎待ち
         }
     }
 
-    return Mati::Null;
+    return WaitType::Null;
 }
 
 } // namespace mahjong

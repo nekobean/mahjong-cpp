@@ -11,6 +11,7 @@
 | 赤牌         | あかはい                 | Akahai           |
 | 和了り       | あがり                   | Agari            |
 | 和了り形     | あがりけい               | Agarikei         |
+| 和了牌       | あがりはい               | WinningTile      |
 | 暗槓         | あんかん                 | Ankan            |
 | 暗刻子       | あんこーつ               | Ankotu           |
 | 暗順子       | あんしゅんつ             | Ansyuntu         |

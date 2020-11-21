@@ -63,13 +63,13 @@ ScoreCalculator create_score_calculator()
     ScoreCalculator::initialize();
 
     ScoreCalculator score;
-    score.enable_akahai(true);
-    score.enable_kuitan(true);
-    score.set_dora({Tile::Manzu1});
+    score.enable_akadora(true);
+    score.enable_open_tanyao(true);
+    score.set_dora_tiles({Tile::Manzu1});
     score.set_bakaze(Tile::Ton);
     score.set_zikaze(Tile::Nan);
-    score.set_tumibo(1);
-    score.set_kyotakubo(2);
+    score.set_num_tumibo(1);
+    score.set_num_kyotakubo(2);
 
     return score;
 }
@@ -79,21 +79,21 @@ TEST_CASE("供託棒")
     SyantenCalculator::initialize();
     ScoreCalculator score = create_score_calculator();
 
-    score.set_tumibo(1);
-    score.set_kyotakubo(2);
+    score.set_num_tumibo(1);
+    score.set_num_kyotakubo(2);
 
     SECTION("Calculate kyotaku score")
     {
-        score.set_tumibo(0);
-        score.set_kyotakubo(0);
+        score.set_num_tumibo(0);
+        score.set_num_kyotakubo(0);
         REQUIRE(score.calc_extra_score() == 0);
 
-        score.set_tumibo(1);
-        score.set_kyotakubo(2);
+        score.set_num_tumibo(1);
+        score.set_num_kyotakubo(2);
         REQUIRE(score.calc_extra_score() == 300 * 1 + 1000 * 2);
 
-        score.set_tumibo(5);
-        score.set_kyotakubo(2);
+        score.set_num_tumibo(5);
+        score.set_num_kyotakubo(2);
         REQUIRE(score.calc_extra_score() == 300 * 5 + 1000 * 2);
     };
 }
