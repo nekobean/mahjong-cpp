@@ -49,7 +49,7 @@
 | 西家         | しゃーちゃ               | Syatya           |
 | 向聴         | しゃんてん               | Syanten          |
 | 雀頭         | じゃんとう               | Zyanto           |
-| 数牌         | しゅーぱい               | Syupai           |
+| 数牌         | しゅーぱい               | Syuhai           |
 | 巡           | じゅん                   | Zyun             |
 | 純全帯幺     | じゅんちゃんたいやお     | Zyuntyantaiyao   |
 | 順子         | しゅんつ                 | Syuntu           |

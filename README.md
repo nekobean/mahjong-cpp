@@ -39,7 +39,7 @@ src/main.cpp
 
 ```cpp
 // 手牌入力
-Tehai tehai({Tile::Manzu1, Tile::Manzu1, Tile::Manzu1, Tile::Manzu2, Tile::Manzu5, Tile::Manzu6,
+Hand tehai({Tile::Manzu1, Tile::Manzu1, Tile::Manzu1, Tile::Manzu2, Tile::Manzu5, Tile::Manzu6,
              Tile::Manzu7, Tile::Manzu8, Tile::Manzu9, Tile::Pinzu1, Tile::Pinzu1, Tile::Pinzu2,
              Tile::Pinzu2});
 

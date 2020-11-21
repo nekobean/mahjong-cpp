@@ -1,33 +1,42 @@
 #ifndef MAHJONG_CPP_SYANTEN
 #define MAHJONG_CPP_SYANTEN
 
-#include "types.hpp"
+#include "types/types.hpp"
 
-namespace mahjong
-{
+namespace mahjong {
 
 /**
- * @brief 向聴数の種類
+ * @brief 向聴の種類
  */
 struct SyantenType {
     enum Type {
+        Null   = 0,
         Normal = 1, /* 通常手 */
         Tiitoi = 2, /* 七対子手 */
         Kokusi = 4, /* 国士無双手 */
     };
+
+    static inline std::map<int, std::string> Names = {
+        {SyantenType::Normal, "通常手"},
+        {SyantenType::Tiitoi, "七対子手"},
+        {SyantenType::Kokusi, "国士無双手"},
+    };
 };
 
-class SyantenCalculator
-{
+class SyantenCalculator {
     /**
      * @brief テーブルの情報
      */
     struct Pattern {
-        Pattern() : n_mentu(-1), n_kouho(-1)
+        Pattern()
+            : n_mentu(-1)
+            , n_kouho(-1)
         {
         }
 
-        Pattern(char n_mentu, char n_kouho) : n_mentu(n_mentu), n_kouho(n_kouho)
+        Pattern(char n_mentu, char n_kouho)
+            : n_mentu(n_mentu)
+            , n_kouho(n_kouho)
         {
         }
 
@@ -46,12 +55,13 @@ class SyantenCalculator
     };
 
 public:
-    static int calc(const Tehai &tehai, int n_fuuro = 0,
-                    int type = SyantenType::Normal | SyantenType::Tiitoi | SyantenType::Kokusi);
+    static std::tuple<int, int> calc(const Hand &tehai, int type = SyantenType::Normal |
+                                                                   SyantenType::Tiitoi |
+                                                                   SyantenType::Kokusi);
     static bool initialize();
-    static int calc_normal(const Tehai &tehai, int n_fuuro = 0);
-    static int calc_tiitoi(const Tehai &tehai);
-    static int calc_kokusi(const Tehai &tehai);
+    static int calc_normal(const Hand &tehai);
+    static int calc_tiitoi(const Hand &tehai);
+    static int calc_kokusi(const Hand &tehai);
 
     /*! 数牌のテーブル */
     static std::vector<Pattern> s_tbl_;

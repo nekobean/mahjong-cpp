@@ -3,27 +3,76 @@
 
 #include <bitset>
 #include <iostream>
+#include <string>
 #include <vector>
 
-namespace mahjong
-{
+namespace mahjong {
 /**
  * @brief ビット演算関係のヘルパー関数やマスクなどを定義
  * 
  */
-class Bit
-{
+class Bit {
 public:
-    static const std::vector<int> mask;
-    static const std::vector<int> hai1;
-    static const std::vector<int> hai2;
-    static const std::vector<int> hai3;
-    static const std::vector<int> hai4;
-    static const std::vector<int> ge2;
+    static inline const std::vector<int> mask = {
+        7,       7 << 3,  7 << 6,  7 << 9,  7 << 12, 7 << 15, 7 << 18, 7 << 21,
+        7 << 24, 7,       7 << 3,  7 << 6,  7 << 9,  7 << 12, 7 << 15, 7 << 18,
+        7 << 21, 7 << 24, 7,       7 << 3,  7 << 6,  7 << 9,  7 << 12, 7 << 15,
+        7 << 18, 7 << 21, 7 << 24, 7,       7 << 3,  7 << 6,  7 << 9,  7 << 12,
+        7 << 15, 7 << 18, 7 << 12, 7 << 12, 7 << 12,
+    };
 
-    static void print(int x)
+    static inline const std::vector<int> hai1 = {
+        1,       1 << 3,  1 << 6,  1 << 9,  1 << 12, 1 << 15, 1 << 18, 1 << 21,
+        1 << 24, 1,       1 << 3,  1 << 6,  1 << 9,  1 << 12, 1 << 15, 1 << 18,
+        1 << 21, 1 << 24, 1,       1 << 3,  1 << 6,  1 << 9,  1 << 12, 1 << 15,
+        1 << 18, 1 << 21, 1 << 24, 1,       1 << 3,  1 << 6,  1 << 9,  1 << 12,
+        1 << 15, 1 << 18, 1 << 12, 1 << 12, 1 << 12,
+    };
+
+    static inline const std::vector<int> hai2 = {
+        2,       2 << 3,  2 << 6,  2 << 9,  2 << 12, 2 << 15, 2 << 18, 2 << 21,
+        2 << 24, 2,       2 << 3,  2 << 6,  2 << 9,  2 << 12, 2 << 15, 2 << 18,
+        2 << 21, 2 << 24, 2,       2 << 3,  2 << 6,  2 << 9,  2 << 12, 2 << 15,
+        2 << 18, 2 << 21, 2 << 24, 2,       2 << 3,  2 << 6,  2 << 9,  2 << 12,
+        2 << 15, 2 << 18, 2 << 12, 2 << 12, 2 << 12,
+    };
+
+    static inline const std::vector<int> hai3 = {
+        3,       3 << 3,  3 << 6,  3 << 9,  3 << 12, 3 << 15, 3 << 18, 3 << 21,
+        3 << 24, 3,       3 << 3,  3 << 6,  3 << 9,  3 << 12, 3 << 15, 3 << 18,
+        3 << 21, 3 << 24, 3,       3 << 3,  3 << 6,  3 << 9,  3 << 12, 3 << 15,
+        3 << 18, 3 << 21, 3 << 24, 3,       3 << 3,  3 << 6,  3 << 9,  3 << 12,
+        3 << 15, 3 << 18, 3 << 12, 3 << 12, 3 << 12,
+    };
+
+    static inline const std::vector<int> hai4 = {
+        4,       4 << 3,  4 << 6,  4 << 9,  4 << 12, 4 << 15, 4 << 18, 4 << 21,
+        4 << 24, 4,       4 << 3,  4 << 6,  4 << 9,  4 << 12, 4 << 15, 4 << 18,
+        4 << 21, 4 << 24, 4,       4 << 3,  4 << 6,  4 << 9,  4 << 12, 4 << 15,
+        4 << 18, 4 << 21, 4 << 24, 4,       4 << 3,  4 << 6,  4 << 9,  4 << 12,
+        4 << 15, 4 << 18, 4 << 21, 4 << 24, 4 << 12, 4 << 12, 4 << 12,
+    };
+
+    static inline const std::vector<int> ge2 = {
+        6,       6 << 3,  6 << 6,  6 << 9,  6 << 12, 6 << 15, 6 << 18, 6 << 21,
+        6 << 24, 6,       6 << 3,  6 << 6,  6 << 9,  6 << 12, 6 << 15, 6 << 18,
+        6 << 21, 6 << 24, 6,       6 << 3,  6 << 6,  6 << 9,  6 << 12, 6 << 15,
+        6 << 18, 6 << 21, 6 << 24, 6,       6 << 3,  6 << 6,  6 << 9,  6 << 12,
+        6 << 15, 6 << 18, 6 << 12, 6 << 12, 6 << 12,
+    };
+
+    static void print_2digits(int x)
     {
         std::cout << std::bitset<27>(x) << std::endl;
+    }
+
+    static std::string to_10digits(int x)
+    {
+        std::string s;
+        for (int i = 0; i < 9; ++i)
+            s += std::to_string(Bit::get_n_tile(x, i));
+
+        return s;
     }
 
     /**
@@ -57,9 +106,9 @@ public:
     static int count_ge1(int x)
     {
         int cnt = x >> 2 | x >> 1 | x;
-        cnt = (cnt >> 3 & 01010101) + (cnt & 01010101) + (cnt >> 24 & 1);
-        cnt = (cnt >> 6 & 030003) + (cnt & 030003);
-        cnt = (cnt >> 12 & 7) + (cnt & 7);
+        cnt     = (cnt >> 3 & 01010101) + (cnt & 01010101) + (cnt >> 24 & 1);
+        cnt     = (cnt >> 6 & 030003) + (cnt & 030003);
+        cnt     = (cnt >> 12 & 7) + (cnt & 7);
 
         return cnt;
     }
@@ -73,9 +122,9 @@ public:
     static int count_ge2(int x)
     {
         int cnt = x >> 2 | x >> 1;
-        cnt = (cnt >> 3 & 01010101) + (cnt & 01010101) + (cnt >> 24 & 1);
-        cnt = (cnt >> 6 & 030003) + (cnt & 030003);
-        cnt = (cnt >> 12 & 7) + (cnt & 7);
+        cnt     = (cnt >> 3 & 01010101) + (cnt & 01010101) + (cnt >> 24 & 1);
+        cnt     = (cnt >> 6 & 030003) + (cnt & 030003);
+        cnt     = (cnt >> 12 & 7) + (cnt & 7);
 
         return cnt;
     }
@@ -89,11 +138,16 @@ public:
     static int sum(int x)
     {
         int cnt = (x >> 3 & 07070707) + (x & 07070707);
-        cnt = (cnt >> 6 & 0170017) + (cnt & 0170017);
-        cnt = (cnt >> 12 & 037) + (cnt & 037);
+        cnt     = (cnt >> 6 & 0170017) + (cnt & 0170017);
+        cnt     = (cnt >> 12 & 037) + (cnt & 037);
         cnt += x >> 24;
 
         return cnt;
+    }
+
+    static bool check_exclusive(unsigned long long x)
+    {
+        return x && !(x & (x - 1));
     }
 
     /**
