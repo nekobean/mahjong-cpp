@@ -20,10 +20,10 @@ public:
 
     void enable_akadora(bool enabled);
     void enable_open_tanyao(bool enabled);
-    void set_dora_tiles(const std::vector<int> &dora_list);
-    void set_uradora_tiles(const std::vector<int> &uradora_list);
-    void set_bakaze(int bakaze);
-    void set_zikaze(int zikaze);
+    void set_dora_tiles(const std::vector<int> &tiles);
+    void set_uradora_tiles(const std::vector<int> &tiles);
+    void set_bakaze(int tile);
+    void set_zikaze(int tile);
     void set_num_tumibo(int n);
     void set_num_kyotakubo(int n);
 
@@ -41,7 +41,7 @@ public:
     Hand merge_hand(const Hand &tehai) const;
     int calc_extra_score() const;
     std::string to_string() const;
-    bool is_yakuhai(int hai) const;
+    bool is_yakuhai(int tile) const;
 
     Result aggregate(const Hand &tehai, int winning_tile, YakuList yaku_list,
                      bool tumo);

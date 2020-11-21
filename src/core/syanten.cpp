@@ -99,9 +99,9 @@ int SyantenCalculator::calc_normal(const Hand &tehai)
     int max = n_mentu * 2 + std::min(4 - n_mentu, n_kouho);
 
     for (size_t i = 0; i < 9; ++i) {
-        if ((tehai.manzu & Bit::mask[i]) >= Bit::hai2[i]) {
+        if ((tehai.manzu & Bit::mask[i]) >= Bit::tile2[i]) {
             // 萬子 i を雀頭とした場合
-            int manzu = tehai.manzu - Bit::hai2[i]; // 雀頭とした2枚を手牌から減らす
+            int manzu = tehai.manzu - Bit::tile2[i]; // 雀頭とした2枚を手牌から減らす
             // 雀頭2枚を抜いた結果、変化する部分は萬子の面子数、面子候補数だけなので、以下のように差分だけ調整する。
             // (m + p + s + z + f) + (m' - m) = m' + p + s + z + f
             int n_mentu2 =
@@ -112,9 +112,9 @@ int SyantenCalculator::calc_normal(const Hand &tehai)
             max = std::max(max, n_mentu2 * 2 + std::min(4 - n_mentu2, n_kouho2) + 1);
         }
 
-        if ((tehai.pinzu & Bit::mask[i]) >= Bit::hai2[i]) {
+        if ((tehai.pinzu & Bit::mask[i]) >= Bit::tile2[i]) {
             // 筒子 i を雀頭とした場合
-            int pinzu = tehai.pinzu - Bit::hai2[i];
+            int pinzu = tehai.pinzu - Bit::tile2[i];
             int n_mentu2 =
                 n_mentu + s_tbl_[pinzu].n_mentu - s_tbl_[tehai.pinzu].n_mentu;
             int n_kouho2 =
@@ -123,9 +123,9 @@ int SyantenCalculator::calc_normal(const Hand &tehai)
             max = std::max(max, n_mentu2 * 2 + std::min(4 - n_mentu2, n_kouho2) + 1);
         }
 
-        if ((tehai.sozu & Bit::mask[i]) >= Bit::hai2[i]) {
+        if ((tehai.sozu & Bit::mask[i]) >= Bit::tile2[i]) {
             // 索子 i を雀頭とした場合
-            int sozu     = tehai.sozu - Bit::hai2[i];
+            int sozu     = tehai.sozu - Bit::tile2[i];
             int n_mentu2 = n_mentu + s_tbl_[sozu].n_mentu - s_tbl_[tehai.sozu].n_mentu;
             int n_kouho2 = n_kouho + s_tbl_[sozu].n_kouho - s_tbl_[tehai.sozu].n_kouho;
 
@@ -135,8 +135,8 @@ int SyantenCalculator::calc_normal(const Hand &tehai)
 
     for (size_t i = 0; i < 7; ++i) {
         // 字牌 i を雀頭とした場合
-        if ((tehai.zihai & Bit::mask[i]) >= Bit::hai2[i]) {
-            int zihai = tehai.zihai - Bit::hai2[i];
+        if ((tehai.zihai & Bit::mask[i]) >= Bit::tile2[i]) {
+            int zihai = tehai.zihai - Bit::tile2[i];
 
             int n_mentu2 =
                 n_mentu + (z_tbl_[zihai].n_mentu - z_tbl_[tehai.zihai].n_mentu);

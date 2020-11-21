@@ -180,13 +180,13 @@ inline void Hand::convert_from_hai34(const std::vector<int> &tiles)
         aka_sozu5 |= tile == Tile::AkaSozu5;
 
         if (tile <= Tile::Manzu9 || tile == Tile::AkaManzu5)
-            manzu += Bit::hai1[tile];
+            manzu += Bit::tile1[tile];
         else if (tile <= Tile::Pinzu9 || tile == Tile::AkaPinzu5)
-            pinzu += Bit::hai1[tile];
+            pinzu += Bit::tile1[tile];
         else if (tile <= Tile::Sozu9 || tile == Tile::AkaSozu5)
-            sozu += Bit::hai1[tile];
+            sozu += Bit::tile1[tile];
         else
-            zihai += Bit::hai1[tile];
+            zihai += Bit::tile1[tile];
     }
 }
 
