@@ -110,40 +110,40 @@ struct Mati {
  * @brief 待ちの種類を取得する。
  * 
  * @param[in] blocks 面子構成
- * @param[in] agarihai 和了り牌
+ * @param[in] winning_tile 和了牌
  * @return int 待ちの種類
  */
-inline int get_mati_type(const std::vector<Block> &blocks, int agarihai)
+inline int get_mati_type(const std::vector<Block> &blocks, int winning_tile)
 {
     for (const auto &block : blocks) {
-        if ((block.type & Block::Kotu) && block.minhai == agarihai) {
+        if ((block.type & Block::Kotu) && block.minhai == winning_tile) {
             return Mati::Syanpon; // 刻子の場合、双ポン待ち
         }
         else if (block.type & Block::Syuntu) {
-            if (block.minhai + 1 == agarihai) {
+            if (block.minhai + 1 == winning_tile) {
                 return Mati::Kantyan; // 嵌張待ち
             }
-            else if (block.minhai == agarihai || block.minhai + 2 == agarihai) {
+            else if (block.minhai == winning_tile || block.minhai + 2 == winning_tile) {
                 if (block.minhai == Tile::Manzu1 || block.minhai == Tile::Pinzu1 ||
                     block.minhai == Tile::Sozu1) {
-                    if (block.minhai == agarihai)
-                        return Mati::Ryanmen; // 123 で和了り牌が1の場合、両面待ち
+                    if (block.minhai == winning_tile)
+                        return Mati::Ryanmen; // 123 で和了牌が1の場合、両面待ち
                     else
-                        return Mati::Pentyan; // 123 で和了り牌が3の場合、辺張待ち
+                        return Mati::Pentyan; // 123 で和了牌が3の場合、辺張待ち
                 }
                 else if (block.minhai == Tile::Manzu7 || block.minhai == Tile::Pinzu7 ||
                          block.minhai == Tile::Sozu7) {
-                    if (block.minhai == agarihai)
-                        return Mati::Pentyan; // 789 で和了り牌が7の場合、辺張待ち
+                    if (block.minhai == winning_tile)
+                        return Mati::Pentyan; // 789 で和了牌が7の場合、辺張待ち
                     else
-                        return Mati::Ryanmen; // 789 で和了り牌が9の場合、両面待ち
+                        return Mati::Ryanmen; // 789 で和了牌が9の場合、両面待ち
                 }
                 else {
                     return Mati::Ryanmen;
                 }
             }
         }
-        else if (block.type & Block::Toitu && block.minhai == agarihai) {
+        else if (block.type & Block::Toitu && block.minhai == winning_tile) {
             return Mati::Tanki; // 対子の場合、単騎待ち
         }
     }

@@ -22,14 +22,14 @@ namespace mahjong {
  */
 struct Result {
     // 通常役
-    Result(const Hand &tehai, int agarihai, bool tumo,
+    Result(const Hand &tehai, int winning_tile, bool tumo,
            const std::vector<std::tuple<YakuList, int>> &yaku_list,
            const std::vector<std::tuple<std::string, int>> &hu_list, int score_type,
            int han, int hu, const std::vector<Block> &blocks, int ko2oya_ron,
            int ko2oya_tumo, int ko2ko_tumo, int oya2ko_ron, int oya2ko_tumo)
         : success(true)
         , tehai(tehai)
-        , agarihai(agarihai)
+        , winning_tile(winning_tile)
         , tumo(tumo)
         , yaku_list(yaku_list)
         , hu_list(hu_list)
@@ -46,13 +46,13 @@ struct Result {
     }
 
     // 役満、流し満貫
-    Result(const Hand &tehai, int agarihai, bool tumo,
+    Result(const Hand &tehai, int winning_tile, bool tumo,
            const std::vector<std::tuple<YakuList, int>> &yaku_list, int score_type,
            int ko2oya_ron, int ko2oya_tumo, int ko2ko_tumo, int oya2ko_ron,
            int oya2ko_tumo)
         : success(true)
         , tehai(tehai)
-        , agarihai(agarihai)
+        , winning_tile(winning_tile)
         , tumo(tumo)
         , yaku_list(yaku_list)
         , score_type(score_type)
@@ -68,10 +68,10 @@ struct Result {
     }
 
     // エラー
-    Result(const Hand &tehai, int agarihai, const std::string &err_msg)
+    Result(const Hand &tehai, int winning_tile, const std::string &err_msg)
         : success(false)
         , tehai(tehai)
-        , agarihai(agarihai)
+        , winning_tile(winning_tile)
         , tumo(false)
         , err_msg(err_msg)
         , yaku_list(Yaku::Null)
@@ -87,8 +87,8 @@ struct Result {
     /* 手牌 */
     Hand tehai;
 
-    /* 和了り牌 */
-    int agarihai;
+    /* 和了牌 */
+    int winning_tile;
 
     /* 自摸和了りかどうか */
     bool tumo;
@@ -128,8 +128,8 @@ struct Result {
         }
 
         s += "[結果]\n";
-        s += fmt::format("手牌: {}, 和了り牌: {} {}\n", tehai.to_string(),
-                         Tile::Names.at(agarihai), tumo ? "ツモ" : "ロン");
+        s += fmt::format("手牌: {}, 和了牌: {} {}\n", tehai.to_string(),
+                         Tile::Names.at(winning_tile), tumo ? "ツモ" : "ロン");
 
         if (hu != -1) {
             if (!blocks.empty()) {

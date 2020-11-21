@@ -47,7 +47,7 @@ bool ScoreCalculator::initialize()
  * @brief 点数を計算する。
  * 
  * @param tehai 手牌
- * @param agarihai 和了り牌
+ * @param winning_tile 和了牌
  * @param flag フラグ
  * @return Result 結果
  * 
@@ -71,15 +71,15 @@ bool ScoreCalculator::initialize()
  *   4. 一発は立直またはダブル立直している場合のみ指定できます。
  *   5. 搶槓、嶺上開花、河底撈魚はどれか1つのみ指定できます。
  */
-Result ScoreCalculator::calc(const Hand &tehai, int agarihai, YakuList flag)
+Result ScoreCalculator::calc(const Hand &tehai, int winning_tile, YakuList flag)
 {
     // 引数をチェックする。
     std::string err_msg;
-    if (!check_arguments(tehai, agarihai, flag, err_msg))
-        return {tehai, agarihai, err_msg}; // 異常終了
+    if (!check_arguments(tehai, winning_tile, flag, err_msg))
+        return {tehai, winning_tile, err_msg}; // 異常終了
 
     if (flag & Yaku::NagasiMangan) {
-        return aggregate(tehai, agarihai, Yaku::NagasiMangan, flag & Yaku::Tumo);
+        return aggregate(tehai, winning_tile, Yaku::NagasiMangan, flag & Yaku::Tumo);
     }
 
     // 向聴数を計算する。
@@ -87,7 +87,7 @@ Result ScoreCalculator::calc(const Hand &tehai, int agarihai, YakuList flag)
     if (syanten != -1) {
         std::string err_msg =
             fmt::format("手牌 {} は和了り形ではありません。", tehai.to_string());
-        return {tehai, agarihai, err_msg};
+        return {tehai, winning_tile, err_msg};
     }
 
     YakuList yaku_list = Yaku::Null;
@@ -98,19 +98,19 @@ Result ScoreCalculator::calc(const Hand &tehai, int agarihai, YakuList flag)
     Hand merged_tehai = merge_tehai(tehai);
 
     // 役満をチェックする。
-    yaku_list |= check_yakuman(merged_tehai, agarihai, flag, syanten_type);
+    yaku_list |= check_yakuman(merged_tehai, winning_tile, flag, syanten_type);
     if (yaku_list)
-        return aggregate(tehai, agarihai, yaku_list, flag & Yaku::Tumo);
+        return aggregate(tehai, winning_tile, yaku_list, flag & Yaku::Tumo);
 
     // 面子構成に関係ない役を調べる。
-    yaku_list |= check_not_pattern_yaku(merged_tehai, agarihai, flag, syanten_type);
+    yaku_list |= check_not_pattern_yaku(merged_tehai, winning_tile, flag, syanten_type);
 
     // 面子構成に関係ある役を調べる。
     if (syanten_type == SyantenType::Normal) {
         // 一般手
         YakuList pattern_yaku_list;
         std::tie(pattern_yaku_list, hu, blocks) =
-            check_pattern_yaku(tehai, agarihai, flag);
+            check_pattern_yaku(tehai, winning_tile, flag);
         yaku_list |= pattern_yaku_list;
     }
     else {
@@ -121,22 +121,22 @@ Result ScoreCalculator::calc(const Hand &tehai, int agarihai, YakuList flag)
     if (!yaku_list) {
         // 役なしの場合
         std::string err_msg = fmt::format("役がありません。");
-        return {tehai, agarihai, err_msg};
+        return {tehai, winning_tile, err_msg};
     }
 
-    return aggregate(tehai, agarihai, yaku_list, blocks, flag & Yaku::Tumo);
+    return aggregate(tehai, winning_tile, yaku_list, blocks, flag & Yaku::Tumo);
 }
 
 /**
  * @brief 集計する。
  * 
  * @param[in] tehai 手牌
- * @param[in] agarihai 和了り牌
+ * @param[in] winning_tile 和了牌
  * @param[in] yaku_list 成功した役一覧
  * @param[in] n_yakuman 何倍役満か
  * @return Result 結果
  */
-Result ScoreCalculator::aggregate(const Hand &tehai, int agarihai, YakuList yaku_list,
+Result ScoreCalculator::aggregate(const Hand &tehai, int winning_tile, YakuList yaku_list,
                                   bool tumo)
 {
     // 何倍役満か数える。
@@ -153,7 +153,7 @@ Result ScoreCalculator::aggregate(const Hand &tehai, int agarihai, YakuList yaku
     auto [ko2oya_ron, ko2oya_tumo, ko2ko_tumo, oya2ko_ron, oya2ko_tumo] =
         calc_score(-1, -1, score_type);
 
-    return {tehai,      agarihai,    tumo,       yaku_han_list, score_type,
+    return {tehai,      winning_tile,    tumo,       yaku_han_list, score_type,
             ko2oya_ron, ko2oya_tumo, ko2ko_tumo, oya2ko_ron,    oya2ko_tumo};
 }
 
@@ -161,13 +161,13 @@ Result ScoreCalculator::aggregate(const Hand &tehai, int agarihai, YakuList yaku
  * @brief 集計する。
  * 
  * @param[in] tehai 手牌
- * @param[in] agarihai 和了り牌
+ * @param[in] winning_tile 和了牌
  * @param[in] yaku_list 成功した役一覧
  * @param[in] hu 符
  * @param[in] blocks 面子構成
  * @return Result 結果
  */
-Result ScoreCalculator::aggregate(const Hand &tehai, int agarihai, YakuList yaku_list,
+Result ScoreCalculator::aggregate(const Hand &tehai, int winning_tile, YakuList yaku_list,
                                   const std::vector<Block> &blocks, bool tumo)
 {
     // 何倍役満か数える。
@@ -209,7 +209,7 @@ Result ScoreCalculator::aggregate(const Hand &tehai, int agarihai, YakuList yaku
         hu = 25;
     }
     else {
-        std::tie(hu, hu_list) = calc_hu(blocks, agarihai, tehai.is_menzen(), tumo);
+        std::tie(hu, hu_list) = calc_hu(blocks, winning_tile, tehai.is_menzen(), tumo);
     }
 
     int score_type = Score::get_normal_score_type(han, hu);
@@ -217,7 +217,7 @@ Result ScoreCalculator::aggregate(const Hand &tehai, int agarihai, YakuList yaku
     auto [ko2oya_ron, ko2oya_tumo, ko2ko_tumo, oya2ko_ron, oya2ko_tumo] =
         calc_score(han, hu, score_type);
 
-    return {tehai,       agarihai,   tumo,       yaku_han_list, hu_list,
+    return {tehai,       winning_tile,   tumo,       yaku_han_list, hu_list,
             score_type,  han,        hu,         blocks,        ko2oya_ron,
             ko2oya_tumo, ko2ko_tumo, oya2ko_ron, oya2ko_tumo};
 }
@@ -226,18 +226,18 @@ Result ScoreCalculator::aggregate(const Hand &tehai, int agarihai, YakuList yaku
  * @brief 引数をチェックする。
  * 
  * @param[in] tehai 手牌
- * @param[in] agarihai 和了り牌
+ * @param[in] winning_tile 和了牌
  * @param[in] yaku_list フラグ
  * @param[out] err_msg エラーメッセージ
  * @return エラーがない場合は true、そうでない場合は false を返す。
  */
-bool ScoreCalculator::check_arguments(const Hand &tehai, int agarihai,
+bool ScoreCalculator::check_arguments(const Hand &tehai, int winning_tile,
                                       YakuList yaku_list, std::string &err_msg) const
 {
-    // 和了り牌をチェックする。
-    if (!tehai.contains(agarihai)) {
-        err_msg = fmt::format("和了り牌 {} が手牌 {} に含まれていません。",
-                              Tile::Names.at(agarihai), tehai.to_string());
+    // 和了牌をチェックする。
+    if (!tehai.contains(winning_tile)) {
+        err_msg = fmt::format("和了牌 {} が手牌 {} に含まれていません。",
+                              Tile::Names.at(winning_tile), tehai.to_string());
         return false;
     }
 
@@ -277,12 +277,12 @@ bool ScoreCalculator::check_arguments(const Hand &tehai, int agarihai,
  * @brief 役満を判定する。
  * 
  * @param[in] tehai 手牌
- * @param[in] agarihai 和了り牌
+ * @param[in] winning_tile 和了牌
  * @param[in] flag フラグ
  * @param[in] syanten_type 和了り形の種類
  * @return YakuList 成立した役一覧
  */
-YakuList ScoreCalculator::check_yakuman(const Hand &tehai, int agarihai, YakuList flag,
+YakuList ScoreCalculator::check_yakuman(const Hand &tehai, int winning_tile, YakuList flag,
                                         int syanten_type) const
 {
     YakuList yaku_list = Yaku::Null;
@@ -310,12 +310,12 @@ YakuList ScoreCalculator::check_yakuman(const Hand &tehai, int agarihai, YakuLis
         if (check_tuiso(tehai))
             yaku_list |= Yaku::Tuiso; // 字一色
 
-        if (check_tyurenpoto9(tehai, agarihai))
+        if (check_tyurenpoto9(tehai, winning_tile))
             yaku_list |= Yaku::Tyurenpoto9; // 純正九連宝灯
-        else if (check_tyurenpoto(tehai, agarihai))
+        else if (check_tyurenpoto(tehai, winning_tile))
             yaku_list |= Yaku::Tyurenpoto; // 九連宝灯
 
-        if (check_suanko_tanki(tehai, agarihai))
+        if (check_suanko_tanki(tehai, winning_tile))
             yaku_list |= Yaku::SuankoTanki; // 四暗刻単騎
         else if (check_suanko(tehai, flag))
             yaku_list |= Yaku::Suanko; // 四暗刻
@@ -333,7 +333,7 @@ YakuList ScoreCalculator::check_yakuman(const Hand &tehai, int agarihai, YakuLis
     }
     else {
         // 国士無双手
-        if (check_kokusi13(tehai, agarihai))
+        if (check_kokusi13(tehai, winning_tile))
             yaku_list |= Yaku::Kokusimuso13; // 国士無双13面待ち
         else
             yaku_list |= Yaku::Kokusimuso;
@@ -346,12 +346,12 @@ YakuList ScoreCalculator::check_yakuman(const Hand &tehai, int agarihai, YakuLis
  * @brief 面子構成に関係ない役を判定する。
  * 
  * @param[in] tehai 手牌
- * @param[in] agarihai 和了り牌
+ * @param[in] winning_tile 和了牌
  * @param[in] flag フラグ
  * @param[in] syanten_type 和了り形の種類
  * @return YakuList 成立した役一覧
  */
-YakuList ScoreCalculator::check_not_pattern_yaku(const Hand &tehai, int agarihai,
+YakuList ScoreCalculator::check_not_pattern_yaku(const Hand &tehai, int winning_tile,
                                                  YakuList flag, int syanten_type) const
 {
     YakuList yaku_list = Yaku::Null;
@@ -432,11 +432,11 @@ YakuList ScoreCalculator::check_not_pattern_yaku(const Hand &tehai, int agarihai
  * @brief 面子構成が関係ある役を判定する。
  * 
  * @param[in] tehai 手牌
- * @param[in] agarihai 和了り牌
+ * @param[in] winning_tile 和了牌
  * @return std::tuple<YakuList, int, std::vector<Block>> (成立した役一覧, 符, 面子構成)
  */
 std::tuple<YakuList, int, std::vector<Block>>
-ScoreCalculator::check_pattern_yaku(const Hand &tehai, int agarihai, YakuList flag)
+ScoreCalculator::check_pattern_yaku(const Hand &tehai, int winning_tile, YakuList flag)
 {
     static const std::vector<YakuList> pattern_yaku = {
         Yaku::Pinhu,        Yaku::Ipeko,          Yaku::Toitoiho,  Yaku::Sananko,
@@ -446,7 +446,7 @@ ScoreCalculator::check_pattern_yaku(const Hand &tehai, int agarihai, YakuList fl
 
     // 面子構成一覧を取得する。
     std::vector<std::vector<Block>> pattern =
-        create_block_patterns(tehai, agarihai, flag & Yaku::Tumo);
+        create_block_patterns(tehai, winning_tile, flag & Yaku::Tumo);
 
     int max_han = 0;
     int max_hu  = 0;
@@ -459,7 +459,7 @@ ScoreCalculator::check_pattern_yaku(const Hand &tehai, int agarihai, YakuList fl
 
         bool pinhu_flag = false; // 平和形かどうか (符計算で利用)
         if (tehai.is_menzen()) {
-            if (check_pinhu(blocks, agarihai)) {
+            if (check_pinhu(blocks, winning_tile)) {
                 yaku_list |= Yaku::Pinhu; // 平和
                 pinhu_flag = true;
             }
@@ -500,7 +500,7 @@ ScoreCalculator::check_pattern_yaku(const Hand &tehai, int agarihai, YakuList fl
 
         // 符を計算する。
         int hu =
-            calc_hu(blocks, agarihai, tehai.is_menzen(), flag & Yaku::Tumo, pinhu_flag);
+            calc_hu(blocks, winning_tile, tehai.is_menzen(), flag & Yaku::Tumo, pinhu_flag);
 
         // 符を計算する。
         if (max_han < han || (max_han == han && max_hu < hu)) {
@@ -518,12 +518,12 @@ ScoreCalculator::check_pattern_yaku(const Hand &tehai, int agarihai, YakuList fl
  * @brief 符を計算する。
  * 
  * @param[in] blocks 面子構成
- * @param[in] agarihai 和了り牌
+ * @param[in] winning_tile 和了牌
  * @param[in] menzen 門前かどうか
  * @param[in] tumo 自摸和了りかどうか
  * @return int 符
  */
-int ScoreCalculator::calc_hu(const std::vector<Block> &blocks, int agarihai,
+int ScoreCalculator::calc_hu(const std::vector<Block> &blocks, int winning_tile,
                              bool menzen, bool tumo, bool pinhu) const
 {
     // 符計算の例外
@@ -547,7 +547,7 @@ int ScoreCalculator::calc_hu(const std::vector<Block> &blocks, int agarihai,
         hu += 2; // 門前ツモ、非門前ツモ
 
     // 待ちによる符
-    int mati = get_mati_type(blocks, agarihai);
+    int mati = get_mati_type(blocks, winning_tile);
     if (mati == Mati::Kantyan || mati == Mati::Pentyan || mati == Mati::Tanki)
         hu += 2; // 嵌張待ち、辺張待ち、単騎待ち
 
@@ -594,12 +594,12 @@ int ScoreCalculator::calc_hu(const std::vector<Block> &blocks, int agarihai,
  * @brief 符を計算する (内訳)。
  */
 std::tuple<int, std::vector<std::tuple<std::string, int>>>
-ScoreCalculator::calc_hu(const std::vector<Block> &blocks, int agarihai, bool menzen,
+ScoreCalculator::calc_hu(const std::vector<Block> &blocks, int winning_tile, bool menzen,
                          bool tumo) const
 {
     std::vector<std::tuple<std::string, int>> hu;
 
-    bool pinhu = check_pinhu(blocks, agarihai);
+    bool pinhu = check_pinhu(blocks, winning_tile);
 
     // 符計算の例外
     //////////////////////////
@@ -631,7 +631,7 @@ ScoreCalculator::calc_hu(const std::vector<Block> &blocks, int agarihai, bool me
         hu.emplace_back("自摸加符", 0);
 
     // 待ちによる符
-    int mati = get_mati_type(blocks, agarihai);
+    int mati = get_mati_type(blocks, winning_tile);
     if (mati == Mati::Kantyan)
         hu.emplace_back("待ちによる符: 嵌張待ち", 2);
     else if (mati == Mati::Pentyan)
@@ -839,7 +839,7 @@ bool ScoreCalculator::check_tuiso(const Hand &tehai) const
 /**
  * @brief 九連宝灯かどうかを判定する。
  */
-bool ScoreCalculator::check_tyurenpoto(const Hand &tehai, int agarihai) const
+bool ScoreCalculator::check_tyurenpoto(const Hand &tehai, int winning_tile) const
 {
     const auto &s_tbl = SyantenCalculator::s_tbl_;
 
@@ -847,11 +847,11 @@ bool ScoreCalculator::check_tyurenpoto(const Hand &tehai, int agarihai) const
         return false; // 副露している場合
 
     int key;
-    if (agarihai <= Tile::Manzu9)
+    if (winning_tile <= Tile::Manzu9)
         key = tehai.manzu;
-    else if (agarihai <= Tile::Pinzu9)
+    else if (winning_tile <= Tile::Pinzu9)
         key = tehai.pinzu;
-    else if (agarihai <= Tile::Sozu9)
+    else if (winning_tile <= Tile::Sozu9)
         key = tehai.sozu;
     else
         return false; // 字牌
@@ -912,7 +912,7 @@ bool ScoreCalculator::check_sukantu(const Hand &tehai) const
 /**
  * @brief 四暗刻単騎かどうかを判定する。
  */
-bool ScoreCalculator::check_suanko_tanki(const Hand &tehai, int agarihai) const
+bool ScoreCalculator::check_suanko_tanki(const Hand &tehai, int winning_tile) const
 {
     const auto &s_tbl = SyantenCalculator::s_tbl_;
     const auto &z_tbl = SyantenCalculator::z_tbl_;
@@ -920,18 +920,18 @@ bool ScoreCalculator::check_suanko_tanki(const Hand &tehai, int agarihai) const
     if (!tehai.is_menzen())
         return false; // 門前でない場合
 
-    // 和了り牌の種類で雀頭が構成されているかどうかを調べる。
+    // 和了牌の種類で雀頭が構成されているかどうかを調べる。
     int key;
-    if (agarihai <= Tile::Manzu9)
+    if (winning_tile <= Tile::Manzu9)
         key = tehai.manzu;
-    else if (agarihai <= Tile::Pinzu9)
+    else if (winning_tile <= Tile::Pinzu9)
         key = tehai.pinzu;
-    else if (agarihai <= Tile::Sozu9)
+    else if (winning_tile <= Tile::Sozu9)
         key = tehai.sozu;
     else
         key = tehai.zihai;
 
-    if ((key & Bit::mask[agarihai]) != Bit::hai2[agarihai])
+    if ((key & Bit::mask[winning_tile]) != Bit::hai2[winning_tile])
         return false;
 
     // 刻子が4つかどうかを調べる。
@@ -956,21 +956,21 @@ bool ScoreCalculator::check_daisusi(const Hand &tehai) const
 /**
  * @brief 純正九連宝灯かどうかを判定する。
  */
-bool ScoreCalculator::check_tyurenpoto9(const Hand &tehai, int agarihai) const
+bool ScoreCalculator::check_tyurenpoto9(const Hand &tehai, int winning_tile) const
 {
     if (tehai.is_melded())
         return false; // 副露している場合
 
-    // 「和了り牌を除いた場合に 1112345678999 となっている」かどうかを調べる。
+    // 「和了牌を除いた場合に 1112345678999 となっている」かどうかを調べる。
     //          | 9 | 8 | 7 | 6 | 5 | 4 | 3 | 2 | 1 |
     int mask = 0b011'001'001'001'001'001'001'001'011;
 
-    if (agarihai <= Tile::Manzu9)
-        return tehai.manzu - Bit::hai1[agarihai] == mask;
-    else if (agarihai <= Tile::Pinzu9)
-        return tehai.pinzu - Bit::hai1[agarihai] == mask;
-    else if (agarihai <= Tile::Sozu9)
-        return tehai.sozu - Bit::hai1[agarihai] == mask;
+    if (winning_tile <= Tile::Manzu9)
+        return tehai.manzu - Bit::hai1[winning_tile] == mask;
+    else if (winning_tile <= Tile::Pinzu9)
+        return tehai.pinzu - Bit::hai1[winning_tile] == mask;
+    else if (winning_tile <= Tile::Sozu9)
+        return tehai.sozu - Bit::hai1[winning_tile] == mask;
 
     return false;
 }
@@ -978,22 +978,22 @@ bool ScoreCalculator::check_tyurenpoto9(const Hand &tehai, int agarihai) const
 /**
  * @brief 国士無双13面待ちかどうかを判定する。
  */
-bool ScoreCalculator::check_kokusi13(const Hand &tehai, int agarihai) const
+bool ScoreCalculator::check_kokusi13(const Hand &tehai, int winning_tile) const
 {
-    // 「和了り牌を除いた場合に幺九牌がすべて1個ずつある」かどうかを調べる。
+    // 「和了牌を除いた場合に幺九牌がすべて1個ずつある」かどうかを調べる。
     int manzu = tehai.manzu;
     int pinzu = tehai.pinzu;
     int sozu  = tehai.sozu;
     int zihai = tehai.zihai;
 
-    if (agarihai <= Tile::Manzu9)
-        manzu -= Bit::hai1[agarihai];
-    else if (agarihai <= Tile::Pinzu9)
-        pinzu -= Bit::hai1[agarihai];
-    else if (agarihai <= Tile::Sozu9)
-        sozu -= Bit::hai1[agarihai];
+    if (winning_tile <= Tile::Manzu9)
+        manzu -= Bit::hai1[winning_tile];
+    else if (winning_tile <= Tile::Pinzu9)
+        pinzu -= Bit::hai1[winning_tile];
+    else if (winning_tile <= Tile::Sozu9)
+        sozu -= Bit::hai1[winning_tile];
     else
-        zihai -= Bit::hai1[agarihai];
+        zihai -= Bit::hai1[winning_tile];
 
     //               | 9 | 8 | 7 | 6 | 5 | 4 | 3 | 2 | 1 |
     int roto_mask = 0b001'000'000'000'000'000'000'000'001;
@@ -1086,7 +1086,7 @@ bool ScoreCalculator::check_sankantu(const Hand &tehai) const
 /**
  * @brief 平和形かどうかを判定する。(門前かどうかは呼び出し側でチェックすること)
  */
-bool ScoreCalculator::check_pinhu(const std::vector<Block> blocks, int agarihai) const
+bool ScoreCalculator::check_pinhu(const std::vector<Block> blocks, int winning_tile) const
 {
     // すべてのブロックが順子または役牌でない対子かどうか
     for (const auto &block : blocks) {
@@ -1098,7 +1098,7 @@ bool ScoreCalculator::check_pinhu(const std::vector<Block> blocks, int agarihai)
     }
 
     // 両面待ちかどうかを判定する。
-    return get_mati_type(blocks, agarihai) == Mati::Ryanmen;
+    return get_mati_type(blocks, winning_tile) == Mati::Ryanmen;
 }
 
 /**
@@ -1447,12 +1447,12 @@ bool ScoreCalculator::is_yakuhai(int hai) const
  * @brief 手牌の可能なブロック構成パターンを生成する。
  * 
  * @param[in] tehai 手牌
- * @param[in] agarihai 和了り牌
+ * @param[in] winning_tile 和了牌
  * @param[in] tumo ツモかどうか
  * @return std::vector<std::vector<Block>> 面子構成の一覧
  */
 std::vector<std::vector<Block>>
-ScoreCalculator::create_block_patterns(const Hand &tehai, int agarihai, bool tumo) const
+ScoreCalculator::create_block_patterns(const Hand &tehai, int winning_tile, bool tumo) const
 {
     std::vector<std::vector<Block>> pattern;
     std::vector<Block> blocks(5);
@@ -1473,7 +1473,7 @@ ScoreCalculator::create_block_patterns(const Hand &tehai, int agarihai, bool tum
     }
 
     // 手牌の切り分けパターンを列挙する。
-    create_block_patterns(tehai, agarihai, tumo, pattern, blocks, i);
+    create_block_patterns(tehai, winning_tile, tumo, pattern, blocks, i);
 
     // for (const auto &p : pattern) {
     //     for (const auto &b : p)
@@ -1481,12 +1481,12 @@ ScoreCalculator::create_block_patterns(const Hand &tehai, int agarihai, bool tum
     //     std::cout << std::endl;
     // }
 
-    // 和了り牌と同じ牌が手牌に3枚しかない刻子は明刻子になる。
-    // int n_tiles = tehai.num_tiles(agarihai);
+    // 和了牌と同じ牌が手牌に3枚しかない刻子は明刻子になる。
+    // int n_tiles = tehai.num_tiles(winning_tile);
     // for (auto &blocks : pattern) {
     //     for (auto &block : blocks) {
     //         if (!(block.type & Block::Huro) && block.type == Block::Kotu &&
-    //             block.minhai == agarihai && n_tiles < 4) {
+    //             block.minhai == winning_tile && n_tiles < 4) {
     //             block.type |= Block::Huro;
     //             break;
     //         }
@@ -1500,12 +1500,12 @@ ScoreCalculator::create_block_patterns(const Hand &tehai, int agarihai, bool tum
  * @brief 役満かどうかを判定する。
  * 
  * @param[in] tehai 手牌
- * @param[in] agarihai 和了り牌
+ * @param[in] winning_tile 和了牌
  * @param[in] flag 成立フラグ
  * @param[in] syanten_type 和了り形の種類
  * @return YakuList 成立した役一覧
  */
-void ScoreCalculator::create_block_patterns(const Hand &tehai, int agarihai, bool tumo,
+void ScoreCalculator::create_block_patterns(const Hand &tehai, int winning_tile, bool tumo,
                                             std::vector<std::vector<Block>> &pattern,
                                             std::vector<Block> &blocks, size_t i,
                                             int d) const
@@ -1525,13 +1525,13 @@ void ScoreCalculator::create_block_patterns(const Hand &tehai, int agarihai, boo
                     continue;
 
                 if (!syuntu && block.type == Block::Syuntu &&
-                    block.minhai <= agarihai && agarihai <= block.minhai + 2) {
+                    block.minhai <= winning_tile && winning_tile <= block.minhai + 2) {
                     block.type |= Block::Huro;
                     pattern.push_back(blocks);
                     block.type &= ~Block::Huro;
                     syuntu = true;
                 }
-                else if (block.type != Block::Syuntu && block.minhai == agarihai) {
+                else if (block.type != Block::Syuntu && block.minhai == winning_tile) {
                     block.type |= Block::Huro;
                     pattern.push_back(blocks);
                     block.type &= ~Block::Huro;
@@ -1545,49 +1545,49 @@ void ScoreCalculator::create_block_patterns(const Hand &tehai, int agarihai, boo
     if (d == 0) {
         // 萬子の面子構成
         if (s_tbl_[tehai.manzu].empty())
-            create_block_patterns(tehai, agarihai, tumo, pattern, blocks, i, d + 1);
+            create_block_patterns(tehai, winning_tile, tumo, pattern, blocks, i, d + 1);
 
         for (const auto &manzu_pattern : s_tbl_[tehai.manzu]) {
             for (const auto &block : manzu_pattern)
                 blocks[i++] = block;
-            create_block_patterns(tehai, agarihai, tumo, pattern, blocks, i, d + 1);
+            create_block_patterns(tehai, winning_tile, tumo, pattern, blocks, i, d + 1);
             i -= manzu_pattern.size();
         }
     }
     else if (d == 1) {
         // 筒子の面子構成
         if (s_tbl_[tehai.pinzu].empty())
-            create_block_patterns(tehai, agarihai, tumo, pattern, blocks, i, d + 1);
+            create_block_patterns(tehai, winning_tile, tumo, pattern, blocks, i, d + 1);
 
         for (const auto &pinzu_pattern : s_tbl_[tehai.pinzu]) {
             for (const auto &block : pinzu_pattern)
                 blocks[i++] = {block.type, block.minhai + 9};
 
-            create_block_patterns(tehai, agarihai, tumo, pattern, blocks, i, d + 1);
+            create_block_patterns(tehai, winning_tile, tumo, pattern, blocks, i, d + 1);
             i -= pinzu_pattern.size();
         }
     }
     else if (d == 2) {
         // 索子の面子構成
         if (s_tbl_[tehai.sozu].empty())
-            create_block_patterns(tehai, agarihai, tumo, pattern, blocks, i, d + 1);
+            create_block_patterns(tehai, winning_tile, tumo, pattern, blocks, i, d + 1);
 
         for (const auto &sozu_pattern : s_tbl_[tehai.sozu]) {
             for (const auto &block : sozu_pattern)
                 blocks[i++] = {block.type, block.minhai + 18};
-            create_block_patterns(tehai, agarihai, tumo, pattern, blocks, i, d + 1);
+            create_block_patterns(tehai, winning_tile, tumo, pattern, blocks, i, d + 1);
             i -= sozu_pattern.size();
         }
     }
     else if (d == 3) {
         // 字牌の面子構成
         if (z_tbl_[tehai.zihai].empty())
-            create_block_patterns(tehai, agarihai, tumo, pattern, blocks, i, d + 1);
+            create_block_patterns(tehai, winning_tile, tumo, pattern, blocks, i, d + 1);
 
         for (const auto &zihai_pattern : z_tbl_[tehai.zihai]) {
             for (const auto &block : zihai_pattern)
                 blocks[i++] = {block.type, block.minhai + 27};
-            create_block_patterns(tehai, agarihai, tumo, pattern, blocks, i, d + 1);
+            create_block_patterns(tehai, winning_tile, tumo, pattern, blocks, i, d + 1);
             i -= zihai_pattern.size();
         }
     }
