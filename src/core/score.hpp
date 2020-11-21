@@ -59,8 +59,7 @@ public:
     std::tuple<int, std::vector<std::tuple<std::string, int>>>
     calc_hu(const std::vector<Block> &blocks, int winning_tile, bool menzen,
             bool tumo) const;
-    std::tuple<int, int, int, int, int> calc_score(int han, int hu,
-                                                   int score_type) const;
+    std::vector<int> calc_score(int han, int hu, int score_type, bool tumo) const;
 
     // 役満をチェックする関数
     bool check_ryuiso(const Hand &tehai) const;

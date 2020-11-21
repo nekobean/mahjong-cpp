@@ -147,7 +147,7 @@ public:
 
     static bool check_exclusive(unsigned long long x)
     {
-        return x && !(x & (x - 1));
+        return !x || !(x & (x - 1));
     }
 
     /**

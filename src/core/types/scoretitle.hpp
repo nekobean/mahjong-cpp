@@ -22,6 +22,10 @@ struct Hu {
         Hu110, /* 110符 */
     };
 
+    static inline std::map<int, int> Values = {
+        {Null, -1}, {Hu20, 20}, {Hu25, 25}, {Hu30, 30}, {Hu40, 40},   {Hu50, 50},
+        {Hu60, 60}, {Hu70, 70}, {Hu80, 80}, {Hu90, 90}, {Hu100, 100}, {Hu110, 110}};
+
     static inline std::map<int, std::string> Names = {
         {Null, "Null"}, {Hu20, "20符"}, {Hu25, "25符"},   {Hu30, "30符"},
         {Hu40, "40符"}, {Hu50, "50符"}, {Hu60, "60符"},   {Hu70, "70符"},
@@ -106,7 +110,7 @@ struct ScoreTitle {
     static int get_score_title(int hu, int han)
     {
         if (han < 5)
-            return is_mangan[hu][han] ? Mangan : Null;
+            return is_mangan[hu][han - 1] ? Mangan : Null;
         if (han == 5)
             return Mangan;
         else if (han <= 7)

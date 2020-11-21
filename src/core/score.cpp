@@ -98,24 +98,26 @@ Result ScoreCalculator::calc(const Hand &hand, int winning_tile, YakuList flag)
     Hand merged_hand = merge_hand(hand);
 
     // 役満をチェックする。
-    yaku_list |= check_yakuman(merged_hand, winning_tile, flag, syanten_type);
+    yaku_list |=
+        check_yakuman(merged_hand, aka2normal(winning_tile), flag, syanten_type);
     if (yaku_list)
         return aggregate(hand, winning_tile, yaku_list, flag & Yaku::Tumo);
 
     // 面子構成に関係ない役を調べる。
-    yaku_list |= check_not_pattern_yaku(merged_hand, winning_tile, flag, syanten_type);
+    yaku_list |= check_not_pattern_yaku(merged_hand, aka2normal(winning_tile), flag,
+                                        syanten_type);
 
     // 面子構成に関係ある役を調べる。
     if (syanten_type == SyantenType::Normal) {
         // 一般手
         YakuList pattern_yaku_list;
         std::tie(pattern_yaku_list, hu, blocks) =
-            check_pattern_yaku(hand, winning_tile, flag);
+            check_pattern_yaku(hand, aka2normal(winning_tile), flag);
         yaku_list |= pattern_yaku_list;
     }
     else {
         // 七対子手
-        hu = 25;
+        hu = Hu::Hu25;
     }
 
     if (!yaku_list) {
@@ -150,11 +152,9 @@ Result ScoreCalculator::aggregate(const Hand &hand, int winning_tile,
     }
     int score_title = ScoreTitle::get_yakuman_title(cnt);
 
-    auto [ko2oya_ron, ko2oya_tumo, ko2ko_tumo, oya2ko_ron, oya2ko_tumo] =
-        calc_score(-1, -1, score_title);
+    auto score = calc_score(-1, -1, score_title, tumo);
 
-    return {hand,       winning_tile, tumo,       yaku_han_list, score_title,
-            ko2oya_ron, ko2oya_tumo,  ko2ko_tumo, oya2ko_ron,    oya2ko_tumo};
+    return {hand, winning_tile, tumo, yaku_han_list, score_title, score};
 }
 
 /**
@@ -207,20 +207,19 @@ Result ScoreCalculator::aggregate(const Hand &hand, int winning_tile,
     std::vector<std::tuple<std::string, int>> hu_list;
     if (yaku_list & Yaku::Tiitoitu) {
         hu_list.emplace_back("七対子", 25);
-        hu = 25;
+        hu = Hu::Hu25;
     }
     else {
-        std::tie(hu, hu_list) = calc_hu(blocks, winning_tile, hand.is_menzen(), tumo);
+        std::tie(hu, hu_list) =
+            calc_hu(blocks, aka2normal(winning_tile), hand.is_menzen(), tumo);
     }
 
     int score_title = ScoreTitle::get_score_title(hu, han);
 
-    auto [ko2oya_ron, ko2oya_tumo, ko2ko_tumo, oya2ko_ron, oya2ko_tumo] =
-        calc_score(han, hu, score_title);
+    auto score = calc_score(han, hu, score_title, tumo);
 
-    return {hand,        winning_tile, tumo,       yaku_han_list, hu_list,
-            score_title, han,          hu,         blocks,        ko2oya_ron,
-            ko2oya_tumo, ko2ko_tumo,   oya2ko_ron, oya2ko_tumo};
+    return {hand,        winning_tile, tumo, yaku_han_list, hu_list,
+            score_title, han,          hu,   blocks,        score};
 }
 
 /**
@@ -243,7 +242,7 @@ bool ScoreCalculator::check_arguments(const Hand &hand, int winning_tile,
     }
 
     // フラグをチェックする。
-    if (Bit::check_exclusive(yaku_list & (Yaku::Tenho | Yaku::Tiho | Yaku::Renho))) {
+    if (!Bit::check_exclusive(yaku_list & (Yaku::Tenho | Yaku::Tiho | Yaku::Renho))) {
         err_msg = "天和、地和、人和はどれか1つのみ指定できます。";
         return false;
     }
@@ -259,8 +258,8 @@ bool ScoreCalculator::check_arguments(const Hand &hand, int winning_tile,
         return false;
     }
 
-    if (Bit::check_exclusive(yaku_list & (Yaku::Tyankan | Yaku::Rinsyankaiho |
-                                          Yaku::Haiteitumo | Yaku::Hoteiron))) {
+    if (!Bit::check_exclusive(yaku_list & (Yaku::Tyankan | Yaku::Rinsyankaiho |
+                                           Yaku::Haiteitumo | Yaku::Hoteiron))) {
         err_msg = "搶槓、嶺上開花、海底撈月、河底撈魚はどれか1つのみ指定できます。";
         return false;
     }
@@ -380,8 +379,8 @@ YakuList ScoreCalculator::check_not_pattern_yaku(const Hand &hand, int winning_t
 
     if (check_tanyao(hand))
         yaku_list |= Yaku::Tanyao; // 断幺九
-    else if (check_honroto(hand))
-        yaku_list |= Yaku::Honroto; // 混老頭
+    // else if (check_honroto(hand))
+    //     yaku_list |= Yaku::Honroto; // 混老頭
     else if (check_honiso(hand))
         yaku_list |= Yaku::Honiso; // 混一色
     else if (check_tiniso(hand))
@@ -485,6 +484,8 @@ ScoreCalculator::check_pattern_yaku(const Hand &hand, int winning_tile, YakuList
             yaku_list |= Yaku::Tyanta; // 混全帯幺九
         else if (tyanta_type == 2)
             yaku_list |= Yaku::Zyuntyanta; // 純全帯幺九
+        else if (tyanta_type == 3)
+            yaku_list |= Yaku::Honroto; // 純全帯幺九
 
         if (check_toitoiho(blocks))
             yaku_list |= Yaku::Toitoiho; // 対々和
@@ -531,9 +532,9 @@ int ScoreCalculator::calc_hu(const std::vector<Block> &blocks, int winning_tile,
     // 符計算の例外
     //////////////////////////
     if (pinhu && tumo)
-        return 20; // 平和形 + ツモ
+        return Hu::Hu20; // 平和形 + ツモ
     if (pinhu && !tumo)
-        return 30; // 平和形 + ロン
+        return Hu::Hu30; // 平和形 + ロン
 
     // 通常の符計算
     //////////////////////////
@@ -606,13 +607,13 @@ ScoreCalculator::calc_hu(const std::vector<Block> &blocks, int winning_tile,
 
     // 符計算の例外
     //////////////////////////
-    if (pinhu && tumo) {
+    if (pinhu && tumo && menzen) { // 平和、ツモ、門前
         hu.emplace_back("平和・ツモ", 20);
-        return {20, hu};
+        return {Hu::Hu20, hu};
     }
-    else if (pinhu && !tumo && !menzen) {
+    else if (pinhu && !tumo && !menzen) { // 平和、ロン、非門前
         hu.emplace_back("喰い平和・ロン", 30);
-        return {30, hu};
+        return {Hu::Hu30, hu};
     }
 
     // 通常の符計算
@@ -669,7 +670,7 @@ ScoreCalculator::calc_hu(const std::vector<Block> &blocks, int winning_tile,
                 hu.emplace_back(
                     fmt::format("面子構成による符: {} (断幺牌)", block.to_string()),
                     16);
-            else if (block.type == (Block::Kantu | Block::Huro) && yaotyu)
+            else if (block.type == (Block::Kotu | Block::Huro) && yaotyu)
                 hu.emplace_back(
                     fmt::format("面子構成による符: {} (幺九牌)", block.to_string()), 4);
             else if (block.type == Block::Kotu && yaotyu)
@@ -1203,7 +1204,8 @@ int ScoreCalculator::check_tyanta(const std::vector<Block> blocks) const
 {
     // 条件「順子がない」
     bool yaotyu = true; // すべてのブロックに幺九牌が含まれるかどうか
-    bool zihai = false; // 字牌が含まれるかどうか
+    bool zihai  = false; // 字牌が含まれるかどうか
+    bool syuntu = false; // 順子が含まれるかどうか (順子が1つもない場合、混老頭になる)
     for (const auto &block : blocks) {
         if (block.type & Block::Syuntu) {
             // 順子の場合
@@ -1213,6 +1215,7 @@ int ScoreCalculator::check_tyanta(const std::vector<Block> blocks) const
                 block.min_tile == Tile::Manzu1 || block.min_tile == Tile::Manzu7 ||
                 block.min_tile == Tile::Pinzu1 || block.min_tile == Tile::Pinzu7 ||
                 block.min_tile == Tile::Sozu1 || block.min_tile == Tile::Sozu7;
+            syuntu = true;
         }
         else {
             // 刻子、槓子、対子の場合、
@@ -1226,12 +1229,17 @@ int ScoreCalculator::check_tyanta(const std::vector<Block> blocks) const
             // ブロックが字牌かどうか
             zihai |= block.min_tile >= Tile::Ton;
         }
+
+        if (!yaotyu)
+            return 0;
     }
 
-    if (yaotyu && zihai)
-        return 1; // 混全帯幺九
-    else if (yaotyu && !zihai)
+    if (zihai && !syuntu)
+        return 3; // 混老頭 (字牌がないと清老頭になる)
+    else if (!zihai && syuntu)
         return 2; // 純全帯幺九
+    else if (zihai && syuntu)
+        return 1; // 混全帯幺九
 
     return 0;
 }
@@ -1265,12 +1273,10 @@ int ScoreCalculator::count_dora(const Hand &hand, std::vector<int> dora_tiles) c
 
         for (const auto &block : hand.melded_blocks) {
             for (auto tile : block.tiles) {
-                if (tile == dora)
+                if (aka2normal(tile) == dora)
                     n_dora++;
             }
         }
-
-        return n_dora;
     }
 
     return n_dora;
@@ -1387,6 +1393,8 @@ std::string ScoreCalculator::to_string() const
 bool ScoreCalculator::make_table(const std::string &path,
                                  std::map<int, std::vector<std::vector<Block>>> &table)
 {
+    table.clear();
+
     std::FILE *fp = std::fopen(path.c_str(), "rb");
     if (!fp) {
         spdlog::error("Failed to open {}.", path);
@@ -1467,16 +1475,17 @@ std::vector<std::vector<Block>> ScoreCalculator::create_block_patterns(const Han
     int i = 0;
 
     // 副露ブロックをブロック一覧に追加する。
-    for (const auto &huro_block : hand.melded_blocks) {
-        if (huro_block.type == MeldType::Pon)
+    for (const auto &melded_block : hand.melded_blocks) {
+        if (melded_block.type == MeldType::Pon)
             blocks[i].type = Block::Kotu | Block::Huro;
-        else if (huro_block.type == MeldType::Ti)
+        else if (melded_block.type == MeldType::Ti)
             blocks[i].type = Block::Syuntu | Block::Huro;
-        else if (huro_block.type == MeldType::Ankan)
+        else if (melded_block.type == MeldType::Ankan)
             blocks[i].type = Block::Kantu;
         else
             blocks[i].type = Block::Kantu | Block::Huro;
-        blocks[i].min_tile = aka2normal(huro_block.tiles.front());
+        blocks[i].min_tile = aka2normal(melded_block.tiles.front());
+
         i++;
     }
 
@@ -1604,29 +1613,55 @@ void ScoreCalculator::create_block_patterns(const Hand &hand, int winning_tile,
     }
 }
 
-std::tuple<int, int, int, int, int> ScoreCalculator::calc_score(int han, int hu,
-                                                                int score_title) const
+std::vector<int> ScoreCalculator::calc_score(int han, int hu, int score_title,
+                                             bool tumo) const
 {
-    int ko2oya_ron, ko2oya_tumo, ko2ko_tumo, oya2ko_ron, oya2ko_tumo;
+    bool is_host = zikaze_ == Tile::Ton;
 
-    if (score_title == ScoreTitle::Null) {
-        // 満貫未満
-        ko2oya_ron  = ScoreBoard::Ko2OyaRon[hu][han - 1];  // 子 → 親ロン
-        ko2oya_tumo = ScoreBoard::Ko2OyaTumo[hu][han - 1]; // 子 → 親ツモ
-        ko2ko_tumo  = ScoreBoard::Ko2KoTumo[hu][han - 1];  // 子 → 子ツモ
-        oya2ko_ron  = ScoreBoard::Oya2KoRon[hu][han - 1];  // 親 → 子ロン
-        oya2ko_tumo = ScoreBoard::Oya2KoTumo[hu][han - 1]; // 親 → 子ツモ
+    if (tumo && is_host) {
+        // 親のツモ和了
+        int non_host_payment = (score_title == ScoreTitle::Null
+                                    ? ScoreBoard::Ko2OyaTumo[hu][han - 1]
+                                    : ScoreBoard::Ko2OyaTumoOverMangan[score_title]) +
+                               100 * n_tumibo_;
+        int income = 1000 * n_kyotakubo_ + non_host_payment * 3;
+
+        return {income, non_host_payment};
+    }
+    else if (tumo && !is_host) {
+        // 子のツモ和了
+        int host_payment = (score_title == ScoreTitle::Null
+                                ? ScoreBoard::Oya2KoTumo[hu][han - 1]
+                                : ScoreBoard::Oya2KoTumoOverMangan[score_title]) +
+                           100 * n_tumibo_;
+        int non_host_payment = (score_title == ScoreTitle::Null
+                                    ? ScoreBoard::Ko2KoTumo[hu][han - 1]
+                                    : ScoreBoard::Ko2KoTumoOverMangan[score_title]) +
+                               100 * n_tumibo_;
+        int income = 1000 * n_kyotakubo_ + host_payment + non_host_payment * 2;
+
+        return {income, host_payment, non_host_payment};
+    }
+    else if (!tumo && is_host) {
+        // 親のロン和了り
+        int payment = (score_title == ScoreTitle::Null
+                           ? ScoreBoard::Ko2OyaRon[hu][han - 1]
+                           : ScoreBoard::Ko2OyaRonOverMangan[score_title]) +
+                      300 * n_tumibo_;
+        int income = 1000 * n_kyotakubo_ + payment;
+
+        return {income, payment};
     }
     else {
-        // 満貫以上
-        ko2oya_ron  = ScoreBoard::Ko2OyaRonOverMangan[score_title]; // 子 → 親ロン
-        ko2oya_tumo = ScoreBoard::Ko2OyaTumoOverMangan[score_title]; // 子 → 親ツモ
-        ko2ko_tumo  = ScoreBoard::Ko2KoTumoOverMangan[score_title]; // 子 → 子ツモ
-        oya2ko_ron  = ScoreBoard::Oya2KoRonOverMangan[score_title]; // 親 → 子ロン
-        oya2ko_tumo = ScoreBoard::Oya2KoTumoOverMangan[score_title]; // 親 → 子ツモ
-    }
+        // 子のロン和了り
+        int payment = (score_title == ScoreTitle::Null
+                           ? ScoreBoard::Oya2KoRon[hu][han - 1]
+                           : ScoreBoard::Oya2KoRonOverMangan[score_title]) +
+                      300 * n_tumibo_;
+        int income = 1000 * n_kyotakubo_ + payment;
 
-    return {ko2oya_ron, ko2oya_tumo, ko2ko_tumo, oya2ko_ron, oya2ko_tumo};
+        return {income, payment};
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////

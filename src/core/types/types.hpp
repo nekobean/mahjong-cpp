@@ -25,8 +25,8 @@ struct Result {
     Result(const Hand &tehai, int winning_tile, bool tumo,
            const std::vector<std::tuple<YakuList, int>> &yaku_list,
            const std::vector<std::tuple<std::string, int>> &hu_list, int score_title,
-           int han, int hu, const std::vector<Block> &blocks, int ko2oya_ron,
-           int ko2oya_tumo, int ko2ko_tumo, int oya2ko_ron, int oya2ko_tumo)
+           int han, int hu, const std::vector<Block> &blocks,
+           const std::vector<int> &score)
         : success(true)
         , tehai(tehai)
         , winning_tile(winning_tile)
@@ -35,21 +35,16 @@ struct Result {
         , hu_list(hu_list)
         , score_title(score_title)
         , han(han)
-        , hu(hu)
+        , hu(Hu::Values.at(hu))
         , blocks(blocks)
-        , ko2oya_ron(ko2oya_ron)
-        , ko2oya_tumo(ko2oya_tumo)
-        , ko2ko_tumo(ko2ko_tumo)
-        , oya2ko_ron(oya2ko_ron)
-        , oya2ko_tumo(oya2ko_tumo)
+        , score(score)
     {
     }
 
     // 役満、流し満貫
     Result(const Hand &tehai, int winning_tile, bool tumo,
            const std::vector<std::tuple<YakuList, int>> &yaku_list, int score_title,
-           int ko2oya_ron, int ko2oya_tumo, int ko2ko_tumo, int oya2ko_ron,
-           int oya2ko_tumo)
+           const std::vector<int> &score)
         : success(true)
         , tehai(tehai)
         , winning_tile(winning_tile)
@@ -59,11 +54,7 @@ struct Result {
         , han(-1)
         , hu(-1)
         , blocks(blocks)
-        , ko2oya_ron(ko2oya_ron)
-        , ko2oya_tumo(ko2oya_tumo)
-        , ko2ko_tumo(ko2ko_tumo)
-        , oya2ko_ron(oya2ko_ron)
-        , oya2ko_tumo(oya2ko_tumo)
+        , score(score)
     {
     }
 
@@ -109,11 +100,12 @@ struct Result {
     /* 符 */
     int hu;
 
-    int ko2oya_ron;
-    int ko2oya_tumo;
-    int ko2ko_tumo;
-    int oya2ko_ron;
-    int oya2ko_tumo;
+    /* 点数
+     * 子ツモの場合: [和了者の獲得点数, 親の支払い点数, 子の支払い点数]
+     * 親ツモの場合: [和了者の獲得点数, 獲得点数, 子の支払い点数]
+     * ロンの場合: [和了者の獲得点数, 獲得点数, 放銃者の支払い点数]
+     */
+    std::vector<int> score;
 
     /* 面子構成 */
     std::vector<Block> blocks;
@@ -140,14 +132,14 @@ struct Result {
 
             // 符
             for (const auto &[type, hu] : hu_list)
-                s += fmt::format("{} {}符\n", type, hu);
+                s += fmt::format("* {} {}符\n", type, hu);
 
             // 通常役
             s += "役:\n";
             for (auto &[yaku, n] : yaku_list)
                 s += fmt::format(" {} {}翻\n", Yaku::Info[yaku].name, n);
 
-            s += fmt::format("{}符{}翻\n", Hu::Names[hu], han);
+            s += fmt::format("{}符{}翻\n", hu, han);
             if (score_title != ScoreTitle::Null)
                 s += ScoreTitle::Names[score_title] + "\n";
         }
@@ -159,10 +151,13 @@ struct Result {
             s += ScoreTitle::Names[score_title] + "\n";
         }
 
-        s += fmt::format("親のロン: {}点\n", ko2oya_ron);
-        s += fmt::format("子のロン: {}点\n", oya2ko_ron);
-        s += fmt::format("親のツモ: {}点オール\n", ko2oya_tumo);
-        s += fmt::format("子のツモ: 親 {}点 / 子 {}点\n", oya2ko_tumo, ko2ko_tumo);
+        if (score.size() == 3)
+            s += fmt::format(
+                "和了者の獲得点数: {}点, 親の支払い点数: {}, 子の支払い点数: {}\n",
+                score[0], score[1], score[2]);
+        else
+            s += fmt::format("和了者の獲得点数: {}点, 放銃者の支払い点数: {}\n",
+                             score[0], score[1]);
 
         return s;
     }
