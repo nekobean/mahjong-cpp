@@ -1,6 +1,6 @@
 import numpy as np
 
-from mahjong import *
+from utils import *
 
 np.random.seed(0)
 

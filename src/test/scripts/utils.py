@@ -176,3 +176,9 @@ TileOrder = [
 
 def sort_hand(hand):
     return sorted(hand, key=lambda x: TileOrder[x])
+
+
+def flatten_tile34(tiles):
+    tiles = sum([[i] * cnt for i, cnt in enumerate(tiles)], [])
+
+    return tiles
