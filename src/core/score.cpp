@@ -93,6 +93,7 @@ Result ScoreCalculator::calc(const Hand &hand, int winning_tile, YakuList flag)
     YakuList yaku_list = Yaku::Null;
     int hu;
     std::vector<Block> blocks;
+    int wait_type;
 
     // 副露牌を手牌に統合する。
     Hand merged_hand = merge_hand(hand);
@@ -111,7 +112,7 @@ Result ScoreCalculator::calc(const Hand &hand, int winning_tile, YakuList flag)
     if (syanten_type == SyantenType::Normal) {
         // 一般手
         YakuList pattern_yaku_list;
-        std::tie(pattern_yaku_list, hu, blocks) =
+        std::tie(pattern_yaku_list, hu, blocks, wait_type) =
             check_pattern_yaku(hand, aka2normal(winning_tile), flag);
         yaku_list |= pattern_yaku_list;
     }
@@ -126,7 +127,8 @@ Result ScoreCalculator::calc(const Hand &hand, int winning_tile, YakuList flag)
         return {hand, winning_tile, err_msg};
     }
 
-    return aggregate(hand, winning_tile, yaku_list, blocks, flag & Yaku::Tumo);
+    return aggregate(hand, winning_tile, yaku_list, blocks, wait_type,
+                     flag & Yaku::Tumo);
 }
 
 /**
@@ -169,7 +171,7 @@ Result ScoreCalculator::aggregate(const Hand &hand, int winning_tile,
  */
 Result ScoreCalculator::aggregate(const Hand &hand, int winning_tile,
                                   YakuList yaku_list, const std::vector<Block> &blocks,
-                                  bool tumo)
+                                  int wait_type, bool tumo)
 {
     // 何倍役満か数える。
     int han = 0;
@@ -210,8 +212,7 @@ Result ScoreCalculator::aggregate(const Hand &hand, int winning_tile,
         hu = Hu::Hu25;
     }
     else {
-        std::tie(hu, hu_list) =
-            calc_hu(blocks, aka2normal(winning_tile), hand.is_menzen(), tumo);
+        std::tie(hu, hu_list) = calc_hu(blocks, wait_type, hand.is_menzen(), tumo);
     }
 
     int score_title = ScoreTitle::get_score_title(hu, han);
@@ -379,12 +380,14 @@ YakuList ScoreCalculator::check_not_pattern_yaku(const Hand &hand, int winning_t
 
     if (check_tanyao(hand))
         yaku_list |= Yaku::Tanyao; // 断幺九
-    // else if (check_honroto(hand))
-    //     yaku_list |= Yaku::Honroto; // 混老頭
+
+    if (check_tiniso(hand))
+        yaku_list |= Yaku::Tiniso; // 清一色
     else if (check_honiso(hand))
         yaku_list |= Yaku::Honiso; // 混一色
-    else if (check_tiniso(hand))
-        yaku_list |= Yaku::Tiniso; // 清一色
+
+    if (check_honroto(hand))
+        yaku_list |= Yaku::Honroto; // 清老頭
 
     if (syanten_type == SyantenType::Normal) {
         if (check_syosangen(hand))
@@ -436,7 +439,7 @@ YakuList ScoreCalculator::check_not_pattern_yaku(const Hand &hand, int winning_t
  * @param[in] winning_tile 和了牌
  * @return std::tuple<YakuList, int, std::vector<Block>> (成立した役一覧, 符, 面子構成)
  */
-std::tuple<YakuList, int, std::vector<Block>>
+std::tuple<YakuList, int, std::vector<Block>, int>
 ScoreCalculator::check_pattern_yaku(const Hand &hand, int winning_tile, YakuList flag)
 {
     static const std::vector<YakuList> pattern_yaku = {
@@ -449,8 +452,9 @@ ScoreCalculator::check_pattern_yaku(const Hand &hand, int winning_tile, YakuList
     std::vector<std::vector<Block>> pattern =
         create_block_patterns(hand, winning_tile, flag & Yaku::Tumo);
 
-    int max_han = 0;
-    int max_hu  = 0;
+    int max_han       = -1; // 1つも役がつかない場合はある
+    int max_hu        = 0;
+    int max_wait_type = -1;
     size_t max_idx;
     YakuList max_yaku_list;
 
@@ -458,13 +462,7 @@ ScoreCalculator::check_pattern_yaku(const Hand &hand, int winning_tile, YakuList
         const auto &blocks = pattern[i];
         YakuList yaku_list = Yaku::Null;
 
-        bool pinhu_flag = false; // 平和形かどうか (符計算で利用)
         if (hand.is_menzen()) {
-            if (check_pinhu(blocks, winning_tile)) {
-                yaku_list |= Yaku::Pinhu; // 平和
-                pinhu_flag = true;
-            }
-
             int ipeko_type = check_ipeko(blocks);
             if (ipeko_type == 1)
                 yaku_list |= Yaku::Ipeko; // 一盃口
@@ -485,7 +483,7 @@ ScoreCalculator::check_pattern_yaku(const Hand &hand, int winning_tile, YakuList
         else if (tyanta_type == 2)
             yaku_list |= Yaku::Zyuntyanta; // 純全帯幺九
         else if (tyanta_type == 3)
-            yaku_list |= Yaku::Honroto; // 純全帯幺九
+            yaku_list |= Yaku::Honroto; // 混老頭
 
         if (check_toitoiho(blocks))
             yaku_list |= Yaku::Toitoiho; // 対々和
@@ -501,20 +499,34 @@ ScoreCalculator::check_pattern_yaku(const Hand &hand, int winning_tile, YakuList
                                         : Yaku::Info[yaku].han[1];
         }
 
-        // 符を計算する。
-        int hu = calc_hu(blocks, winning_tile, hand.is_menzen(), flag & Yaku::Tumo,
-                         pinhu_flag);
+        std::vector<int> wait_types = get_wait_type(blocks, aka2normal(winning_tile));
+        for (auto wait_type : wait_types) {
+            YakuList yaku_list_back = yaku_list;
+            bool pinhu_flag         = false;
+            int han_back            = han;
 
-        // 符を計算する。
-        if (max_han < han || (max_han == han && max_hu < hu)) {
-            max_han       = han;
-            max_hu        = hu;
-            max_idx       = i;
-            max_yaku_list = yaku_list;
+            if (hand.is_menzen() && wait_type == WaitType::Ryanmen &&
+                check_pinhu(blocks)) {
+                yaku_list_back |= Yaku::Pinhu; // 平和
+                pinhu_flag = true;
+                han_back++;
+            }
+
+            int hu = calc_hu(blocks, wait_type, hand.is_menzen(), flag & Yaku::Tumo,
+                             pinhu_flag);
+
+            // 符を計算する。
+            if (max_han < han_back || (max_han == han_back && max_hu < hu)) {
+                max_han       = han_back;
+                max_hu        = hu;
+                max_idx       = i;
+                max_yaku_list = yaku_list_back;
+                max_wait_type = wait_type;
+            }
         }
     }
 
-    return {max_yaku_list, max_hu, pattern[max_idx]};
+    return {max_yaku_list, max_hu, pattern[max_idx], max_wait_type};
 }
 
 /**
@@ -526,7 +538,7 @@ ScoreCalculator::check_pattern_yaku(const Hand &hand, int winning_tile, YakuList
  * @param[in] tumo 自摸和了りかどうか
  * @return int 符
  */
-int ScoreCalculator::calc_hu(const std::vector<Block> &blocks, int winning_tile,
+int ScoreCalculator::calc_hu(const std::vector<Block> &blocks, int wait_type,
                              bool menzen, bool tumo, bool pinhu) const
 {
     // 符計算の例外
@@ -550,9 +562,8 @@ int ScoreCalculator::calc_hu(const std::vector<Block> &blocks, int winning_tile,
         hu += 2; // 門前ツモ、非門前ツモ
 
     // 待ちによる符
-    int mati = get_wait_type(blocks, winning_tile);
-    if (mati == WaitType::Kantyan || mati == WaitType::Pentyan ||
-        mati == WaitType::Tanki)
+    if (wait_type == WaitType::Kantyan || wait_type == WaitType::Pentyan ||
+        wait_type == WaitType::Tanki)
         hu += 2; // 嵌張待ち、辺張待ち、単騎待ち
 
     // 面子構成による符
@@ -598,12 +609,12 @@ int ScoreCalculator::calc_hu(const std::vector<Block> &blocks, int winning_tile,
  * @brief 符を計算する (内訳)。
  */
 std::tuple<int, std::vector<std::tuple<std::string, int>>>
-ScoreCalculator::calc_hu(const std::vector<Block> &blocks, int winning_tile,
-                         bool menzen, bool tumo) const
+ScoreCalculator::calc_hu(const std::vector<Block> &blocks, int wait_type, bool menzen,
+                         bool tumo) const
 {
     std::vector<std::tuple<std::string, int>> hu;
 
-    bool pinhu = check_pinhu(blocks, winning_tile);
+    bool pinhu = check_pinhu(blocks) && wait_type == WaitType::Ryanmen;
 
     // 符計算の例外
     //////////////////////////
@@ -635,16 +646,15 @@ ScoreCalculator::calc_hu(const std::vector<Block> &blocks, int winning_tile,
         hu.emplace_back("自摸加符", 0);
 
     // 待ちによる符
-    int mati = get_wait_type(blocks, winning_tile);
-    if (mati == WaitType::Kantyan)
+    if (wait_type == WaitType::Kantyan)
         hu.emplace_back("待ちによる符: 嵌張待ち", 2);
-    else if (mati == WaitType::Pentyan)
+    else if (wait_type == WaitType::Pentyan)
         hu.emplace_back("待ちによる符: 辺張待ち", 2);
-    else if (mati == WaitType::Tanki)
+    else if (wait_type == WaitType::Tanki)
         hu.emplace_back("待ちによる符: 単騎待ち", 2);
-    else if (mati == WaitType::Syanpon)
+    else if (wait_type == WaitType::Syanpon)
         hu.emplace_back("待ちによる符: 双ポン待ち", 0);
-    else if (mati == WaitType::Ryanmen)
+    else if (wait_type == WaitType::Ryanmen)
         hu.emplace_back("待ちによる符: 両面待ち", 0);
 
     // 面子構成による符
@@ -687,7 +697,10 @@ ScoreCalculator::calc_hu(const std::vector<Block> &blocks, int winning_tile,
         }
         else if (block.type & Block::Toitu) {
             // 対子の場合
-            if (is_yakuhai(block.min_tile))
+            if (block.min_tile == zikaze_ && block.min_tile == bakaze_)
+                hu.emplace_back(fmt::format("雀頭による符: {} 役牌", block.to_string()),
+                                4); // 連風牌の雀頭は4符
+            else if (is_yakuhai(block.min_tile))
                 hu.emplace_back(fmt::format("雀頭による符: {} 役牌", block.to_string()),
                                 2);
             else
@@ -887,7 +900,11 @@ bool ScoreCalculator::check_suanko(const Hand &hand, YakuList flag) const
     int n_ge3 = s_tbl[hand.manzu].n_ge3 + s_tbl[hand.pinzu].n_ge3 +
                 s_tbl[hand.sozu].n_ge3 + z_tbl[hand.zihai].n_ge3;
 
-    return n_ge3 - n_ge4 == 4;
+    // 牌: 888p 3444r5999s [7777m, 暗槓] のような3枚以上が4つあっても6種類牌があるとだめ
+    int n_types = s_tbl[hand.manzu].n_ge1 + s_tbl[hand.pinzu].n_ge1 +
+                  s_tbl[hand.sozu].n_ge1 + z_tbl[hand.zihai].n_ge1;
+
+    return n_ge3 - n_ge4 == 4 && n_types == 5;
 }
 
 /**
@@ -1088,10 +1105,9 @@ bool ScoreCalculator::check_sankantu(const Hand &hand) const
 }
 
 /**
- * @brief 平和形かどうかを判定する。(門前かどうかは呼び出し側でチェックすること)
+ * @brief 平和形かどうかを判定する。(門前かどうか、両面待ちかどうかは呼び出し側でチェックすること)
  */
-bool ScoreCalculator::check_pinhu(const std::vector<Block> blocks,
-                                  int winning_tile) const
+bool ScoreCalculator::check_pinhu(const std::vector<Block> blocks) const
 {
     // すべてのブロックが順子または役牌でない対子かどうか
     for (const auto &block : blocks) {
@@ -1102,8 +1118,7 @@ bool ScoreCalculator::check_pinhu(const std::vector<Block> blocks,
             return false; // 対子の役牌の場合
     }
 
-    // 両面待ちかどうかを判定する。
-    return get_wait_type(blocks, winning_tile) == WaitType::Ryanmen;
+    return true;
 }
 
 /**
@@ -1234,9 +1249,7 @@ int ScoreCalculator::check_tyanta(const std::vector<Block> blocks) const
             return 0;
     }
 
-    if (zihai && !syuntu)
-        return 3; // 混老頭 (字牌がないと清老頭になる)
-    else if (!zihai && syuntu)
+    if (!zihai && syuntu)
         return 2; // 純全帯幺九
     else if (zihai && syuntu)
         return 1; // 混全帯幺九
@@ -1485,6 +1498,7 @@ std::vector<std::vector<Block>> ScoreCalculator::create_block_patterns(const Han
         else
             blocks[i].type = Block::Kantu | Block::Huro;
         blocks[i].min_tile = aka2normal(melded_block.tiles.front());
+        blocks[i].meld     = true;
 
         i++;
     }

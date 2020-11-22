@@ -44,6 +44,8 @@ struct Block {
     /*! 最小の構成牌 */
     int min_tile;
 
+    bool meld = false;
+
     static inline std::map<int, std::string> Names = {
         {Block::Kotu, "暗刻子"},   {Block::Kotu | Block::Huro, "明刻子"},
         {Block::Syuntu, "暗順子"}, {Block::Syuntu | Block::Huro, "明順子"},
@@ -91,11 +93,11 @@ inline std::string Block::to_string() const
 struct WaitType {
     enum Type {
         Null = -1,
-        Ryanmen, /* 両面待ち */
+        Tanki,   /* 単騎待ち */
         Pentyan, /* 辺張待ち */
         Kantyan, /* 嵌張待ち */
         Syanpon, /* 双ポン待ち */
-        Tanki,   /* 単騎待ち */
+        Ryanmen, /* 両面待ち */
     };
 
     static inline const std::map<int, std::string> Names = {
@@ -110,44 +112,58 @@ struct WaitType {
  * @param[in] winning_tile 和了牌
  * @return int 待ちの種類
  */
-inline int get_wait_type(const std::vector<Block> &blocks, int winning_tile)
+inline std::vector<int> get_wait_type(const std::vector<Block> &blocks,
+                                      int winning_tile)
 {
+    std::vector<int> wait_types;
+
     for (const auto &block : blocks) {
+        if (block.meld)
+            continue; // 副露ブロックは待ちにできない
+
         if ((block.type & Block::Kotu) && block.min_tile == winning_tile) {
-            return WaitType::Syanpon; // 刻子の場合、双ポン待ち
+            wait_types.push_back(WaitType::Syanpon); // 刻子の場合、双ポン待ち
         }
         else if (block.type & Block::Syuntu) {
             if (block.min_tile + 1 == winning_tile) {
-                return WaitType::Kantyan; // 嵌張待ち
+                wait_types.push_back(WaitType::Kantyan); // 嵌張待ち
             }
             else if (block.min_tile == winning_tile ||
                      block.min_tile + 2 == winning_tile) {
                 if (block.min_tile == Tile::Manzu1 || block.min_tile == Tile::Pinzu1 ||
                     block.min_tile == Tile::Sozu1) {
                     if (block.min_tile == winning_tile)
-                        return WaitType::Ryanmen; // 123 で和了牌が1の場合、両面待ち
+                        // 123 で和了牌が1の場合、両面待ち
+                        wait_types.push_back(WaitType::Ryanmen);
                     else
-                        return WaitType::Pentyan; // 123 で和了牌が3の場合、辺張待ち
+                        // 123 で和了牌が3の場合、辺張待ち
+                        wait_types.push_back(WaitType::Pentyan);
                 }
                 else if (block.min_tile == Tile::Manzu7 ||
                          block.min_tile == Tile::Pinzu7 ||
                          block.min_tile == Tile::Sozu7) {
                     if (block.min_tile == winning_tile)
-                        return WaitType::Pentyan; // 789 で和了牌が7の場合、辺張待ち
+                        // 789 で和了牌が7の場合、辺張待ち
+                        wait_types.push_back(WaitType::Pentyan);
                     else
-                        return WaitType::Ryanmen; // 789 で和了牌が9の場合、両面待ち
+                        // 789 で和了牌が9の場合、両面待ち
+                        wait_types.push_back(WaitType::Ryanmen);
                 }
                 else {
-                    return WaitType::Ryanmen;
+                    wait_types.push_back(WaitType::Ryanmen);
                 }
             }
         }
-        else if (block.type & Block::Toitu && block.min_tile == winning_tile) {
-            return WaitType::Tanki; // 対子の場合、単騎待ち
+        else if ((block.type & Block::Toitu) && block.min_tile == winning_tile) {
+            wait_types.push_back(WaitType::Tanki); // 対子の場合、単騎待ち
         }
     }
 
-    return WaitType::Null;
+    if (wait_types.size() == 0) {
+        std::cout << "おかしい" << std::endl;
+    }
+
+    return wait_types;
 }
 
 } // namespace mahjong

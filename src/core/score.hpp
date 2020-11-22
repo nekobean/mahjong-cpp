@@ -34,10 +34,10 @@ public:
                            int syanten_type) const;
     YakuList check_not_pattern_yaku(const Hand &tehai, int winning_tile, YakuList flag,
                                     int syanten_type) const;
-    std::tuple<YakuList, int, std::vector<Block>>
+    std::tuple<YakuList, int, std::vector<Block>, int>
     check_pattern_yaku(const Hand &tehai, int winning_tile, YakuList flag);
-    int calc_hu(const std::vector<Block> &blocks, int winning_tile, bool menzen,
-                bool tumo, bool pinhu) const;
+    int calc_hu(const std::vector<Block> &blocks, int wait_type, bool menzen, bool tumo,
+                bool pinhu) const;
     Hand merge_hand(const Hand &tehai) const;
     int calc_extra_score() const;
     std::string to_string() const;
@@ -46,7 +46,7 @@ public:
     Result aggregate(const Hand &tehai, int winning_tile, YakuList yaku_list,
                      bool tumo);
     Result aggregate(const Hand &tehai, int winning_tile, YakuList yaku_list,
-                     const std::vector<Block> &blocks, bool tumo);
+                     const std::vector<Block> &blocks, int wait_type, bool tumo);
 
     static bool make_table(const std::string &path,
                            std::map<int, std::vector<std::vector<Block>>> &table);
@@ -57,7 +57,7 @@ public:
                                std::vector<std::vector<Block>> &patterns,
                                std::vector<Block> &blocks, size_t i, int d = 0) const;
     std::tuple<int, std::vector<std::tuple<std::string, int>>>
-    calc_hu(const std::vector<Block> &blocks, int winning_tile, bool menzen,
+    calc_hu(const std::vector<Block> &blocks, int wait_type, bool menzen,
             bool tumo) const;
     std::vector<int> calc_score(int han, int hu, int score_type, bool tumo) const;
 
@@ -81,7 +81,7 @@ public:
     bool check_tiniso(const Hand &tehai) const;
     bool check_syosangen(const Hand &tehai) const;
     bool check_sankantu(const Hand &tehai) const;
-    bool check_pinhu(const std::vector<Block> blocks, int winning_tile) const;
+    bool check_pinhu(const std::vector<Block> blocks) const;
     int check_ipeko(const std::vector<Block> blocks) const;
     bool check_ikkitukan(const std::vector<Block> blocks) const;
     bool check_sansyokudoko(const std::vector<Block> blocks) const;
