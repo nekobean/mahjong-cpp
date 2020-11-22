@@ -61,6 +61,9 @@ struct TestCase {
     std::vector<int> score;
 
     std::string url;
+
+    bool enable_akadora;
+    bool enable_kuitan;
 };
 
 /**
@@ -142,7 +145,9 @@ bool load_cases(const std::string &filename, std::vector<TestCase> &cases)
         for (auto &x : v["score"].GetArray())
             testcase.score.push_back(x.GetInt());
 
-        testcase.url = v["url"].GetString();
+        testcase.url            = v["url"].GetString();
+        testcase.enable_akadora = v["akadora"].GetBool();
+        testcase.enable_kuitan  = v["kuitan"].GetBool();
 
         cases.push_back(testcase);
     }
@@ -205,6 +210,8 @@ TEST_CASE("一般役の点数計算")
             score.set_num_kyotakubo(testcase.num_kyotakubo);
             score.set_dora_tiles(testcase.dora_tiles);
             score.set_uradora_tiles(testcase.uradora_tiles);
+            score.enable_akadora(testcase.enable_akadora);
+            score.enable_open_tanyao(testcase.enable_kuitan);
 
             // 計算
             Result ret =

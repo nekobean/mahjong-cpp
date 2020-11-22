@@ -9,10 +9,12 @@ from utils import *
 
 # 牌
 tiles134 = np.arange(34).repeat(4)
+
 tiles134[np.where(tiles134 == Tile.Manzu5)[0][0]] = Tile.AkaManzu5  # 赤萬子5
 tiles134[np.where(tiles134 == Tile.Pinzu5)[0][0]] = Tile.AkaPinzu5  # 赤筒子5
 tiles134[np.where(tiles134 == Tile.Sozu5)[0][0]] = Tile.AkaSozu5  # 赤索子5
 ToTile = {i: int(tile) for i, tile in enumerate(tiles134)}
+
 
 # 役
 ToYaku = {
@@ -86,8 +88,8 @@ def convert_taku(s):
     s = int(s)
 
     vs_person = bool(s & 1)
-    aka = bool(s & 0b10)
-    kuitan = bool(s & 0b100)
+    aka = not bool(s & 0b10)
+    kuitan = not bool(s & 0b100)
     taku = "半荘" if s & 0b1000 else "東風"
     yonma = "三麻" if s & 0b10000 else "四麻"
     if s & 0b10100000:
@@ -353,7 +355,7 @@ def convert_flag(yaku_list, is_tumo):
     return flag
 
 
-def parse_agari(tag, bakaze, zikaze_list, path):
+def parse_agari(tag, bakaze, zikaze_list, path, taku):
     win_player = int(tag["who"])
     lose_player = int(tag["fromWho"])
 
@@ -414,8 +416,12 @@ def parse_agari(tag, bakaze, zikaze_list, path):
         # 場況
         "bakaze": bakaze,
         "zikaze": zikaze,
-        "num_tumibo": n_tumibo,
-        "num_kyotakubo": n_kyotakubo,
+        "num_tumibo": 0
+        if n_tumibo + n_kyotakubo > 0 and score[0] == base_score
+        else n_tumibo,
+        "num_kyotakubo": 0
+        if n_tumibo + n_kyotakubo > 0 and score[0] == base_score
+        else n_kyotakubo,
         "dora_tiles": dora_tiles,
         "uradora_tiles": uradora_tiles,
         # 和了り情報
@@ -433,6 +439,8 @@ def parse_agari(tag, bakaze, zikaze_list, path):
         "lose_player": lose_player,
         "score": score,
         "url": path.name,
+        "akadora": taku["赤有り"],
+        "kuitan": taku["喰い断あり"],
     }
 
     return data, yakuman
@@ -440,7 +448,14 @@ def parse_agari(tag, bakaze, zikaze_list, path):
 
 def parse_init(tag):
     ba, honba, tumibo, dice1, dice2, dora = list(map(int, tag["seed"].split(",")))
-    bakaze = Tile.Ton if ba <= 3 else Tile.Nan
+    if ba <= 3:
+        bakaze = Tile.Ton
+    elif ba <= 7:
+        bakaze = Tile.Nan
+    elif ba <= 11:
+        bakaze = Tile.Sya
+    else:
+        bakaze = Tile.Pe
     kyoku = ba % 4 + 1
 
     if kyoku == 1:
@@ -471,7 +486,7 @@ def parse_mjlog(path):
             init_data = parse_init(child)
         elif child.name == "AGARI":
             agari_data, yakuman = parse_agari(
-                child, init_data["bakaze"], init_data["zikaze_list"], path
+                child, init_data["bakaze"], init_data["zikaze_list"], path, taku
             )
 
             if not yakuman:
@@ -485,7 +500,7 @@ mj_paths = sorted(data_dir.glob("**/*.mjlog"))
 print(f"{len(mj_paths)} mjlog files found.")
 
 data = []
-for x in tqdm(mj_paths[:500]):
+for x in tqdm(mj_paths[:10000]):
     d = parse_mjlog(x)
     if d:
         data += d
