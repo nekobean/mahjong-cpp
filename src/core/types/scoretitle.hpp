@@ -37,7 +37,7 @@ struct Hu {
      * @param[in] hu 符
      * @return int 切り上げた符
      */
-    static inline int round_up_hu(int hu)
+    static inline int round_up_fu(int hu)
     {
         hu = int(std::ceil(hu / 10.)) * 10;
 

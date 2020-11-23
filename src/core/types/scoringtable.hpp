@@ -8,10 +8,10 @@ namespace mahjong {
 struct ScoringTable {
 
     /**
-     * @brief 子が親にロンされたときに支払う点数
+     * @brief 親がロンした場合に放銃者が支払う点数
      */
     // clang-format off
-    static const inline std::vector<std::vector<int>> Ko2OyaRon = {
+    static const inline std::vector<std::vector<int>> ParentRon = {
     //    1翻    2翻    3翻    4翻
         {   0,     0,     0,     0}, // 20符 (20符は平和自摸なのでロンの場合はない)
         {   0,  2400,  4800,  9600}, // 25符 (七対子は最低2翻以上)
@@ -28,10 +28,10 @@ struct ScoringTable {
     // clang-format on
 
     /**
-     * @brief 親が子にロンされたときに支払う点数
+     * @brief 子がロンした場合に放銃者が支払う点数
      */
     // clang-format off
-    static const inline std::vector<std::vector<int>> Oya2KoRon = {
+    static const inline std::vector<std::vector<int>> ChildRon = {
     //    1翻   2翻   3翻   4翻
         {   0,    0,    0,    0}, // 20符 (20符は平和自摸なのでロンの場合はない)
         {   0, 1600, 3200, 6400}, // 25符 (七対子は最低2翻以上)
@@ -48,10 +48,10 @@ struct ScoringTable {
     // clang-format on
 
     /**
-     * @brief 子が親に自摸されたときに支払う点数
+     * @brief 親が自摸した場合に子が支払う点数
      */
     // clang-format off
-    static const inline std::vector<std::vector<int>> Ko2OyaTumo = {
+    static const inline std::vector<std::vector<int>> ParentTumoChild = {
     //    1翻   2翻   3翻   4翻
         {   0,  700, 1300, 2600}, // 20符 (平和、門前清自摸和は最低2翻以上)
         {   0,    0, 1600, 3200}, // 25符 (七対子、門前清自摸和は最低3翻以上)
@@ -68,10 +68,10 @@ struct ScoringTable {
     // clang-format on
 
     /**
-     * @brief 親が子に自摸されたときに支払う点数
+     * @brief 子が自摸した場合に親が支払う点数
      */
     // clang-format off
-    static const inline std::vector<std::vector<int>> Oya2KoTumo = {
+    static const inline std::vector<std::vector<int>> ChildTumoParent = {
     //    1翻   2翻   3翻   4翻
         {   0,  700, 1300, 2600}, // 20符 (平和、門前清自摸和は最低2翻以上)
         {   0,    0, 1600, 3200}, // 25符 (七対子、門前清自摸和は最低3翻以上)
@@ -88,10 +88,10 @@ struct ScoringTable {
     // clang-format on
 
     /**
-     * @brief 子が子に自摸されたときに支払う点数 (満貫以上)
+     * @brief 子が自摸した場合に子が支払う点数
      */
     // clang-format off
-    static const inline std::vector<std::vector<int>> Ko2KoTumo = {
+    static const inline std::vector<std::vector<int>> ChildTumoChild = {
     //    1翻   2翻   3翻   4翻
         {  0,  400,  700, 1300}, // 20符 (平和、門前清自摸和は最低2翻以上)
         {  0,    0,  800, 1600}, // 25符 (七対子、門前清自摸和は最低3翻以上)
@@ -108,9 +108,9 @@ struct ScoringTable {
     // clang-format on
 
     /**
-     * @brief 子が親にロンされたときに支払う点数 (満貫以上)
+     * @brief 親がロンした場合に放銃者が支払う点数 (満貫以上)
      */
-    static const inline std::vector<int> Ko2OyaRonOverMangan = {
+    static const inline std::vector<int> ParentRonOverMangan = {
         12000,  // 満貫
         18000,  // 跳満
         24000,  // 倍満
@@ -125,9 +125,9 @@ struct ScoringTable {
     };
 
     /**
-     * @brief 親が子にロンされたときに支払う点数 (満貫以上)
+     * @brief 子がロンした場合に放銃者が支払う点数 (満貫以上)
      */
-    static const inline std::vector<int> Oya2KoRonOverMangan = {
+    static const inline std::vector<int> ChildRonOverMangan = {
         8000,   // 満貫
         12000,  // 跳満
         16000,  // 倍満
@@ -142,9 +142,9 @@ struct ScoringTable {
     };
 
     /**
-     * @brief 子が親に自摸されたときに支払う点数 (満貫以上)
+     * @brief 親が自摸した場合に子が支払う点数 (満貫以上)
      */
-    static const inline std::vector<int> Ko2OyaTumoOverMangan = {
+    static const inline std::vector<int> ParentTumoChildOverMangan = {
         4000,  // 満貫
         6000,  // 跳満
         8000,  // 倍満
@@ -159,9 +159,9 @@ struct ScoringTable {
     };
 
     /**
-     * @brief 親が子に自摸されたときに支払う点数 (満貫以上)
+     * @brief 子が自摸した場合に親が支払う点数 (満貫以上)
      */
-    static const inline std::vector<int> Oya2KoTumoOverMangan = {
+    static const inline std::vector<int> ChildTumoParentOverMangan = {
         4000,  // 満貫
         6000,  // 跳満
         8000,  // 倍満
@@ -176,9 +176,9 @@ struct ScoringTable {
     };
 
     /**
-     * @brief 子が子に自摸されたときに支払う点数
+     * @brief 子が自摸した場合に子が支払う点数
      */
-    static const inline std::vector<int> Ko2KoTumoOverMangan = {
+    static const inline std::vector<int> ChildTumoChildOverMangan = {
         2000,  // 満貫
         3000,  // 跳満
         4000,  // 倍満

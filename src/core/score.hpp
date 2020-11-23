@@ -106,18 +106,17 @@ public:
     check_pattern_yaku(const Hand &tehai, int win_tile, int flag, int syanten_type);
 
     Hand merge_hand(const Hand &tehai) const;
-    int calc_hu(const std::vector<Block> &blocks, int wait_type, bool menzen, bool tumo,
-                bool pinhu) const;
+    int calc_fu(const std::vector<Block> &blocks, int wait_type, bool is_menzen,
+                bool is_tumo, bool is_pinhu) const;
+    std::vector<int> calc_score(int han, int hu, int score_type, bool is_tumo) const;
     bool is_yakuhai(int tile) const;
 
-    Result aggregate(const Hand &tehai, int win_tile, YakuList yaku_list, bool tumo);
-    Result aggregate(const Hand &tehai, int win_tile, YakuList yaku_list,
-                     const std::vector<Block> &blocks, int wait_type, bool tumo);
-
+    Result aggregate(const Hand &tehai, int win_tile, int flag, YakuList yaku_list);
+    Result aggregate(const Hand &tehai, int win_tile, int flag, YakuList yaku_list,
+                     const std::vector<Block> &blocks, int wait_type);
     std::tuple<int, std::vector<std::tuple<std::string, int>>>
-    calc_hu(const std::vector<Block> &blocks, int wait_type, bool menzen,
+    calc_fu(const std::vector<Block> &blocks, int wait_type, bool menzen,
             bool tumo) const;
-    std::vector<int> calc_score(int han, int hu, int score_type, bool is_tumo) const;
 
     // 役満をチェックする関数
     bool check_ryuiso(const Hand &tehai) const;
@@ -139,7 +138,7 @@ public:
     bool check_tiniso(const Hand &tehai) const;
     bool check_syosangen(const Hand &tehai) const;
     bool check_sankantu(const Hand &tehai) const;
-    bool check_pinhu(const std::vector<Block> blocks) const;
+    bool check_pinhu(const std::vector<Block> blocks, int wait_type) const;
     int check_ipeko(const std::vector<Block> blocks) const;
     bool check_ikkitukan(const std::vector<Block> blocks) const;
     bool check_sansyokudoko(const std::vector<Block> blocks) const;

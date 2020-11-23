@@ -146,10 +146,10 @@ inline bool Hand::check_arguments(const std::vector<int> &tiles,
 
     n_tiles += int(melded_blocks.size()) * 3;
     // for (const auto &block : melded_blocks) {
-    //     if (block.type & (Block::Kotu | Block::Kantu)) {
+    //     if (block.type & (BlockType::Kotu | BlockType::Kantu)) {
     //         count[block.min_tile] += 3;
     //     }
-    //     else if (block.type & Block::Syuntu) {
+    //     else if (block.type & BlockType::Syuntu) {
     //         count[block.min_tile]++;
     //         count[block.min_tile + 1]++;
     //         count[block.min_tile + 2]++;

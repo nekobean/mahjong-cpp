@@ -181,6 +181,24 @@ TEST_CASE("一般役の点数計算")
 
     ScoreCalculator score;
 
+    BENCHMARK("一般役の点数計算")
+    {
+        for (const auto &testcase : cases) {
+            // 設定
+            score.set_bakaze(testcase.bakaze);
+            score.set_zikaze(testcase.zikaze);
+            score.set_num_tumibo(testcase.num_tumibo);
+            score.set_num_kyotakubo(testcase.num_kyotakubo);
+            score.set_dora_tiles(testcase.dora_tiles);
+            score.set_uradora_tiles(testcase.uradora_tiles);
+            score.set_rule(RuleFlag::AkaDora, testcase.enable_akadora);
+            score.set_rule(RuleFlag::OpenTanyao, testcase.enable_kuitan);
+
+            // 計算
+            Result ret = score.calc(testcase.hand, testcase.win_tile, testcase.flag);
+        }
+    };
+
     SECTION("一般役の点数計算")
     {
         for (const auto &testcase : cases) {
@@ -207,13 +225,14 @@ TEST_CASE("一般役の点数計算")
             REQUIRE(ret.han == testcase.han);                 // 飜
             REQUIRE(ret.hu == testcase.hu);                   // 符
             REQUIRE(ret.score_title == testcase.score_title); // タイトル
-
             // 成立役
             REQUIRE(ret.yaku_list.size() == testcase.yaku_list.size());
-            for (size_t i = 0; i < ret.yaku_list.size(); ++i) {
-                REQUIRE(std::get<0>(ret.yaku_list[i]) == std::get<0>(ret.yaku_list[i]));
-                REQUIRE(std::get<1>(ret.yaku_list[i]) == std::get<1>(ret.yaku_list[i]));
-            }
+            // for (size_t i = 0; i < ret.yaku_list.size(); ++i) {
+            //     REQUIRE(std::get<0>(ret.yaku_list[i]) ==
+            //             std::get<0>(testcase.yaku_list[i]));
+            //     REQUIRE(std::get<1>(ret.yaku_list[i]) ==
+            //             std::get<1>(testcase.yaku_list[i]));
+            // }
 
             // 点数の収支
             REQUIRE(ret.score.size() == testcase.score.size());

@@ -12,61 +12,67 @@ namespace mahjong {
 /**
  * @brief 副露の種類
  */
-struct MeldType {
-    enum Type {
-        Null = -1,
-        Pon,    /* ポン */
-        Ti,     /* チー */
-        Ankan,  /* 暗槓 */
-        Minkan, /* 明槓 */
-        Kakan,  /* 加槓 */
-        Length,
-    };
+namespace MeldType {
 
-    static inline const std::map<int, std::string> Names = {
-        {Null, "Null"},  {Pon, "ポン"},    {Ti, "チー"},
-        {Ankan, "暗槓"}, {Minkan, "明槓"}, {Kakan, "加槓"}};
+enum {
+    Null = -1,
+    Pon,    /* ポン */
+    Ti,     /* チー */
+    Ankan,  /* 暗槓 */
+    Minkan, /* 明槓 */
+    Kakan,  /* 加槓 */
+    Length,
 };
+
+static inline const std::map<int, std::string> Names = {
+    {Null, "Null"},  {Pon, "ポン"},    {Ti, "チー"},
+    {Ankan, "暗槓"}, {Minkan, "明槓"}, {Kakan, "加槓"}};
+
+} // namespace MeldType
 
 /**
  * @brief プレイヤーの種類
  */
-struct PlayerType {
-    enum Type {
-        Null = -1,
-        Player0,
-        Player1,
-        Player2,
-        Player3,
-        Length,
-    };
+namespace PlayerType {
 
-    static inline const std::map<int, std::string> Names = {{Null, "Null"},
-                                                            {Player0, "プレイヤー1"},
-                                                            {Player1, "プレイヤー2"},
-                                                            {Player2, "プレイヤー3"},
-                                                            {Player3, "プレイヤー4"}};
+enum {
+    Null = -1,
+    Player0,
+    Player1,
+    Player2,
+    Player3,
+    Length,
 };
+
+static inline const std::map<int, std::string> Names = {{Null, "Null"},
+                                                        {Player0, "プレイヤー1"},
+                                                        {Player1, "プレイヤー2"},
+                                                        {Player2, "プレイヤー3"},
+                                                        {Player3, "プレイヤー4"}};
+
+} // namespace PlayerType
 
 /**
  * @brief 座席の種類
  */
-struct SeatType {
-    enum Type {
-        Null = -1,
-        Zitya,   /* 自家 */
-        Kamitya, /* 上家 */
-        Toimen,  /* 対面 */
-        Simotya, /* 下家 */
-        Length,
-    };
+namespace SeatType {
 
-    static inline const std::map<int, std::string> Names = {{Null, "Null"},
-                                                            {Zitya, "自家"},
-                                                            {Kamitya, "上家"},
-                                                            {Toimen, "対面"},
-                                                            {Simotya, "下家"}};
+enum {
+    Null = -1,
+    Zitya,   /* 自家 */
+    Kamitya, /* 上家 */
+    Toimen,  /* 対面 */
+    Simotya, /* 下家 */
+    Length,
 };
+
+static inline const std::map<int, std::string> Names = {{Null, "Null"},
+                                                        {Zitya, "自家"},
+                                                        {Kamitya, "上家"},
+                                                        {Toimen, "対面"},
+                                                        {Simotya, "下家"}};
+
+} // namespace SeatType
 
 /**
  * @brief 副露ブロック
