@@ -16,8 +16,10 @@ int main(int, char **)
 
         auto [syanten_type, syanten] = SyantenCalculator::calc(hand);
 
-        spdlog::info("手牌: {}, 向聴数の種類: {}, 向聴数: {}", hand.to_string(),
-                     SyantenType::Names[syanten_type], syanten);
+        std::cout << fmt::format("手牌: {}, 向聴数の種類: {}, 向聴数: {}",
+                                 hand.to_string(), SyantenType::Names[syanten_type],
+                                 syanten)
+                  << std::endl;
     }
 
     // 特定の手の向聴数を計算したい場合は第2引数にフラグで指定します。フラグは複数指定できます。
@@ -34,8 +36,10 @@ int main(int, char **)
         auto [syanten_type, syanten] =
             SyantenCalculator::calc(hand, SyantenType::Normal);
 
-        spdlog::info("手牌: {}, 向聴数の種類: {}, 向聴数: {}", hand.to_string(),
-                     SyantenType::Names[syanten_type], syanten);
+        std::cout << fmt::format("手牌: {}, 向聴数の種類: {}, 向聴数: {}",
+                                 hand.to_string(), SyantenType::Names[syanten_type],
+                                 syanten)
+                  << std::endl;
     }
 
     // 七対子手の向聴数を計算する
@@ -48,8 +52,10 @@ int main(int, char **)
         auto [syanten_type, syanten] =
             SyantenCalculator::calc(hand, SyantenType::Tiitoi);
 
-        spdlog::info("手牌: {}, 向聴数の種類: {}, 向聴数: {}", hand.to_string(),
-                     SyantenType::Names[syanten_type], syanten);
+        std::cout << fmt::format("手牌: {}, 向聴数の種類: {}, 向聴数: {}",
+                                 hand.to_string(), SyantenType::Names[syanten_type],
+                                 syanten)
+                  << std::endl;
     }
 
     // 国士無双手の向聴数を計算する
@@ -61,7 +67,9 @@ int main(int, char **)
         auto [syanten_type, syanten] =
             SyantenCalculator::calc(hand, SyantenType::Kokusi);
 
-        spdlog::info("手牌: {}, 向聴数の種類: {}, 向聴数: {}", hand.to_string(),
-                     SyantenType::Names[syanten_type], syanten);
+        std::cout << fmt::format("手牌: {}, 向聴数の種類: {}, 向聴数: {}",
+                                 hand.to_string(), SyantenType::Names[syanten_type],
+                                 syanten)
+                  << std::endl;
     }
 }
