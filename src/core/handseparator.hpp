@@ -1,5 +1,5 @@
-#ifndef MAHJONG_CPP_BLOCKSEPARATOR
-#define MAHJONG_CPP_BLOCKSEPARATOR
+#ifndef MAHJONG_CPP_HANDSEPARATOR
+#define MAHJONG_CPP_HANDSEPARATOR
 
 #include "types/types.hpp"
 
@@ -8,12 +8,15 @@ namespace mahjong {
 /**
  * @brief 手牌から面子パターンを生成する。
  */
-class BlockSeparator {
+class HandSeparator {
+public:
     static bool initialize();
+    static std::vector<std::vector<Block>> separate(const Hand &tehai, int win_tile,
+                                                    bool tumo);
+
+private:
     static bool make_table(const std::string &path,
                            std::map<int, std::vector<std::vector<Block>>> &table);
-    static std::vector<std::vector<Block>>
-    create_block_patterns(const Hand &tehai, int win_tile, bool tumo);
     static std::vector<Block> get_blocks(const std::string &s);
     static void create_block_patterns(const Hand &tehai, int win_tile, bool tumo,
                                       std::vector<std::vector<Block>> &patterns,
@@ -25,4 +28,4 @@ private:
 };
 } // namespace mahjong
 
-#endif /* MAHJONG_CPP_BLOCKSEPARATOR */
+#endif /* MAHJONG_CPP_HANDSEPARATOR */

@@ -114,14 +114,6 @@ public:
     Result aggregate(const Hand &tehai, int win_tile, YakuList yaku_list,
                      const std::vector<Block> &blocks, int wait_type, bool tumo);
 
-    static bool make_table(const std::string &path,
-                           std::map<int, std::vector<std::vector<Block>>> &table);
-    std::vector<std::vector<Block>>
-    create_block_patterns(const Hand &tehai, int win_tile, bool tumo) const;
-    static std::vector<Block> get_blocks(const std::string &s);
-    void create_block_patterns(const Hand &tehai, int win_tile, bool tumo,
-                               std::vector<std::vector<Block>> &patterns,
-                               std::vector<Block> &blocks, size_t i, int d = 0) const;
     std::tuple<int, std::vector<std::tuple<std::string, int>>>
     calc_hu(const std::vector<Block> &blocks, int wait_type, bool menzen,
             bool tumo) const;
@@ -173,10 +165,6 @@ private:
     std::vector<int> dora_tiles_;
     /* 裏ドラの一覧 */
     std::vector<int> uradora_tiles_;
-
-private:
-    static std::map<int, std::vector<std::vector<Block>>> s_tbl_;
-    static std::map<int, std::vector<std::vector<Block>>> z_tbl_;
 };
 } // namespace mahjong
 
