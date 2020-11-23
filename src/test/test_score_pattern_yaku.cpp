@@ -12,28 +12,9 @@
 
 #include "score.hpp"
 #include "syanten.hpp"
+#include "utils.hpp"
 
 using namespace mahjong;
-
-/**
- * @brief 点数計算器を初期化する。
- * 
- * @return ScoreCalculator 点数計算器
- */
-ScoreCalculator setup_score_calculator()
-{
-    ScoreCalculator score;
-    score.enable_akadora(true);
-    score.enable_open_tanyao(true);
-    score.set_dora_tiles({Tile::Pinzu3});
-    score.set_uradora_tiles({Tile::Hatu});
-    score.set_bakaze(Tile::Ton);
-    score.set_zikaze(Tile::Pe);
-    score.set_num_tumibo(1);
-    score.set_num_kyotakubo(2);
-
-    return score;
-}
 
 struct TestCase {
     // 場況
@@ -46,8 +27,8 @@ struct TestCase {
 
     // 入力
     Hand hand;
-    int winning_tile;
-    YakuList flag;
+    int win_tile;
+    int flag;
 
     // 結果
     int han;
@@ -124,9 +105,9 @@ bool load_cases(const std::string &filename, std::vector<TestCase> &cases)
             melded_blocks.push_back(melded_block);
         }
 
-        testcase.hand         = Hand(tiles, melded_blocks);
-        testcase.winning_tile = v["winning_tile"].GetInt();
-        testcase.flag         = v["flag"].GetInt64();
+        testcase.hand     = Hand(tiles, melded_blocks);
+        testcase.win_tile = v["win_tile"].GetInt();
+        testcase.flag     = v["flag"].GetInt();
 
         testcase.han         = v["han"].GetInt();
         testcase.hu          = v["hu"].GetInt();
@@ -158,32 +139,32 @@ bool load_cases(const std::string &filename, std::vector<TestCase> &cases)
     return true;
 }
 
-std::string flag_to_string(YakuList flag)
+std::string flag_to_string(int flag)
 {
     std::string s;
-    if (flag & Yaku::Tumo)
-        s += "自摸和了り ";
-    if (flag & Yaku::Tenho)
+    if (flag & HandFlag::Tumo)
+        s += "自摸和了 ";
+    if (flag & HandFlag::Tenho)
         s += "天和成立 ";
-    if (flag & Yaku::Tiho)
-        s += "自摸和了り ";
-    if (flag & Yaku::Renho)
+    if (flag & HandFlag::Tiho)
+        s += "自摸和了 ";
+    if (flag & HandFlag::Renho)
         s += "人和成立 ";
-    if (flag & Yaku::Reach)
+    if (flag & HandFlag::Reach)
         s += "立直成立 ";
-    if (flag & Yaku::DoubleReach)
+    if (flag & HandFlag::DoubleReach)
         s += "ダブル立直成立 ";
-    if (flag & Yaku::Ippatu)
+    if (flag & HandFlag::Ippatu)
         s += "一発成立 ";
-    if (flag & Yaku::Tyankan)
+    if (flag & HandFlag::Tyankan)
         s += "搶槓成立 ";
-    if (flag & Yaku::Rinsyankaiho)
+    if (flag & HandFlag::Rinsyankaiho)
         s += "嶺上開花成立 ";
-    if (flag & Yaku::Haiteitumo)
+    if (flag & HandFlag::Haiteitumo)
         s += "海底撈月成立 ";
-    if (flag & Yaku::Hoteiron)
+    if (flag & HandFlag::Hoteiron)
         s += "河底撈魚成立 ";
-    if (flag & Yaku::NagasiMangan)
+    if (flag & HandFlag::NagasiMangan)
         s += "流し満貫成立 ";
 
     return s;
@@ -210,12 +191,11 @@ TEST_CASE("一般役の点数計算")
             score.set_num_kyotakubo(testcase.num_kyotakubo);
             score.set_dora_tiles(testcase.dora_tiles);
             score.set_uradora_tiles(testcase.uradora_tiles);
-            score.enable_akadora(testcase.enable_akadora);
-            score.enable_open_tanyao(testcase.enable_kuitan);
+            score.set_rule(RuleFlag::AkaDora, testcase.enable_akadora);
+            score.set_rule(RuleFlag::OpenTanyao, testcase.enable_kuitan);
 
             // 計算
-            Result ret =
-                score.calc(testcase.hand, testcase.winning_tile, testcase.flag);
+            Result ret = score.calc(testcase.hand, testcase.win_tile, testcase.flag);
 
             // 照合
             INFO(fmt::format("URL: {} {} {} {} {}", testcase.url, testcase.bakaze,

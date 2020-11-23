@@ -9,9 +9,9 @@
 | 赤           | あか                     | Aka              |
 | 赤ドラ       | あかどら                 | AkaDora          |
 | 赤牌         | あかはい                 | Akahai           |
-| 和了り       | あがり                   | Agari            |
-| 和了り形     | あがりけい               | Agarikei         |
-| 和了牌       | あがりはい               | WinningTile      |
+| 和了       | あがり                   | Agari            |
+| 和了形     | あがりけい               | Agarikei         |
+| 和了牌       | あがりはい               | Agarihai      |
 | 暗槓         | あんかん                 | Ankan            |
 | 暗刻子       | あんこーつ               | Ankotu           |
 | 暗順子       | あんしゅんつ             | Ansyuntu         |

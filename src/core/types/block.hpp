@@ -109,11 +109,10 @@ struct WaitType {
  * @brief 待ちの種類を取得する。
  * 
  * @param[in] blocks 面子構成
- * @param[in] winning_tile 和了牌
+ * @param[in] win_tile 和了牌
  * @return int 待ちの種類
  */
-inline std::vector<int> get_wait_type(const std::vector<Block> &blocks,
-                                      int winning_tile)
+inline std::vector<int> get_wait_type(const std::vector<Block> &blocks, int win_tile)
 {
     std::vector<int> wait_types;
 
@@ -121,18 +120,17 @@ inline std::vector<int> get_wait_type(const std::vector<Block> &blocks,
         if (block.meld)
             continue; // 副露ブロックは待ちにできない
 
-        if ((block.type & Block::Kotu) && block.min_tile == winning_tile) {
+        if ((block.type & Block::Kotu) && block.min_tile == win_tile) {
             wait_types.push_back(WaitType::Syanpon); // 刻子の場合、双ポン待ち
         }
         else if (block.type & Block::Syuntu) {
-            if (block.min_tile + 1 == winning_tile) {
+            if (block.min_tile + 1 == win_tile) {
                 wait_types.push_back(WaitType::Kantyan); // 嵌張待ち
             }
-            else if (block.min_tile == winning_tile ||
-                     block.min_tile + 2 == winning_tile) {
+            else if (block.min_tile == win_tile || block.min_tile + 2 == win_tile) {
                 if (block.min_tile == Tile::Manzu1 || block.min_tile == Tile::Pinzu1 ||
                     block.min_tile == Tile::Sozu1) {
-                    if (block.min_tile == winning_tile)
+                    if (block.min_tile == win_tile)
                         // 123 で和了牌が1の場合、両面待ち
                         wait_types.push_back(WaitType::Ryanmen);
                     else
@@ -142,7 +140,7 @@ inline std::vector<int> get_wait_type(const std::vector<Block> &blocks,
                 else if (block.min_tile == Tile::Manzu7 ||
                          block.min_tile == Tile::Pinzu7 ||
                          block.min_tile == Tile::Sozu7) {
-                    if (block.min_tile == winning_tile)
+                    if (block.min_tile == win_tile)
                         // 789 で和了牌が7の場合、辺張待ち
                         wait_types.push_back(WaitType::Pentyan);
                     else
@@ -154,7 +152,7 @@ inline std::vector<int> get_wait_type(const std::vector<Block> &blocks,
                 }
             }
         }
-        else if ((block.type & Block::Toitu) && block.min_tile == winning_tile) {
+        else if ((block.type & Block::Toitu) && block.min_tile == win_tile) {
             wait_types.push_back(WaitType::Tanki); // 対子の場合、単騎待ち
         }
     }

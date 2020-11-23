@@ -5,13 +5,17 @@
 
 #include <spdlog/spdlog.h>
 
+#include "score.hpp"
+
+namespace mahjong {
+
 /**
  * @brief 手牌を表すビット表記の文字列を取得する。
  *        例: 111256789m 1122p
  * 
  * @return std::string 文字列
  */
-inline std::string Hand::to_bit_string(const Hand &hand)
+inline std::string to_bit_string(const Hand &hand)
 {
     std::string s;
     s += fmt::format("manzu: {:027b}\npinzu: {:027b}\n sozu: {:027b}\nzihai: {:027b}",
@@ -20,7 +24,7 @@ inline std::string Hand::to_bit_string(const Hand &hand)
     return s;
 }
 
-inline std::string Hand::to_count_string(const Hand &hand)
+inline std::string to_count_string(const Hand &hand)
 {
     std::string s;
 
@@ -44,5 +48,39 @@ inline std::string Hand::to_count_string(const Hand &hand)
 
     return s;
 }
+
+/**
+ * @brief 設定を文字列にして返す。
+ * 
+ * @return std::string 文字列
+ */
+inline std::string print_round_info(const ScoreCalculator &score)
+{
+    std::string s;
+
+    s += "[ルール]\n";
+    for (auto rule : {RuleFlag::AkaDora, RuleFlag::OpenTanyao}) {
+        s += fmt::format("  {}: {}\n", RuleFlag::Names.at(rule),
+                         (score.rules() & rule) ? "有り" : "無し");
+    }
+
+    s += fmt::format("[場] 場風: {}, 自風: {}, 積み棒の数: {}, 供託棒の数: {}\n",
+                     Tile::Names.at(score.bakaze()), Tile::Names.at(score.zikaze()),
+                     score.num_tumibo(), score.num_kyotakubo());
+
+    s += "[表ドラ] ";
+    for (const auto &tile : score.dora_tiles())
+        s += fmt::format("{}{}", Tile::Names.at(tile),
+                         &tile == &score.dora_tiles().back() ? "\n" : ", ");
+
+    s += "[裏ドラ] ";
+    for (const auto &tile : score.uradora_tiles())
+        s += fmt::format("{}{}", Tile::Names.at(tile),
+                         &tile == &score.uradora_tiles().back() ? "\n" : ", ");
+
+    return s;
+}
+
+} // namespace mahjong
 
 #endif /* MAHJONG_CPP_UTILS */

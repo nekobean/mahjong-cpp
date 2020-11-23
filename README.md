@@ -10,9 +10,8 @@ Miscellaneous programs about Japanese Mahjong
 
 * [x] 向聴数計算
 * [ ] 有効牌計算
-* [ ] 点数計算
+* [x] 点数計算
 * [ ] 期待値計算
-* [ ] 牌譜解析スクリプト
 
 ## 依存ライブラリ
 
@@ -46,3 +45,8 @@ Hand tehai({Tile::Manzu1, Tile::Manzu1, Tile::Manzu1, Tile::Manzu2, Tile::Manzu5
 int syanten = SyantenCalculator::calc(tehai);
 std::cout << tehai << " " << syanten << std::endl;
 ```
+
+## Bug
+
+* 待ちの種類が複数考えられる場合は一番点数が高いものを待ち牌とする
+* ドラの飜数が　Result::to_string() で表示されない

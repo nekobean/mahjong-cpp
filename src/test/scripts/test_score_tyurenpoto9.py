@@ -66,6 +66,6 @@ for key in tyuren_keys:
 
 
 with open(TESTCASE_DIR / "test_score_tyurenpoto9.txt", "w") as f:
-    for hand, winning_tile, is_established in cases:
+    for hand, win_tile, is_established in cases:
         hand_str = " ".join(str(x) for x in hand)
-        f.write(f"{hand_str} {winning_tile} {int(is_established)}\n")
+        f.write(f"{hand_str} {win_tile} {int(is_established)}\n")

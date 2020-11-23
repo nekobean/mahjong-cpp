@@ -25,8 +25,8 @@ for key in tqdm(product(range(5), repeat=9), total=5 ** 9):
 
     if shanten.calculate_shanten(tiles) == -1:
         tiles = flatten_tile34(tiles)
-        winning_tile = np.random.choice(tiles)
-        cases.append((tiles, winning_tile, True))
+        win_tile = np.random.choice(tiles)
+        cases.append((tiles, win_tile, True))
 
 # 小三元
 for key in tqdm(product(range(5), repeat=9), total=5 ** 9):
@@ -37,10 +37,10 @@ for key in tqdm(product(range(5), repeat=9), total=5 ** 9):
 
     if shanten.calculate_shanten(tiles) == -1:
         tiles = flatten_tile34(tiles)
-        winning_tile = np.random.choice(tiles)
-        cases.append((tiles, winning_tile, False))
+        win_tile = np.random.choice(tiles)
+        cases.append((tiles, win_tile, False))
 
 with open(TESTCASE_DIR / "test_score_daisangen.txt", "w") as f:
-    for hand, winning_tile, is_established in cases:
+    for hand, win_tile, is_established in cases:
         hand_str = " ".join(str(x) for x in hand)
-        f.write(f"{hand_str} {winning_tile} {int(is_established)}\n")
+        f.write(f"{hand_str} {win_tile} {int(is_established)}\n")

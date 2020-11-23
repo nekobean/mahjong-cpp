@@ -331,26 +331,29 @@ def parse_meld(s, player):
 
 
 def convert_flag(yaku_list, is_tumo):
-    flag = 0
-    if is_tumo:
-        flag |= Yaku.Tumo
+    yaku_list = [x for x, _ in yaku_list]
 
-    yaku_list = set(x for x, _ in yaku_list)
-    special_yaku = {
-        Yaku.Tenho,
-        Yaku.Tiho,
-        Yaku.Renho,
-        Yaku.Reach,
-        Yaku.DoubleReach,
-        Yaku.Ippatu,
-        Yaku.Tyankan,
-        Yaku.Rinsyankaiho,
-        Yaku.Haiteitumo,
-        Yaku.Hoteiron,
+    flags = {
+        Yaku.Tumo: 1 << 1,
+        Yaku.Reach: 1 << 2,
+        Yaku.Ippatu: 1 << 3,
+        Yaku.Tyankan: 1 << 4,
+        Yaku.Rinsyankaiho: 1 << 5,
+        Yaku.Haiteitumo: 1 << 6,
+        Yaku.Hoteiron: 1 << 7,
+        Yaku.DoubleReach: 1 << 8,
+        Yaku.Tenho: 1 << 10,
+        Yaku.Tiho: 1 << 11,
+        Yaku.Renho: 1 << 12,
     }
 
-    for yaku in special_yaku & yaku_list:
-        flag |= yaku
+    flag = 0
+    if is_tumo:
+        flag |= flags[Yaku.Tumo]
+
+    for yaku in yaku_list:
+        if yaku in flags:
+            flag |= flags[yaku]
 
     return flag
 
@@ -372,7 +375,7 @@ def parse_agari(tag, bakaze, zikaze_list, path, taku):
     # 入力
     hand_tiles = convert_tiles34(tag["hai"])
     melded_blocks = parse_meld(tag["m"], win_player) if tag.has_attr("m") else []
-    winning_tile = ToTile[int(tag["machi"])]
+    win_tile = ToTile[int(tag["machi"])]
     flag = 0
 
     # 結果
@@ -399,14 +402,14 @@ def parse_agari(tag, bakaze, zikaze_list, path, taku):
     is_tumo = win_player == lose_player
 
     if is_tumo and is_host:
-        # 親ツモ
-        non_host_payment = payments[0]
-        score = [income, non_host_payment]
+        # 親自摸
+        child_payment = payments[0]
+        score = [income, child_payment]
     elif is_tumo and not is_host:
-        # 子ツモ
-        host_payment = max(payments)
-        non_host_payment = min(payments)
-        score = [income, host_payment, non_host_payment]
+        # 子自摸
+        parent_payment = max(payments)
+        child_payment = min(payments)
+        score = [income, parent_payment, child_payment]
     elif not is_tumo:
         # ロン
         payment = payments[0]
@@ -424,10 +427,10 @@ def parse_agari(tag, bakaze, zikaze_list, path, taku):
         else n_kyotakubo,
         "dora_tiles": dora_tiles,
         "uradora_tiles": uradora_tiles,
-        # 和了り情報
+        # 和了情報
         "hand_tiles": hand_tiles,
         "melded_blocks": melded_blocks,
-        "winning_tile": winning_tile,
+        "win_tile": win_tile,
         "flag": flag,
         # 点数
         "han": han,

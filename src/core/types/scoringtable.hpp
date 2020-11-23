@@ -5,7 +5,7 @@
 
 namespace mahjong {
 
-struct ScoreBoard {
+struct ScoringTable {
 
     /**
      * @brief 子が親にロンされたときに支払う点数
@@ -13,7 +13,7 @@ struct ScoreBoard {
     // clang-format off
     static const inline std::vector<std::vector<int>> Ko2OyaRon = {
     //    1翻    2翻    3翻    4翻
-        {   0,     0,     0,     0}, // 20符 (20符は平和ツモなのでロンの場合はない)
+        {   0,     0,     0,     0}, // 20符 (20符は平和自摸なのでロンの場合はない)
         {   0,  2400,  4800,  9600}, // 25符 (七対子は最低2翻以上)
         {1500,  2900,  5800, 11600}, // 30符
         {2000,  3900,  7700,     0}, // 40符
@@ -33,7 +33,7 @@ struct ScoreBoard {
     // clang-format off
     static const inline std::vector<std::vector<int>> Oya2KoRon = {
     //    1翻   2翻   3翻   4翻
-        {   0,    0,    0,    0}, // 20符 (20符は平和ツモなのでロンの場合はない)
+        {   0,    0,    0,    0}, // 20符 (20符は平和自摸なのでロンの場合はない)
         {   0, 1600, 3200, 6400}, // 25符 (七対子は最低2翻以上)
         {1000, 2000, 3900, 7700}, // 30符
         {1300, 2600, 5200,    0}, // 40符
@@ -48,7 +48,7 @@ struct ScoreBoard {
     // clang-format on
 
     /**
-     * @brief 子が親にツモされたときに支払う点数
+     * @brief 子が親に自摸されたときに支払う点数
      */
     // clang-format off
     static const inline std::vector<std::vector<int>> Ko2OyaTumo = {
@@ -68,7 +68,7 @@ struct ScoreBoard {
     // clang-format on
 
     /**
-     * @brief 親が子にツモされたときに支払う点数
+     * @brief 親が子に自摸されたときに支払う点数
      */
     // clang-format off
     static const inline std::vector<std::vector<int>> Oya2KoTumo = {
@@ -88,7 +88,7 @@ struct ScoreBoard {
     // clang-format on
 
     /**
-     * @brief 子が子にツモされたときに支払う点数 (満貫以上)
+     * @brief 子が子に自摸されたときに支払う点数 (満貫以上)
      */
     // clang-format off
     static const inline std::vector<std::vector<int>> Ko2KoTumo = {
@@ -142,7 +142,7 @@ struct ScoreBoard {
     };
 
     /**
-     * @brief 子が親にツモされたときに支払う点数 (満貫以上)
+     * @brief 子が親に自摸されたときに支払う点数 (満貫以上)
      */
     static const inline std::vector<int> Ko2OyaTumoOverMangan = {
         4000,  // 満貫
@@ -159,7 +159,7 @@ struct ScoreBoard {
     };
 
     /**
-     * @brief 親が子にツモされたときに支払う点数 (満貫以上)
+     * @brief 親が子に自摸されたときに支払う点数 (満貫以上)
      */
     static const inline std::vector<int> Oya2KoTumoOverMangan = {
         4000,  // 満貫
@@ -176,7 +176,7 @@ struct ScoreBoard {
     };
 
     /**
-     * @brief 子が子にツモされたときに支払う点数
+     * @brief 子が子に自摸されたときに支払う点数
      */
     static const inline std::vector<int> Ko2KoTumoOverMangan = {
         2000,  // 満貫

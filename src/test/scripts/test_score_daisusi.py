@@ -35,10 +35,10 @@ for key in kazehai:
         is_established = len([hand[i] for i in range(27, 31) if hand[i] == 3]) == 4
 
         flatten = flatten_tile34(hand)
-        winning_tile = np.random.choice(flatten)
-        cases.append((flatten, winning_tile, is_established))
+        win_tile = np.random.choice(flatten)
+        cases.append((flatten, win_tile, is_established))
 
 with open(TESTCASE_DIR / "test_score_daisusi.txt", "w") as f:
-    for hand, winning_tile, is_established in cases:
+    for hand, win_tile, is_established in cases:
         hand_str = " ".join(str(x) for x in hand)
-        f.write(f"{hand_str} {winning_tile} {int(is_established)}\n")
+        f.write(f"{hand_str} {win_tile} {int(is_established)}\n")
