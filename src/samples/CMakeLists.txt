@@ -1,4 +1,4 @@
-file(GLOB_RECURSE SRC_FILES ../core/*.cpp)
+file(GLOB_RECURSE SRC_FILES ../mahjong/*.cpp)
 file(GLOB ENTRY_FILES ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 
 foreach(ENTRY_FILE ${ENTRY_FILES})

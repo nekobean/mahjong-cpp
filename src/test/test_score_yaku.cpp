@@ -10,9 +10,7 @@
 #define CATCH_CONFIG_ENABLE_BENCHMARKING
 #include <catch2/catch.hpp>
 
-#include "score.hpp"
-#include "syanten.hpp"
-#include "utils.hpp"
+#include "mahjong/mahjong.hpp"
 
 using namespace mahjong;
 
@@ -141,32 +139,30 @@ bool load_cases(const std::string &filename, std::vector<TestCase> &cases)
 
 TEST_CASE("一般役の点数計算")
 {
-    SyantenCalculator::initialize();
-    ScoreCalculator::initialize();
-
     std::vector<TestCase> cases;
     if (!load_cases("test_score_normal_yaku.json", cases))
         return;
 
     ScoreCalculator score;
+    SyantenCalculator::initialize();
 
-    // BENCHMARK("一般役の点数計算")
-    // {
-    //     for (const auto &testcase : cases) {
-    //         // 設定
-    //         score.set_bakaze(testcase.bakaze);
-    //         score.set_zikaze(testcase.zikaze);
-    //         score.set_num_tumibo(testcase.num_tumibo);
-    //         score.set_num_kyotakubo(testcase.num_kyotakubo);
-    //         score.set_dora_tiles(testcase.dora_tiles);
-    //         score.set_uradora_tiles(testcase.uradora_tiles);
-    //         score.set_rule(RuleFlag::AkaDora, testcase.enable_akadora);
-    //         score.set_rule(RuleFlag::OpenTanyao, testcase.enable_kuitan);
+    BENCHMARK("一般役の点数計算")
+    {
+        for (const auto &testcase : cases) {
+            // 設定
+            score.set_bakaze(testcase.bakaze);
+            score.set_zikaze(testcase.zikaze);
+            score.set_num_tumibo(testcase.num_tumibo);
+            score.set_num_kyotakubo(testcase.num_kyotakubo);
+            score.set_dora_tiles(testcase.dora_tiles);
+            score.set_uradora_tiles(testcase.uradora_tiles);
+            score.set_rule(RuleFlag::AkaDora, testcase.enable_akadora);
+            score.set_rule(RuleFlag::OpenTanyao, testcase.enable_kuitan);
 
-    //         // 計算
-    //         Result ret = score.calc(testcase.hand, testcase.win_tile, testcase.flag);
-    //     }
-    // };
+            // 計算
+            Result ret = score.calc(testcase.hand, testcase.win_tile, testcase.flag);
+        }
+    };
 
     SECTION("一般役の点数計算")
     {
@@ -186,7 +182,6 @@ TEST_CASE("一般役の点数計算")
 
             // 照合
             INFO(fmt::format("URL: {}", testcase.url));
-            INFO(print_round_info(score));
             INFO(ret.to_string());
 
             REQUIRE(ret.han == testcase.han);                 // 飜

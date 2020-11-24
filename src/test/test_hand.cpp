@@ -9,7 +9,7 @@
 #define CATCH_CONFIG_ENABLE_BENCHMARKING
 #include <catch2/catch.hpp>
 
-#include "types/types.hpp"
+#include "mahjong/mahjong.hpp"
 
 using namespace mahjong;
 

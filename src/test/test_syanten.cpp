@@ -8,7 +8,7 @@
 #define CATCH_CONFIG_ENABLE_BENCHMARKING
 #include <catch2/catch.hpp>
 
-#include "syanten.hpp"
+#include "mahjong/mahjong.hpp"
 
 using namespace mahjong;
 
@@ -46,6 +46,8 @@ bool load_testcase(std::vector<std::tuple<Hand, int, int, int>> &cases)
         cases.emplace_back(Hand(tiles), std::stoi(tokens[14]), std::stoi(tokens[15]),
                            std::stoi(tokens[16]));
     }
+
+    std::cout << fmt::format("{} testcases loaded.", cases.size()) << std::endl;
 
     return true;
 }

@@ -1,6 +1,4 @@
-#include <spdlog/spdlog.h>
-
-#include "syanten.hpp"
+#include "mahjong/mahjong.hpp"
 
 using namespace mahjong;
 

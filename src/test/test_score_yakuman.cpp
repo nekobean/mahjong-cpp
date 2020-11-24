@@ -8,8 +8,7 @@
 #define CATCH_CONFIG_ENABLE_BENCHMARKING
 #include <catch2/catch.hpp>
 
-#include "score.hpp"
-#include "syanten.hpp"
+#include "mahjong/mahjong.hpp"
 
 using namespace mahjong;
 
@@ -298,9 +297,9 @@ TEST_CASE("四槓子")
                             PlayerType::Player1});
         Hand hand({Tile::Haku, Tile::Haku}, {block1, block2, block3, block4});
 
-        int win_tile = Tile::Haku;
-        bool expected    = true;
-        bool actual      = score.check_sukantu(hand);
+        int win_tile  = Tile::Haku;
+        bool expected = true;
+        bool actual   = score.check_sukantu(hand);
         INFO(fmt::format("手牌: {}, 和了牌: {}", hand.to_string(),
                          Tile::Name.at(win_tile)));
         REQUIRE(actual == expected);
@@ -326,9 +325,9 @@ TEST_CASE("四槓子")
                             PlayerType::Player1});
         Hand hand({Tile::Haku, Tile::Haku}, {block1, block2, block3, block4});
 
-        int win_tile = Tile::Haku;
-        bool expected    = false;
-        bool actual      = score.check_sukantu(hand);
+        int win_tile  = Tile::Haku;
+        bool expected = false;
+        bool actual   = score.check_sukantu(hand);
         INFO(fmt::format("手牌: {}, 和了牌: {}", hand.to_string(),
                          Tile::Name.at(win_tile)));
         REQUIRE(actual == expected);
@@ -351,9 +350,9 @@ TEST_CASE("四槓子")
         Hand hand({Tile::Haku, Tile::Haku, Tile::Tyun, Tile::Tyun, Tile::Tyun},
                   {block1, block2, block3});
 
-        int win_tile = Tile::Haku;
-        bool expected    = false;
-        bool actual      = score.check_sukantu(hand);
+        int win_tile  = Tile::Haku;
+        bool expected = false;
+        bool actual   = score.check_sukantu(hand);
         INFO(fmt::format("手牌: {}, 和了牌: {}", hand.to_string(),
                          Tile::Name.at(win_tile)));
         REQUIRE(actual == expected);

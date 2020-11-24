@@ -5,7 +5,7 @@ FetchContent_Declare(
   GIT_TAG        v2.13.1)
 FetchContent_MakeAvailable(Catch2)
 
-file(GLOB_RECURSE SRC_FILES ../core/*.cpp)
+file(GLOB_RECURSE SRC_FILES ../mahjong/*.cpp)
 file(GLOB ENTRY_FILES ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 
 foreach(ENTRY_FILE ${ENTRY_FILES})
