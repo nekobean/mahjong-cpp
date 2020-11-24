@@ -24,7 +24,7 @@ enum {
     Length,
 };
 
-static inline const std::map<int, std::string> Names = {
+static inline const std::map<int, std::string> Name = {
     {Null, "Null"},  {Pon, "ポン"},    {Ti, "チー"},
     {Ankan, "暗槓"}, {Minkan, "明槓"}, {Kakan, "加槓"}};
 
@@ -44,11 +44,11 @@ enum {
     Length,
 };
 
-static inline const std::map<int, std::string> Names = {{Null, "Null"},
-                                                        {Player0, "プレイヤー1"},
-                                                        {Player1, "プレイヤー2"},
-                                                        {Player2, "プレイヤー3"},
-                                                        {Player3, "プレイヤー4"}};
+static inline const std::map<int, std::string> Name = {{Null, "Null"},
+                                                       {Player0, "プレイヤー1"},
+                                                       {Player1, "プレイヤー2"},
+                                                       {Player2, "プレイヤー3"},
+                                                       {Player3, "プレイヤー4"}};
 
 } // namespace PlayerType
 
@@ -66,11 +66,11 @@ enum {
     Length,
 };
 
-static inline const std::map<int, std::string> Names = {{Null, "Null"},
-                                                        {Zitya, "自家"},
-                                                        {Kamitya, "上家"},
-                                                        {Toimen, "対面"},
-                                                        {Simotya, "下家"}};
+static inline const std::map<int, std::string> Name = {{Null, "Null"},
+                                                       {Zitya, "自家"},
+                                                       {Kamitya, "上家"},
+                                                       {Toimen, "対面"},
+                                                       {Simotya, "下家"}};
 
 } // namespace SeatType
 
@@ -128,7 +128,7 @@ inline std::string MeldedBlock::to_string() const
         else if (is_sozu(tile))
             s += std::to_string(tile - 17);
         else
-            s += Tile::Names.at(tile);
+            s += Tile::Name.at(tile);
     }
 
     if (is_manzu(tiles[0]))
@@ -137,7 +137,7 @@ inline std::string MeldedBlock::to_string() const
         s += "p";
     else if (is_sozu(tiles[0]))
         s += "s";
-    s += fmt::format(", {}]", MeldType::Names.at(type));
+    s += fmt::format(", {}]", MeldType::Name.at(type));
 
     return s;
 }

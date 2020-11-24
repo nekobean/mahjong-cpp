@@ -316,7 +316,7 @@ inline std::string Hand::to_string() const
     for (int i = 0; i < 9; ++i) {
         int n = Bit::get_n_tile(zihai, i);
         for (int j = 0; j < n; ++j)
-            s += Tile::Names.at(27 + i);
+            s += Tile::Name.at(27 + i);
     }
 
     // 副露ブロック

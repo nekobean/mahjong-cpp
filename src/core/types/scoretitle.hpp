@@ -26,7 +26,7 @@ struct Hu {
         {Null, -1}, {Hu20, 20}, {Hu25, 25}, {Hu30, 30}, {Hu40, 40},   {Hu50, 50},
         {Hu60, 60}, {Hu70, 70}, {Hu80, 80}, {Hu90, 90}, {Hu100, 100}, {Hu110, 110}};
 
-    static inline std::map<int, std::string> Names = {
+    static inline std::map<int, std::string> Name = {
         {Null, "Null"}, {Hu20, "20符"}, {Hu25, "25符"},   {Hu30, "30符"},
         {Hu40, "40符"}, {Hu50, "50符"}, {Hu60, "60符"},   {Hu70, "70符"},
         {Hu80, "80符"}, {Hu90, "90符"}, {Hu100, "100符"}, {Hu110, "110符"}};
@@ -87,18 +87,18 @@ struct ScoreTitle {
         Length,
     };
 
-    static inline std::map<int, std::string> Names = {{Null, "Null"},
-                                                      {Mangan, "満貫"},
-                                                      {Haneman, "跳満"},
-                                                      {Baiman, "倍満"},
-                                                      {Sanbaiman, "三倍満"},
-                                                      {KazoeYakuman, "数え役満"},
-                                                      {Yakuman, "役満"},
-                                                      {TwoYakuman, "ダブル役満"},
-                                                      {ThreeYakuman, "トリプル役満"},
-                                                      {FourYakuman, "4倍役満"},
-                                                      {FiveYakuman, "5倍役満"},
-                                                      {SixYakuman, "6倍役満"}};
+    static inline std::map<int, std::string> Name = {{Null, "Null"},
+                                                     {Mangan, "満貫"},
+                                                     {Haneman, "跳満"},
+                                                     {Baiman, "倍満"},
+                                                     {Sanbaiman, "三倍満"},
+                                                     {KazoeYakuman, "数え役満"},
+                                                     {Yakuman, "役満"},
+                                                     {TwoYakuman, "ダブル役満"},
+                                                     {ThreeYakuman, "トリプル役満"},
+                                                     {FourYakuman, "4倍役満"},
+                                                     {FiveYakuman, "5倍役満"},
+                                                     {SixYakuman, "6倍役満"}};
 
     /**
      * @brief 役満でない点数のタイトルを取得する。
@@ -129,7 +129,7 @@ struct ScoreTitle {
      * @param[in] n 何倍役満かを指定する
      * @return int タイトル
      */
-    static int get_yakuman_title(int n)
+    static int get_score_title(int n)
     {
         if (n == 1)
             return Yakuman;

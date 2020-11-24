@@ -118,7 +118,7 @@ struct Result {
 
         s += "[結果]\n";
         s += fmt::format("手牌: {}, 和了牌: {} {}\n", tehai.to_string(),
-                         Tile::Names.at(win_tile), tumo ? "自摸" : "ロン");
+                         Tile::Name.at(win_tile), tumo ? "自摸" : "ロン");
 
         if (hu != -1) {
             if (!blocks.empty()) {
@@ -138,14 +138,14 @@ struct Result {
 
             s += fmt::format("{}符{}翻\n", hu, han);
             if (score_title != ScoreTitle::Null)
-                s += ScoreTitle::Names[score_title] + "\n";
+                s += ScoreTitle::Name[score_title] + "\n";
         }
         else {
             // 流し満貫、役満
             s += "役:\n";
             for (auto &[yaku, n] : yaku_list)
                 s += fmt::format(" {}\n", Yaku::Info[yaku].name);
-            s += ScoreTitle::Names[score_title] + "\n";
+            s += ScoreTitle::Name[score_title] + "\n";
         }
 
         if (score.size() == 3)

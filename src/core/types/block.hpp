@@ -26,7 +26,7 @@ enum {
     Length = 6,
 };
 
-static inline const std::map<int, std::string> Names = {
+static inline const std::map<int, std::string> Name = {
     {Kotu, "暗刻子"},          {Kotu | Open, "明刻子"},  {Syuntu, "暗順子"},
     {Syuntu | Open, "明順子"}, {Kantu, "暗槓子"},        {Kantu | Open, "明槓子"},
     {Toitu, "暗対子"},         {Toitu | Open, "明対子"},
@@ -48,7 +48,7 @@ enum {
     Tanki,   /* 単騎待ち */
 };
 
-static inline const std::map<int, std::string> Names = {
+static inline const std::map<int, std::string> Name = {
     {Null, "Null"},        {Ryanmen, "両面待ち"},   {Pentyan, "辺張待ち"},
     {Kantyan, "嵌張待ち"}, {Syanpon, "双ポン待ち"}, {Tanki, "単騎待ち"}};
 
@@ -91,21 +91,21 @@ inline std::string Block::to_string() const
     s += "[";
     if (type & BlockType::Kotu) {
         for (int i = 0; i < 3; ++i)
-            s += Tile::Names.at(min_tile);
+            s += Tile::Name.at(min_tile);
     }
     else if (type & BlockType::Syuntu) {
         for (int i = 0; i < 3; ++i)
-            s += Tile::Names.at(min_tile + i);
+            s += Tile::Name.at(min_tile + i);
     }
     else if (type & BlockType::Kantu) {
         for (int i = 0; i < 4; ++i)
-            s += Tile::Names.at(min_tile);
+            s += Tile::Name.at(min_tile);
     }
     else if (type & BlockType::Toitu) {
         for (int i = 0; i < 2; ++i)
-            s += Tile::Names.at(min_tile);
+            s += Tile::Name.at(min_tile);
     }
-    s += fmt::format(", {}]", BlockType::Names.at(type));
+    s += fmt::format(", {}]", BlockType::Name.at(type));
 
     return s;
 }

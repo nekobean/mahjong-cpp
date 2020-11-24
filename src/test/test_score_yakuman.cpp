@@ -111,7 +111,7 @@ TEST_CASE("緑一色")
         for (auto &[hand, win_tile, expected] : cases) {
             bool actual = score.check_ryuiso(hand);
             INFO(fmt::format("手牌: {}, 和了牌: {}", hand.to_string(),
-                             Tile::Names.at(win_tile)));
+                             Tile::Name.at(win_tile)));
             REQUIRE(actual == expected);
         }
     };
@@ -136,7 +136,7 @@ TEST_CASE("大三元")
         for (auto &[hand, win_tile, expected] : cases) {
             bool actual = score.check_daisangen(hand);
             INFO(fmt::format("手牌: {}, 和了牌: {}", hand.to_string(),
-                             Tile::Names.at(win_tile)));
+                             Tile::Name.at(win_tile)));
             REQUIRE(actual == expected);
         }
     };
@@ -161,7 +161,7 @@ TEST_CASE("小四喜")
         for (auto &[hand, win_tile, expected] : cases) {
             bool actual = score.check_syosusi(hand);
             INFO(fmt::format("手牌: {}, 和了牌: {}", hand.to_string(),
-                             Tile::Names.at(win_tile)));
+                             Tile::Name.at(win_tile)));
             REQUIRE(actual == expected);
         }
     };
@@ -186,7 +186,7 @@ TEST_CASE("字一色")
         for (auto &[hand, win_tile, expected] : cases) {
             bool actual = score.check_tuiso(hand);
             INFO(fmt::format("手牌: {}, 和了牌: {}", hand.to_string(),
-                             Tile::Names.at(win_tile)));
+                             Tile::Name.at(win_tile)));
             REQUIRE(actual == expected);
         }
     };
@@ -211,7 +211,7 @@ TEST_CASE("九蓮宝燈")
         for (auto &[hand, win_tile, expected] : cases) {
             bool actual = score.check_tyurenpoto(hand, win_tile);
             INFO(fmt::format("手牌: {}, 和了牌: {}", hand.to_string(),
-                             Tile::Names.at(win_tile)));
+                             Tile::Name.at(win_tile)));
             REQUIRE(actual == expected);
         }
     };
@@ -236,7 +236,7 @@ TEST_CASE("四暗刻")
         for (auto &[hand, win_tile, expected] : cases) {
             bool actual = score.check_suanko(hand, Yaku::Tumo);
             INFO(fmt::format("手牌: {}, 和了牌: {}", hand.to_string(),
-                             Tile::Names.at(win_tile)));
+                             Tile::Name.at(win_tile)));
             REQUIRE(actual == expected);
         }
     };
@@ -261,7 +261,7 @@ TEST_CASE("清老頭")
         for (auto &[hand, win_tile, expected] : cases) {
             bool actual = score.check_tinroto(hand);
             INFO(fmt::format("手牌: {}, 和了牌: {}", hand.to_string(),
-                             Tile::Names.at(win_tile)));
+                             Tile::Name.at(win_tile)));
             REQUIRE(actual == expected);
         }
     };
@@ -302,7 +302,7 @@ TEST_CASE("四槓子")
         bool expected    = true;
         bool actual      = score.check_sukantu(hand);
         INFO(fmt::format("手牌: {}, 和了牌: {}", hand.to_string(),
-                         Tile::Names.at(win_tile)));
+                         Tile::Name.at(win_tile)));
         REQUIRE(actual == expected);
     };
 
@@ -330,7 +330,7 @@ TEST_CASE("四槓子")
         bool expected    = false;
         bool actual      = score.check_sukantu(hand);
         INFO(fmt::format("手牌: {}, 和了牌: {}", hand.to_string(),
-                         Tile::Names.at(win_tile)));
+                         Tile::Name.at(win_tile)));
         REQUIRE(actual == expected);
     };
 
@@ -355,7 +355,7 @@ TEST_CASE("四槓子")
         bool expected    = false;
         bool actual      = score.check_sukantu(hand);
         INFO(fmt::format("手牌: {}, 和了牌: {}", hand.to_string(),
-                         Tile::Names.at(win_tile)));
+                         Tile::Name.at(win_tile)));
         REQUIRE(actual == expected);
     };
 }
@@ -373,7 +373,7 @@ TEST_CASE("四暗刻単騎")
         for (auto &[hand, win_tile, expected] : cases) {
             bool actual = score.check_suanko_tanki(hand, win_tile);
             INFO(fmt::format("手牌: {}, 和了牌: {}", hand.to_string(),
-                             Tile::Names.at(win_tile)));
+                             Tile::Name.at(win_tile)));
             REQUIRE(actual == expected);
         }
     };
@@ -398,7 +398,7 @@ TEST_CASE("大四喜")
         for (auto &[hand, win_tile, expected] : cases) {
             bool actual = score.check_daisusi(hand);
             INFO(fmt::format("手牌: {}, 和了牌: {}", hand.to_string(),
-                             Tile::Names.at(win_tile)));
+                             Tile::Name.at(win_tile)));
             REQUIRE(actual == expected);
         }
     };
@@ -423,7 +423,7 @@ TEST_CASE("純正九蓮宝燈")
         for (auto &[hand, win_tile, expected] : cases) {
             bool actual = score.check_tyurenpoto9(hand, win_tile);
             INFO(fmt::format("手牌: {}, 和了牌: {}", hand.to_string(),
-                             Tile::Names.at(win_tile)));
+                             Tile::Name.at(win_tile)));
             REQUIRE(actual == expected);
         }
     };
@@ -448,7 +448,7 @@ TEST_CASE("国士無双13面待ち")
         for (auto &[hand, win_tile, expected] : cases) {
             bool actual = score.check_kokusi13(hand, win_tile);
             INFO(fmt::format("手牌: {}, 和了牌: {}", hand.to_string(),
-                             Tile::Names.at(win_tile)));
+                             Tile::Name.at(win_tile)));
             REQUIRE(actual == expected);
         }
     };

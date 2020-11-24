@@ -16,7 +16,7 @@ struct SyantenType {
         Kokusi = 4, /* 国士無双手 */
     };
 
-    static inline std::map<int, std::string> Names = {
+    static inline std::map<int, std::string> Name = {
         {SyantenType::Normal, "通常手"},
         {SyantenType::Tiitoi, "七対子手"},
         {SyantenType::Kokusi, "国士無双手"},

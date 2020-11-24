@@ -259,7 +259,7 @@ Result ScoreCalculator::aggregate(const Hand &hand, int win_tile, int flag,
     }
 
     // 点数のタイトルを計算する。
-    int score_title = ScoreTitle::get_yakuman_title(n);
+    int score_title = ScoreTitle::get_score_title(n);
 
     // 点数を計算する。
     auto score = calc_score(-1, -1, score_title, flag & HandFlag::Tumo);
@@ -307,10 +307,12 @@ Result ScoreCalculator::aggregate(const Hand &hand, int win_tile, int flag,
         han += n_uradora;
     }
 
-    int n_akadora = count_akadora(hand);
-    if ((rules_ & RuleFlag::AkaDora) && n_akadora) {
-        yaku_han_list.emplace_back(Yaku::AkaDora, n_akadora);
-        han += n_akadora;
+    if (rules_ & RuleFlag::AkaDora) {
+        int n_akadora = count_akadora(hand);
+        if (n_akadora) {
+            yaku_han_list.emplace_back(Yaku::AkaDora, n_akadora);
+            han += n_akadora;
+        }
     }
 
     // 符集計
@@ -351,7 +353,7 @@ ScoreCalculator::check_arguments(const Hand &hand, int win_tile, int flag) const
     // 和了牌をチェックする。
     if (!hand.contains(win_tile)) {
         std::string err_msg = fmt::format("和了牌 {} が手牌 {} に含まれていません。",
-                                          Tile::Names.at(win_tile), hand.to_string());
+                                          Tile::Name.at(win_tile), hand.to_string());
         return {false, err_msg};
     }
 

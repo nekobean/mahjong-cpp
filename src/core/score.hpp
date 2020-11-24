@@ -33,19 +33,19 @@ enum {
     Renho        = 1 << 12, /* 人和成立 */
 };
 
-static inline const std::map<int, std::string> Names = {{Null, "Null"},
-                                                        {Tumo, "自摸和了"},
-                                                        {Reach, "立直成立"},
-                                                        {Ippatu, "一発成立"},
-                                                        {Tyankan, "搶槓成立"},
-                                                        {Rinsyankaiho, "嶺上開花成立"},
-                                                        {Haiteitumo, "海底撈月成立"},
-                                                        {Hoteiron, "河底撈魚成立"},
-                                                        {DoubleReach, "ダブル立直成立"},
-                                                        {NagasiMangan, "流し満貫成立"},
-                                                        {Tenho, "天和成立"},
-                                                        {Tiho, "地和成立"},
-                                                        {Renho, "人和成立"}};
+static inline const std::map<int, std::string> Name = {{Null, "Null"},
+                                                       {Tumo, "自摸和了"},
+                                                       {Reach, "立直成立"},
+                                                       {Ippatu, "一発成立"},
+                                                       {Tyankan, "搶槓成立"},
+                                                       {Rinsyankaiho, "嶺上開花成立"},
+                                                       {Haiteitumo, "海底撈月成立"},
+                                                       {Hoteiron, "河底撈魚成立"},
+                                                       {DoubleReach, "ダブル立直成立"},
+                                                       {NagasiMangan, "流し満貫成立"},
+                                                       {Tenho, "天和成立"},
+                                                       {Tiho, "地和成立"},
+                                                       {Renho, "人和成立"}};
 } // namespace HandFlag
 
 /**
@@ -58,7 +58,7 @@ enum {
     OpenTanyao = 1 << 2, /* 喰い断有り */
 };
 
-static inline const std::map<int, std::string> Names = {
+static inline const std::map<int, std::string> Name = {
     {Null, "Null"}, {AkaDora, "赤ドラ有り"}, {OpenTanyao, "喰い断有り"}};
 } // namespace RuleFlag
 

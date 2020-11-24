@@ -181,23 +181,23 @@ TEST_CASE("一般役の点数計算")
 
     ScoreCalculator score;
 
-    BENCHMARK("一般役の点数計算")
-    {
-        for (const auto &testcase : cases) {
-            // 設定
-            score.set_bakaze(testcase.bakaze);
-            score.set_zikaze(testcase.zikaze);
-            score.set_num_tumibo(testcase.num_tumibo);
-            score.set_num_kyotakubo(testcase.num_kyotakubo);
-            score.set_dora_tiles(testcase.dora_tiles);
-            score.set_uradora_tiles(testcase.uradora_tiles);
-            score.set_rule(RuleFlag::AkaDora, testcase.enable_akadora);
-            score.set_rule(RuleFlag::OpenTanyao, testcase.enable_kuitan);
+    // BENCHMARK("一般役の点数計算")
+    // {
+    //     for (const auto &testcase : cases) {
+    //         // 設定
+    //         score.set_bakaze(testcase.bakaze);
+    //         score.set_zikaze(testcase.zikaze);
+    //         score.set_num_tumibo(testcase.num_tumibo);
+    //         score.set_num_kyotakubo(testcase.num_kyotakubo);
+    //         score.set_dora_tiles(testcase.dora_tiles);
+    //         score.set_uradora_tiles(testcase.uradora_tiles);
+    //         score.set_rule(RuleFlag::AkaDora, testcase.enable_akadora);
+    //         score.set_rule(RuleFlag::OpenTanyao, testcase.enable_kuitan);
 
-            // 計算
-            Result ret = score.calc(testcase.hand, testcase.win_tile, testcase.flag);
-        }
-    };
+    //         // 計算
+    //         Result ret = score.calc(testcase.hand, testcase.win_tile, testcase.flag);
+    //     }
+    // };
 
     SECTION("一般役の点数計算")
     {
