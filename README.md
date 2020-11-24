@@ -1,26 +1,39 @@
 # mahjong-cpp
 
-## 概要
+## About (概要)
 
 日本のリーチ麻雀のプログラム置き場
 
 Miscellaneous programs about Japanese Mahjong
 
-## 内容
+## Features (機能)
 
-* [x] 向聴数計算
-* [x] 点数計算
-* [ ] 有効牌計算
-* [ ] 期待値計算
+🚧This program is under development. Currently the following features have been implemented.🚧
 
-## ビルドに必要なライブラリ
+* [x] 向聴数計算 (Syanten Number Calculation)
+* [x] 点数計算 (Score Calculation)
+* [ ] 有効牌列挙 (Yukohai Selector)
+* [ ] 捨牌列挙 (Sutehai Selector)
+* [ ] 期待値計算 (Expected Score Calculation)
+
+## Requirements (依存ライブラリ)
 
 * [Boost C++ Libraries](https://www.boost.org/) >= 1.61
 * [CMake](https://cmake.org/) >= 3.1.1
 
-## 使い方
+## How to build (ビルド方法)
 
-### 向聴数計算
+```bash
+git clone https://github.com/nekobean/mahjong-cpp.git
+cd mahjong-cpp
+mkdir build
+cd build
+cmake ..
+```
+
+## Usage (使い方)
+
+### Syanten Number Calculation (向聴数計算)
 
 ```cpp
 #include "mahjong/mahjong.hpp"
@@ -43,7 +56,7 @@ int main(int, char **)
 }
 ```
 
-### 点数計算
+### Score Calculation (点数計算)
 
 ```cpp
 #include "mahjong/mahjong.hpp"
@@ -77,7 +90,7 @@ int main(int, char **)
 }
 ```
 
-## ベンチマーク
+## Benchmark (ベンチマーク)
 
 * Core™ i9-9900K 3.6 GHz
 
@@ -95,7 +108,7 @@ int main(int, char **)
 |------|--------------------|-------------|
 | 一般手  | 128ms              | 311ns |
 
-## テスト
+## Test (テスト)
 
 ### 向聴数計算
 
