@@ -29,7 +29,6 @@ class ScoreCalculator {
 public:
     ScoreCalculator();
 
-    static bool initialize();
     Result calc(const Hand &tehai, int win_tile, int flag = HandFlag::Null);
     std::vector<std::tuple<std::string, int>>
     calc_fu_detail(const std::vector<Block> &blocks, int wait_type, bool is_menzen,

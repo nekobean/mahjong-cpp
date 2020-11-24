@@ -85,6 +85,14 @@ struct MeldedBlock {
     {
     }
 
+    MeldedBlock(int type, std::vector<int> tiles)
+        : type(type)
+        , tiles(tiles)
+        , discarded_tile(!tiles.empty() ? tiles.front() : Tile::Null)
+        , from(PlayerType::Player0)
+    {
+    }
+
     MeldedBlock(int type, std::vector<int> tiles, int discarded_tile, int from)
         : type(type)
         , tiles(tiles)

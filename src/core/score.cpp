@@ -16,16 +16,7 @@ ScoreCalculator::ScoreCalculator()
     , n_tumibo_(0)
     , n_kyotakubo_(0)
 {
-}
-
-/**
- * @brief 初期化する。
- * 
- * @return 初期化に成功した場合は true、そうでない場合は false を返す。
- */
-bool ScoreCalculator::initialize()
-{
-    return HandSeparator::initialize();
+    HandSeparator::initialize();
 }
 
 /**
@@ -1303,10 +1294,6 @@ int ScoreCalculator::count_akadora(const Hand &hand) const
 
     return n_akadora;
 }
-
-////////////////////////////////////////////////////////////////////////////////////////
-/// helper functions
-////////////////////////////////////////////////////////////////////////////////////////
 
 /**
  * @brief 副露ブロックを統合した手牌を作成する。

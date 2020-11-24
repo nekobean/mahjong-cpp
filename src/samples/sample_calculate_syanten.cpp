@@ -17,7 +17,7 @@ int main(int, char **)
         auto [syanten_type, syanten] = SyantenCalculator::calc(hand);
 
         std::cout << fmt::format("手牌: {}, 向聴数の種類: {}, 向聴数: {}",
-                                 hand.to_string(), SyantenTypestd::map<int, std::string> Name[syanten_type],
+                                 hand.to_string(), SyantenType::Name[syanten_type],
                                  syanten)
                   << std::endl;
     }
@@ -37,7 +37,7 @@ int main(int, char **)
             SyantenCalculator::calc(hand, SyantenType::Normal);
 
         std::cout << fmt::format("手牌: {}, 向聴数の種類: {}, 向聴数: {}",
-                                 hand.to_string(), SyantenTypestd::map<int, std::string> Name[syanten_type],
+                                 hand.to_string(), SyantenType::Name[syanten_type],
                                  syanten)
                   << std::endl;
     }
@@ -53,7 +53,7 @@ int main(int, char **)
             SyantenCalculator::calc(hand, SyantenType::Tiitoi);
 
         std::cout << fmt::format("手牌: {}, 向聴数の種類: {}, 向聴数: {}",
-                                 hand.to_string(), SyantenTypestd::map<int, std::string> Name[syanten_type],
+                                 hand.to_string(), SyantenType::Name[syanten_type],
                                  syanten)
                   << std::endl;
     }
@@ -68,7 +68,7 @@ int main(int, char **)
             SyantenCalculator::calc(hand, SyantenType::Kokusi);
 
         std::cout << fmt::format("手牌: {}, 向聴数の種類: {}, 向聴数: {}",
-                                 hand.to_string(), SyantenTypestd::map<int, std::string> Name[syanten_type],
+                                 hand.to_string(), SyantenType::Name[syanten_type],
                                  syanten)
                   << std::endl;
     }

@@ -18,6 +18,9 @@ namespace mahjong {
  */
 bool HandSeparator::initialize()
 {
+    if (!s_tbl_.empty())
+        return true; // 初期化済み
+
     boost::filesystem::path s_tbl_path =
         boost::dll::program_location().parent_path() / "syupai_pattern.json";
     boost::filesystem::path z_tbl_path =
