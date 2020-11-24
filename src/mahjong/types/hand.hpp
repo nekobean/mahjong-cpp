@@ -36,7 +36,7 @@ private:
     bool check_arguments(const std::vector<int> &tiles,
                          const std::vector<MeldedBlock> &melded_blocks);
 
-    friend std::ostream &operator<<(std::ostream &os, const Hand &tehai);
+    friend std::ostream &operator<<(std::ostream &os, const Hand &hand);
 
 public:
     /*! ビット列にした手牌
@@ -95,7 +95,7 @@ inline Hand::Hand()
 /**
  * @brief 手牌を作成する。
  * 
- * @param[in] tehai 手牌の一覧
+ * @param[in] tiles 牌の一覧
  */
 inline Hand::Hand(const std::vector<int> &tiles)
 {
@@ -110,7 +110,7 @@ inline Hand::Hand(const std::vector<int> &tiles)
 /**
  * @brief 手牌を作成する。
  * 
- * @param[in] tehai 手牌の一覧
+ * @param[in] tiles 牌の一覧
  * @param[in] melded_blocks 副露ブロックの一覧
  */
 inline Hand::Hand(const std::vector<int> &tiles,

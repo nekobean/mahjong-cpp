@@ -12,14 +12,14 @@ class HandSeparator {
 public:
     static bool initialize();
     static std::vector<std::tuple<std::vector<Block>, int>>
-    separate(const Hand &tehai, int win_tile, bool tumo);
+    separate(const Hand &hand, int win_tile, bool tumo);
 
 private:
     static bool make_table(const std::string &path,
                            std::map<int, std::vector<std::vector<Block>>> &table);
     static std::vector<Block> get_blocks(const std::string &s);
     static void
-    create_block_patterns(const Hand &tehai, int win_tile, bool tumo,
+    create_block_patterns(const Hand &hand, int win_tile, bool tumo,
                           std::vector<std::tuple<std::vector<Block>, int>> &patterns,
                           std::vector<Block> &blocks, size_t i, int d = 0);
 

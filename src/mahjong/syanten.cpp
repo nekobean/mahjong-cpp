@@ -157,10 +157,10 @@ int SyantenCalculator::calc_tiitoi(const Hand &hand)
     int n_types = s_tbl_[hand.manzu].n_ge1 + s_tbl_[hand.pinzu].n_ge1 +
                   s_tbl_[hand.sozu].n_ge1 + z_tbl_[hand.zihai].n_ge1;
     // 対子の数 (2枚以上の牌) を数える。
-    int n_toitsu = s_tbl_[hand.manzu].n_ge2 + s_tbl_[hand.pinzu].n_ge2 +
-                   s_tbl_[hand.sozu].n_ge2 + z_tbl_[hand.zihai].n_ge2;
+    int n_toitu = s_tbl_[hand.manzu].n_ge2 + s_tbl_[hand.pinzu].n_ge2 +
+                  s_tbl_[hand.sozu].n_ge2 + z_tbl_[hand.zihai].n_ge2;
 
-    int syanten = 6 - n_toitsu;
+    int syanten = 6 - n_toitu;
     if (n_types < 7)
         syanten += 7 - n_types; // 4枚持ちを考慮
 
@@ -185,12 +185,12 @@ int SyantenCalculator::calc_kokusi(const Hand &hand)
                       s_tbl_[sozu19].n_ge1 + z_tbl_[hand.zihai].n_ge1;
 
     // 幺九牌の対子があるかどうか
-    int toitsu_flag = ((manzu19 & 0b110'000'000'000'000'000'000'000'110) |
-                       (pinzu19 & 0b110'000'000'000'000'000'000'000'110) |
-                       (sozu19 & 0b110'000'000'000'000'000'000'000'110) |
-                       (hand.zihai & 0b110'110'110'110'110'110'110)) > 0;
+    int toitu = ((manzu19 & 0b110'000'000'000'000'000'000'000'110) |
+                 (pinzu19 & 0b110'000'000'000'000'000'000'000'110) |
+                 (sozu19 & 0b110'000'000'000'000'000'000'000'110) |
+                 (hand.zihai & 0b110'110'110'110'110'110'110)) > 0;
 
-    return 13 - toitsu_flag - n_yaochuhai;
+    return 13 - toitu - n_yaochuhai;
 }
 
 /**

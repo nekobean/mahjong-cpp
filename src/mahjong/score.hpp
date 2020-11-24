@@ -29,7 +29,7 @@ class ScoreCalculator {
 public:
     ScoreCalculator();
 
-    Result calc(const Hand &tehai, int win_tile, int flag = HandFlag::Null);
+    Result calc(const Hand &hand, int win_tile, int flag = HandFlag::Null);
     std::vector<std::tuple<std::string, int>>
     calc_fu_detail(const std::vector<Block> &blocks, int wait_type, bool is_menzen,
                    bool is_tumo) const;
@@ -58,43 +58,43 @@ public:
     int num_kyotakubo() const;
 
 public:
-    std::tuple<bool, std::string> check_arguments(const Hand &tehai, int win_tile,
+    std::tuple<bool, std::string> check_arguments(const Hand &hand, int win_tile,
                                                   int yaku_list) const;
-    YakuList check_yakuman(const Hand &tehai, int win_tile, int flag,
+    YakuList check_yakuman(const Hand &hand, int win_tile, int flag,
                            int syanten_type) const;
-    YakuList check_not_pattern_yaku(const Hand &tehai, int win_tile, int flag,
+    YakuList check_not_pattern_yaku(const Hand &hand, int win_tile, int flag,
                                     int syanten_type) const;
     std::tuple<YakuList, int, std::vector<Block>, int>
-    check_pattern_yaku(const Hand &tehai, int win_tile, int flag, int syanten_type);
-    Hand merge_hand(const Hand &tehai) const;
+    check_pattern_yaku(const Hand &hand, int win_tile, int flag, int syanten_type);
+    Hand merge_hand(const Hand &hand) const;
     int calc_fu(const std::vector<Block> &blocks, int wait_type, bool is_menzen,
                 bool is_tumo, bool is_pinhu) const;
     std::vector<int> calc_score(bool is_tumo, int score_type, int han = 0,
                                 int fu = 0) const;
-    Result aggregate(const Hand &tehai, int win_tile, int flag, YakuList yaku_list);
-    Result aggregate(const Hand &tehai, int win_tile, int flag, YakuList yaku_list,
+    Result aggregate(const Hand &hand, int win_tile, int flag, YakuList yaku_list);
+    Result aggregate(const Hand &hand, int win_tile, int flag, YakuList yaku_list,
                      int fu, const std::vector<Block> &blocks, int wait_type);
 
     // 役満をチェックする関数
-    bool check_ryuiso(const Hand &tehai) const;
-    bool check_daisangen(const Hand &tehai) const;
-    bool check_syosusi(const Hand &tehai) const;
-    bool check_tuiso(const Hand &tehai) const;
-    bool check_tyurenpoto(const Hand &tehai, int win_tile) const;
-    bool check_suanko(const Hand &tehai, int flag) const;
-    bool check_tinroto(const Hand &tehai) const;
-    bool check_sukantu(const Hand &tehai) const;
-    bool check_suanko_tanki(const Hand &tehai, int win_tile) const;
-    bool check_daisusi(const Hand &tehai) const;
-    bool check_tyurenpoto9(const Hand &tehai, int win_tile) const;
-    bool check_kokusi13(const Hand &tehai, int win_tile) const;
+    bool check_ryuiso(const Hand &hand) const;
+    bool check_daisangen(const Hand &hand) const;
+    bool check_syosusi(const Hand &hand) const;
+    bool check_tuiso(const Hand &hand) const;
+    bool check_tyurenpoto(const Hand &hand, int win_tile) const;
+    bool check_suanko(const Hand &hand, int flag) const;
+    bool check_tinroto(const Hand &hand) const;
+    bool check_sukantu(const Hand &hand) const;
+    bool check_suanko_tanki(const Hand &hand, int win_tile) const;
+    bool check_daisusi(const Hand &hand) const;
+    bool check_tyurenpoto9(const Hand &hand, int win_tile) const;
+    bool check_kokusi13(const Hand &hand, int win_tile) const;
     // 一般役をチェックする関数
-    bool check_tanyao(const Hand &tehai) const;
-    bool check_honroto(const Hand &tehai) const;
-    bool check_honiso(const Hand &tehai) const;
-    bool check_tiniso(const Hand &tehai) const;
-    bool check_syosangen(const Hand &tehai) const;
-    bool check_sankantu(const Hand &tehai) const;
+    bool check_tanyao(const Hand &hand) const;
+    bool check_honroto(const Hand &hand) const;
+    bool check_honiso(const Hand &hand) const;
+    bool check_tiniso(const Hand &hand) const;
+    bool check_syosangen(const Hand &hand) const;
+    bool check_sankantu(const Hand &hand) const;
     bool check_pinhu(const std::vector<Block> blocks, int wait_type) const;
     int check_ipeko(const std::vector<Block> blocks) const;
     bool check_ikkitukan(const std::vector<Block> blocks) const;
@@ -103,8 +103,8 @@ public:
     bool check_toitoiho(const std::vector<Block> blocks) const;
     int check_tyanta(const std::vector<Block> blocks) const;
     bool check_sananko(const std::vector<Block> blocks) const;
-    int count_dora(const Hand &tehai, std::vector<int> dora_list) const;
-    int count_akadora(const Hand &tehai) const;
+    int count_dora(const Hand &hand, std::vector<int> dora_list) const;
+    int count_akadora(const Hand &hand) const;
 
 private:
     /* ゲームルール */
