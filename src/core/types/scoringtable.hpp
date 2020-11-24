@@ -6,6 +6,23 @@
 namespace mahjong {
 
 struct ScoringTable {
+    // 満貫かどうかを判定するテーブル
+    // clang-format off
+    static const inline std::vector<std::vector<int>> IsMangan = {
+        // 1翻    2翻    3翻    4翻
+        {false, false, false, false}, // 20符
+        {false, false, false, false}, // 25符
+        {false, false, false, false}, // 30符
+        {false, false, false, true},  // 40符
+        {false, false, false, true},  // 50符
+        {false, false, false, true},  // 60符
+        {false, false, true,  true},  // 70符
+        {false, false, true,  true},  // 80符
+        {false, false, true,  true},  // 90符
+        {false, false, true,  true},  // 100符
+        {false, false, true,  true},  // 110符
+    };
+    // clang-format on
 
     /**
      * @brief 親がロンした場合に放銃者が支払う点数

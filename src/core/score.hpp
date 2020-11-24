@@ -9,46 +9,6 @@
 namespace mahjong {
 
 /**
- * @brief 手牌に関するフラグ
- * 
- *    自摸和了の場合は門前かどうかに関わらず、Tumo を指定します。
- *    立直、ダブル立直はどれか1つのみ指定できます。
- *    搶槓、嶺上開花、海底撈月、河底撈魚はどれか1つのみ指定できます。
- *    天和、地和、人和はどれか1つのみ指定できます。
- */
-namespace HandFlag {
-enum {
-    Null         = 0,
-    Tumo         = 1 << 1,  /* 自摸和了 */
-    Reach        = 1 << 2,  /* 立直成立 */
-    Ippatu       = 1 << 3,  /* 一発成立 */
-    Tyankan      = 1 << 4,  /* 搶槓成立 */
-    Rinsyankaiho = 1 << 5,  /* 嶺上開花成立 */
-    Haiteitumo   = 1 << 6,  /* 海底撈月成立 */
-    Hoteiron     = 1 << 7,  /* 河底撈魚成立 */
-    DoubleReach  = 1 << 8,  /* ダブル立直成立 */
-    NagasiMangan = 1 << 9,  /* 流し満貫成立 */
-    Tenho        = 1 << 10, /* 天和成立 */
-    Tiho         = 1 << 11, /* 地和成立 */
-    Renho        = 1 << 12, /* 人和成立 */
-};
-
-static inline const std::map<int, std::string> Name = {{Null, "Null"},
-                                                       {Tumo, "自摸和了"},
-                                                       {Reach, "立直成立"},
-                                                       {Ippatu, "一発成立"},
-                                                       {Tyankan, "搶槓成立"},
-                                                       {Rinsyankaiho, "嶺上開花成立"},
-                                                       {Haiteitumo, "海底撈月成立"},
-                                                       {Hoteiron, "河底撈魚成立"},
-                                                       {DoubleReach, "ダブル立直成立"},
-                                                       {NagasiMangan, "流し満貫成立"},
-                                                       {Tenho, "天和成立"},
-                                                       {Tiho, "地和成立"},
-                                                       {Renho, "人和成立"}};
-} // namespace HandFlag
-
-/**
  * @brief ルールに関するフラグ
  */
 namespace RuleFlag {
@@ -71,6 +31,9 @@ public:
 
     static bool initialize();
     Result calc(const Hand &tehai, int win_tile, int flag = HandFlag::Null);
+    std::vector<std::tuple<std::string, int>>
+    calc_fu_detail(const std::vector<Block> &blocks, int wait_type, bool is_menzen,
+                   bool is_tumo) const;
 
     /* パラメータを設定・取得する関数 */
     void set_rules(int rule = RuleFlag::Null);
@@ -104,19 +67,14 @@ public:
                                     int syanten_type) const;
     std::tuple<YakuList, int, std::vector<Block>, int>
     check_pattern_yaku(const Hand &tehai, int win_tile, int flag, int syanten_type);
-
     Hand merge_hand(const Hand &tehai) const;
     int calc_fu(const std::vector<Block> &blocks, int wait_type, bool is_menzen,
                 bool is_tumo, bool is_pinhu) const;
-    std::vector<int> calc_score(int han, int hu, int score_type, bool is_tumo) const;
-    bool is_yakuhai(int tile) const;
-
+    std::vector<int> calc_score(bool is_tumo, int score_type, int han = 0,
+                                int fu = 0) const;
     Result aggregate(const Hand &tehai, int win_tile, int flag, YakuList yaku_list);
     Result aggregate(const Hand &tehai, int win_tile, int flag, YakuList yaku_list,
-                     const std::vector<Block> &blocks, int wait_type);
-    std::tuple<int, std::vector<std::tuple<std::string, int>>>
-    calc_fu(const std::vector<Block> &blocks, int wait_type, bool menzen,
-            bool tumo) const;
+                     int fu, const std::vector<Block> &blocks, int wait_type);
 
     // 役満をチェックする関数
     bool check_ryuiso(const Hand &tehai) const;

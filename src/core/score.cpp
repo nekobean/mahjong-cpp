@@ -39,7 +39,7 @@ bool ScoreCalculator::initialize()
 Result ScoreCalculator::calc(const Hand &hand, int win_tile, int flag)
 {
     if (auto [ok, err_msg] = check_arguments(hand, win_tile, flag); !ok)
-        return {hand, win_tile, err_msg}; // 異常終了
+        return {hand, win_tile, flag, err_msg}; // 異常終了
 
     if (flag & HandFlag::NagasiMangan)
         return aggregate(hand, win_tile, flag, Yaku::NagasiMangan);
@@ -47,7 +47,7 @@ Result ScoreCalculator::calc(const Hand &hand, int win_tile, int flag)
     // 向聴数を計算する。
     auto [syanten_type, syanten] = SyantenCalculator::calc(hand);
     if (syanten != -1)
-        return {hand, win_tile, "和了形ではありません。"};
+        return {hand, win_tile, flag, "和了形ではありません。"};
 
     // 副露牌を手牌に統合する。
     Hand norm_hand = merge_hand(hand);
@@ -55,9 +55,6 @@ Result ScoreCalculator::calc(const Hand &hand, int win_tile, int flag)
     int norm_win_tile = aka2normal(win_tile);
 
     YakuList yaku_list = Yaku::Null;
-    int hu;
-    std::vector<Block> blocks;
-    int wait_type;
 
     // 役満をチェックする。
     yaku_list |= check_yakuman(norm_hand, norm_win_tile, flag, syanten_type);
@@ -68,15 +65,14 @@ Result ScoreCalculator::calc(const Hand &hand, int win_tile, int flag)
     yaku_list |= check_not_pattern_yaku(norm_hand, norm_win_tile, flag, syanten_type);
 
     // 面子構成に関係ある役を調べる。
-    YakuList pattern_yaku_list;
-    std::tie(pattern_yaku_list, hu, blocks, wait_type) =
+    auto [pattern_yaku_list, fu, blocks, wait_type] =
         check_pattern_yaku(hand, norm_win_tile, flag, syanten_type);
     yaku_list |= pattern_yaku_list;
 
     if (!yaku_list)
-        return {hand, win_tile, "役がありません。"};
+        return {hand, win_tile, flag, "役がありません。"};
 
-    return aggregate(hand, win_tile, flag, yaku_list, blocks, wait_type);
+    return aggregate(hand, win_tile, flag, yaku_list, fu, blocks, wait_type);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -248,24 +244,32 @@ const std::vector<int> &ScoreCalculator::uradora_tiles() const
 Result ScoreCalculator::aggregate(const Hand &hand, int win_tile, int flag,
                                   YakuList yaku_list)
 {
-    // 何倍役満か数える。
-    int n = 0;
+    int score_title;
     std::vector<std::tuple<YakuList, int>> yaku_han_list;
-    for (auto yaku : Yaku::Yakuman) {
-        if (yaku_list & yaku) {
-            yaku_han_list.emplace_back(yaku, Yaku::Info[yaku].han[0]);
-            n += Yaku::Info[yaku].han[0];
+
+    if (yaku_list & Yaku::NagasiMangan) {
+        // 流し満貫
+        yaku_han_list.emplace_back(Yaku::NagasiMangan, 0);
+        score_title = ScoreTitle::Mangan;
+    }
+    else {
+        // 役満
+        int n = 0;
+        for (auto yaku : Yaku::Yakuman) {
+            if (yaku_list & yaku) {
+                yaku_han_list.emplace_back(yaku, Yaku::Info[yaku].han[0]);
+                n += Yaku::Info[yaku].han[0];
+            }
         }
+
+        // 点数のタイトルを計算する。
+        score_title = ScoreTitle::get_score_title(n);
     }
 
-    // 点数のタイトルを計算する。
-    int score_title = ScoreTitle::get_score_title(n);
-
     // 点数を計算する。
-    auto score = calc_score(-1, -1, score_title, flag & HandFlag::Tumo);
+    auto score = calc_score(flag & HandFlag::Tumo, score_title);
 
-    return {hand,          win_tile,    bool(flag & HandFlag::Tumo),
-            yaku_han_list, score_title, score};
+    return {hand, win_tile, flag, yaku_han_list, score_title, score};
 }
 
 /**
@@ -279,8 +283,8 @@ Result ScoreCalculator::aggregate(const Hand &hand, int win_tile, int flag,
  * @return Result 結果
  */
 Result ScoreCalculator::aggregate(const Hand &hand, int win_tile, int flag,
-                                  YakuList yaku_list, const std::vector<Block> &blocks,
-                                  int wait_type)
+                                  YakuList yaku_list, int fu,
+                                  const std::vector<Block> &blocks, int wait_type)
 {
     // 飜を計算する。
     int han = 0;
@@ -315,28 +319,14 @@ Result ScoreCalculator::aggregate(const Hand &hand, int win_tile, int flag,
         }
     }
 
-    // 符集計
-    int hu;
-    std::vector<std::tuple<std::string, int>> hu_list;
-    if (yaku_list & Yaku::Tiitoitu) {
-        hu_list.emplace_back("七対子", 25);
-        hu = Hu::Hu25;
-    }
-    else {
-        std::tie(hu, hu_list) =
-            calc_fu(blocks, wait_type, hand.is_menzen(), flag & HandFlag::Tumo);
-    }
-
     // 点数のタイトルを計算する。
-    int score_title = ScoreTitle::get_score_title(hu, han);
+    int score_title = ScoreTitle::get_score_title(fu, han);
 
     // 点数を計算する。
-    auto score = calc_score(han, hu, score_title, flag & HandFlag::Tumo);
+    auto score = calc_score(flag & HandFlag::Tumo, score_title, han, fu);
 
-    return {hand,          win_tile, bool(flag & HandFlag::Tumo),
-            yaku_han_list, hu_list,  score_title,
-            han,           hu,       blocks,
-            score};
+    return {hand, win_tile,    flag,  yaku_han_list, han,
+            fu,   score_title, score, blocks,        wait_type};
 }
 
 /**
@@ -671,9 +661,9 @@ int ScoreCalculator::calc_fu(const std::vector<Block> &blocks, int wait_type,
 {
     // 符計算の例外
     //////////////////////////
-    if (is_pinhu && is_tumo)
+    if (is_pinhu && is_tumo && is_menzen)
         return Hu::Hu20; // 平和形 + 自摸
-    else if (is_pinhu && !is_tumo)
+    else if (is_pinhu && !is_tumo && !is_menzen)
         return Hu::Hu30; // 平和形 + ロン
 
     // 通常の符計算
@@ -696,8 +686,8 @@ int ScoreCalculator::calc_fu(const std::vector<Block> &blocks, int wait_type,
 
     // 面子構成による符
     for (const auto &block : blocks) {
-        int block_fu = 0;
         if (block.type & (BlockType::Kotu | BlockType::Kantu)) { // 刻子、槓子の場合
+            int block_fu = 0;
             if (block.type == (BlockType::Kotu | BlockType::Open))
                 block_fu = 2; // 明刻子
             else if (block.type == BlockType::Kotu)
@@ -717,7 +707,8 @@ int ScoreCalculator::calc_fu(const std::vector<Block> &blocks, int wait_type,
         else if (block.type & BlockType::Toitu) { // 対子の場合
             if (block.min_tile == zikaze_ && block.min_tile == bakaze_)
                 fu += 4; // 連風牌
-            else if (is_yakuhai(block.min_tile))
+            else if (block.min_tile == zikaze_ || block.min_tile == bakaze_ ||
+                     block.min_tile >= Tile::Haku)
                 fu += 2; // 役牌
         }
     }
@@ -728,115 +719,72 @@ int ScoreCalculator::calc_fu(const std::vector<Block> &blocks, int wait_type,
 /**
  * @brief 符を計算する (内訳)。
  */
-std::tuple<int, std::vector<std::tuple<std::string, int>>>
-ScoreCalculator::calc_fu(const std::vector<Block> &blocks, int wait_type, bool menzen,
-                         bool tumo) const
+std::vector<std::tuple<std::string, int>>
+ScoreCalculator::calc_fu_detail(const std::vector<Block> &blocks, int wait_type,
+                                bool is_menzen, bool is_tumo) const
 {
-    std::vector<std::tuple<std::string, int>> hu;
-
-    bool pinhu = check_pinhu(blocks, wait_type);
+    bool is_pinhu = check_pinhu(blocks, wait_type);
 
     // 符計算の例外
     //////////////////////////
-    if (pinhu && tumo && menzen) { // 平和、自摸、門前
-        hu.emplace_back("平和・自摸", 20);
-        return {Hu::Hu20, hu};
+    if (is_pinhu && is_tumo && is_menzen) { // 平和、自摸、門前
+        return {{"平和・自摸", 20}};
     }
-    else if (pinhu && !tumo && !menzen) { // 平和、ロン、非門前
-        hu.emplace_back("喰い平和・ロン", 30);
-        return {Hu::Hu30, hu};
+    else if (is_pinhu && !is_tumo && !is_menzen) { // 平和、ロン、非門前
+        return {{"喰い平和・ロン", 30}};
     }
 
     // 通常の符計算
     //////////////////////////
 
-    // 副底
-    hu.emplace_back("副底", 20);
+    std::vector<std::tuple<std::string, int>> fu_detail;
+    fu_detail.emplace_back("副底", 20);
 
-    // 門前加符
-    if (menzen && !tumo)
-        hu.emplace_back("門前加符", 10);
-    else
-        hu.emplace_back("門前加符", 0);
+    if (is_menzen && !is_tumo)
+        fu_detail.emplace_back("門前加符", 10);
+    else if (is_tumo)
+        fu_detail.emplace_back("自摸加符", 2);
 
-    // 自摸加符
-    if (tumo)
-        hu.emplace_back("自摸加符", 2);
-    else
-        hu.emplace_back("自摸加符", 0);
+    if (wait_type == WaitType::Kantyan || wait_type == WaitType::Pentyan ||
+        wait_type == WaitType::Tanki)
+        fu_detail.emplace_back(fmt::format("待ち: {}", WaitType::Name.at(wait_type)),
+                               2);
 
-    // 待ちによる符
-    if (wait_type == WaitType::Kantyan)
-        hu.emplace_back("待ちによる符: 嵌張待ち", 2);
-    else if (wait_type == WaitType::Pentyan)
-        hu.emplace_back("待ちによる符: 辺張待ち", 2);
-    else if (wait_type == WaitType::Tanki)
-        hu.emplace_back("待ちによる符: 単騎待ち", 2);
-    else if (wait_type == WaitType::Syanpon)
-        hu.emplace_back("待ちによる符: 双ポン待ち", 0);
-    else if (wait_type == WaitType::Ryanmen)
-        hu.emplace_back("待ちによる符: 両面待ち", 0);
-
-    // 面子構成による符
     for (const auto &block : blocks) {
         if (block.type & (BlockType::Kotu | BlockType::Kantu)) {
+            int block_fu = 0;
+            if (block.type == (BlockType::Kotu | BlockType::Open))
+                block_fu = 2; // 明刻子
+            else if (block.type == BlockType::Kotu)
+                block_fu = 4; // 暗刻子
+            else if (block.type == (BlockType::Kantu | BlockType::Open))
+                block_fu = 8; // 明槓子
+            else if (block.type == BlockType::Kantu)
+                block_fu = 16; // 暗槓子
+
             bool yaotyu =
                 block.min_tile == Tile::Manzu1 || block.min_tile == Tile::Manzu9 ||
                 block.min_tile == Tile::Pinzu1 || block.min_tile == Tile::Pinzu9 ||
                 block.min_tile == Tile::Sozu1 || block.min_tile == Tile::Sozu9 ||
                 block.min_tile >= Tile::Ton;
 
-            // 刻子、対子の場合
-            if (block.type == (BlockType::Kotu | BlockType::Open) && !yaotyu)
-                hu.emplace_back(
-                    fmt::format("面子構成による符: {} (断幺牌)", block.to_string()), 2);
-            else if (block.type == BlockType::Kotu && !yaotyu)
-                hu.emplace_back(
-                    fmt::format("面子構成による符: {} (断幺牌)", block.to_string()), 4);
-            else if (block.type == (BlockType::Kantu | BlockType::Open) && !yaotyu)
-                hu.emplace_back(
-                    fmt::format("面子構成による符: {} (断幺牌)", block.to_string()), 8);
-            else if (block.type == BlockType::Kantu && !yaotyu)
-                hu.emplace_back(
-                    fmt::format("面子構成による符: {} (断幺牌)", block.to_string()),
-                    16);
-            else if (block.type == (BlockType::Kotu | BlockType::Open) && yaotyu)
-                hu.emplace_back(
-                    fmt::format("面子構成による符: {} (幺九牌)", block.to_string()), 4);
-            else if (block.type == BlockType::Kotu && yaotyu)
-                hu.emplace_back(
-                    fmt::format("面子構成による符: {} (幺九牌)", block.to_string()), 8);
-            else if (block.type == (BlockType::Kantu | BlockType::Open) && yaotyu)
-                hu.emplace_back(
-                    fmt::format("面子構成による符: {} (幺九牌)", block.to_string()),
-                    16);
-            else if (block.type == BlockType::Kantu && yaotyu)
-                hu.emplace_back(
-                    fmt::format("面子構成による符: {} (幺九牌)", block.to_string()),
-                    32);
+            fu_detail.emplace_back(fmt::format("面子構成: {} {}", block.to_string(),
+                                               yaotyu ? "幺九牌" : "断幺牌"),
+                                   yaotyu ? block_fu * 2 : block_fu);
         }
         else if (block.type & BlockType::Toitu) {
-            // 対子の場合
+            // 対子
             if (block.min_tile == zikaze_ && block.min_tile == bakaze_)
-                hu.emplace_back(fmt::format("雀頭による符: {} 役牌", block.to_string()),
-                                4); // 連風牌の雀頭は4符
-            else if (is_yakuhai(block.min_tile))
-                hu.emplace_back(fmt::format("雀頭による符: {} 役牌", block.to_string()),
-                                2);
-            else
-                hu.emplace_back(fmt::format("雀頭による符: {}", block.to_string()), 0);
-        }
-        else {
-            hu.emplace_back(fmt::format("面子構成による符: {}", block.to_string()), 0);
+                fu_detail.emplace_back(
+                    fmt::format("雀頭: {} 連風牌", block.to_string()), 4);
+            else if (block.min_tile == zikaze_ || block.min_tile == bakaze_ ||
+                     block.min_tile >= Tile::Haku)
+                fu_detail.emplace_back(fmt::format("雀頭: {} 役牌", block.to_string()),
+                                       2);
         }
     }
 
-    int total_hu = 0;
-    for (auto &[type, n] : hu)
-        total_hu += n;
-
-    // 下一桁は切り上げる。
-    return {Hu::round_up_fu(total_hu), hu};
+    return fu_detail;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -1153,7 +1101,9 @@ bool ScoreCalculator::check_pinhu(const std::vector<Block> blocks, int wait_type
         if (block.type & (BlockType::Kotu | BlockType::Kantu))
             return false; // 刻子、槓子の場合
 
-        if ((block.type & BlockType::Toitu) && is_yakuhai(block.min_tile))
+        if ((block.type & BlockType::Toitu) &&
+            (block.min_tile == zikaze_ || block.min_tile == bakaze_ ||
+             block.min_tile >= Tile::Haku))
             return false; // 対子の役牌の場合
     }
 
@@ -1393,30 +1343,19 @@ Hand ScoreCalculator::merge_hand(const Hand &hand) const
 }
 
 /**
- * @brief 役牌かどうか判定する。
- * 
- * @param[in] tile 牌
- * @return 役牌の場合は true、そうでない場合は false を返す。
- */
-bool ScoreCalculator::is_yakuhai(int tile) const
-{
-    return tile == zikaze_ || tile == bakaze_ || tile >= Tile::Haku;
-}
-
-/**
  * @brief プレイヤーの収支を計算する。
  * 
- * @param[in] han 飜
- * @param[in] hu 符
- * @param[in] score_title タイトル
  * @param[in] is_tumo 自摸和了かどうか
+ * @param[in] score_title タイトル
+ * @param[in] han 飜
+ * @param[in] fu 符
  * @return std::vector<int>
  *         親の自摸和了の場合 (和了者の収入, 子の支出)
  *         子の自摸和了の場合 (和了者の収入, 親の支出, 子の支出)
  *         ロン和了の場合     (和了者の収入, 放銃者の支出)
  */
-std::vector<int> ScoreCalculator::calc_score(int han, int hu, int score_title,
-                                             bool is_tumo) const
+std::vector<int> ScoreCalculator::calc_score(bool is_tumo, int score_title, int han,
+                                             int fu) const
 {
     bool is_parent = zikaze_ == Tile::Ton;
 
@@ -1424,7 +1363,7 @@ std::vector<int> ScoreCalculator::calc_score(int han, int hu, int score_title,
         // 親の自摸和了
         int child_payment =
             (score_title == ScoreTitle::Null
-                 ? ScoringTable::ParentTumoChild[hu][han - 1]
+                 ? ScoringTable::ParentTumoChild[fu][han - 1]
                  : ScoringTable::ParentTumoChildOverMangan[score_title]) +
             100 * n_tumibo_;
         int score = 1000 * n_kyotakubo_ + child_payment * 3;
@@ -1435,12 +1374,12 @@ std::vector<int> ScoreCalculator::calc_score(int han, int hu, int score_title,
         // 子の自摸和了
         int parent_payment =
             (score_title == ScoreTitle::Null
-                 ? ScoringTable::ChildTumoParent[hu][han - 1]
+                 ? ScoringTable::ChildTumoParent[fu][han - 1]
                  : ScoringTable::ChildTumoParentOverMangan[score_title]) +
             100 * n_tumibo_;
         int child_payment =
             (score_title == ScoreTitle::Null
-                 ? ScoringTable::ChildTumoChild[hu][han - 1]
+                 ? ScoringTable::ChildTumoChild[fu][han - 1]
                  : ScoringTable::ChildTumoChildOverMangan[score_title]) +
             100 * n_tumibo_;
         int score = 1000 * n_kyotakubo_ + parent_payment + child_payment * 2;
@@ -1450,7 +1389,7 @@ std::vector<int> ScoreCalculator::calc_score(int han, int hu, int score_title,
     else if (!is_tumo && is_parent) {
         // 親のロン和了
         int payment = (score_title == ScoreTitle::Null
-                           ? ScoringTable::ParentRon[hu][han - 1]
+                           ? ScoringTable::ParentRon[fu][han - 1]
                            : ScoringTable::ParentRonOverMangan[score_title]) +
                       300 * n_tumibo_;
         int score = 1000 * n_kyotakubo_ + payment;
@@ -1460,7 +1399,7 @@ std::vector<int> ScoreCalculator::calc_score(int han, int hu, int score_title,
     else {
         // 子のロン和了
         int payment = (score_title == ScoreTitle::Null
-                           ? ScoringTable::ChildRon[hu][han - 1]
+                           ? ScoringTable::ChildRon[fu][han - 1]
                            : ScoringTable::ChildRonOverMangan[score_title]) +
                       300 * n_tumibo_;
         int score = 1000 * n_kyotakubo_ + payment;

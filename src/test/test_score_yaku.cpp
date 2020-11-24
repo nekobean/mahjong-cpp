@@ -139,37 +139,6 @@ bool load_cases(const std::string &filename, std::vector<TestCase> &cases)
     return true;
 }
 
-std::string flag_to_string(int flag)
-{
-    std::string s;
-    if (flag & HandFlag::Tumo)
-        s += "自摸和了 ";
-    if (flag & HandFlag::Tenho)
-        s += "天和成立 ";
-    if (flag & HandFlag::Tiho)
-        s += "自摸和了 ";
-    if (flag & HandFlag::Renho)
-        s += "人和成立 ";
-    if (flag & HandFlag::Reach)
-        s += "立直成立 ";
-    if (flag & HandFlag::DoubleReach)
-        s += "ダブル立直成立 ";
-    if (flag & HandFlag::Ippatu)
-        s += "一発成立 ";
-    if (flag & HandFlag::Tyankan)
-        s += "搶槓成立 ";
-    if (flag & HandFlag::Rinsyankaiho)
-        s += "嶺上開花成立 ";
-    if (flag & HandFlag::Haiteitumo)
-        s += "海底撈月成立 ";
-    if (flag & HandFlag::Hoteiron)
-        s += "河底撈魚成立 ";
-    if (flag & HandFlag::NagasiMangan)
-        s += "流し満貫成立 ";
-
-    return s;
-}
-
 TEST_CASE("一般役の点数計算")
 {
     SyantenCalculator::initialize();
@@ -216,14 +185,12 @@ TEST_CASE("一般役の点数計算")
             Result ret = score.calc(testcase.hand, testcase.win_tile, testcase.flag);
 
             // 照合
-            INFO(fmt::format("URL: {} {} {} {} {}", testcase.url, testcase.bakaze,
-                             testcase.zikaze, testcase.score[0],
-                             testcase.hand.to_string()));
-            INFO(fmt::format("フラグ: {}", flag_to_string(testcase.flag)));
+            INFO(fmt::format("URL: {}", testcase.url));
+            INFO(print_round_info(score));
             INFO(ret.to_string());
 
             REQUIRE(ret.han == testcase.han);                 // 飜
-            REQUIRE(ret.hu == testcase.hu);                   // 符
+            REQUIRE(ret.fu == testcase.hu);                   // 符
             REQUIRE(ret.score_title == testcase.score_title); // タイトル
             // 成立役
             REQUIRE(ret.yaku_list.size() == testcase.yaku_list.size());
