@@ -237,11 +237,15 @@ Result ScoreCalculator::aggregate(const Hand &hand, int win_tile, int flag,
 {
     int score_title;
     std::vector<std::tuple<YakuList, int>> yaku_han_list;
+    std::vector<int> score;
 
     if (yaku_list & Yaku::NagasiMangan) {
         // 流し満貫
         yaku_han_list.emplace_back(Yaku::NagasiMangan, 0);
         score_title = ScoreTitle::Mangan;
+
+        // 流し満貫は自摸扱い
+        score = calc_score(HandFlag::Tumo, score_title);
     }
     else {
         // 役満
@@ -255,10 +259,10 @@ Result ScoreCalculator::aggregate(const Hand &hand, int win_tile, int flag,
 
         // 点数のタイトルを計算する。
         score_title = ScoreTitle::get_score_title(n);
-    }
 
-    // 点数を計算する。
-    auto score = calc_score(flag & HandFlag::Tumo, score_title);
+        // 点数を計算する。
+        score = calc_score(flag & HandFlag::Tumo, score_title);
+    }
 
     return {hand, win_tile, flag, yaku_han_list, score_title, score};
 }
