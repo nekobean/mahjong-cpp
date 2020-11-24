@@ -70,4 +70,18 @@ int main(int, char **)
                                  syanten)
                   << std::endl;
     }
+
+    // 国士無双手の向聴数を計算する
+    {
+        Hand hand({Tile::Ton, Tile::Ton, Tile::Ton, Tile::Ton, Tile::Nan, Tile::Nan,
+                   Tile::Nan, Tile::Nan, Tile::Sya, Tile::Sya, Tile::Sya, Tile::Pe,
+                   Tile::Pe, Tile::Pe});
+
+        auto [syanten_type, syanten] = SyantenCalculator::calc(hand);
+
+        std::cout << fmt::format("手牌: {}, 向聴数の種類: {}, 向聴数: {}",
+                                 hand.to_string(), SyantenType::Name[syanten_type],
+                                 syanten)
+                  << std::endl;
+    }
 }
