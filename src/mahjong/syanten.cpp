@@ -101,24 +101,21 @@ int SyantenCalculator::calc_normal(const Hand &hand)
         // 萬子の雀頭有り
         int n_mentu = n_mentu_base + s_tbl_[hand.manzu].n_mentu_diff;
         int n_kouho = n_kouho_base + s_tbl_[hand.manzu].n_kouho_diff;
-        max         = std::max(max, n_mentu * 2 + std::min(4 - n_mentu, n_kouho) +
-                                s_tbl_[hand.manzu].head);
+        max         = std::max(max, n_mentu * 2 + std::min(4 - n_mentu, n_kouho) + 1);
     }
 
     if (s_tbl_[hand.pinzu].head) {
         // 筒子の雀頭有り
         int n_mentu = n_mentu_base + s_tbl_[hand.pinzu].n_mentu_diff;
         int n_kouho = n_kouho_base + s_tbl_[hand.pinzu].n_kouho_diff;
-        max         = std::max(max, n_mentu * 2 + std::min(4 - n_mentu, n_kouho) +
-                                s_tbl_[hand.pinzu].head);
+        max         = std::max(max, n_mentu * 2 + std::min(4 - n_mentu, n_kouho) + 1);
     }
 
     if (s_tbl_[hand.sozu].head) {
         // 索子の雀頭有り
         int n_mentu = n_mentu_base + s_tbl_[hand.sozu].n_mentu_diff;
         int n_kouho = n_kouho_base + s_tbl_[hand.sozu].n_kouho_diff;
-        max         = std::max(max, n_mentu * 2 + std::min(4 - n_mentu, n_kouho) +
-                                s_tbl_[hand.sozu].head);
+        max         = std::max(max, n_mentu * 2 + std::min(4 - n_mentu, n_kouho) + 1);
     }
 
     if (z_tbl_[hand.zihai].head) {
