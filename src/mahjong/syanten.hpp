@@ -33,27 +33,42 @@ class SyantenCalculator {
         Pattern()
             : n_mentu(-1)
             , n_kouho(-1)
+            , head(-1)
+            , n_mentu_diff(-1)
+            , n_kouho_diff(-1)
         {
         }
 
-        Pattern(char n_mentu, char n_kouho)
+        Pattern(signed char n_mentu, signed char n_kouho, signed char head,
+                signed char n_mentu_diff, signed char n_kouho_diff)
             : n_mentu(n_mentu)
             , n_kouho(n_kouho)
+            , head(head)
+            , n_mentu_diff(n_mentu_diff)
+            , n_kouho_diff(n_kouho_diff)
         {
         }
 
         /*! 面子の数 */
-        char n_mentu;
+        signed char n_mentu;
         /*! 面子候補の数 */
-        char n_kouho;
+        signed char n_kouho;
+
+        /*! 頭あり */
+        signed char head;
+        /*! 面子の数 */
+        signed char n_mentu_diff;
+        /*! 面子候補の数 */
+        signed char n_kouho_diff;
+
         /*! 1枚以上の数 */
-        char n_ge1;
+        signed char n_ge1;
         /*! 2枚以上の数 */
-        char n_ge2;
+        signed char n_ge2;
         /*! 3枚以上の数 */
-        char n_ge3;
+        signed char n_ge3;
         /*! 4枚以上の数 */
-        char n_ge4;
+        signed char n_ge4;
     };
 
 public:

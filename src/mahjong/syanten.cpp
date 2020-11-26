@@ -87,59 +87,45 @@ bool SyantenCalculator::initialize()
 int SyantenCalculator::calc_normal(const Hand &hand)
 {
     // 制約条件「面子 + 候補 <= 4」で「面子数 * 2 + 候補」の最大値を計算する。
+    int n_melds      = int(hand.melded_blocks.size());
+    int n_mentu_base = n_melds + s_tbl_[hand.manzu].n_mentu +
+                       s_tbl_[hand.pinzu].n_mentu + s_tbl_[hand.sozu].n_mentu +
+                       z_tbl_[hand.zihai].n_mentu;
+    int n_kouho_base = s_tbl_[hand.manzu].n_kouho + s_tbl_[hand.pinzu].n_kouho +
+                       s_tbl_[hand.sozu].n_kouho + z_tbl_[hand.zihai].n_kouho;
 
-    int n_melds = int(hand.melded_blocks.size());
-    int n_mentu = n_melds + s_tbl_[hand.manzu].n_mentu + s_tbl_[hand.pinzu].n_mentu +
-                  s_tbl_[hand.sozu].n_mentu + z_tbl_[hand.zihai].n_mentu;
-    int n_kouho = s_tbl_[hand.manzu].n_kouho + s_tbl_[hand.pinzu].n_kouho +
-                  s_tbl_[hand.sozu].n_kouho + z_tbl_[hand.zihai].n_kouho;
+    // 雀頭なし
+    int max = n_mentu_base * 2 + std::min(4 - n_mentu_base, n_kouho_base);
 
-    // 雀頭なしと仮定して計算
-    int max = n_mentu * 2 + std::min(4 - n_mentu, n_kouho);
-
-    for (size_t i = 0; i < 9; ++i) {
-        if ((hand.manzu & Bit::mask[i]) >= Bit::tile2[i]) {
-            // 萬子 i を雀頭とした場合
-            int manzu = hand.manzu - Bit::tile2[i]; // 雀頭とした2枚を手牌から減らす
-            // 雀頭2枚を抜いた結果、変化する部分は萬子の面子数、面子候補数だけなので、以下のように差分だけ調整する。
-            // (m + p + s + z + f) + (m' - m) = m' + p + s + z + f
-            int n_mentu2 = n_mentu + s_tbl_[manzu].n_mentu - s_tbl_[hand.manzu].n_mentu;
-            int n_kouho2 = n_kouho + s_tbl_[manzu].n_kouho - s_tbl_[hand.manzu].n_kouho;
-            // +1 は雀頭分
-            max = std::max(max, n_mentu2 * 2 + std::min(4 - n_mentu2, n_kouho2) + 1);
-        }
-
-        if ((hand.pinzu & Bit::mask[i]) >= Bit::tile2[i]) {
-            // 筒子 i を雀頭とした場合
-            int pinzu    = hand.pinzu - Bit::tile2[i];
-            int n_mentu2 = n_mentu + s_tbl_[pinzu].n_mentu - s_tbl_[hand.pinzu].n_mentu;
-            int n_kouho2 = n_kouho + s_tbl_[pinzu].n_kouho - s_tbl_[hand.pinzu].n_kouho;
-
-            max = std::max(max, n_mentu2 * 2 + std::min(4 - n_mentu2, n_kouho2) + 1);
-        }
-
-        if ((hand.sozu & Bit::mask[i]) >= Bit::tile2[i]) {
-            // 索子 i を雀頭とした場合
-            int sozu     = hand.sozu - Bit::tile2[i];
-            int n_mentu2 = n_mentu + s_tbl_[sozu].n_mentu - s_tbl_[hand.sozu].n_mentu;
-            int n_kouho2 = n_kouho + s_tbl_[sozu].n_kouho - s_tbl_[hand.sozu].n_kouho;
-
-            max = std::max(max, n_mentu2 * 2 + std::min(4 - n_mentu2, n_kouho2) + 1);
-        }
+    if (s_tbl_[hand.manzu].head) {
+        // 萬子の雀頭有り
+        int n_mentu = n_mentu_base + s_tbl_[hand.manzu].n_mentu_diff;
+        int n_kouho = n_kouho_base + s_tbl_[hand.manzu].n_kouho_diff;
+        max         = std::max(max, n_mentu * 2 + std::min(4 - n_mentu, n_kouho) +
+                                s_tbl_[hand.manzu].head);
     }
 
-    for (size_t i = 0; i < 7; ++i) {
-        // 字牌 i を雀頭とした場合
-        if ((hand.zihai & Bit::mask[i]) >= Bit::tile2[i]) {
-            int zihai = hand.zihai - Bit::tile2[i];
+    if (s_tbl_[hand.pinzu].head) {
+        // 筒子の雀頭有り
+        int n_mentu = n_mentu_base + s_tbl_[hand.pinzu].n_mentu_diff;
+        int n_kouho = n_kouho_base + s_tbl_[hand.pinzu].n_kouho_diff;
+        max         = std::max(max, n_mentu * 2 + std::min(4 - n_mentu, n_kouho) +
+                                s_tbl_[hand.pinzu].head);
+    }
 
-            int n_mentu2 =
-                n_mentu + (z_tbl_[zihai].n_mentu - z_tbl_[hand.zihai].n_mentu);
-            int n_kouho2 =
-                n_kouho + (z_tbl_[zihai].n_kouho - z_tbl_[hand.zihai].n_kouho);
+    if (s_tbl_[hand.sozu].head) {
+        // 索子の雀頭有り
+        int n_mentu = n_mentu_base + s_tbl_[hand.sozu].n_mentu_diff;
+        int n_kouho = n_kouho_base + s_tbl_[hand.sozu].n_kouho_diff;
+        max         = std::max(max, n_mentu * 2 + std::min(4 - n_mentu, n_kouho) +
+                                s_tbl_[hand.sozu].head);
+    }
 
-            max = std::max(max, n_mentu2 * 2 + std::min(4 - n_mentu2, n_kouho2) + 1);
-        }
+    if (z_tbl_[hand.zihai].head) {
+        // 字牌の雀頭有り
+        int n_mentu = n_mentu_base + z_tbl_[hand.zihai].n_mentu_diff;
+        int n_kouho = n_kouho_base + z_tbl_[hand.zihai].n_kouho_diff;
+        max         = std::max(max, n_mentu * 2 + std::min(4 - n_mentu, n_kouho) + 1);
     }
 
     return 8 - max;
@@ -223,12 +209,15 @@ bool SyantenCalculator::make_table(const std::string &path, std::vector<Pattern>
         assert(table.size() > hash);
 
         // テーブルに格納する。
-        table[hash].n_mentu = line[10] - '0';
-        table[hash].n_kouho = line[11] - '0';
-        table[hash].n_ge1   = line[12] - '0';
-        table[hash].n_ge2   = line[13] - '0';
-        table[hash].n_ge3   = line[14] - '0';
-        table[hash].n_ge4   = line[15] - '0';
+        table[hash].n_mentu      = line[10] - '0';
+        table[hash].n_kouho      = line[11] - '0';
+        table[hash].head         = line[12] - '0';
+        table[hash].n_mentu_diff = line[13] - '0' - table[hash].n_mentu;
+        table[hash].n_kouho_diff = line[14] - '0' - table[hash].n_kouho;
+        table[hash].n_ge1        = line[15] - '0';
+        table[hash].n_ge2        = line[16] - '0';
+        table[hash].n_ge3        = line[17] - '0';
+        table[hash].n_ge4        = line[18] - '0';
     }
 
     return true;

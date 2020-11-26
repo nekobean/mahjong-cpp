@@ -33,7 +33,7 @@ bool load_testcase(std::vector<std::tuple<Hand, int, int, int>> &cases)
     }
 
     // ファイルを読み込む。
-    // 形式は `<牌1> <牌2> ... <牌14> <一般手の向聴数> <国士無双手の向聴数> <七対子手の向聴数>`
+    // 形式は `<牌1> <牌2> ... <牌14> <一般手の向聴数> <国士手の向聴数> <七対子手の向聴数>`
     std::string line;
     while (std::getline(ifs, line)) {
         std::vector<std::string> tokens;
@@ -52,7 +52,7 @@ bool load_testcase(std::vector<std::tuple<Hand, int, int, int>> &cases)
     return true;
 }
 
-TEST_CASE("Calculate Normal Syanten")
+TEST_CASE("一般手の向聴数")
 {
     std::vector<std::tuple<Hand, int, int, int>> cases;
     if (!load_testcase(cases))
@@ -60,20 +60,20 @@ TEST_CASE("Calculate Normal Syanten")
 
     SyantenCalculator::initialize();
 
-    SECTION("Normal Syanten")
+    SECTION("一般手の向聴数")
     {
         for (auto &[hand, normal, kokusi, tiitoi] : cases)
             REQUIRE(SyantenCalculator::calc_normal(hand) == normal);
     };
 
-    BENCHMARK("Normal Syanten")
+    BENCHMARK("一般手の向聴数")
     {
         for (auto &[hand, normal, kokusi, tiitoi] : cases)
             SyantenCalculator::calc_normal(hand);
     };
 }
 
-TEST_CASE("Calculate Tiitoi Syanten")
+TEST_CASE("七対子手の向聴数")
 {
     std::vector<std::tuple<Hand, int, int, int>> cases;
     if (!load_testcase(cases))
@@ -81,20 +81,20 @@ TEST_CASE("Calculate Tiitoi Syanten")
 
     SyantenCalculator::initialize();
 
-    SECTION("Tiitoi Syanten")
+    SECTION("七対子手の向聴数")
     {
         for (auto &[hand, normal, kokusi, tiitoi] : cases)
             REQUIRE(SyantenCalculator::calc_tiitoi(hand) == tiitoi);
     };
 
-    BENCHMARK("Tiitoi Syanten")
+    BENCHMARK("七対子手の向聴数")
     {
         for (auto &[hand, normal, kokusi, tiitoi] : cases)
             SyantenCalculator::calc_tiitoi(hand);
     };
 }
 
-TEST_CASE("Calculate Kokusi Syanten")
+TEST_CASE("国士手の向聴数")
 {
     std::vector<std::tuple<Hand, int, int, int>> cases;
     if (!load_testcase(cases))
@@ -102,20 +102,20 @@ TEST_CASE("Calculate Kokusi Syanten")
 
     SyantenCalculator::initialize();
 
-    SECTION("Kokusi Syanten")
+    SECTION("国士手の向聴数")
     {
         for (auto &[hand, normal, kokusi, tiitoi] : cases)
             REQUIRE(SyantenCalculator::calc_kokusi(hand) == kokusi);
     };
 
-    BENCHMARK("Kokusi Syanten")
+    BENCHMARK("国士手の向聴数")
     {
         for (auto &[hand, normal, kokusi, tiitoi] : cases)
             SyantenCalculator::calc_kokusi(hand);
     };
 }
 
-TEST_CASE("Calculate All Syanten")
+TEST_CASE("すべての向聴数")
 {
     std::vector<std::tuple<Hand, int, int, int>> cases;
     if (!load_testcase(cases))
@@ -123,7 +123,7 @@ TEST_CASE("Calculate All Syanten")
 
     SyantenCalculator::initialize();
 
-    SECTION("All Syanten")
+    SECTION("すべての向聴数")
     {
         for (auto &[hand, normal, kokusi, tiitoi] : cases) {
             auto [syanten_type, syanten] = SyantenCalculator::calc(hand);
@@ -131,7 +131,7 @@ TEST_CASE("Calculate All Syanten")
         }
     };
 
-    BENCHMARK("All Syanten")
+    BENCHMARK("すべての向聴数")
     {
         for (auto &[hand, normal, kokusi, tiitoi] : cases)
             SyantenCalculator::calc(hand);
@@ -140,8 +140,8 @@ TEST_CASE("Calculate All Syanten")
 
 TEST_CASE("Initialize Syanten Table")
 {
-    BENCHMARK("Syantan table initialization")
-    {
-        return SyantenCalculator::initialize();
-    };
+    // BENCHMARK("Syantan table initialization")
+    // {
+    //     return SyantenCalculator::initialize();
+    // };
 }
