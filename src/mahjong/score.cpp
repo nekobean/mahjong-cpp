@@ -245,7 +245,7 @@ Result ScoreCalculator::aggregate(const Hand &hand, int win_tile, int flag,
         score_title = ScoreTitle::Mangan;
 
         // 流し満貫は自摸扱い
-        score = calc_score(HandFlag::Tumo, score_title);
+        score = calc_score(true, score_title);
     }
     else {
         // 役満
