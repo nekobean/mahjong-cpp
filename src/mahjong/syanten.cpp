@@ -65,6 +65,9 @@ std::tuple<int, int> SyantenCalculator::calc(const Hand &hand, int type)
  */
 bool SyantenCalculator::initialize()
 {
+    if (!s_tbl_.empty())
+        return true; // 初期化済み
+
     boost::filesystem::path s_tbl_path =
         boost::dll::program_location().parent_path() / "syupai_table.txt";
     boost::filesystem::path z_tbl_path =

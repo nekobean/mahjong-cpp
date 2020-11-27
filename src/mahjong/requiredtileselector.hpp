@@ -10,7 +10,8 @@ namespace mahjong {
 class RequiredTileSelector {
 public:
     static std::vector<int> select_normal(const Hand &hand);
-    static std::vector<int> select_normal2(const Hand &hand);
+    static std::vector<int> select_tiitoi(const Hand &hand);
+    static std::vector<int> select_kokusi(const Hand &hand);
 };
 
 } // namespace mahjong

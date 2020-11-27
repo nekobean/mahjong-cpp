@@ -12,8 +12,8 @@ Miscellaneous programs about Japanese Mahjong
 
 * [x] 向聴数計算 (Syanten Number Calculation)
 * [x] 点数計算 (Score Calculation)
-* [ ] 有効牌列挙 (Yukohai Selector)
-* [ ] 捨牌列挙 (Sutehai Selector)
+* [x] 有効牌列挙 (Required Tile Selection)
+* [x] 不要牌列挙 (Unnecessary Tile Selection)
 * [ ] 期待値計算 (Expected Score Calculation)
 
 ## Requirements (依存ライブラリ)
@@ -33,30 +33,10 @@ cmake ..
 
 ## Usage (使い方)
 
-### Syanten Number Calculation (向聴数計算)
-
-```cpp
-#include "mahjong/mahjong.hpp"
-
-using namespace mahjong;
-
-int main(int, char **)
-{
-    Hand hand({Tile::Manzu1, Tile::Manzu1, Tile::Manzu1, Tile::Manzu2,
-                Tile::AkaManzu5, Tile::Manzu6, Tile::Manzu7, Tile::Manzu8,
-                Tile::Manzu9, Tile::Pinzu1, Tile::Pinzu1, Tile::Pinzu2,
-                Tile::Pinzu2});
-
-    auto [syanten_type, syanten] = SyantenCalculator::calc(hand);
-
-    std::cout << fmt::format("手牌: {}, 向聴数の種類: {}, 向聴数: {}",
-                                hand.to_string(), SyantenType::Name[syanten_type],
-                                syanten)
-                << std::endl;
-}
-```
-
-### Score Calculation (点数計算)
+* [向聴数計算 (Syanten Number Calculation)](src/samples/sample_calculate_syanten.cpp)
+* [点数計算 (Score Calculation)](src/samples/sample_calculate_score.cpp)
+* [有効牌選択 (Required Tile Selection)](src/samples/sample_required_tile_selector.cpp)
+* [不要牌選択 (Unnecessary Tile Selection)](src/samples/sample_unnecessary_tile_selector.cpp)
 
 ```cpp
 #include "mahjong/mahjong.hpp"
@@ -125,7 +105,7 @@ int main(int, char **)
 |------|--------------------|-------------|
 | 一般手  | 128ms              | 311ns |
 
-### 有効牌選択
+### 不要牌選択
 
 |      | N=100000 | 1手あたりの平均計算時間  |
 |------|--------------------|-------------|
@@ -133,12 +113,10 @@ int main(int, char **)
 | 七対子手 | 21 ms          | 210ns |
 | 国士手  | 12 ms           | 120ns |
 
-## Test (テスト)
+### 有効牌選択
 
-### 向聴数計算
-
-4万手のテストケースで一般手、七対子手、国士無双手の向聴数が一致することを確認
-
-### 点数計算
-
-天鳳の41万手のテストケースで飜、符、役、点数が一致することを確認
+|      | N=100000 | 1手あたりの平均計算時間  |
+|------|--------------------|-------------|
+| 一般手  | 62 ms           | 620ns |
+| 七対子手 | 35 ms          | 350ns |
+| 国士手  | 13 ms           | 130ns |
