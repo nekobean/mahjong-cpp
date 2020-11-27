@@ -51,56 +51,9 @@ bool load_yakuman_cases(const std::string &filename,
     return true;
 }
 
-/**
- * @brief 点数計算器を初期化する。
- * 
- * @return ScoreCalculator 点数計算器
- */
-ScoreCalculator create_score_calculator()
-{
-    SyantenCalculator::initialize();
-    ScoreCalculator::initialize();
-
-    ScoreCalculator score;
-    score.enable_akadora(true);
-    score.enable_open_tanyao(true);
-    score.set_dora_tiles({Tile::Manzu1});
-    score.set_bakaze(Tile::Ton);
-    score.set_zikaze(Tile::Nan);
-    score.set_num_tumibo(1);
-    score.set_num_kyotakubo(2);
-
-    return score;
-}
-
-TEST_CASE("供託棒")
-{
-    SyantenCalculator::initialize();
-    ScoreCalculator score = create_score_calculator();
-
-    score.set_num_tumibo(1);
-    score.set_num_kyotakubo(2);
-
-    SECTION("Calculate kyotaku score")
-    {
-        score.set_num_tumibo(0);
-        score.set_num_kyotakubo(0);
-        REQUIRE(score.calc_extra_score() == 0);
-
-        score.set_num_tumibo(1);
-        score.set_num_kyotakubo(2);
-        REQUIRE(score.calc_extra_score() == 300 * 1 + 1000 * 2);
-
-        score.set_num_tumibo(5);
-        score.set_num_kyotakubo(2);
-        REQUIRE(score.calc_extra_score() == 300 * 5 + 1000 * 2);
-    };
-}
-
 TEST_CASE("緑一色")
 {
-    SyantenCalculator::initialize();
-    ScoreCalculator score = create_score_calculator();
+    ScoreCalculator score;
 
     std::vector<std::tuple<Hand, int, bool>> cases;
     load_yakuman_cases("test_score_ryuiso.txt", cases);
@@ -124,8 +77,7 @@ TEST_CASE("緑一色")
 
 TEST_CASE("大三元")
 {
-    SyantenCalculator::initialize();
-    ScoreCalculator score = create_score_calculator();
+    ScoreCalculator score;
 
     std::vector<std::tuple<Hand, int, bool>> cases;
     load_yakuman_cases("test_score_daisangen.txt", cases);
@@ -149,8 +101,7 @@ TEST_CASE("大三元")
 
 TEST_CASE("小四喜")
 {
-    SyantenCalculator::initialize();
-    ScoreCalculator score = create_score_calculator();
+    ScoreCalculator score;
 
     std::vector<std::tuple<Hand, int, bool>> cases;
     load_yakuman_cases("test_score_syosusi.txt", cases);
@@ -174,8 +125,7 @@ TEST_CASE("小四喜")
 
 TEST_CASE("字一色")
 {
-    SyantenCalculator::initialize();
-    ScoreCalculator score = create_score_calculator();
+    ScoreCalculator score;
 
     std::vector<std::tuple<Hand, int, bool>> cases;
     load_yakuman_cases("test_score_tuiso.txt", cases);
@@ -199,8 +149,7 @@ TEST_CASE("字一色")
 
 TEST_CASE("九蓮宝燈")
 {
-    SyantenCalculator::initialize();
-    ScoreCalculator score = create_score_calculator();
+    ScoreCalculator score;
 
     std::vector<std::tuple<Hand, int, bool>> cases;
     load_yakuman_cases("test_score_tyurenpoto.txt", cases);
@@ -224,8 +173,7 @@ TEST_CASE("九蓮宝燈")
 
 TEST_CASE("四暗刻")
 {
-    SyantenCalculator::initialize();
-    ScoreCalculator score = create_score_calculator();
+    ScoreCalculator score;
 
     std::vector<std::tuple<Hand, int, bool>> cases;
     load_yakuman_cases("test_score_suanko.txt", cases);
@@ -233,7 +181,8 @@ TEST_CASE("四暗刻")
     SECTION("四暗刻")
     {
         for (auto &[hand, win_tile, expected] : cases) {
-            bool actual = score.check_suanko(hand, Yaku::Tumo);
+            bool actual = score.check_suanko(hand, HandFlag::Tumo);
+
             INFO(fmt::format("手牌: {}, 和了牌: {}", hand.to_string(),
                              Tile::Name.at(win_tile)));
             REQUIRE(actual == expected);
@@ -243,14 +192,13 @@ TEST_CASE("四暗刻")
     BENCHMARK("四暗刻")
     {
         auto &[hand, win_tile, expected] = cases.front();
-        score.check_suanko(hand, Yaku::Tumo);
+        score.check_suanko(hand, HandFlag::Tumo);
     };
 }
 
 TEST_CASE("清老頭")
 {
-    SyantenCalculator::initialize();
-    ScoreCalculator score = create_score_calculator();
+    ScoreCalculator score;
 
     std::vector<std::tuple<Hand, int, bool>> cases;
     load_yakuman_cases("test_score_tinroto.txt", cases);
@@ -274,8 +222,7 @@ TEST_CASE("清老頭")
 
 TEST_CASE("四槓子")
 {
-    SyantenCalculator::initialize();
-    ScoreCalculator score = create_score_calculator();
+    ScoreCalculator score;
 
     SECTION("四槓子成立")
     {
@@ -361,8 +308,7 @@ TEST_CASE("四槓子")
 
 TEST_CASE("四暗刻単騎")
 {
-    SyantenCalculator::initialize();
-    ScoreCalculator score = create_score_calculator();
+    ScoreCalculator score;
 
     std::vector<std::tuple<Hand, int, bool>> cases;
     load_yakuman_cases("test_score_suanko_tanki.txt", cases);
@@ -386,8 +332,7 @@ TEST_CASE("四暗刻単騎")
 
 TEST_CASE("大四喜")
 {
-    SyantenCalculator::initialize();
-    ScoreCalculator score = create_score_calculator();
+    ScoreCalculator score;
 
     std::vector<std::tuple<Hand, int, bool>> cases;
     load_yakuman_cases("test_score_daisusi.txt", cases);
@@ -411,8 +356,7 @@ TEST_CASE("大四喜")
 
 TEST_CASE("純正九蓮宝燈")
 {
-    SyantenCalculator::initialize();
-    ScoreCalculator score = create_score_calculator();
+    ScoreCalculator score;
 
     std::vector<std::tuple<Hand, int, bool>> cases;
     load_yakuman_cases("test_score_tyurenpoto9.txt", cases);
@@ -436,8 +380,7 @@ TEST_CASE("純正九蓮宝燈")
 
 TEST_CASE("国士無双13面待ち")
 {
-    SyantenCalculator::initialize();
-    ScoreCalculator score = create_score_calculator();
+    ScoreCalculator score;
 
     std::vector<std::tuple<Hand, int, bool>> cases;
     load_yakuman_cases("test_kokusi13.txt", cases);

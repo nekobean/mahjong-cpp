@@ -72,6 +72,7 @@ class SyantenCalculator {
     };
 
 public:
+    SyantenCalculator();
     static std::tuple<int, int> calc(const Hand &hand, int type = SyantenType::Normal |
                                                                   SyantenType::Tiitoi |
                                                                   SyantenType::Kokusi);

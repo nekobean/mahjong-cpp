@@ -144,7 +144,6 @@ TEST_CASE("一般役の点数計算")
         return;
 
     ScoreCalculator score;
-    SyantenCalculator::initialize();
 
     BENCHMARK("一般役の点数計算")
     {

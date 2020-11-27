@@ -16,7 +16,6 @@ ScoreCalculator::ScoreCalculator()
     , n_tumibo_(0)
     , n_kyotakubo_(0)
 {
-    HandSeparator::initialize();
 }
 
 /**
@@ -878,12 +877,13 @@ bool ScoreCalculator::check_suanko(const Hand &hand, int flag) const
                 s_tbl[hand.sozu].n_ge4 + z_tbl[hand.zihai].n_ge4;
     int n_ge3 = s_tbl[hand.manzu].n_ge3 + s_tbl[hand.pinzu].n_ge3 +
                 s_tbl[hand.sozu].n_ge3 + z_tbl[hand.zihai].n_ge3;
+    int n_kotu = n_ge3 - n_ge4;
 
     // 牌: 888p 3444r5999s [7777m, 暗槓] のような3枚以上が4つあっても6種類牌があるとだめ
     int n_types = s_tbl[hand.manzu].n_ge1 + s_tbl[hand.pinzu].n_ge1 +
                   s_tbl[hand.sozu].n_ge1 + z_tbl[hand.zihai].n_ge1;
 
-    return n_ge3 - n_ge4 == 4 && n_types == 5;
+    return n_kotu == 4 && n_types == 5;
 }
 
 /**

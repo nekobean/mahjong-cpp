@@ -51,8 +51,6 @@ bool load_testcase(std::vector<Hand> &cases)
 
 TEST_CASE("一般手の不要牌を選択する")
 {
-    SyantenCalculator::initialize();
-
     std::vector<Hand> cases;
     if (!load_testcase(cases))
         return;
@@ -66,8 +64,6 @@ TEST_CASE("一般手の不要牌を選択する")
 
 TEST_CASE("七対子手の不要牌を選択する")
 {
-    SyantenCalculator::initialize();
-
     std::vector<Hand> cases;
     if (!load_testcase(cases))
         return;
@@ -81,8 +77,6 @@ TEST_CASE("七対子手の不要牌を選択する")
 
 TEST_CASE("国士手の不要牌を選択する")
 {
-    SyantenCalculator::initialize();
-
     std::vector<Hand> cases;
     if (!load_testcase(cases))
         return;

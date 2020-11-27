@@ -4,8 +4,6 @@ using namespace mahjong;
 
 int main(int, char **)
 {
-    SyantenCalculator::initialize();
-
     // 一般手の不要牌を計算する
     {
         Hand hand({Tile::Manzu1, Tile::Manzu1, Tile::Manzu1, Tile::Manzu2,

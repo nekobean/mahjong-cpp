@@ -10,6 +10,7 @@ namespace mahjong {
  */
 class HandSeparator {
 public:
+    HandSeparator();
     static bool initialize();
     static std::vector<std::tuple<std::vector<Block>, int>>
     separate(const Hand &hand, int win_tile, bool tumo);

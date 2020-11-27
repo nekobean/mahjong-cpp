@@ -45,8 +45,6 @@ int count_num_required_tiles(const std::vector<int> &count,
 
 int main(int, char **)
 {
-    SyantenCalculator::initialize();
-
     // 一般手の有効牌を計算する
     {
         Hand hand({Tile::Manzu1, Tile::Manzu1, Tile::Manzu1, Tile::Manzu2,

@@ -9,8 +9,10 @@
 
 namespace mahjong {
 
-std::vector<SyantenCalculator::Pattern> SyantenCalculator::s_tbl_;
-std::vector<SyantenCalculator::Pattern> SyantenCalculator::z_tbl_;
+SyantenCalculator::SyantenCalculator()
+{
+    initialize();
+}
 
 /**
  * @brief 向聴数を計算する。
@@ -21,9 +23,6 @@ std::vector<SyantenCalculator::Pattern> SyantenCalculator::z_tbl_;
  */
 std::tuple<int, int> SyantenCalculator::calc(const Hand &hand, int type)
 {
-    if (SyantenCalculator::s_tbl_.empty())
-        initialize();
-
 #ifdef CHECK_ARGUMENT
     if (type < 0 || type > 7) {
         spdlog::warn("Invalid type {} passed.", type);
@@ -222,5 +221,9 @@ bool SyantenCalculator::make_table(const std::string &path, std::vector<Pattern>
 
     return true;
 }
+
+std::vector<SyantenCalculator::Pattern> SyantenCalculator::s_tbl_;
+std::vector<SyantenCalculator::Pattern> SyantenCalculator::z_tbl_;
+static SyantenCalculator inst;
 
 } // namespace mahjong

@@ -58,8 +58,6 @@ TEST_CASE("一般手の向聴数")
     if (!load_testcase(cases))
         return;
 
-    SyantenCalculator::initialize();
-
     SECTION("一般手の向聴数")
     {
         for (auto &[hand, normal, kokusi, tiitoi] : cases)
@@ -78,8 +76,6 @@ TEST_CASE("七対子手の向聴数")
     std::vector<std::tuple<Hand, int, int, int>> cases;
     if (!load_testcase(cases))
         return;
-
-    SyantenCalculator::initialize();
 
     SECTION("七対子手の向聴数")
     {
@@ -100,8 +96,6 @@ TEST_CASE("国士手の向聴数")
     if (!load_testcase(cases))
         return;
 
-    SyantenCalculator::initialize();
-
     SECTION("国士手の向聴数")
     {
         for (auto &[hand, normal, kokusi, tiitoi] : cases)
@@ -120,8 +114,6 @@ TEST_CASE("すべての向聴数")
     std::vector<std::tuple<Hand, int, int, int>> cases;
     if (!load_testcase(cases))
         return;
-
-    SyantenCalculator::initialize();
 
     SECTION("すべての向聴数")
     {
