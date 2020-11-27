@@ -9,7 +9,7 @@ np.random.seed(0)
 
 
 def is_suanko(hand):
-    return sum([x == 3 for x in key]) == 4
+    return sum([x == 3 for x in hand]) == 4 and sum([x == 2 for x in hand]) == 1
 
 
 shanten = Shanten()
