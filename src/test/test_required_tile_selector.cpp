@@ -83,8 +83,10 @@ TEST_CASE("一般手の有効牌を選択する")
 
     BENCHMARK("一般手の有効牌を選択する")
     {
-        for (const auto &hand : cases)
+        for (const auto &hand : cases) {
+
             RequiredTileSelector::select_normal(hand);
+        }
     };
 }
 
@@ -96,8 +98,10 @@ TEST_CASE("七対子手の有効牌を選択する")
 
     BENCHMARK("七対子手の有効牌を選択する")
     {
-        for (const auto &hand : cases)
+        for (const auto &hand : cases) {
+
             RequiredTileSelector::select_tiitoi(hand);
+        }
     };
 }
 
@@ -109,7 +113,9 @@ TEST_CASE("国士手の有効牌を選択する")
 
     BENCHMARK("国士手の有効牌を選択する")
     {
-        for (const auto &hand : cases)
+        for (const auto &hand : cases) {
+
             RequiredTileSelector::select_kokusi(hand);
+        }
     };
 }

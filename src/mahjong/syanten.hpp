@@ -69,6 +69,8 @@ class SyantenCalculator {
         signed char n_ge3;
         /*! 4枚以上の数 */
         signed char n_ge4;
+        /*! 合計数 */
+        signed char n;
     };
 
 public:

@@ -217,6 +217,7 @@ bool SyantenCalculator::make_table(const std::string &path, std::vector<Pattern>
         table[hash].n_ge2        = line[16] - '0';
         table[hash].n_ge3        = line[17] - '0';
         table[hash].n_ge4        = line[18] - '0';
+        table[hash].n            = Bit::sum(hash);
     }
 
     return true;

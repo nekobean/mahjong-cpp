@@ -1,6 +1,7 @@
 #ifndef MAHJONG_CPP_MAHJONG
 #define MAHJONG_CPP_MAHJONG
 
+#include "expectedvaluecalculator.hpp"
 #include "requiredtileselector.hpp"
 #include "score.hpp"
 #include "syanten.hpp"

@@ -4,6 +4,23 @@
 
 namespace mahjong {
 
+/**
+ * @brief 不要牌を選択する。
+ * 
+ * @param[in] hand 手牌
+ * @param[in] type 計算対象の向聴数の種類
+ * @return std::vector<int> 牌一覧
+ */
+std::vector<int> UnnecessaryTileSelector::select(const Hand &hand, int type)
+{
+    if (type & SyantenType::Normal)
+        return select_normal(hand);
+    else if (type & SyantenType::Tiitoi)
+        return select_tiitoi(hand);
+    else
+        return select_kokusi(hand);
+}
+
 std::vector<int> UnnecessaryTileSelector::select_normal(const Hand &hand)
 {
     std::vector<int> tiles;
@@ -12,6 +29,8 @@ std::vector<int> UnnecessaryTileSelector::select_normal(const Hand &hand)
 
     // 打牌前の向聴数を計算する。
     int syanten = SyantenCalculator::calc_normal(hand);
+    if (syanten == -1)
+        return {}; // 和了形
 
     // 打牌後に向聴数が変化しない牌を列挙する。
     for (int i = 0; i < 9; ++i) {

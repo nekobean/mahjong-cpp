@@ -53,7 +53,7 @@ int main(int, char **)
                    Tile::Pinzu2});
 
         // 有効牌を計算する。
-        auto tiles = RequiredTileSelector::select_normal(hand);
+        auto tiles = RequiredTileSelector::select(hand, SyantenType::Normal);
 
         // 各牌の残り枚数を数える。
         auto count = count_left_tiles(hand);
@@ -77,7 +77,7 @@ int main(int, char **)
                    Tile::Manzu8, Tile::Ton, Tile::Nan, Tile::Sya, Tile::Sya});
 
         // 有効牌を計算する。
-        auto tiles = RequiredTileSelector::select_tiitoi(hand);
+        auto tiles = RequiredTileSelector::select(hand, SyantenType::Tiitoi);
 
         // 各牌の残り枚数を数える。
         auto count = count_left_tiles(hand);
@@ -101,7 +101,7 @@ int main(int, char **)
                    Tile::Hatu, Tile::Tyun});
 
         // 有効牌を計算する。
-        auto tiles = RequiredTileSelector::select_kokusi(hand);
+        auto tiles = RequiredTileSelector::select(hand, SyantenType::Kokusi);
 
         // 各牌の残り枚数を数える。
         auto count = count_left_tiles(hand);

@@ -26,7 +26,7 @@ ScoreCalculator::ScoreCalculator()
  * @param[in] flag フラグ
  * @return Result 結果
  */
-Result ScoreCalculator::calc(const Hand &hand, int win_tile, int flag)
+Result ScoreCalculator::calc(const Hand &hand, int win_tile, int flag) const
 {
     if (auto [ok, err_msg] = check_arguments(hand, win_tile, flag); !ok)
         return {hand, win_tile, flag, err_msg}; // 異常終了
@@ -232,7 +232,7 @@ const std::vector<int> &ScoreCalculator::uradora_tiles() const
  * @return Result 結果
  */
 Result ScoreCalculator::aggregate(const Hand &hand, int win_tile, int flag,
-                                  YakuList yaku_list)
+                                  YakuList yaku_list) const
 {
     int score_title;
     std::vector<std::tuple<YakuList, int>> yaku_han_list;
@@ -278,7 +278,7 @@ Result ScoreCalculator::aggregate(const Hand &hand, int win_tile, int flag,
  */
 Result ScoreCalculator::aggregate(const Hand &hand, int win_tile, int flag,
                                   YakuList yaku_list, int fu,
-                                  const std::vector<Block> &blocks, int wait_type)
+                                  const std::vector<Block> &blocks, int wait_type) const
 {
     // 飜を計算する。
     int han = 0;
@@ -558,7 +558,7 @@ YakuList ScoreCalculator::check_not_pattern_yaku(const Hand &hand, int win_tile,
  */
 std::tuple<YakuList, int, std::vector<Block>, int>
 ScoreCalculator::check_pattern_yaku(const Hand &hand, int win_tile, int flag,
-                                    int syanten_type)
+                                    int syanten_type) const
 {
     if (syanten_type == SyantenType::Tiitoi)
         return {Yaku::Null, Hu::Hu25, {}, WaitType::Tanki};
