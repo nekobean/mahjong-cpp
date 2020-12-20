@@ -39,18 +39,17 @@ void ExpectedValueCalculator::calc(const Hand &hand, const ScoreCalculator &scor
     // グラフを作成する。
     int n_tiles = hand.num_tiles() + int(hand.melded_blocks.size()) * 3;
     if (n_tiles == 13)
-        draw(G_, root, syanten);
+        build_tree_draw(G_, root, syanten + 1);
     else
-        discard(G_, root, syanten);
+        build_tree_discard(G_, root, syanten + 1);
 
     if (n_tiles == 14) {
         std::vector<Candidate> candidates = select(G_, root, total_left_tiles, 1);
 
         for (const auto &candidate : candidates) {
-            std::cout << fmt::format("打 {}: 期待値: {:.4f}, 有効牌: {}枚",
+            std::cout << fmt::format("打 {}: 期待値: {:.4f}, 有効牌: {}枚 ",
                                      Tile::Name.at(candidate.tile), candidate.win_exp,
-                                     candidate.total_required_tiles)
-                      << std::endl;
+                                     candidate.total_required_tiles);
 
             for (auto [tile, num] : candidate.required_tiles)
                 std::cout << fmt::format("{}: {}枚 ", Tile::Name.at(tile), num);
@@ -63,7 +62,7 @@ void ExpectedValueCalculator::calc(const Hand &hand, const ScoreCalculator &scor
 }
 
 double ExpectedValueCalculator::draw(const Graph &G, Graph::vertex_descriptor v,
-                                     int total_left_tiles, int turn)
+                                     int sum_required_tiles, int turn)
 {
     int total_required_tiles = 0;
     for (const auto e : boost::make_iterator_range(boost::out_edges(v, G))) {
@@ -71,45 +70,43 @@ double ExpectedValueCalculator::draw(const Graph &G, Graph::vertex_descriptor v,
         total_required_tiles += counts_[data->tile];
     }
 
-    double total_exp = 0;
-
+    double exp = 0;
     for (const auto e : boost::make_iterator_range(boost::out_edges(v, G))) {
-        auto data   = std::static_pointer_cast<DrawData>(G_[e]);
-        auto u      = boost::target(e, G);
-        double exp2 = 1; // 前回の巡目までに有効牌を自摸れない確率
-        double exp3 = 1; // 期待値
+        auto data = std::static_pointer_cast<DrawData>(G_[e]);
+        auto u    = boost::target(e, G);
 
-        int n_req_left_tiles = counts_[data->tile]; // 有効牌枚数
+        int n_required_tiles = counts_[data->tile]; // 有効牌枚数
 
-        for (int m = 0; m < 18 - turn - G[v]->syanten; m++) {
-            total_left_tiles -= m; // 無駄ツモ分を残り枚数から引く
+        double prob2 = 1; // 前回の巡目までに有効牌を自摸れない確率
+        for (int i = 1; i <= 18 - turn - G[v]->syanten; i++) {
+            sum_required_tiles -= i; // 無駄ツモ分を残り枚数から引く
 
             // 次のツモで有効牌が引ける確率
-            double exp1 = double(n_req_left_tiles) / total_left_tiles;
+            double prob1 = double(n_required_tiles) / sum_required_tiles;
 
             // 前回のツモまで有効牌が引けない確率
-            if (m > 0) {
-                exp2 *= (double(total_left_tiles + 1 - total_required_tiles) /
-                         double(total_left_tiles + 1));
+            if (i > 1) {
+                prob2 *= (double(sum_required_tiles + 1 - total_required_tiles) /
+                          double(sum_required_tiles + 1));
             }
 
             counts_[data->tile]--;
-            total_left_tiles--; // 有効牌ツモ分を残り枚数から引く
+            sum_required_tiles--; // 有効牌ツモ分を残り枚数から引く
 
             // 向聴数を落として同様に計算
-            double exp3 = discard(G_, u, total_left_tiles, turn + m + 1);
+            double exp3 = discard(G_, u, sum_required_tiles, turn + i);
 
-            total_left_tiles++;
+            sum_required_tiles++;
             counts_[data->tile]++;
 
             // 合計
-            total_exp += exp1 * exp2 * exp3;
+            exp += prob1 * prob2 * exp3;
 
-            total_left_tiles += m;
+            sum_required_tiles += i;
         }
     }
 
-    return total_exp;
+    return exp;
 }
 
 double ExpectedValueCalculator::discard(const Graph &G, Graph::vertex_descriptor v,
@@ -238,14 +235,13 @@ int ExpectedValueCalculator::count_num_required_tiles(const std::vector<int> &co
  * 
  * @param[in,out] G グラフ
  * @param[in] parent 親ノード
- * @param[in] is_tumo 現在のノードが自摸かどうか
- * @param[in] syanten 現在のノードの向聴数
  */
-void ExpectedValueCalculator::draw(Graph &G, Graph::vertex_descriptor parent,
-                                   int syanten)
+void ExpectedValueCalculator::build_tree_draw(Graph &G, Graph::vertex_descriptor parent,
+                                              int n_left_tumo)
 {
     std::vector<int> tiles = RequiredTileSelector::select(hand_, syanten_type_);
     int total_tiles        = count_num_required_tiles(counts_, tiles);
+    int syanten            = G[parent]->syanten;
 
     for (auto tile : tiles) {
         add_tile(hand_, tile);
@@ -256,21 +252,22 @@ void ExpectedValueCalculator::draw(Graph &G, Graph::vertex_descriptor parent,
             node = itr->second;
         }
         else if (syanten == 0) {
-            Result result = score_.calc(hand_, tile, HandFlag::Tumo);
+            Result result = score_.calc(hand_, tile, HandFlag::Tumo | HandFlag::Reach);
             node          = boost::add_vertex(
                 std::make_shared<LeafData>(hand_, syanten - 1, result), G);
             vert_cache_.insert_or_assign(hand_, node);
         }
         else {
-            node = boost::add_vertex(std::make_shared<NodeData>(hand_, syanten - 1), G);
+            auto node_data = std::make_shared<NodeData>(hand_, syanten - 1);
+            node           = boost::add_vertex(node_data, G);
             vert_cache_.insert_or_assign(hand_, node);
         }
 
-        auto data = std::make_shared<DrawData>(tile, counts_[tile], total_tiles);
-        boost::add_edge(parent, node, data, G);
+        auto edge_data = std::make_shared<DrawData>(tile, counts_[tile], total_tiles);
+        boost::add_edge(parent, node, edge_data, G);
 
-        if (syanten > 0 && itr == vert_cache_.end())
-            discard(G, node, syanten - 1);
+        if (syanten > 0 && n_left_tumo > 0 && itr == vert_cache_.end())
+            build_tree_discard(G, node, n_left_tumo - 1);
 
         remove_tile(hand_, tile);
     }
@@ -281,11 +278,10 @@ void ExpectedValueCalculator::draw(Graph &G, Graph::vertex_descriptor parent,
  * 
  * @param[in,out] G グラフ
  * @param[in] parent 親ノード
- * @param[in] is_tumo 現在のノードが自摸かどうか
- * @param[in] syanten 現在のノードの向聴数
  */
-void ExpectedValueCalculator::discard(Graph &G, Graph::vertex_descriptor parent,
-                                      int syanten)
+void ExpectedValueCalculator::build_tree_discard(Graph &G,
+                                                 Graph::vertex_descriptor parent,
+                                                 int n_left_tumo)
 {
     std::vector<int> tiles = UnnecessaryTileSelector::select(hand_, syanten_type_);
 
@@ -298,15 +294,16 @@ void ExpectedValueCalculator::discard(Graph &G, Graph::vertex_descriptor parent,
             node = itr->second;
         }
         else {
-            node = boost::add_vertex(std::make_shared<NodeData>(hand_, syanten), G);
+            auto node_data = std::make_shared<NodeData>(hand_, G[parent]->syanten);
+            node           = boost::add_vertex(node_data, G);
             vert_cache_.insert_or_assign(hand_, node);
         }
 
-        auto data = std::make_shared<DiscardData>(tile);
-        boost::add_edge(parent, node, data, G);
+        auto edge_data = std::make_shared<DiscardData>(tile);
+        boost::add_edge(parent, node, edge_data, G);
 
         if (itr == vert_cache_.end())
-            draw(G, node, syanten);
+            build_tree_draw(G, node, n_left_tumo);
 
         add_tile(hand_, tile);
     }

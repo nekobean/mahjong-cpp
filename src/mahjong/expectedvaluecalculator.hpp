@@ -149,8 +149,10 @@ public:
                                  const std::vector<int> &tiles);
 
     void calc(const Hand &hand, const ScoreCalculator &score, int syanten_type);
-    void discard(Graph &G, Graph::vertex_descriptor parent, int syanten);
-    void draw(Graph &G, Graph::vertex_descriptor parent, int syanten);
+
+    void build_tree_discard(Graph &G, Graph::vertex_descriptor parent, int n_left_tumo);
+    void build_tree_draw(Graph &G, Graph::vertex_descriptor parent, int n_left_tumo);
+
     std::vector<std::tuple<Hand, Result>> get_win_hands();
     double discard(const Graph &G, Graph::vertex_descriptor parent,
                    int total_left_tiles, int turn);
@@ -164,6 +166,7 @@ public:
 private:
     Hand hand_;
     std::vector<int> counts_;
+
     ScoreCalculator score_;
     int syanten_type_;
     Graph G_;

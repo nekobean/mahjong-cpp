@@ -15,9 +15,12 @@ int main(int, char **)
 
     ExpectedValueCalculator calculator;
 
-    Hand hand({Tile::Manzu8, Tile::Manzu8, Tile::Manzu9, Tile::Manzu9, Tile::Manzu9,
-               Tile::Pinzu3, Tile::Pinzu5, Tile::Pinzu5, Tile::Pinzu9, Tile::Sozu2,
-               Tile::Sozu4, Tile::Haku, Tile::Haku, Tile::Tyun});
+    // Hand hand({Tile::Manzu2, Tile::Manzu2, Tile::Manzu2, Tile::Manzu5, Tile::Manzu6,
+    //            Tile::Manzu7, Tile::Pinzu3, Tile::Pinzu4, Tile::Pinzu5, Tile::Sozu3,
+    //            Tile::Sozu3, Tile::Sozu6, Tile::Sozu6, Tile::Sozu7});
+    Hand hand({Tile::Manzu2, Tile::Manzu2, Tile::Tyun, Tile::Manzu9, Tile::Manzu6,
+               Tile::Manzu7, Tile::Pinzu9, Tile::Pinzu4, Tile::Pinzu5, Tile::Sozu3,
+               Tile::Sozu3, Tile::Sozu6, Tile::Sozu6, Tile::Sozu6});
 
     auto [syanten_type, syanten] = SyantenCalculator::calc(hand, SyantenType::Normal);
 
@@ -28,7 +31,7 @@ int main(int, char **)
     calculator.calc(hand, score, SyantenType::Normal);
     auto end = std::chrono::steady_clock::now();
     auto elapsed_ms =
-        std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count();
+        std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
     std::cout << fmt::format("{}ms", elapsed_ms) << std::endl;
 
     auto win_hands = calculator.get_win_hands();
