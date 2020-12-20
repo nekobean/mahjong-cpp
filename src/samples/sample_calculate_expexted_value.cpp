@@ -15,8 +15,8 @@ int main(int, char **)
 
     ExpectedValueCalculator calculator;
 
-    Hand hand({Tile::Manzu1, Tile::Manzu9, Tile::Manzu5, Tile::Manzu8, Tile::Manzu8,
-               Tile::Pinzu3, Tile::Ton, Tile::Pinzu5, Tile::Tyun, Tile::Pinzu9,
+    Hand hand({Tile::Manzu9, Tile::Manzu9, Tile::Manzu9, Tile::Manzu8, Tile::Manzu8,
+               Tile::Pinzu3, Tile::Pinzu5, Tile::Pinzu5, Tile::Tyun, Tile::Pinzu9,
                Tile::Sozu2, Tile::Sozu4, Tile::Haku, Tile::Hatu});
 
     auto [syanten_type, syanten] = SyantenCalculator::calc(hand, SyantenType::Normal);
@@ -37,10 +37,10 @@ int main(int, char **)
                   return std::get<1>(a).score[0] < std::get<1>(b).score[0];
               });
 
-    for (const auto &[hand, result] : win_hands) {
-        std::cout << fmt::format("手牌: {}, 結果: {}符{}翻 {}点", hand.to_string(),
-                                 result.fu, result.han, result.score[0])
-                  << std::endl;
-    }
+    // for (const auto &[hand, result] : win_hands) {
+    //     std::cout << fmt::format("手牌: {}, 結果: {}符{}翻 {}点", hand.to_string(),
+    //                              result.fu, result.han, result.score[0])
+    //               << std::endl;
+    // }
     std::cout << fmt::format("和了形の数: {}", win_hands.size()) << std::endl;
 }

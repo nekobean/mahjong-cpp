@@ -2,13 +2,16 @@
 
 #undef NDEBUG
 #include <assert.h>
+#include <numeric>
 
 namespace mahjong {
 
 /**
- * @brief 
+ * @brief 期待値を計算する。
  * 
- * @param hand 
+ * @param[in] hand 手牌
+ * @param[in] score 点数計算機
+ * @param[in] syanten_type 向聴数の種類
  */
 void ExpectedValueCalculator::calc(const Hand &hand, const ScoreCalculator &score,
                                    int syanten_type)
@@ -18,23 +21,123 @@ void ExpectedValueCalculator::calc(const Hand &hand, const ScoreCalculator &scor
     syanten_type_ = syanten_type;
     G_.clear();
 
+    // 残り牌の枚数を数える。
+    counts_ = count_left_tiles(hand, score.dora_tiles());
+
+    int total_left_tiles = std::accumulate(counts_.begin(), counts_.end(), 0);
+    std::cout << "total_left_tiles " << total_left_tiles << std::endl;
+
+    // 現在の向聴数を計算する。
     auto [_, syanten] = SyantenCalculator::calc(hand, syanten_type_);
     if (syanten == -1)
         return; // 和了形
 
-    // 残り牌の枚数を数える。
-    counts_ = count_left_tiles(hand, score.dora_tiles());
+    int n_tiles = hand.num_tiles() + int(hand.melded_blocks.size()) * 3;
 
     // 現在の手牌をルートノードとする。
     Graph::vertex_descriptor root =
-        boost::add_vertex(std::make_shared<NodeData>(hand), G_);
+        boost::add_vertex(std::make_shared<NodeData>(hand, syanten), G_);
 
-    // 次のアクションが自摸かどうか
-    int n_tiles = hand.num_tiles() + hand.melded_blocks.size() * 3 == 13;
+    // グラフを作成する。
     if (n_tiles == 13)
         draw(G_, root, syanten);
     else
         discard(G_, root, syanten);
+
+    if (n_tiles == 14) {
+        std::vector<Candidate> candidates = select(G_, root, total_left_tiles, 1);
+
+        for (const auto &candidate : candidates) {
+            std::cout << fmt::format("打 {}: {:.4f}", Tile::Name.at(candidate.tile),
+                                     candidate.win_exp)
+                      << std::endl;
+        }
+    }
+    else {
+        draw(G_, root, total_left_tiles, 1);
+    }
+}
+
+double ExpectedValueCalculator::draw(const Graph &G, Graph::vertex_descriptor v,
+                                     int total_left_tiles, int turn)
+{
+    int total_req_left_tiles = 0;
+    for (const auto e : boost::make_iterator_range(boost::out_edges(v, G))) {
+        auto data = std::static_pointer_cast<DrawData>(G_[e]);
+        total_req_left_tiles += counts_[data->tile];
+    }
+
+    double total_exp = 0;
+
+    for (const auto e : boost::make_iterator_range(boost::out_edges(v, G))) {
+        auto data   = std::static_pointer_cast<DrawData>(G_[e]);
+        auto u      = boost::target(e, G);
+        double exp2 = 1; // 前回の巡目までに有効牌を自摸れない確率
+        double exp3 = 1; // 期待値
+
+        int n_req_left_tiles = counts_[data->tile]; // 有効牌枚数
+
+        for (int m = 0; m < 18 - turn - G[v]->syanten; m++) {
+            total_left_tiles -= m; // 無駄ツモ分を残り枚数から引く
+
+            // 次のツモで有効牌が引ける確率
+            double exp1 = double(n_req_left_tiles) / total_left_tiles;
+
+            // 前回のツモまで有効牌が引けない確率
+            if (m > 0) {
+                exp2 *= (double(total_left_tiles + 1 - total_req_left_tiles) /
+                         double(total_left_tiles + 1));
+            }
+
+            total_left_tiles--; // 有効牌ツモ分を残り枚数から引く
+
+            // 向聴数を落として同様に計算
+            double exp3 = discard(G_, u, total_left_tiles, turn + m + 1);
+
+            total_left_tiles++;
+
+            // 合計
+            total_exp += exp1 * exp2 * exp3;
+
+            total_left_tiles += m;
+        }
+    }
+
+    return total_exp;
+}
+
+double ExpectedValueCalculator::discard(const Graph &G, Graph::vertex_descriptor v,
+                                        int total_left_tiles, int turn)
+{
+    if (G_[v]->syanten == -1) {
+        auto data = std::static_pointer_cast<LeafData>(G_[v]);
+        return data->result.score[0];
+    }
+
+    double max_exp = 0;
+    for (const auto e : boost::make_iterator_range(boost::out_edges(v, G))) {
+        double exp = draw(G_, boost::target(e, G), total_left_tiles, turn);
+        max_exp    = std::max(max_exp, exp);
+    }
+
+    return max_exp;
+}
+
+std::vector<Candidate> ExpectedValueCalculator::select(const Graph &G,
+                                                       Graph::vertex_descriptor v,
+                                                       int total_left_tiles, int turn)
+{
+    std::vector<Candidate> candidates;
+
+    for (const auto e : boost::make_iterator_range(boost::out_edges(v, G))) {
+        auto data  = std::static_pointer_cast<DrawData>(G_[e]);
+        auto u     = boost::target(e, G);
+        double exp = draw(G_, u, total_left_tiles, turn);
+
+        candidates.emplace_back(data->tile, 0, 0, exp);
+    }
+
+    return candidates;
 }
 
 Graph &ExpectedValueCalculator::graph()
@@ -128,11 +231,12 @@ void ExpectedValueCalculator::draw(Graph &G, Graph::vertex_descriptor parent,
         }
         else if (syanten == 0) {
             Result result = score_.calc(hand_, tile, HandFlag::Tumo);
-            node = boost::add_vertex(std::make_shared<LeafData>(hand_, result), G);
+            node          = boost::add_vertex(
+                std::make_shared<LeafData>(hand_, syanten - 1, result), G);
             vert_cache_.insert_or_assign(hand_, node);
         }
         else {
-            node = boost::add_vertex(std::make_shared<NodeData>(hand_), G);
+            node = boost::add_vertex(std::make_shared<NodeData>(hand_, syanten - 1), G);
             vert_cache_.insert_or_assign(hand_, node);
         }
 
@@ -168,7 +272,7 @@ void ExpectedValueCalculator::discard(Graph &G, Graph::vertex_descriptor parent,
             node = itr->second;
         }
         else {
-            node = boost::add_vertex(std::make_shared<NodeData>(hand_), G);
+            node = boost::add_vertex(std::make_shared<NodeData>(hand_, syanten), G);
             vert_cache_.insert_or_assign(hand_, node);
         }
 

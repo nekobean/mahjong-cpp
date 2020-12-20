@@ -11,13 +11,30 @@
 
 namespace mahjong {
 
+class Candidate {
+public:
+    Candidate(int tile, double tenpai_prob, double win_prob, double win_exp)
+        : tile(tile)
+        , tenpai_prob(tenpai_prob)
+        , win_prob(win_prob)
+        , win_exp(win_exp)
+    {
+    }
+
+    int tile;
+    double tenpai_prob;
+    double win_prob;
+    double win_exp;
+};
+
 /**
  * @brief ノード
  */
 class NodeData {
 public:
-    NodeData(const Hand &hand)
+    NodeData(const Hand &hand, int syanten)
         : hand(hand)
+        , syanten(syanten)
     {
     }
 
@@ -25,6 +42,9 @@ public:
 
     /*! 手牌 */
     Hand hand;
+
+    /*! 向聴数 */
+    int syanten;
 };
 
 /**
@@ -32,8 +52,8 @@ public:
  */
 class LeafData : public NodeData {
 public:
-    LeafData(const Hand &hand, const Result &result)
-        : NodeData(hand)
+    LeafData(const Hand &hand, int syanten, const Result &result)
+        : NodeData(hand, syanten)
         , result(result)
     {
     }
@@ -126,6 +146,12 @@ public:
     void discard(Graph &G, Graph::vertex_descriptor parent, int syanten);
     void draw(Graph &G, Graph::vertex_descriptor parent, int syanten);
     std::vector<std::tuple<Hand, Result>> get_win_hands();
+    double discard(const Graph &G, Graph::vertex_descriptor parent,
+                   int total_left_tiles, int turn);
+    double draw(const Graph &G, Graph::vertex_descriptor parent, int total_left_tiles,
+                int turn);
+    std::vector<Candidate> select(const Graph &G, Graph::vertex_descriptor parent,
+                                  int total_left_tiles, int turn);
 
     Graph &graph();
 
