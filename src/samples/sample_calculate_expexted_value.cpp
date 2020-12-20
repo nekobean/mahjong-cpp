@@ -8,16 +8,16 @@ int main(int, char **)
 {
     ScoreCalculator score;
     score.set_bakaze(Tile::Ton);
-    score.set_zikaze(Tile::Nan);
+    score.set_zikaze(Tile::Ton);
     score.set_num_tumibo(0);
     score.set_num_kyotakubo(0);
     score.set_dora_tiles({Tile::Pe});
 
     ExpectedValueCalculator calculator;
 
-    Hand hand({Tile::Manzu9, Tile::Manzu9, Tile::Manzu9, Tile::Manzu8, Tile::Manzu8,
-               Tile::Pinzu3, Tile::Pinzu5, Tile::Pinzu5, Tile::Tyun, Tile::Pinzu9,
-               Tile::Sozu2, Tile::Sozu4, Tile::Haku, Tile::Hatu});
+    Hand hand({Tile::Manzu8, Tile::Manzu8, Tile::Manzu9, Tile::Manzu9, Tile::Manzu9,
+               Tile::Pinzu3, Tile::Pinzu5, Tile::Pinzu5, Tile::Pinzu9, Tile::Sozu2,
+               Tile::Sozu4, Tile::Haku, Tile::Haku, Tile::Tyun});
 
     auto [syanten_type, syanten] = SyantenCalculator::calc(hand, SyantenType::Normal);
 

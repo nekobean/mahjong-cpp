@@ -21,24 +21,23 @@ void ExpectedValueCalculator::calc(const Hand &hand, const ScoreCalculator &scor
     syanten_type_ = syanten_type;
     G_.clear();
 
-    // 残り牌の枚数を数える。
+    // 各牌の残り枚数を数える。
     counts_ = count_left_tiles(hand, score.dora_tiles());
 
+    // 合計残り枚数を数える。
     int total_left_tiles = std::accumulate(counts_.begin(), counts_.end(), 0);
-    std::cout << "total_left_tiles " << total_left_tiles << std::endl;
 
     // 現在の向聴数を計算する。
     auto [_, syanten] = SyantenCalculator::calc(hand, syanten_type_);
     if (syanten == -1)
         return; // 和了形
 
-    int n_tiles = hand.num_tiles() + int(hand.melded_blocks.size()) * 3;
-
     // 現在の手牌をルートノードとする。
     Graph::vertex_descriptor root =
         boost::add_vertex(std::make_shared<NodeData>(hand, syanten), G_);
 
     // グラフを作成する。
+    int n_tiles = hand.num_tiles() + int(hand.melded_blocks.size()) * 3;
     if (n_tiles == 13)
         draw(G_, root, syanten);
     else
@@ -48,9 +47,14 @@ void ExpectedValueCalculator::calc(const Hand &hand, const ScoreCalculator &scor
         std::vector<Candidate> candidates = select(G_, root, total_left_tiles, 1);
 
         for (const auto &candidate : candidates) {
-            std::cout << fmt::format("打 {}: {:.4f}", Tile::Name.at(candidate.tile),
-                                     candidate.win_exp)
+            std::cout << fmt::format("打 {}: 期待値: {:.4f}, 有効牌: {}枚",
+                                     Tile::Name.at(candidate.tile), candidate.win_exp,
+                                     candidate.total_required_tiles)
                       << std::endl;
+
+            for (auto [tile, num] : candidate.required_tiles)
+                std::cout << fmt::format("{}: {}枚 ", Tile::Name.at(tile), num);
+            std::cout << std::endl;
         }
     }
     else {
@@ -61,10 +65,10 @@ void ExpectedValueCalculator::calc(const Hand &hand, const ScoreCalculator &scor
 double ExpectedValueCalculator::draw(const Graph &G, Graph::vertex_descriptor v,
                                      int total_left_tiles, int turn)
 {
-    int total_req_left_tiles = 0;
+    int total_required_tiles = 0;
     for (const auto e : boost::make_iterator_range(boost::out_edges(v, G))) {
         auto data = std::static_pointer_cast<DrawData>(G_[e]);
-        total_req_left_tiles += counts_[data->tile];
+        total_required_tiles += counts_[data->tile];
     }
 
     double total_exp = 0;
@@ -85,16 +89,18 @@ double ExpectedValueCalculator::draw(const Graph &G, Graph::vertex_descriptor v,
 
             // 前回のツモまで有効牌が引けない確率
             if (m > 0) {
-                exp2 *= (double(total_left_tiles + 1 - total_req_left_tiles) /
+                exp2 *= (double(total_left_tiles + 1 - total_required_tiles) /
                          double(total_left_tiles + 1));
             }
 
+            counts_[data->tile]--;
             total_left_tiles--; // 有効牌ツモ分を残り枚数から引く
 
             // 向聴数を落として同様に計算
             double exp3 = discard(G_, u, total_left_tiles, turn + m + 1);
 
             total_left_tiles++;
+            counts_[data->tile]++;
 
             // 合計
             total_exp += exp1 * exp2 * exp3;
@@ -110,8 +116,9 @@ double ExpectedValueCalculator::discard(const Graph &G, Graph::vertex_descriptor
                                         int total_left_tiles, int turn)
 {
     if (G_[v]->syanten == -1) {
-        auto data = std::static_pointer_cast<LeafData>(G_[v]);
-        return data->result.score[0];
+        // 和了形
+        auto node_data = std::static_pointer_cast<LeafData>(G_[v]);
+        return node_data->result.score[0];
     }
 
     double max_exp = 0;
@@ -123,18 +130,37 @@ double ExpectedValueCalculator::discard(const Graph &G, Graph::vertex_descriptor
     return max_exp;
 }
 
+/**
+ * @brief 各打牌の情報を計算する。
+ * 
+ * @param[in] G グラフ
+ * @param[in] root ルートノード
+ * @param[in] total_left_tiles 
+ * @param[in] turn 現在の巡目
+ * @return std::vector<Candidate> 
+ */
 std::vector<Candidate> ExpectedValueCalculator::select(const Graph &G,
-                                                       Graph::vertex_descriptor v,
+                                                       Graph::vertex_descriptor root,
                                                        int total_left_tiles, int turn)
 {
     std::vector<Candidate> candidates;
 
-    for (const auto e : boost::make_iterator_range(boost::out_edges(v, G))) {
-        auto data  = std::static_pointer_cast<DrawData>(G_[e]);
-        auto u     = boost::target(e, G);
-        double exp = draw(G_, u, total_left_tiles, turn);
+    for (const auto e1 : boost::make_iterator_range(boost::out_edges(root, G))) {
+        auto data  = std::static_pointer_cast<DrawData>(G_[e1]);
+        double exp = draw(G_, boost::target(e1, G), total_left_tiles, turn);
 
-        candidates.emplace_back(data->tile, 0, 0, exp);
+        std::vector<std::tuple<int, int>> required_tiles;
+        int total_required_tiles = 0;
+        for (const auto e2 :
+             boost::make_iterator_range(boost::out_edges(boost::target(e1, G), G))) {
+            auto data = std::static_pointer_cast<DrawData>(G_[e2]);
+
+            required_tiles.emplace_back(data->tile, counts_[data->tile]);
+            total_required_tiles += counts_[data->tile];
+        }
+
+        candidates.emplace_back(data->tile, total_required_tiles, required_tiles, 0, 0,
+                                exp);
     }
 
     return candidates;
@@ -172,7 +198,7 @@ std::vector<int>
 ExpectedValueCalculator::count_left_tiles(const Hand &hand,
                                           const std::vector<int> &dora_tiles)
 {
-    std::vector<int> counts(34, 4); // 残り牌の枚数
+    std::vector<int> counts(34, 4);
 
     for (int i = 0; i < 34; ++i)
         counts[i] -= hand.num_tiles(i);

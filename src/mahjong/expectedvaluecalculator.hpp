@@ -13,8 +13,12 @@ namespace mahjong {
 
 class Candidate {
 public:
-    Candidate(int tile, double tenpai_prob, double win_prob, double win_exp)
+    Candidate(int tile, int total_required_tiles,
+              const std::vector<std::tuple<int, int>> &required_tiles,
+              double tenpai_prob, double win_prob, double win_exp)
         : tile(tile)
+        , total_required_tiles(total_required_tiles)
+        , required_tiles(required_tiles)
         , tenpai_prob(tenpai_prob)
         , win_prob(win_prob)
         , win_exp(win_exp)
@@ -25,6 +29,8 @@ public:
     double tenpai_prob;
     double win_prob;
     double win_exp;
+    std::vector<std::tuple<int, int>> required_tiles;
+    int total_required_tiles;
 };
 
 /**
