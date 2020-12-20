@@ -42,7 +42,7 @@ void ExpectedValueCalculator::calc(const Hand &hand, const ScoreCalculator &scor
         build_tree_draw(G_, root, syanten + 1);
     else
         build_tree_discard(G_, root, syanten + 1);
-
+    return;
     if (n_tiles == 14) {
         std::vector<Candidate> candidates = select(G_, root, total_left_tiles, 1);
 
@@ -203,12 +203,12 @@ ExpectedValueCalculator::count_left_tiles(const Hand &hand,
     for (const auto &block : hand.melded_blocks) {
         for (auto tile : block.tiles) {
             tile = aka2normal(tile);
-            counts[tile] -= hand.num_tiles(tile);
+            counts[tile]--;
         }
     }
 
     for (auto tile : dora_tiles)
-        counts[tile] -= hand.num_tiles(tile);
+        counts[tile]--;
 
     return counts;
 }
@@ -239,36 +239,50 @@ int ExpectedValueCalculator::count_num_required_tiles(const std::vector<int> &co
 void ExpectedValueCalculator::build_tree_draw(Graph &G, Graph::vertex_descriptor parent,
                                               int n_left_tumo)
 {
-    std::vector<int> tiles = RequiredTileSelector::select(hand_, syanten_type_);
-    int total_tiles        = count_num_required_tiles(counts_, tiles);
-    int syanten            = G[parent]->syanten;
+    //std::vector<int> tiles = RequiredTileSelector::select(hand_, syanten_type_);
+    //int total_tiles = count_num_required_tiles(counts_, tiles);
+    int total_tiles = 0;
+    int syanten     = G[parent]->syanten;
 
-    for (auto tile : tiles) {
+    for (int tile = 0; tile < 34; ++tile) {
+        if (counts_[tile] == 0)
+            continue; // 残り枚数が0枚の場合
+
+        // 手牌に加える
         add_tile(hand_, tile);
+        counts_[tile]--;
 
-        Graph::vertex_descriptor node;
-        auto itr = vert_cache_.find(hand_);
-        if (itr != vert_cache_.end()) {
-            node = itr->second;
+        auto [_, syanten] = SyantenCalculator::calc(hand_, syanten_type_);
+
+        if (syanten < G[parent]->syanten) {
+            Graph::vertex_descriptor node;
+            auto itr = vert_cache_.find(hand_);
+            if (itr != vert_cache_.end()) {
+                node = itr->second;
+            }
+            else if (syanten == -1) {
+                Result result =
+                    score_.calc(hand_, tile, HandFlag::Tumo | HandFlag::Reach);
+                node = boost::add_vertex(
+                    std::make_shared<LeafData>(hand_, syanten, result), G);
+                vert_cache_.insert_or_assign(hand_, node);
+            }
+            else {
+                auto node_data = std::make_shared<NodeData>(hand_, syanten);
+                node           = boost::add_vertex(node_data, G);
+                vert_cache_.insert_or_assign(hand_, node);
+            }
+
+            auto edge_data =
+                std::make_shared<DrawData>(tile, counts_[tile], total_tiles);
+            boost::add_edge(parent, node, edge_data, G);
+
+            if (n_left_tumo >= syanten && syanten != -1 && itr == vert_cache_.end())
+                build_tree_discard(G, node, n_left_tumo - 1);
         }
-        else if (syanten == 0) {
-            Result result = score_.calc(hand_, tile, HandFlag::Tumo | HandFlag::Reach);
-            node          = boost::add_vertex(
-                std::make_shared<LeafData>(hand_, syanten - 1, result), G);
-            vert_cache_.insert_or_assign(hand_, node);
-        }
-        else {
-            auto node_data = std::make_shared<NodeData>(hand_, syanten - 1);
-            node           = boost::add_vertex(node_data, G);
-            vert_cache_.insert_or_assign(hand_, node);
-        }
 
-        auto edge_data = std::make_shared<DrawData>(tile, counts_[tile], total_tiles);
-        boost::add_edge(parent, node, edge_data, G);
-
-        if (syanten > 0 && n_left_tumo > 0 && itr == vert_cache_.end())
-            build_tree_discard(G, node, n_left_tumo - 1);
-
+        // 手牌から除く
+        counts_[tile]++;
         remove_tile(hand_, tile);
     }
 }
@@ -283,28 +297,37 @@ void ExpectedValueCalculator::build_tree_discard(Graph &G,
                                                  Graph::vertex_descriptor parent,
                                                  int n_left_tumo)
 {
-    std::vector<int> tiles = UnnecessaryTileSelector::select(hand_, syanten_type_);
+    for (int tile = 0; tile < 34; ++tile) {
+        if (!hand_.contains(tile))
+            continue; // 牌が手牌にない場合
 
-    for (auto tile : tiles) {
+        // 手牌から除く
         remove_tile(hand_, tile);
 
-        Graph::vertex_descriptor node;
-        auto itr = vert_cache_.find(hand_);
-        if (itr != vert_cache_.end()) {
-            node = itr->second;
+        auto [_, syanten] = SyantenCalculator::calc(hand_, syanten_type_);
+
+        if (syanten == G[parent]->syanten) {
+            // 向聴数が変化しない場合は打牌候補
+
+            Graph::vertex_descriptor node;
+            auto itr = vert_cache_.find(hand_);
+            if (itr != vert_cache_.end()) {
+                node = itr->second;
+            }
+            else {
+                auto node_data = std::make_shared<NodeData>(hand_, syanten);
+                node           = boost::add_vertex(node_data, G);
+                vert_cache_.insert_or_assign(hand_, node);
+            }
+
+            auto edge_data = std::make_shared<DiscardData>(tile);
+            boost::add_edge(parent, node, edge_data, G);
+
+            if (itr == vert_cache_.end())
+                build_tree_draw(G, node, n_left_tumo);
         }
-        else {
-            auto node_data = std::make_shared<NodeData>(hand_, G[parent]->syanten);
-            node           = boost::add_vertex(node_data, G);
-            vert_cache_.insert_or_assign(hand_, node);
-        }
 
-        auto edge_data = std::make_shared<DiscardData>(tile);
-        boost::add_edge(parent, node, edge_data, G);
-
-        if (itr == vert_cache_.end())
-            build_tree_draw(G, node, n_left_tumo);
-
+        // 手牌に戻す
         add_tile(hand_, tile);
     }
 }
