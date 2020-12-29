@@ -15,13 +15,14 @@ class Candidate {
 public:
     Candidate(int tile, int total_required_tiles,
               const std::vector<std::tuple<int, int>> &required_tiles,
-              double tenpai_prob, double win_prob, double win_exp)
+              double tenpai_prob, double win_prob, double win_exp, bool syanten_down)
         : tile(tile)
         , total_required_tiles(total_required_tiles)
         , required_tiles(required_tiles)
         , tenpai_prob(tenpai_prob)
         , win_prob(win_prob)
         , win_exp(win_exp)
+        , syanten_down(syanten_down)
     {
     }
 
@@ -31,6 +32,7 @@ public:
     double win_exp;
     std::vector<std::tuple<int, int>> required_tiles;
     int total_required_tiles;
+    bool syanten_down;
 };
 
 /**
@@ -38,29 +40,38 @@ public:
  */
 class NodeData {
 public:
-    NodeData(const Hand &hand, int syanten)
+    virtual ~NodeData() = default;
+};
+
+/**
+ * @brief 手牌
+ */
+class HandData : public NodeData {
+public:
+    HandData(const Hand &hand, int syanten, double exp)
         : hand(hand)
         , syanten(syanten)
+        , exp(exp)
     {
     }
-
-    virtual ~NodeData() = default;
 
     /*! 手牌 */
     Hand hand;
 
     /*! 向聴数 */
     int syanten;
+
+    /* 期待値 */
+    double exp;
 };
 
 /**
- * @brief 葉ノード
+ * @brief 点数
  */
-class LeafData : public NodeData {
+class ScoreData : public NodeData {
 public:
-    LeafData(const Hand &hand, int syanten, const Result &result)
-        : NodeData(hand, syanten)
-        , result(result)
+    ScoreData(const Result &result)
+        : result(result)
     {
     }
 
@@ -140,9 +151,40 @@ using Graph =
     boost::adjacency_list<boost::vecS, boost::vecS, boost::bidirectionalS,
                           std::shared_ptr<NodeData>, std::shared_ptr<EdgeData>>;
 
+struct VertCache {
+    VertCache(const Hand &hand, int turn)
+        : hand(hand)
+        , turn(turn)
+    {
+    }
+
+    bool operator<(const VertCache &rhs) const
+    {
+        return std::make_tuple(hand.manzu, hand.pinzu, hand.sozu, hand.zihai, turn) <
+               std::make_tuple(rhs.hand.manzu, rhs.hand.pinzu, rhs.hand.sozu,
+                               rhs.hand.zihai, rhs.turn);
+    }
+
+    Hand hand;
+    int turn;
+};
+
+struct DiscardCache {
+    std::vector<int> hands1;
+    std::vector<int> hands2;
+};
+
+struct DrawCache {
+    std::vector<int> hands1;
+    std::vector<int> hands2;
+};
+
 class ExpectedValueCalculator {
 
 public:
+    ExpectedValueCalculator();
+    void initialize();
+
     std::vector<int> count_left_tiles(const Hand &hand,
                                       const std::vector<int> &dora_tiles);
     int count_num_required_tiles(const std::vector<int> &count,
@@ -150,28 +192,29 @@ public:
 
     void calc(const Hand &hand, const ScoreCalculator &score, int syanten_type);
 
-    void build_tree_discard(Graph &G, Graph::vertex_descriptor parent, int n_left_tumo);
-    void build_tree_draw(Graph &G, Graph::vertex_descriptor parent, int n_left_tumo);
-
-    std::vector<std::tuple<Hand, Result>> get_win_hands();
-    double discard(const Graph &G, Graph::vertex_descriptor parent,
-                   int total_left_tiles, int turn);
-    double draw(const Graph &G, Graph::vertex_descriptor parent, int total_left_tiles,
-                int turn);
-    std::vector<Candidate> select(const Graph &G, Graph::vertex_descriptor parent,
-                                  int total_left_tiles, int turn);
-
-    Graph &graph();
+    void build_tree_discard_first(int n_left_tumo, int syanten);
+    std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
+    build_tree_discard(int n_left_tumo, int syanten, int tumo_tile);
+    std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
+    build_tree_draw(int n_left_tumo, int syanten);
 
 private:
     Hand hand_;
     std::vector<int> counts_;
-
     ScoreCalculator score_;
     int syanten_type_;
-    Graph G_;
 
-    std::map<Hand, Graph::vertex_descriptor> vert_cache_;
+    std::map<VertCache, double> vert_cache_;
+
+    std::map<int, int> num_eval_hands_;
+    std::map<int, int> num_actual_eval_hands_;
+
+    std::map<Hand, DiscardCache> discard_cache_;
+    std::map<Hand, DrawCache> draw_cache_;
+    DrawCache get_draw_tiles(Hand &hand, int syanten);
+    DiscardCache get_discard_tiles(Hand &hand, int syanten);
+    std::vector<std::vector<double>> tumo_probs_table_;
+    std::vector<std::vector<double>> not_tumo_probs_table_;
 };
 
 } // namespace mahjong

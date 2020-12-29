@@ -1,10 +1,44 @@
 #include "expectedvaluecalculator.hpp"
 
 #undef NDEBUG
+#include <algorithm>
 #include <assert.h>
 #include <numeric>
 
 namespace mahjong {
+
+ExpectedValueCalculator::ExpectedValueCalculator()
+{
+    initialize();
+}
+
+void ExpectedValueCalculator::initialize()
+{
+    tumo_probs_table_.resize(5);
+    for (int i = 0; i < 5; ++i) {
+        std::vector<double> probs(17);
+
+        for (int j = 0; j < 17; ++j) {
+            probs[j] = double(i) / double(121 - j);
+        }
+
+        tumo_probs_table_[i] = probs;
+    }
+
+    not_tumo_probs_table_.resize(121);
+    for (int i = 0; i < 121; ++i) {
+        std::vector<double> probs(17);
+        probs[0] = 1;
+
+        double prob = 1;
+        for (int j = 0; j < 16; ++j) {
+            prob *= double(121 - j - i) / double(121 - j);
+            probs[j + 1] = prob;
+        }
+
+        not_tumo_probs_table_[i] = probs;
+    }
+}
 
 /**
  * @brief 期待値を計算する。
@@ -19,169 +53,22 @@ void ExpectedValueCalculator::calc(const Hand &hand, const ScoreCalculator &scor
     score_        = score;
     hand_         = hand;
     syanten_type_ = syanten_type;
-    G_.clear();
+
+    // グラフを作成する。
+    int n_tiles = hand.num_tiles() + int(hand.melded_blocks.size()) * 3;
+    if (n_tiles != 14)
+        return;
+
+    // 現在の向聴数を計算する。
+    auto [_, syanten] = SyantenCalculator::calc(hand, syanten_type_);
+    if (syanten == -1 || syanten == 4)
+        return; // 和了形
 
     // 各牌の残り枚数を数える。
     counts_ = count_left_tiles(hand, score.dora_tiles());
 
-    // 合計残り枚数を数える。
-    int total_left_tiles = std::accumulate(counts_.begin(), counts_.end(), 0);
-
-    // 現在の向聴数を計算する。
-    auto [_, syanten] = SyantenCalculator::calc(hand, syanten_type_);
-    if (syanten == -1)
-        return; // 和了形
-
-    // 現在の手牌をルートノードとする。
-    Graph::vertex_descriptor root =
-        boost::add_vertex(std::make_shared<NodeData>(hand, syanten), G_);
-
     // グラフを作成する。
-    int n_tiles = hand.num_tiles() + int(hand.melded_blocks.size()) * 3;
-    if (n_tiles == 13)
-        build_tree_draw(G_, root, syanten + 1);
-    else
-        build_tree_discard(G_, root, syanten + 1);
-    return;
-    if (n_tiles == 14) {
-        std::vector<Candidate> candidates = select(G_, root, total_left_tiles, 1);
-
-        for (const auto &candidate : candidates) {
-            std::cout << fmt::format("打 {}: 期待値: {:.4f}, 有効牌: {}枚 ",
-                                     Tile::Name.at(candidate.tile), candidate.win_exp,
-                                     candidate.total_required_tiles);
-
-            for (auto [tile, num] : candidate.required_tiles)
-                std::cout << fmt::format("{}: {}枚 ", Tile::Name.at(tile), num);
-            std::cout << std::endl;
-        }
-    }
-    else {
-        draw(G_, root, total_left_tiles, 1);
-    }
-}
-
-double ExpectedValueCalculator::draw(const Graph &G, Graph::vertex_descriptor v,
-                                     int sum_required_tiles, int turn)
-{
-    int total_required_tiles = 0;
-    for (const auto e : boost::make_iterator_range(boost::out_edges(v, G))) {
-        auto data = std::static_pointer_cast<DrawData>(G_[e]);
-        total_required_tiles += counts_[data->tile];
-    }
-
-    double exp = 0;
-    for (const auto e : boost::make_iterator_range(boost::out_edges(v, G))) {
-        auto data = std::static_pointer_cast<DrawData>(G_[e]);
-        auto u    = boost::target(e, G);
-
-        int n_required_tiles = counts_[data->tile]; // 有効牌枚数
-
-        double prob2 = 1; // 前回の巡目までに有効牌を自摸れない確率
-        for (int i = 1; i <= 18 - turn - G[v]->syanten; i++) {
-            sum_required_tiles -= i; // 無駄ツモ分を残り枚数から引く
-
-            // 次のツモで有効牌が引ける確率
-            double prob1 = double(n_required_tiles) / sum_required_tiles;
-
-            // 前回のツモまで有効牌が引けない確率
-            if (i > 1) {
-                prob2 *= (double(sum_required_tiles + 1 - total_required_tiles) /
-                          double(sum_required_tiles + 1));
-            }
-
-            counts_[data->tile]--;
-            sum_required_tiles--; // 有効牌ツモ分を残り枚数から引く
-
-            // 向聴数を落として同様に計算
-            double exp3 = discard(G_, u, sum_required_tiles, turn + i);
-
-            sum_required_tiles++;
-            counts_[data->tile]++;
-
-            // 合計
-            exp += prob1 * prob2 * exp3;
-
-            sum_required_tiles += i;
-        }
-    }
-
-    return exp;
-}
-
-double ExpectedValueCalculator::discard(const Graph &G, Graph::vertex_descriptor v,
-                                        int total_left_tiles, int turn)
-{
-    if (G_[v]->syanten == -1) {
-        // 和了形
-        auto node_data = std::static_pointer_cast<LeafData>(G_[v]);
-        return node_data->result.score[0];
-    }
-
-    double max_exp = 0;
-    for (const auto e : boost::make_iterator_range(boost::out_edges(v, G))) {
-        double exp = draw(G_, boost::target(e, G), total_left_tiles, turn);
-        max_exp    = std::max(max_exp, exp);
-    }
-
-    return max_exp;
-}
-
-/**
- * @brief 各打牌の情報を計算する。
- * 
- * @param[in] G グラフ
- * @param[in] root ルートノード
- * @param[in] total_left_tiles 
- * @param[in] turn 現在の巡目
- * @return std::vector<Candidate> 
- */
-std::vector<Candidate> ExpectedValueCalculator::select(const Graph &G,
-                                                       Graph::vertex_descriptor root,
-                                                       int total_left_tiles, int turn)
-{
-    std::vector<Candidate> candidates;
-
-    for (const auto e1 : boost::make_iterator_range(boost::out_edges(root, G))) {
-        auto data  = std::static_pointer_cast<DrawData>(G_[e1]);
-        double exp = draw(G_, boost::target(e1, G), total_left_tiles, turn);
-
-        std::vector<std::tuple<int, int>> required_tiles;
-        int total_required_tiles = 0;
-        for (const auto e2 :
-             boost::make_iterator_range(boost::out_edges(boost::target(e1, G), G))) {
-            auto data = std::static_pointer_cast<DrawData>(G_[e2]);
-
-            required_tiles.emplace_back(data->tile, counts_[data->tile]);
-            total_required_tiles += counts_[data->tile];
-        }
-
-        candidates.emplace_back(data->tile, total_required_tiles, required_tiles, 0, 0,
-                                exp);
-    }
-
-    return candidates;
-}
-
-Graph &ExpectedValueCalculator::graph()
-{
-    return G_;
-}
-
-/**
- * @brief すべての和了形を取得する。
- * 
- */
-std::vector<std::tuple<Hand, Result>> ExpectedValueCalculator::get_win_hands()
-{
-    std::vector<std::tuple<Hand, Result>> hands;
-
-    for (const auto &v : boost::make_iterator_range(boost::vertices(G_))) {
-        if (auto data = std::dynamic_pointer_cast<LeafData>(G_[v]))
-            hands.emplace_back(data->hand, data->result);
-    }
-
-    return hands;
+    build_tree_discard_first(1, syanten);
 }
 
 /**
@@ -236,55 +123,72 @@ int ExpectedValueCalculator::count_num_required_tiles(const std::vector<int> &co
  * @param[in,out] G グラフ
  * @param[in] parent 親ノード
  */
-void ExpectedValueCalculator::build_tree_draw(Graph &G, Graph::vertex_descriptor parent,
-                                              int n_left_tumo)
+std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
+ExpectedValueCalculator::build_tree_draw(int n_left_tumo, int syanten)
 {
-    //std::vector<int> tiles = RequiredTileSelector::select(hand_, syanten_type_);
-    //int total_tiles = count_num_required_tiles(counts_, tiles);
-    int total_tiles = 0;
-    int syanten     = G[parent]->syanten;
+    std::vector<double> tenpai_probs(17, 0);
+    std::vector<double> win_probs(17, 0);
+    std::vector<double> exp_values(17, 0);
 
-    for (int tile = 0; tile < 34; ++tile) {
-        if (counts_[tile] == 0)
+    DrawCache cache = get_draw_tiles(hand_, syanten);
+
+    int sum_required_tiles = 0;
+    for (const auto &tile : cache.hands1)
+        sum_required_tiles += counts_[tile];
+
+    for (const auto &tile : cache.hands1) {
+        int n_required_tiles = counts_[tile]; // 有効牌枚数
+        if (n_required_tiles == 0)
             continue; // 残り枚数が0枚の場合
 
         // 手牌に加える
         add_tile(hand_, tile);
         counts_[tile]--;
 
-        auto [_, syanten] = SyantenCalculator::calc(hand_, syanten_type_);
+        auto [next_tenpai_probs, next_win_probs, next_exp_values] =
+            build_tree_discard(n_left_tumo, syanten - 1, tile);
 
-        if (syanten < G[parent]->syanten) {
-            Graph::vertex_descriptor node;
-            auto itr = vert_cache_.find(hand_);
-            if (itr != vert_cache_.end()) {
-                node = itr->second;
-            }
-            else if (syanten == -1) {
-                Result result =
-                    score_.calc(hand_, tile, HandFlag::Tumo | HandFlag::Reach);
-                node = boost::add_vertex(
-                    std::make_shared<LeafData>(hand_, syanten, result), G);
-                vert_cache_.insert_or_assign(hand_, node);
-            }
-            else {
-                auto node_data = std::make_shared<NodeData>(hand_, syanten);
-                node           = boost::add_vertex(node_data, G);
-                vert_cache_.insert_or_assign(hand_, node);
+        const std::vector<double> &tumo_probs = tumo_probs_table_[n_required_tiles];
+        const std::vector<double> &not_tumo_probs =
+            not_tumo_probs_table_[sum_required_tiles];
+
+        for (int i = 0; i < 17; ++i) {
+            double tenpai_prob = 0;
+            double win_prob    = 0;
+            double exp_value   = 0;
+            for (int j = i; j < 17; ++j) {
+                double prob = tumo_probs[j] * not_tumo_probs[j] / not_tumo_probs[i];
+
+                if (syanten == 0)
+                    exp_value += prob * next_exp_values.front();
+                else if (j < 16 && syanten > 0)
+                    exp_value += prob * next_exp_values[j + 1];
+
+                if (syanten == 0)
+                    win_prob += prob;
+                else if (j < 16 && syanten > 0)
+                    win_prob += prob * next_win_probs[j + 1];
+
+                if (syanten == 1)
+                    tenpai_prob += prob;
+                else if (j < 16 && syanten > 1)
+                    tenpai_prob += prob * next_tenpai_probs[j + 1];
             }
 
-            auto edge_data =
-                std::make_shared<DrawData>(tile, counts_[tile], total_tiles);
-            boost::add_edge(parent, node, edge_data, G);
-
-            if (n_left_tumo >= syanten && syanten != -1 && itr == vert_cache_.end())
-                build_tree_discard(G, node, n_left_tumo - 1);
+            win_probs[i] += win_prob;
+            tenpai_probs[i] += tenpai_prob;
+            exp_values[i] += exp_value;
         }
+
+        if (syanten == 0)
+            std::fill(tenpai_probs.begin(), tenpai_probs.end(), 1);
 
         // 手牌から除く
         counts_[tile]++;
         remove_tile(hand_, tile);
     }
+
+    return {tenpai_probs, win_probs, exp_values};
 }
 
 /**
@@ -293,43 +197,138 @@ void ExpectedValueCalculator::build_tree_draw(Graph &G, Graph::vertex_descriptor
  * @param[in,out] G グラフ
  * @param[in] parent 親ノード
  */
-void ExpectedValueCalculator::build_tree_discard(Graph &G,
-                                                 Graph::vertex_descriptor parent,
-                                                 int n_left_tumo)
+std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
+ExpectedValueCalculator::build_tree_discard(int n_left_tumo, int syanten, int tumo_tile)
 {
+    std::vector<double> max_win_probs;
+    std::vector<double> max_tenpai_probs;
+    std::vector<double> max_exp_values;
+    double max_exp = 0;
+
+    if (syanten == -1) {
+        Result result = score_.calc(hand_, tumo_tile, HandFlag::Reach | HandFlag::Tumo);
+        return {{}, {}, std::vector<double>(17, result.score[0])};
+    }
+
+    DiscardCache cache = get_discard_tiles(hand_, syanten);
+
+    for (const auto &tile : cache.hands1) {
+        remove_tile(hand_, tile);
+
+        auto [tenpai_probs, win_probs, exp_values] =
+            build_tree_draw(n_left_tumo, syanten);
+
+        if (win_probs.front() > max_exp) {
+            max_exp          = win_probs.front();
+            max_tenpai_probs = tenpai_probs;
+            max_win_probs    = win_probs;
+            max_exp_values   = exp_values;
+        }
+
+        add_tile(hand_, tile);
+    }
+
+    return {max_tenpai_probs, max_win_probs, max_exp_values};
+}
+
+/**
+ * @brief グラフ (DAG) を作成する。
+ * 
+ * @param[in,out] G グラフ
+ * @param[in] parent 親ノード
+ */
+void ExpectedValueCalculator::build_tree_discard_first(int n_left_tumo, int syanten)
+{
+    DiscardCache cache = get_discard_tiles(hand_, syanten);
+
+    for (const auto &tile : cache.hands1) {
+
+        remove_tile(hand_, tile);
+
+        auto [tenpai_probs, win_probs, exp_values] =
+            build_tree_draw(n_left_tumo, syanten);
+
+        std::cout << "聴牌確率 ";
+        std::cout << fmt::format("{}: ", Tile::Name.at(tile));
+        for (int i = 0; i < 17; ++i)
+            std::cout << fmt::format("{}: {:.2f}% ", i + 1, tenpai_probs[i] * 100);
+        std::cout << std::endl;
+
+        std::cout << "和了確率 ";
+        std::cout << fmt::format("{}: ", Tile::Name.at(tile));
+        for (int i = 0; i < 17; ++i)
+            std::cout << fmt::format("{}: {:.2f}% ", i + 1, win_probs[i] * 100);
+        std::cout << std::endl;
+
+        std::cout << "期待値 ";
+        std::cout << fmt::format("{}: ", Tile::Name.at(tile));
+        for (int i = 0; i < 17; ++i)
+            std::cout << fmt::format("{}: {:.2f} ", i + 1, exp_values[i]);
+        std::cout << std::endl;
+
+        add_tile(hand_, tile);
+    }
+}
+
+DiscardCache ExpectedValueCalculator::get_discard_tiles(Hand &hand, int syanten)
+{
+    auto itr = discard_cache_.find(hand);
+    if (itr != discard_cache_.end())
+        return itr->second;
+
+    DiscardCache cache;
+    cache.hands1.reserve(34);
+    cache.hands2.reserve(34);
+
     for (int tile = 0; tile < 34; ++tile) {
-        if (!hand_.contains(tile))
+        if (!hand.contains(tile))
             continue; // 牌が手牌にない場合
 
         // 手牌から除く
-        remove_tile(hand_, tile);
+        remove_tile(hand, tile);
 
-        auto [_, syanten] = SyantenCalculator::calc(hand_, syanten_type_);
-
-        if (syanten == G[parent]->syanten) {
-            // 向聴数が変化しない場合は打牌候補
-
-            Graph::vertex_descriptor node;
-            auto itr = vert_cache_.find(hand_);
-            if (itr != vert_cache_.end()) {
-                node = itr->second;
-            }
-            else {
-                auto node_data = std::make_shared<NodeData>(hand_, syanten);
-                node           = boost::add_vertex(node_data, G);
-                vert_cache_.insert_or_assign(hand_, node);
-            }
-
-            auto edge_data = std::make_shared<DiscardData>(tile);
-            boost::add_edge(parent, node, edge_data, G);
-
-            if (itr == vert_cache_.end())
-                build_tree_draw(G, node, n_left_tumo);
-        }
+        auto [_, syanten_after] = SyantenCalculator::calc(hand, syanten_type_);
+        if (syanten == syanten_after)
+            cache.hands1.push_back(tile);
+        else
+            cache.hands2.push_back(tile);
 
         // 手牌に戻す
-        add_tile(hand_, tile);
+        add_tile(hand, tile);
     }
+
+    discard_cache_.insert_or_assign(hand, cache);
+
+    return cache;
+}
+
+DrawCache ExpectedValueCalculator::get_draw_tiles(Hand &hand, int syanten)
+{
+    auto itr = draw_cache_.find(hand);
+    if (itr != draw_cache_.end())
+        return itr->second;
+
+    DrawCache cache;
+    cache.hands1.reserve(34);
+    cache.hands2.reserve(34);
+
+    for (int tile = 0; tile < 34; ++tile) {
+        // 手牌から除く
+        add_tile(hand, tile);
+
+        auto [_, syanten_after] = SyantenCalculator::calc(hand, syanten_type_);
+        if (syanten > syanten_after)
+            cache.hands1.push_back(tile);
+        else
+            cache.hands2.push_back(tile);
+
+        // 手牌に戻す
+        remove_tile(hand, tile);
+    }
+
+    draw_cache_.insert_or_assign(hand, cache);
+
+    return cache;
 }
 
 } // namespace mahjong
