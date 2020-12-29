@@ -35,94 +35,6 @@ public:
     bool syanten_down;
 };
 
-/**
- * @brief ノード
- */
-class NodeData {
-public:
-    virtual ~NodeData() = default;
-};
-
-/**
- * @brief 手牌
- */
-class HandData : public NodeData {
-public:
-    HandData(const Hand &hand, int syanten, double exp)
-        : hand(hand)
-        , syanten(syanten)
-        , exp(exp)
-    {
-    }
-
-    /*! 手牌 */
-    Hand hand;
-
-    /*! 向聴数 */
-    int syanten;
-
-    /* 期待値 */
-    double exp;
-};
-
-/**
- * @brief 点数
- */
-class ScoreData : public NodeData {
-public:
-    ScoreData(const Result &result)
-        : result(result)
-    {
-    }
-
-    /*! 点数計算結果 */
-    Result result;
-};
-
-/**
- * @brief エッジ
- */
-class EdgeData {
-public:
-    virtual ~EdgeData() = default;
-};
-
-/**
- * @brief 打牌
- */
-class DiscardData : public EdgeData {
-public:
-    DiscardData(int tile)
-        : tile(tile)
-    {
-    }
-
-    /*! 牌 */
-    int tile;
-};
-
-/**
- * @brief 自摸
- */
-class DrawData : public EdgeData {
-public:
-    DrawData(int tile, int num_left_tiles, int total_left_tiles)
-        : tile(tile)
-        , num_left_tiles(num_left_tiles)
-        , total_left_tiles(total_left_tiles)
-    {
-    }
-
-    /*! 牌 */
-    int tile;
-
-    /* その牌の残り枚数 */
-    int num_left_tiles;
-
-    /* 有効牌の合計枚数 */
-    int total_left_tiles;
-};
-
 inline void add_tile(Hand &hand, int tile)
 {
     if (tile <= Tile::Manzu9)
@@ -146,10 +58,6 @@ inline void remove_tile(Hand &hand, int tile)
     else
         hand.zihai -= Bit::tile1[tile];
 }
-
-using Graph =
-    boost::adjacency_list<boost::vecS, boost::vecS, boost::bidirectionalS,
-                          std::shared_ptr<NodeData>, std::shared_ptr<EdgeData>>;
 
 struct VertCache {
     VertCache(const Hand &hand, int turn)
@@ -203,11 +111,6 @@ private:
     std::vector<int> counts_;
     ScoreCalculator score_;
     int syanten_type_;
-
-    std::map<VertCache, double> vert_cache_;
-
-    std::map<int, int> num_eval_hands_;
-    std::map<int, int> num_actual_eval_hands_;
 
     std::map<Hand, DiscardCache> discard_cache_;
     std::map<Hand, DrawCache> draw_cache_;
