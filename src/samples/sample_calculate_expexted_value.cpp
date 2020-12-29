@@ -33,35 +33,5 @@ int main(int, char **)
     auto end = std::chrono::steady_clock::now();
     auto elapsed_ms =
         std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count();
-
-    // auto win_hands = calculator.get_win_hands();
-    // std::sort(win_hands.begin(), win_hands.end(),
-    //           [](const std::tuple<Hand, Result> &a, const std::tuple<Hand, Result> &b) {
-    //               return std::get<1>(a).score[0] < std::get<1>(b).score[0];
-    //           });
-
-    // for (const auto &[hand, result] : win_hands) {
-    //     std::cout << fmt::format("手牌: {}, 結果: {}符{}翻 {}点", hand.to_string(),
-    //                              result.fu, result.han, result.score[0])
-    //               << std::endl;
-    // }
-    // std::cout << fmt::format("和了形の数: {}", win_hands.size()) << std::endl;
-
-    // const auto &G = calculator.graph();
-    // std::map<int, int> counts;
-    // for (const auto &v : boost::make_iterator_range(boost::vertices(G))) {
-    //     auto node_data = std::static_pointer_cast<HandData>(G[v]);
-    //     counts[node_data->syanten]++;
-    // }
-
-    // for (auto [syanten, n] : counts) {
-    //     std::cout << fmt::format("向聴数: {}, 局面数: {}", syanten, n) << std::endl;
-    // }
-    // std::cout << fmt::format("局面数: {}", boost::num_vertices(G)) << std::endl;
-
-    // std::cout << fmt::format("手牌: {}, 向聴数: {}", hand.to_string(), syanten)
-    //           << std::endl;
     std::cout << fmt::format("{}ms", elapsed_ms) << std::endl;
-    // std::cout << fmt::format("評価手: {}", boost::num_vertices(calculator.graph()))
-    //           << std::endl;
 }
