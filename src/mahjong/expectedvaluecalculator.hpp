@@ -1,13 +1,9 @@
 #ifndef MAHJONG_CPP_EXPECTEDVALUECALCULATOR
 #define MAHJONG_CPP_EXPECTEDVALUECALCULATOR
 
-#include <boost/graph/adjacency_list.hpp>
-
-#include "requiredtileselector.hpp"
 #include "score.hpp"
 #include "syanten.hpp"
 #include "types/types.hpp"
-#include "unnecessarytileselector.hpp"
 
 namespace mahjong {
 
@@ -88,7 +84,6 @@ struct DrawCache {
 };
 
 class ExpectedValueCalculator {
-
 public:
     ExpectedValueCalculator();
     void initialize();
