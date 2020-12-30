@@ -55,7 +55,7 @@ void ExpectedValueCalculator::initialize()
  */
 std::tuple<bool, std::vector<Candidate>>
 ExpectedValueCalculator::calc(const Hand &hand, const ScoreCalculator &score,
-                              int syanten_type)
+                              int syanten_type, int n_extra_tumo)
 {
     for (auto &cache : discard_cache_)
         cache.clear();
@@ -81,7 +81,7 @@ ExpectedValueCalculator::calc(const Hand &hand, const ScoreCalculator &score,
     counts_ = count_left_tiles(hand, score.dora_tiles());
 
     // グラフを作成する。
-    std::vector<Candidate> candidates = analyze(1, syanten);
+    std::vector<Candidate> candidates = analyze(n_extra_tumo, syanten);
 
     return {true, candidates};
 }
@@ -116,7 +116,7 @@ ExpectedValueCalculator::get_required_tiles(const Hand &hand, int syanten_type)
  * @param[in] parent 親ノード
  */
 std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
-ExpectedValueCalculator::build_tree_draw(int n_left_tumo, int syanten)
+ExpectedValueCalculator::build_tree_draw(int n_extra_tumo, int syanten)
 {
     std::vector<double> tenpai_probs(17, 0);
     std::vector<double> win_probs(17, 0);
@@ -138,7 +138,7 @@ ExpectedValueCalculator::build_tree_draw(int n_left_tumo, int syanten)
         counts_[tile]--;
 
         auto [next_tenpai_probs, next_win_probs, next_exp_values] =
-            build_tree_discard(n_left_tumo, syanten - 1, tile);
+            discard(n_extra_tumo, syanten - 1, tile);
 
         const std::vector<double> &tumo_probs = tumo_probs_table_[n_required_tiles];
         const std::vector<double> &not_tumo_probs =
@@ -190,7 +190,7 @@ ExpectedValueCalculator::build_tree_draw(int n_left_tumo, int syanten)
  * @param[in] parent 親ノード
  */
 std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
-ExpectedValueCalculator::build_tree_discard(int n_left_tumo, int syanten, int tumo_tile)
+ExpectedValueCalculator::discard(int n_extra_tumo, int syanten, int tumo_tile)
 {
     if (syanten == -1) {
         ScoreCache &cache = get_score(hand_, tumo_tile);
@@ -201,21 +201,33 @@ ExpectedValueCalculator::build_tree_discard(int n_left_tumo, int syanten, int tu
     std::vector<double> max_tenpai_probs;
     std::vector<double> max_exp_values;
 
-    DiscardTilesCache cache = get_discard_tiles(hand_, syanten);
+    std::vector<int> &flags = get_discard_tiles(hand_, syanten);
 
-    for (const auto &tile : cache.hands1) {
-        remove_tile(hand_, tile);
+    for (int tile = 0; tile < 34; ++tile) {
+        if (flags[tile] == 1) {
+            remove_tile(hand_, tile);
+            auto [tenpai_probs, win_probs, exp_values] =
+                build_tree_draw(n_extra_tumo, syanten);
+            add_tile(hand_, tile);
 
-        auto [tenpai_probs, win_probs, exp_values] =
-            build_tree_draw(n_left_tumo, syanten);
-
-        if (max_exp_values.empty() || exp_values.front() > max_exp_values.front()) {
-            max_tenpai_probs = tenpai_probs;
-            max_win_probs    = win_probs;
-            max_exp_values   = exp_values;
+            if (max_exp_values.empty() || exp_values.front() > max_exp_values.front()) {
+                max_tenpai_probs = tenpai_probs;
+                max_win_probs    = win_probs;
+                max_exp_values   = exp_values;
+            }
         }
+        else if (flags[tile] == 2 && n_extra_tumo > 0) {
+            remove_tile(hand_, tile);
+            auto [tenpai_probs, win_probs, exp_values] =
+                build_tree_draw(n_extra_tumo - 1, syanten + 1);
+            add_tile(hand_, tile);
 
-        add_tile(hand_, tile);
+            if (max_exp_values.empty() || exp_values.front() > max_exp_values.front()) {
+                max_tenpai_probs = tenpai_probs;
+                max_win_probs    = win_probs;
+                max_exp_values   = exp_values;
+            }
+        }
     }
 
     return {max_tenpai_probs, max_win_probs, max_exp_values};
@@ -227,25 +239,41 @@ ExpectedValueCalculator::build_tree_discard(int n_left_tumo, int syanten, int tu
  * @param[in,out] G グラフ
  * @param[in] parent 親ノード
  */
-std::vector<Candidate> ExpectedValueCalculator::analyze(int n_left_tumo, int syanten)
+std::vector<Candidate> ExpectedValueCalculator::analyze(int n_extra_tumo, int syanten)
 {
     std::vector<Candidate> candidates;
 
-    DiscardTilesCache &cache = get_discard_tiles(hand_, syanten);
+    std::vector<int> &flags = get_discard_tiles(hand_, syanten);
 
-    for (const auto &tile : cache.hands1) {
-        remove_tile(hand_, tile);
+    for (int tile = 0; tile < 34; ++tile) {
+        if (flags[tile] == 1) {
+            remove_tile(hand_, tile);
 
-        auto [sum_required_tiles, required_tiles] =
-            get_required_tiles(hand_, syanten_type_);
+            auto [sum_required_tiles, required_tiles] =
+                get_required_tiles(hand_, syanten_type_);
 
-        auto [tenpai_probs, win_probs, exp_values] =
-            build_tree_draw(n_left_tumo, syanten);
+            auto [tenpai_probs, win_probs, exp_values] =
+                build_tree_draw(n_extra_tumo, syanten);
 
-        candidates.emplace_back(tile, sum_required_tiles, required_tiles, tenpai_probs,
-                                win_probs, exp_values, false);
+            add_tile(hand_, tile);
 
-        add_tile(hand_, tile);
+            candidates.emplace_back(tile, sum_required_tiles, required_tiles,
+                                    tenpai_probs, win_probs, exp_values, false);
+        }
+        else if (flags[tile] == 2 && n_extra_tumo > 0) {
+            remove_tile(hand_, tile);
+
+            auto [sum_required_tiles, required_tiles] =
+                get_required_tiles(hand_, syanten_type_);
+
+            auto [tenpai_probs, win_probs, exp_values] =
+                build_tree_draw(n_extra_tumo - 1, syanten + 1);
+
+            add_tile(hand_, tile);
+
+            candidates.emplace_back(tile, sum_required_tiles, required_tiles,
+                                    tenpai_probs, win_probs, exp_values, true);
+        }
     }
 
     return candidates;
@@ -287,35 +315,25 @@ ExpectedValueCalculator::count_left_tiles(const Hand &hand,
  * @param[in] syanten 手牌の向聴数
  * @return 打牌一覧
  */
-DiscardTilesCache &ExpectedValueCalculator::get_discard_tiles(Hand &hand, int syanten)
+std::vector<int> &ExpectedValueCalculator::get_discard_tiles(Hand &hand, int syanten)
 {
-    auto &table = discard_cache_[syanten];
+    auto &cache = discard_cache_[syanten];
 
-    assert(syanten > -1);
-
-    if (auto itr = table.find(hand); itr != table.end())
+    if (auto itr = cache.find(hand); itr != cache.end())
         return itr->second; // キャッシュが存在する場合
 
-    DiscardTilesCache cache;
-    cache.hands1.reserve(34);
-    cache.hands2.reserve(34);
-
+    std::vector<int> flags(34, 0);
     for (int tile = 0; tile < 34; ++tile) {
-        if (!hand.contains(tile))
-            continue; // 牌が手牌にない場合
+        if (hand.contains(tile)) {
+            remove_tile(hand, tile);
+            auto [_, syanten_after] = SyantenCalculator::calc(hand, syanten_type_);
+            add_tile(hand, tile);
 
-        remove_tile(hand, tile);
-
-        auto [_, syanten_after] = SyantenCalculator::calc(hand, syanten_type_);
-        if (syanten == syanten_after)
-            cache.hands1.push_back(tile);
-        else
-            cache.hands2.push_back(tile);
-
-        add_tile(hand, tile);
+            flags[tile] = syanten == syanten_after ? 1 : 2;
+        }
     }
 
-    auto [itr, _] = table.insert_or_assign(hand, cache);
+    auto [itr, _] = cache.insert_or_assign(hand, flags);
 
     return itr->second;
 }

@@ -86,9 +86,6 @@ struct VertCache {
     int turn;
 };
 
-using DiscardTilesKey = Hand;
-using DrawTilesKey    = Hand;
-
 struct DiscardTilesCache {
     std::vector<int> hands1;
     std::vector<int> hands2;
@@ -137,8 +134,9 @@ class ExpectedValueCalculator {
 public:
     ExpectedValueCalculator();
 
-    std::tuple<bool, std::vector<Candidate>>
-    calc(const Hand &hand, const ScoreCalculator &score, int syanten_type);
+    std::tuple<bool, std::vector<Candidate>> calc(const Hand &hand,
+                                                  const ScoreCalculator &score,
+                                                  int syanten_type, int n_extra_tumo);
 
     std::tuple<int, std::vector<std::tuple<int, int>>>
     get_required_tiles(const Hand &hand, int syanten_type);
@@ -148,14 +146,14 @@ private:
 
     std::vector<Candidate> analyze(int n_left_tumo, int syanten);
     std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
-    build_tree_discard(int n_left_tumo, int syanten, int tumo_tile);
+    discard(int n_left_tumo, int syanten, int tumo_tile);
     std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
     build_tree_draw(int n_left_tumo, int syanten);
 
     std::vector<int> count_left_tiles(const Hand &hand,
                                       const std::vector<int> &dora_tiles);
     DrawTilesCache &get_draw_tiles(Hand &hand, int syanten);
-    DiscardTilesCache &get_discard_tiles(Hand &hand, int syanten);
+    std::vector<int> &get_discard_tiles(Hand &hand, int syanten);
     ScoreCache &get_score(const Hand &hand, int win_tile);
 
 private:
@@ -169,10 +167,10 @@ private:
     ScoreCalculator score_;
 
     /* 打牌一覧のキャッシュ */
-    std::vector<std::map<DiscardTilesKey, DiscardTilesCache>> discard_cache_;
+    std::vector<std::map<Hand, std::vector<int>>> discard_cache_;
 
     /* 自摸牌一覧のキャッシュ */
-    std::vector<std::map<DrawTilesKey, DrawTilesCache>> draw_cache_;
+    std::vector<std::map<Hand, DrawTilesCache>> draw_cache_;
 
     /* 点数のキャッシュ */
     std::map<ScoreKey, ScoreCache> score_cache_;
