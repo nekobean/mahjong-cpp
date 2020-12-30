@@ -15,6 +15,9 @@ ExpectedValueCalculator::ExpectedValueCalculator()
     initialize();
 }
 
+/**
+ * @brief 初期化する。
+ */
 void ExpectedValueCalculator::initialize()
 {
     tumo_probs_table_.resize(5);
@@ -42,10 +45,13 @@ void ExpectedValueCalculator::initialize()
         not_tumo_probs_table_[i] = probs;
     }
 
-    discard_cache_.resize(5);
-    draw_cache_.resize(5);
+    discard_cache_.resize(5); // 0(聴牌) ~ 4(4向聴)
+    draw_cache_.resize(5);    // 0(聴牌) ~ 4(4向聴)
 }
 
+/**
+ * @brief キャッシュをクリアする。
+ */
 void ExpectedValueCalculator::clear()
 {
     for (auto &cache : discard_cache_)
@@ -57,10 +63,11 @@ void ExpectedValueCalculator::clear()
 
 /**
  * @brief 期待値を計算する。
- * 
  * @param[in] hand 手牌
  * @param[in] score 点数計算機
  * @param[in] syanten_type 向聴数の種類
+ * @param[in] n_extra_tumo 交換枚数 (手変わりまたは向聴戻しを行える回数)
+ * @return 各打牌の情報
  */
 std::tuple<bool, std::vector<Candidate>>
 ExpectedValueCalculator::calc(const Hand &hand, const ScoreCalculator &score,
@@ -88,10 +95,11 @@ ExpectedValueCalculator::calc(const Hand &hand, const ScoreCalculator &score,
 }
 
 /**
- * @brief 手牌の有効牌の一覧を取得する。
+ * @brief 
  * 
  * @param[in] hand 手牌
  * @param[in] syanten_type 向聴数の種類
+ * @param[in] counts 各牌の残り枚数
  * @return (有効牌の合計枚数, 有効牌の一覧)
  */
 std::tuple<int, std::vector<std::tuple<int, int>>>
@@ -111,12 +119,6 @@ ExpectedValueCalculator::get_required_tiles(const Hand &hand, int syanten_type,
     return {sum_required_tiles, required_tiles};
 }
 
-/**
- * @brief グラフ (DAG) を作成する。
- * 
- * @param[in,out] G グラフ
- * @param[in] parent 親ノード
- */
 std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
 ExpectedValueCalculator::draw(int n_extra_tumo, int syanten, Hand &hand,
                               std::vector<int> &counts)
@@ -195,22 +197,15 @@ ExpectedValueCalculator::draw(int n_extra_tumo, int syanten, Hand &hand,
     return {tenpai_probs, win_probs, exp_values};
 }
 
-/**
- * @brief グラフ (DAG) を作成する。
- * 
- * @param[in,out] G グラフ
- * @param[in] parent 親ノード
- */
 std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
 ExpectedValueCalculator::discard(int n_extra_tumo, int syanten, Hand &hand,
                                  std::vector<int> &counts)
 {
+    // 打牌候補を取得する。
     const std::vector<int> &flags = get_discard_tiles(hand, syanten);
 
     // 期待値が最大となる打牌を選択する。
-    std::vector<double> max_win_probs;
-    std::vector<double> max_tenpai_probs;
-    std::vector<double> max_exp_values;
+    std::vector<double> max_win_probs, max_tenpai_probs, max_exp_values;
     for (int tile = 0; tile < 34; ++tile) {
         if (flags[tile] == 1) {
             // 向聴数が変化しない打牌
@@ -243,21 +238,14 @@ ExpectedValueCalculator::discard(int n_extra_tumo, int syanten, Hand &hand,
     return {max_tenpai_probs, max_win_probs, max_exp_values};
 }
 
-/**
- * @brief グラフ (DAG) を作成する。
- * 
- * @param[in,out] G グラフ
- * @param[in] parent 親ノード
- */
 std::vector<Candidate> ExpectedValueCalculator::analyze(int n_extra_tumo, int syanten,
                                                         const Hand &_hand)
 {
+    std::vector<Candidate> candidates;
     Hand hand = _hand;
 
     // 各牌の残り枚数を数える。
     std::vector<int> counts = count_left_tiles(hand, score_.dora_tiles());
-
-    std::vector<Candidate> candidates;
 
     const std::vector<int> &flags = get_discard_tiles(hand, syanten);
 
