@@ -31,12 +31,6 @@ public:
     int num_tiles() const;
     std::string to_string() const;
 
-    bool operator<(const Hand &rhs) const
-    {
-        return std::make_tuple(manzu, pinzu, sozu, zihai) <
-               std::make_tuple(rhs.manzu, rhs.pinzu, rhs.sozu, rhs.zihai);
-    }
-
 private:
     void convert_from_hai34(const std::vector<int> &tiles);
     bool check_arguments(const std::vector<int> &tiles,

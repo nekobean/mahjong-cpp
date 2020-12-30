@@ -2,32 +2,45 @@
 #define MAHJONG_CPP_EXPECTEDVALUECALCULATOR
 
 #include "score.hpp"
-#include "syanten.hpp"
 #include "types/types.hpp"
 
 namespace mahjong {
 
 class Candidate {
 public:
-    Candidate(int tile, int total_required_tiles,
+    Candidate(int tile, int sum_required_tiles,
               const std::vector<std::tuple<int, int>> &required_tiles,
-              double tenpai_prob, double win_prob, double win_exp, bool syanten_down)
+              std::vector<double> tenpai_probs, std::vector<double> win_probs,
+              std::vector<double> exp_values, bool syanten_down)
         : tile(tile)
-        , total_required_tiles(total_required_tiles)
+        , sum_required_tiles(sum_required_tiles)
         , required_tiles(required_tiles)
-        , tenpai_prob(tenpai_prob)
-        , win_prob(win_prob)
-        , win_exp(win_exp)
+        , tenpai_probs(tenpai_probs)
+        , win_probs(win_probs)
+        , exp_values(exp_values)
         , syanten_down(syanten_down)
     {
     }
 
+    /*! 打牌 */
     int tile;
-    double tenpai_prob;
-    double win_prob;
-    double win_exp;
+
+    /*! 巡目ごとの聴牌確率 */
+    std::vector<double> tenpai_probs;
+
+    /*! 巡目ごとの和了確率 */
+    std::vector<double> win_probs;
+
+    /*! 巡目ごとの期待値 */
+    std::vector<double> exp_values;
+
+    /*! 有効牌及び枚数の一覧 */
     std::vector<std::tuple<int, int>> required_tiles;
-    int total_required_tiles;
+
+    /*! 有効牌の合計枚数 */
+    int sum_required_tiles;
+
+    /*! 向聴戻しになるかどうか */
     bool syanten_down;
 };
 
@@ -73,44 +86,97 @@ struct VertCache {
     int turn;
 };
 
-struct DiscardCache {
+using DiscardTilesKey = Hand;
+using DrawTilesKey    = Hand;
+
+struct DiscardTilesCache {
     std::vector<int> hands1;
     std::vector<int> hands2;
 };
 
-struct DrawCache {
+struct DrawTilesCache {
     std::vector<int> hands1;
     std::vector<int> hands2;
 };
+
+struct ScoreKey {
+    ScoreKey(const Hand &hand, int win_tile)
+        : hand(hand)
+        , win_tile(win_tile)
+    {
+    }
+
+    Hand hand;
+    int win_tile;
+};
+
+struct ScoreCache {
+    ScoreCache(double score)
+        : score(score)
+    {
+    }
+
+    double score;
+};
+
+inline bool operator<(const Hand &lhs, const Hand &rhs)
+{
+    return std::make_tuple(lhs.manzu, lhs.pinzu, lhs.sozu, lhs.zihai) <
+           std::make_tuple(rhs.manzu, rhs.pinzu, rhs.sozu, rhs.zihai);
+}
+
+inline bool operator<(const ScoreKey &lhs, const ScoreKey &rhs)
+{
+    return std::make_tuple(lhs.hand.manzu, lhs.hand.pinzu, lhs.hand.sozu,
+                           lhs.hand.zihai, lhs.win_tile) <
+           std::make_tuple(rhs.hand.manzu, rhs.hand.pinzu, rhs.hand.sozu,
+                           rhs.hand.zihai, rhs.win_tile);
+}
 
 class ExpectedValueCalculator {
 public:
     ExpectedValueCalculator();
+
+    std::tuple<bool, std::vector<Candidate>>
+    calc(const Hand &hand, const ScoreCalculator &score, int syanten_type);
+
+    std::tuple<int, std::vector<std::tuple<int, int>>>
+    get_required_tiles(const Hand &hand, int syanten_type);
+
+private:
     void initialize();
 
-    std::vector<int> count_left_tiles(const Hand &hand,
-                                      const std::vector<int> &dora_tiles);
-    int count_num_required_tiles(const std::vector<int> &count,
-                                 const std::vector<int> &tiles);
-
-    void calc(const Hand &hand, const ScoreCalculator &score, int syanten_type);
-
-    void build_tree_discard_first(int n_left_tumo, int syanten);
+    std::vector<Candidate> analyze(int n_left_tumo, int syanten);
     std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
     build_tree_discard(int n_left_tumo, int syanten, int tumo_tile);
     std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
     build_tree_draw(int n_left_tumo, int syanten);
 
+    std::vector<int> count_left_tiles(const Hand &hand,
+                                      const std::vector<int> &dora_tiles);
+    DrawTilesCache &get_draw_tiles(Hand &hand, int syanten);
+    DiscardTilesCache &get_discard_tiles(Hand &hand, int syanten);
+    ScoreCache &get_score(const Hand &hand, int win_tile);
+
 private:
     Hand hand_;
     std::vector<int> counts_;
-    ScoreCalculator score_;
+
+    /* 向聴数の種類 */
     int syanten_type_;
 
-    std::map<Hand, DiscardCache> discard_cache_;
-    std::map<Hand, DrawCache> draw_cache_;
-    DrawCache get_draw_tiles(Hand &hand, int syanten);
-    DiscardCache get_discard_tiles(Hand &hand, int syanten);
+    /* 点数計算機 */
+    ScoreCalculator score_;
+
+    /* 打牌一覧のキャッシュ */
+    std::vector<std::map<DiscardTilesKey, DiscardTilesCache>> discard_cache_;
+
+    /* 自摸牌一覧のキャッシュ */
+    std::vector<std::map<DrawTilesKey, DrawTilesCache>> draw_cache_;
+
+    /* 点数のキャッシュ */
+    std::map<ScoreKey, ScoreCache> score_cache_;
+
     std::vector<std::vector<double>> tumo_probs_table_;
     std::vector<std::vector<double>> not_tumo_probs_table_;
 };
