@@ -32,7 +32,7 @@ int main(int, char **)
                 Tile::Sozu6, Tile::Sozu7, Tile::Sozu7, Tile::Sozu8});
 
     int turn         = 1;
-    int n_extra_tumo = 0;
+    int n_extra_tumo = 1;
     Hand hand        = hand3;
 
     // 向聴数を計算する。

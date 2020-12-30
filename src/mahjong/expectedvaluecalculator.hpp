@@ -68,23 +68,45 @@ inline void remove_tile(Hand &hand, int tile)
         hand.zihai -= Bit::tile1[tile];
 }
 
-struct VertCache {
-    VertCache(const Hand &hand, int turn)
+struct CacheKey {
+    CacheKey(const Hand &hand, const std::vector<int> &counts, int n_extra_tumo)
         : hand(hand)
-        , turn(turn)
+        , manzu(0)
+        , pinzu(0)
+        , sozu(0)
+        , zihai(0)
+        , n_extra_tumo(n_extra_tumo)
     {
-    }
-
-    bool operator<(const VertCache &rhs) const
-    {
-        return std::make_tuple(hand.manzu, hand.pinzu, hand.sozu, hand.zihai, turn) <
-               std::make_tuple(rhs.hand.manzu, rhs.hand.pinzu, rhs.hand.sozu,
-                               rhs.hand.zihai, rhs.turn);
+        for (size_t i = 0; i < 9; ++i)
+            manzu = manzu * 8 + counts[i];
+        for (size_t i = 9; i < 18; ++i)
+            pinzu = pinzu * 8 + counts[i];
+        for (size_t i = 18; i < 27; ++i)
+            sozu = sozu * 8 + counts[i];
+        for (size_t i = 27; i < 34; ++i)
+            zihai = zihai * 8 + counts[i];
     }
 
     Hand hand;
-    int turn;
+    int manzu;
+    int pinzu;
+    int sozu;
+    int zihai;
+    int n_extra_tumo;
 };
+
+inline bool operator<(const CacheKey &lhs, const CacheKey &rhs)
+{
+    return std::make_tuple(lhs.hand.manzu, lhs.hand.pinzu, lhs.hand.sozu,
+                           lhs.hand.zihai, lhs.manzu, lhs.pinzu, lhs.sozu, lhs.zihai,
+                           lhs.n_extra_tumo) <
+           std::make_tuple(rhs.hand.manzu, rhs.hand.pinzu, rhs.hand.sozu,
+                           rhs.hand.zihai, rhs.manzu, rhs.pinzu, rhs.sozu, rhs.zihai,
+                           rhs.n_extra_tumo);
+}
+
+using CacheValue =
+    std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>;
 
 struct DrawTilesCache {
     std::vector<int> hands1;
@@ -141,11 +163,11 @@ private:
     void initialize();
     void clear();
 
-    std::vector<Candidate> analyze(int n_left_tumo, int syanten, const Hand &hand);
+    std::vector<Candidate> analyze(int n_extra_tumo, int syanten, const Hand &hand);
     std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
-    discard(int n_left_tumo, int syanten, Hand &hand, std::vector<int> &counts);
+    discard(int n_extra_tumo, int syanten, Hand &hand, std::vector<int> &counts);
     std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
-    draw(int n_left_tumo, int syanten, Hand &hand, std::vector<int> &counts);
+    draw(int n_extra_tumo, int syanten, Hand &hand, std::vector<int> &counts);
 
     std::vector<int> count_left_tiles(const Hand &hand,
                                       const std::vector<int> &dora_tiles);
@@ -160,13 +182,10 @@ private:
     /* 点数計算機 */
     ScoreCalculator score_;
 
-    /* 打牌一覧のキャッシュ */
     std::vector<std::map<Hand, std::vector<int>>> discard_cache_;
-
-    /* 自摸牌一覧のキャッシュ */
     std::vector<std::map<Hand, DrawTilesCache>> draw_cache_;
-
-    /* 点数のキャッシュ */
+    std::vector<std::map<CacheKey, CacheValue>> discard_cache2_;
+    std::vector<std::map<CacheKey, CacheValue>> draw_cache2_;
     std::map<ScoreKey, ScoreCache> score_cache_;
 
     std::vector<std::vector<double>> tumo_probs_table_;

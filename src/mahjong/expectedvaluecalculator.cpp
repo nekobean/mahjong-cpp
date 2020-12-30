@@ -45,8 +45,10 @@ void ExpectedValueCalculator::initialize()
         not_tumo_probs_table_[i] = probs;
     }
 
-    discard_cache_.resize(5); // 0(聴牌) ~ 4(4向聴)
-    draw_cache_.resize(5);    // 0(聴牌) ~ 4(4向聴)
+    discard_cache_.resize(5);  // 0(聴牌) ~ 4(4向聴)
+    draw_cache_.resize(5);     // 0(聴牌) ~ 4(4向聴)
+    discard_cache2_.resize(5); // 0(聴牌) ~ 4(4向聴)
+    draw_cache2_.resize(5);    // 0(聴牌) ~ 4(4向聴)
 }
 
 /**
@@ -57,6 +59,10 @@ void ExpectedValueCalculator::clear()
     for (auto &cache : discard_cache_)
         cache.clear();
     for (auto &cache : draw_cache_)
+        cache.clear();
+    for (auto &cache : discard_cache2_)
+        cache.clear();
+    for (auto &cache : draw_cache2_)
         cache.clear();
     score_cache_.clear();
 }
@@ -91,6 +97,12 @@ ExpectedValueCalculator::calc(const Hand &hand, const ScoreCalculator &score,
     // グラフを作成する。
     std::vector<Candidate> candidates = analyze(n_extra_tumo, syanten, hand);
 
+    // for (size_t i = 0; i < 5; ++i)
+    //     spdlog::info("{} 打牌: {}, 自摸: {} 打牌2: {}, 自摸2: {}", i,
+    //                  discard_cache_[i].size(), draw_cache_[i].size(),
+    //                  discard_cache2_[i].size(), draw_cache2_[i].size());
+    // spdlog::info("点数: {}", score_cache_.size());
+
     return {true, candidates};
 }
 
@@ -123,6 +135,12 @@ std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
 ExpectedValueCalculator::draw(int n_extra_tumo, int syanten, Hand &hand,
                               std::vector<int> &counts)
 {
+    auto &table = draw_cache2_[syanten];
+
+    CacheKey key(hand, counts, n_extra_tumo);
+    if (auto itr = table.find(key); itr != table.end())
+        return itr->second; // キャッシュが存在する場合
+
     std::vector<double> tenpai_probs(17, 0);
     std::vector<double> win_probs(17, 0);
     std::vector<double> exp_values(17, 0);
@@ -194,18 +212,27 @@ ExpectedValueCalculator::draw(int n_extra_tumo, int syanten, Hand &hand,
         remove_tile(hand, tile);
     }
 
-    return {tenpai_probs, win_probs, exp_values};
+    auto value    = std::make_tuple(tenpai_probs, win_probs, exp_values);
+    auto [itr, _] = table.insert_or_assign(key, value);
+
+    return itr->second;
 }
 
 std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
 ExpectedValueCalculator::discard(int n_extra_tumo, int syanten, Hand &hand,
                                  std::vector<int> &counts)
 {
+    auto &table = discard_cache2_[syanten];
+
+    CacheKey key(hand, counts, n_extra_tumo);
+    if (auto itr = table.find(key); itr != table.end())
+        return itr->second; // キャッシュが存在する場合
+
     // 打牌候補を取得する。
     const std::vector<int> &flags = get_discard_tiles(hand, syanten);
 
     // 期待値が最大となる打牌を選択する。
-    std::vector<double> max_win_probs, max_tenpai_probs, max_exp_values;
+    std::vector<double> max_tenpai_probs, max_win_probs, max_exp_values;
     for (int tile = 0; tile < 34; ++tile) {
         if (flags[tile] == 1) {
             // 向聴数が変化しない打牌
@@ -235,7 +262,10 @@ ExpectedValueCalculator::discard(int n_extra_tumo, int syanten, Hand &hand,
         }
     }
 
-    return {max_tenpai_probs, max_win_probs, max_exp_values};
+    auto value    = std::make_tuple(max_tenpai_probs, max_win_probs, max_exp_values);
+    auto [itr, _] = table.insert_or_assign(key, value);
+
+    return itr->second;
 }
 
 std::vector<Candidate> ExpectedValueCalculator::analyze(int n_extra_tumo, int syanten,
