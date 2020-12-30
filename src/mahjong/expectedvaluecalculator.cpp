@@ -125,7 +125,7 @@ ExpectedValueCalculator::draw(int n_extra_tumo, int syanten, Hand &hand,
     std::vector<double> win_probs(17, 0);
     std::vector<double> exp_values(17, 0);
 
-    DrawTilesCache &cache = get_draw_tiles(hand, syanten);
+    const DrawTilesCache &cache = get_draw_tiles(hand, syanten);
 
     int sum_required_tiles = 0;
     for (const auto &tile : cache.hands1)
@@ -140,8 +140,17 @@ ExpectedValueCalculator::draw(int n_extra_tumo, int syanten, Hand &hand,
         add_tile(hand, tile);
         counts[tile]--;
 
-        auto [next_tenpai_probs, next_win_probs, next_exp_values] =
-            discard(n_extra_tumo, syanten - 1, tile, hand, counts);
+        std::vector<double> next_tenpai_probs, next_win_probs, next_exp_values;
+        double score;
+
+        if (syanten == 0) {
+            const ScoreCache &cache = get_score(hand, tile);
+            score                   = cache.score;
+        }
+        else {
+            std::tie(next_tenpai_probs, next_win_probs, next_exp_values) =
+                discard(n_extra_tumo, syanten - 1, hand, counts);
+        }
 
         const std::vector<double> &tumo_probs = tumo_probs_table_[n_required_tiles];
         const std::vector<double> &not_tumo_probs =
@@ -155,7 +164,7 @@ ExpectedValueCalculator::draw(int n_extra_tumo, int syanten, Hand &hand,
                 double prob = tumo_probs[j] * not_tumo_probs[j] / not_tumo_probs[i];
 
                 if (syanten == 0)
-                    exp_value += prob * next_exp_values.front();
+                    exp_value += prob * score;
                 else if (j < 16 && syanten > 0)
                     exp_value += prob * next_exp_values[j + 1];
 
@@ -193,20 +202,15 @@ ExpectedValueCalculator::draw(int n_extra_tumo, int syanten, Hand &hand,
  * @param[in] parent 親ノード
  */
 std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
-ExpectedValueCalculator::discard(int n_extra_tumo, int syanten, int tumo_tile,
-                                 Hand &hand, std::vector<int> &counts)
+ExpectedValueCalculator::discard(int n_extra_tumo, int syanten, Hand &hand,
+                                 std::vector<int> &counts)
 {
-    if (syanten == -1) {
-        ScoreCache &cache = get_score(hand, tumo_tile);
-        return {{}, {}, std::vector<double>(17, cache.score)};
-    }
+    const std::vector<int> &flags = get_discard_tiles(hand, syanten);
 
+    // 期待値が最大となる打牌を選択する。
     std::vector<double> max_win_probs;
     std::vector<double> max_tenpai_probs;
     std::vector<double> max_exp_values;
-
-    std::vector<int> &flags = get_discard_tiles(hand, syanten);
-
     for (int tile = 0; tile < 34; ++tile) {
         if (flags[tile] == 1) {
             // 向聴数が変化しない打牌
@@ -255,7 +259,7 @@ std::vector<Candidate> ExpectedValueCalculator::analyze(int n_extra_tumo, int sy
 
     std::vector<Candidate> candidates;
 
-    std::vector<int> &flags = get_discard_tiles(hand, syanten);
+    const std::vector<int> &flags = get_discard_tiles(hand, syanten);
 
     for (int tile = 0; tile < 34; ++tile) {
         if (flags[tile] == 1) {
@@ -327,7 +331,8 @@ ExpectedValueCalculator::count_left_tiles(const Hand &hand,
  * @param[in] syanten 手牌の向聴数
  * @return 打牌一覧
  */
-std::vector<int> &ExpectedValueCalculator::get_discard_tiles(Hand &hand, int syanten)
+const std::vector<int> &ExpectedValueCalculator::get_discard_tiles(Hand &hand,
+                                                                   int syanten)
 {
     auto &cache = discard_cache_[syanten];
 
@@ -357,7 +362,7 @@ std::vector<int> &ExpectedValueCalculator::get_discard_tiles(Hand &hand, int sya
  * @param[in] syanten 手牌の向聴数
  * @return 自摸牌一覧
  */
-DrawTilesCache &ExpectedValueCalculator::get_draw_tiles(Hand &hand, int syanten)
+const DrawTilesCache &ExpectedValueCalculator::get_draw_tiles(Hand &hand, int syanten)
 {
     auto &table = draw_cache_[syanten];
 
@@ -392,7 +397,7 @@ DrawTilesCache &ExpectedValueCalculator::get_draw_tiles(Hand &hand, int syanten)
  * @param[in] win_tile 自摸牌
  * @return 点数
  */
-ScoreCache &ExpectedValueCalculator::get_score(const Hand &hand, int win_tile)
+const ScoreCache &ExpectedValueCalculator::get_score(const Hand &hand, int win_tile)
 {
     ScoreKey key(hand, win_tile);
     if (auto itr = score_cache_.find(key); itr != score_cache_.end())

@@ -143,16 +143,15 @@ private:
 
     std::vector<Candidate> analyze(int n_left_tumo, int syanten, const Hand &hand);
     std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
-    discard(int n_left_tumo, int syanten, int tumo_tile, Hand &hand,
-            std::vector<int> &counts);
+    discard(int n_left_tumo, int syanten, Hand &hand, std::vector<int> &counts);
     std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
     draw(int n_left_tumo, int syanten, Hand &hand, std::vector<int> &counts);
 
     std::vector<int> count_left_tiles(const Hand &hand,
                                       const std::vector<int> &dora_tiles);
-    DrawTilesCache &get_draw_tiles(Hand &hand, int syanten);
-    std::vector<int> &get_discard_tiles(Hand &hand, int syanten);
-    ScoreCache &get_score(const Hand &hand, int win_tile);
+    const DrawTilesCache &get_draw_tiles(Hand &hand, int syanten);
+    const std::vector<int> &get_discard_tiles(Hand &hand, int syanten);
+    const ScoreCache &get_score(const Hand &hand, int win_tile);
 
 private:
     /* 向聴数の種類 */
