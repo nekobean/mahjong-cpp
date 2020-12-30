@@ -46,6 +46,15 @@ void ExpectedValueCalculator::initialize()
     draw_cache_.resize(5);
 }
 
+void ExpectedValueCalculator::clear()
+{
+    for (auto &cache : discard_cache_)
+        cache.clear();
+    for (auto &cache : draw_cache_)
+        cache.clear();
+    score_cache_.clear();
+}
+
 /**
  * @brief 期待値を計算する。
  * 
@@ -57,14 +66,9 @@ std::tuple<bool, std::vector<Candidate>>
 ExpectedValueCalculator::calc(const Hand &hand, const ScoreCalculator &score,
                               int syanten_type, int n_extra_tumo)
 {
-    for (auto &cache : discard_cache_)
-        cache.clear();
-    for (auto &cache : draw_cache_)
-        cache.clear();
-    score_cache_.clear();
+    clear();
 
     score_        = score;
-    hand_         = hand;
     syanten_type_ = syanten_type;
 
     // グラフを作成する。
@@ -75,13 +79,10 @@ ExpectedValueCalculator::calc(const Hand &hand, const ScoreCalculator &score,
     // 現在の向聴数を計算する。
     auto [_, syanten] = SyantenCalculator::calc(hand, syanten_type_);
     if (syanten == -1 || syanten > 3)
-        return {false, {}};
-
-    // 各牌の残り枚数を数える。
-    counts_ = count_left_tiles(hand, score.dora_tiles());
+        return {false, {}}; // 手牌が和了形または4向聴以上
 
     // グラフを作成する。
-    std::vector<Candidate> candidates = analyze(n_extra_tumo, syanten);
+    std::vector<Candidate> candidates = analyze(n_extra_tumo, syanten, hand);
 
     return {true, candidates};
 }
@@ -94,7 +95,8 @@ ExpectedValueCalculator::calc(const Hand &hand, const ScoreCalculator &score,
  * @return (有効牌の合計枚数, 有効牌の一覧)
  */
 std::tuple<int, std::vector<std::tuple<int, int>>>
-ExpectedValueCalculator::get_required_tiles(const Hand &hand, int syanten_type)
+ExpectedValueCalculator::get_required_tiles(const Hand &hand, int syanten_type,
+                                            const std::vector<int> &counts)
 {
     // 有効牌の一覧を取得する。
     std::vector<int> tiles = RequiredTileSelector::select(hand, syanten_type);
@@ -102,8 +104,8 @@ ExpectedValueCalculator::get_required_tiles(const Hand &hand, int syanten_type)
     std::vector<std::tuple<int, int>> required_tiles;
     int sum_required_tiles = 0;
     for (auto tile : tiles) {
-        required_tiles.emplace_back(tile, counts_[tile]);
-        sum_required_tiles += counts_[tile];
+        required_tiles.emplace_back(tile, counts[tile]);
+        sum_required_tiles += counts[tile];
     }
 
     return {sum_required_tiles, required_tiles};
@@ -116,29 +118,30 @@ ExpectedValueCalculator::get_required_tiles(const Hand &hand, int syanten_type)
  * @param[in] parent 親ノード
  */
 std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
-ExpectedValueCalculator::build_tree_draw(int n_extra_tumo, int syanten)
+ExpectedValueCalculator::draw(int n_extra_tumo, int syanten, Hand &hand,
+                              std::vector<int> &counts)
 {
     std::vector<double> tenpai_probs(17, 0);
     std::vector<double> win_probs(17, 0);
     std::vector<double> exp_values(17, 0);
 
-    DrawTilesCache &cache = get_draw_tiles(hand_, syanten);
+    DrawTilesCache &cache = get_draw_tiles(hand, syanten);
 
     int sum_required_tiles = 0;
     for (const auto &tile : cache.hands1)
-        sum_required_tiles += counts_[tile];
+        sum_required_tiles += counts[tile];
 
     for (const auto &tile : cache.hands1) {
-        int n_required_tiles = counts_[tile]; // 有効牌枚数
+        int n_required_tiles = counts[tile]; // 有効牌枚数
         if (n_required_tiles == 0)
             continue; // 残り枚数が0枚の場合
 
         // 手牌に加える
-        add_tile(hand_, tile);
-        counts_[tile]--;
+        add_tile(hand, tile);
+        counts[tile]--;
 
         auto [next_tenpai_probs, next_win_probs, next_exp_values] =
-            discard(n_extra_tumo, syanten - 1, tile);
+            discard(n_extra_tumo, syanten - 1, tile, hand, counts);
 
         const std::vector<double> &tumo_probs = tumo_probs_table_[n_required_tiles];
         const std::vector<double> &not_tumo_probs =
@@ -176,8 +179,8 @@ ExpectedValueCalculator::build_tree_draw(int n_extra_tumo, int syanten)
             std::fill(tenpai_probs.begin(), tenpai_probs.end(), 1);
 
         // 手牌から除く
-        counts_[tile]++;
-        remove_tile(hand_, tile);
+        counts[tile]++;
+        remove_tile(hand, tile);
     }
 
     return {tenpai_probs, win_probs, exp_values};
@@ -190,10 +193,11 @@ ExpectedValueCalculator::build_tree_draw(int n_extra_tumo, int syanten)
  * @param[in] parent 親ノード
  */
 std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
-ExpectedValueCalculator::discard(int n_extra_tumo, int syanten, int tumo_tile)
+ExpectedValueCalculator::discard(int n_extra_tumo, int syanten, int tumo_tile,
+                                 Hand &hand, std::vector<int> &counts)
 {
     if (syanten == -1) {
-        ScoreCache &cache = get_score(hand_, tumo_tile);
+        ScoreCache &cache = get_score(hand, tumo_tile);
         return {{}, {}, std::vector<double>(17, cache.score)};
     }
 
@@ -201,14 +205,15 @@ ExpectedValueCalculator::discard(int n_extra_tumo, int syanten, int tumo_tile)
     std::vector<double> max_tenpai_probs;
     std::vector<double> max_exp_values;
 
-    std::vector<int> &flags = get_discard_tiles(hand_, syanten);
+    std::vector<int> &flags = get_discard_tiles(hand, syanten);
 
     for (int tile = 0; tile < 34; ++tile) {
         if (flags[tile] == 1) {
-            remove_tile(hand_, tile);
+            // 向聴数が変化しない打牌
+            remove_tile(hand, tile);
             auto [tenpai_probs, win_probs, exp_values] =
-                build_tree_draw(n_extra_tumo, syanten);
-            add_tile(hand_, tile);
+                draw(n_extra_tumo, syanten, hand, counts);
+            add_tile(hand, tile);
 
             if (max_exp_values.empty() || exp_values.front() > max_exp_values.front()) {
                 max_tenpai_probs = tenpai_probs;
@@ -217,10 +222,11 @@ ExpectedValueCalculator::discard(int n_extra_tumo, int syanten, int tumo_tile)
             }
         }
         else if (flags[tile] == 2 && n_extra_tumo > 0) {
-            remove_tile(hand_, tile);
+            // 向聴戻しになる打牌
+            remove_tile(hand, tile);
             auto [tenpai_probs, win_probs, exp_values] =
-                build_tree_draw(n_extra_tumo - 1, syanten + 1);
-            add_tile(hand_, tile);
+                draw(n_extra_tumo - 1, syanten + 1, hand, counts);
+            add_tile(hand, tile);
 
             if (max_exp_values.empty() || exp_values.front() > max_exp_values.front()) {
                 max_tenpai_probs = tenpai_probs;
@@ -239,37 +245,43 @@ ExpectedValueCalculator::discard(int n_extra_tumo, int syanten, int tumo_tile)
  * @param[in,out] G グラフ
  * @param[in] parent 親ノード
  */
-std::vector<Candidate> ExpectedValueCalculator::analyze(int n_extra_tumo, int syanten)
+std::vector<Candidate> ExpectedValueCalculator::analyze(int n_extra_tumo, int syanten,
+                                                        const Hand &_hand)
 {
+    Hand hand = _hand;
+
+    // 各牌の残り枚数を数える。
+    std::vector<int> counts = count_left_tiles(hand, score_.dora_tiles());
+
     std::vector<Candidate> candidates;
 
-    std::vector<int> &flags = get_discard_tiles(hand_, syanten);
+    std::vector<int> &flags = get_discard_tiles(hand, syanten);
 
     for (int tile = 0; tile < 34; ++tile) {
         if (flags[tile] == 1) {
-            remove_tile(hand_, tile);
+            remove_tile(hand, tile);
 
             auto [sum_required_tiles, required_tiles] =
-                get_required_tiles(hand_, syanten_type_);
+                get_required_tiles(hand, syanten_type_, counts);
 
             auto [tenpai_probs, win_probs, exp_values] =
-                build_tree_draw(n_extra_tumo, syanten);
+                draw(n_extra_tumo, syanten, hand, counts);
 
-            add_tile(hand_, tile);
+            add_tile(hand, tile);
 
             candidates.emplace_back(tile, sum_required_tiles, required_tiles,
                                     tenpai_probs, win_probs, exp_values, false);
         }
         else if (flags[tile] == 2 && n_extra_tumo > 0) {
-            remove_tile(hand_, tile);
+            remove_tile(hand, tile);
 
             auto [sum_required_tiles, required_tiles] =
-                get_required_tiles(hand_, syanten_type_);
+                get_required_tiles(hand, syanten_type_, counts);
 
             auto [tenpai_probs, win_probs, exp_values] =
-                build_tree_draw(n_extra_tumo - 1, syanten + 1);
+                draw(n_extra_tumo - 1, syanten + 1, hand, counts);
 
-            add_tile(hand_, tile);
+            add_tile(hand, tile);
 
             candidates.emplace_back(tile, sum_required_tiles, required_tiles,
                                     tenpai_probs, win_probs, exp_values, true);

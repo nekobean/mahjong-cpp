@@ -86,11 +86,6 @@ struct VertCache {
     int turn;
 };
 
-struct DiscardTilesCache {
-    std::vector<int> hands1;
-    std::vector<int> hands2;
-};
-
 struct DrawTilesCache {
     std::vector<int> hands1;
     std::vector<int> hands2;
@@ -139,16 +134,19 @@ public:
                                                   int syanten_type, int n_extra_tumo);
 
     std::tuple<int, std::vector<std::tuple<int, int>>>
-    get_required_tiles(const Hand &hand, int syanten_type);
+    get_required_tiles(const Hand &hand, int syanten_type,
+                       const std::vector<int> &counts);
 
 private:
     void initialize();
+    void clear();
 
-    std::vector<Candidate> analyze(int n_left_tumo, int syanten);
+    std::vector<Candidate> analyze(int n_left_tumo, int syanten, const Hand &hand);
     std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
-    discard(int n_left_tumo, int syanten, int tumo_tile);
+    discard(int n_left_tumo, int syanten, int tumo_tile, Hand &hand,
+            std::vector<int> &counts);
     std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
-    build_tree_draw(int n_left_tumo, int syanten);
+    draw(int n_left_tumo, int syanten, Hand &hand, std::vector<int> &counts);
 
     std::vector<int> count_left_tiles(const Hand &hand,
                                       const std::vector<int> &dora_tiles);
@@ -157,9 +155,6 @@ private:
     ScoreCache &get_score(const Hand &hand, int win_tile);
 
 private:
-    Hand hand_;
-    std::vector<int> counts_;
-
     /* 向聴数の種類 */
     int syanten_type_;
 
