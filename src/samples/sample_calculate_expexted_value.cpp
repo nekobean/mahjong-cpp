@@ -32,8 +32,8 @@ int main(int, char **)
                 Tile::Sozu6, Tile::Sozu7, Tile::Sozu7, Tile::Sozu8});
 
     int turn         = 1;
-    int n_extra_tumo = 1;
-    Hand hand        = hand3;
+    int n_extra_tumo = 0;
+    Hand hand        = hand2;
 
     // 向聴数を計算する。
     auto [syanten_type, syanten] = SyantenCalculator::calc(hand, SyantenType::Normal);
@@ -46,42 +46,46 @@ int main(int, char **)
     auto elapsed_ms =
         std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
 
-    std::sort(candidates.begin(), candidates.end(),
-              [](const Candidate &a, const Candidate &b) {
-                  return a.exp_values.front() > b.exp_values.front();
-              });
+    // std::sort(candidates.begin(), candidates.end(),
+    //           [](const Candidate &a, const Candidate &b) {
+    //               return a.exp_values.front() > b.exp_values.front();
+    //           });
 
     // 結果を出力する。
-    if (success) {
-        std::cout << fmt::format("手牌: {}, 向聴数: {}, 巡目: {}", hand.to_string(),
-                                 syanten, turn)
-                  << std::endl;
+    if (!success)
+        return 1;
 
-        for (const auto &candidate : candidates) {
-            std::cout << fmt::format("[打 {}{}]", Tile::Name.at(candidate.tile),
-                                     candidate.syanten_down ? " (向聴戻し)" : "")
-                      << " ";
+    std::cout << fmt::format("手牌: {}, 向聴数: {}, 巡目: {}", hand.to_string(),
+                             syanten, turn)
+              << std::endl;
 
-            std::cout << fmt::format("有効牌: {}種{}枚, 聴牌確率: {:.2f}%, 和了確率: "
-                                     "{:.2f}%, 期待値: {:.2f}",
-                                     candidate.required_tiles.size(),
-                                     candidate.sum_required_tiles,
-                                     candidate.tenpai_probs[turn - 1] * 100,
-                                     candidate.win_probs[turn - 1] * 100,
-                                     candidate.exp_values[turn - 1])
-                      << std::endl;
+    for (const auto &candidate : candidates) {
+        std::cout << fmt::format("[打 {}{}]", Tile::Name.at(candidate.tile),
+                                 candidate.syanten_down ? " (向聴戻し)" : "")
+                  << " ";
 
-            // std::cout << "巡目ごとの聴牌確率、和了確率、期待値" << std::endl;
-            // for (size_t i = 0; i < 17; ++i) {
-            //     std::cout << fmt::format("{:<2}巡目 聴牌確率: {:>5.2f}%, 和了確率: "
-            //                              "{:>5.2f}%, 期待値: {:.2f}",
-            //                              i + 1, candidate.tenpai_probs[i] * 100,
-            //                              candidate.win_probs[i] * 100,
-            //                              candidate.exp_values[i])
-            //               << std::endl;
-            // }
-        }
+        std::cout << fmt::format(
+            "有効牌: {}種{}枚, 聴牌確率: {:.2f}%, 和了確率: "
+            "{:.2f}%, 期待値: {:.2f} ",
+            candidate.required_tiles.size(), candidate.sum_required_tiles,
+            candidate.tenpai_probs[turn - 1] * 100, candidate.win_probs[turn - 1] * 100,
+            candidate.exp_values[turn - 1]);
 
-        std::cout << fmt::format("計算時間: {}ms", elapsed_ms) << std::endl;
+        std::cout << "有効牌";
+        for (const auto [tile, n] : candidate.required_tiles)
+            std::cout << fmt::format(" {}", Tile::Name.at(tile));
+        std::cout << std::endl;
+
+        // std::cout << "巡目ごとの聴牌確率、和了確率、期待値" << std::endl;
+        // for (size_t i = 0; i < 17; ++i) {
+        //     std::cout << fmt::format("{:<2}巡目 聴牌確率: {:>5.2f}%, 和了確率: "
+        //                              "{:>5.2f}%, 期待値: {:.2f}",
+        //                              i + 1, candidate.tenpai_probs[i] * 100,
+        //                              candidate.win_probs[i] * 100,
+        //                              candidate.exp_values[i])
+        //               << std::endl;
+        // }
     }
+
+    std::cout << fmt::format("計算時間: {}ms", elapsed_ms) << std::endl;
 }
