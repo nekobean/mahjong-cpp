@@ -14,7 +14,12 @@ Miscellaneous programs about Japanese Mahjong
 * [x] 点数計算 (Score Calculation)
 * [x] 有効牌列挙 (Required Tile Selection)
 * [x] 不要牌列挙 (Unnecessary Tile Selection)
-* [ ] 期待値計算 (Expected Score Calculation)
+* [x] 期待値計算 (Expected Score Calculation)
+  * [x] 向聴戻し考慮
+  * [x] 一発、海底撈月考慮
+  * [ ] 裏ドラ考慮
+  * [ ] 向聴数が変化しない手変わり考慮
+  * [ ] 槓されている場合を考慮
 
 ## Requirements (依存ライブラリ)
 
