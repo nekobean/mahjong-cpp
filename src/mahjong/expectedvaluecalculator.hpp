@@ -160,7 +160,6 @@ public:
                        const std::vector<int> &counts);
 
 private:
-    void initialize();
     void clear();
 
     std::vector<Candidate> analyze(int n_extra_tumo, int syanten, const Hand &hand);
@@ -169,6 +168,7 @@ private:
     std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
     draw(int n_extra_tumo, int syanten, Hand &hand, std::vector<int> &counts);
 
+    void create_prob_table(int n_left_tile);
     std::vector<int> count_left_tiles(const Hand &hand,
                                       const std::vector<int> &dora_tiles);
     const DrawTilesCache &get_draw_tiles(Hand &hand, int syanten);

@@ -12,43 +12,41 @@ namespace mahjong {
 
 ExpectedValueCalculator::ExpectedValueCalculator()
 {
-    initialize();
+    discard_cache_.resize(5);  // 0(聴牌) ~ 4(4向聴)
+    draw_cache_.resize(5);     // 0(聴牌) ~ 4(4向聴)
+    discard_cache2_.resize(5); // 0(聴牌) ~ 4(4向聴)
+    draw_cache2_.resize(5);    // 0(聴牌) ~ 4(4向聴)
 }
 
 /**
  * @brief 初期化する。
  */
-void ExpectedValueCalculator::initialize()
+void ExpectedValueCalculator::create_prob_table(int n_left_tile)
 {
     tumo_probs_table_.resize(5);
     for (int i = 0; i < 5; ++i) {
         std::vector<double> probs(17);
 
         for (int j = 0; j < 17; ++j) {
-            probs[j] = double(i) / double(121 - j);
+            probs[j] = double(i) / double(n_left_tile - j);
         }
 
         tumo_probs_table_[i] = probs;
     }
 
-    not_tumo_probs_table_.resize(121);
-    for (int i = 0; i < 121; ++i) {
+    not_tumo_probs_table_.resize(n_left_tile);
+    for (int i = 0; i < n_left_tile; ++i) {
         std::vector<double> probs(17);
         probs[0] = 1;
 
         double prob = 1;
         for (int j = 0; j < 16; ++j) {
-            prob *= double(121 - j - i) / double(121 - j);
+            prob *= double(n_left_tile - j - i) / double(n_left_tile - j);
             probs[j + 1] = prob;
         }
 
         not_tumo_probs_table_[i] = probs;
     }
-
-    discard_cache_.resize(5);  // 0(聴牌) ~ 4(4向聴)
-    draw_cache_.resize(5);     // 0(聴牌) ~ 4(4向聴)
-    discard_cache2_.resize(5); // 0(聴牌) ~ 4(4向聴)
-    draw_cache2_.resize(5);    // 0(聴牌) ~ 4(4向聴)
 }
 
 /**
@@ -84,10 +82,16 @@ ExpectedValueCalculator::calc(const Hand &hand, const ScoreCalculator &score,
     score_        = score;
     syanten_type_ = syanten_type;
 
-    // グラフを作成する。
     int n_tiles = hand.num_tiles() + int(hand.melded_blocks.size()) * 3;
     if (n_tiles != 14)
-        return {false, {}};
+        return {false, {}}; // 手牌が14枚ではない
+
+    // 残り牌の枚数を数える。
+    std::vector<int> counts = count_left_tiles(hand, score_.dora_tiles());
+    int sum_left_tiles      = std::accumulate(counts.begin(), counts.end(), 0);
+
+    // 自摸確率のテーブルを作成する。
+    create_prob_table(sum_left_tiles);
 
     // 現在の向聴数を計算する。
     auto [_, syanten] = SyantenCalculator::calc(hand, syanten_type_);
@@ -418,8 +422,17 @@ const ScoreCache &ExpectedValueCalculator::get_score(const Hand &hand, int win_t
     if (auto itr = score_cache_.find(key); itr != score_cache_.end())
         return itr->second; // キャッシュが存在する場合
 
-    Result result = score_.calc(hand, win_tile, HandFlag::Reach | HandFlag::Tumo);
-    std::vector<int> scores = score_.get_scores_for_exp(result);
+    int hand_flag = HandFlag::Tumo;
+    if (hand.is_menzen())
+        hand_flag |= HandFlag::Reach; // 門前の場合は立直している
+
+    Result result = score_.calc(hand, win_tile, hand_flag);
+
+    std::vector<int> scores;
+    if (result.success)
+        scores = score_.get_scores_for_exp(result);
+    else
+        scores = {0}; // 役なしは0点として計算
 
     ScoreCache cache(scores);
 

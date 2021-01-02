@@ -31,9 +31,15 @@ int main(int, char **)
                 Tile::Pinzu1, Tile::Pinzu3, Tile::Pinzu4, Tile::Pinzu7, Tile::Pinzu9,
                 Tile::Sozu6, Tile::Sozu7, Tile::Sozu7, Tile::Sozu8});
 
+    MeldedBlock block(MeldType::Kakan, {Tile::Ton, Tile::Ton, Tile::Ton, Tile::Ton});
+    Hand hand5({Tile::Manzu2, Tile::Manzu3, Tile::Manzu4, Tile::Manzu5, Tile::Pinzu1,
+                Tile::Pinzu1, Tile::Pinzu3, Tile::Pinzu4, Tile::Pinzu7, Tile::Pinzu9,
+                Tile::Sozu6},
+               {block});
+
     int turn         = 1;
-    int n_extra_tumo = 1;
-    Hand hand        = hand4;
+    int n_extra_tumo = 0;
+    Hand hand        = hand5;
 
     // 向聴数を計算する。
     auto [syanten_type, syanten] = SyantenCalculator::calc(hand, SyantenType::Normal);
@@ -53,8 +59,10 @@ int main(int, char **)
               });
 
     // 結果を出力する。
-    if (!success)
+    if (!success) {
+        std::cout << "エラー" << std::endl;
         return 1;
+    }
 
     std::cout << fmt::format("手牌: {}, 向聴数: {}, 巡目: {}", hand.to_string(),
                              syanten, turn)

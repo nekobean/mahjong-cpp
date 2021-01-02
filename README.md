@@ -17,9 +17,9 @@ Miscellaneous programs about Japanese Mahjong
 * [x] 期待値計算 (Expected Score Calculation)
   * [x] 向聴戻し考慮
   * [x] 一発、海底撈月考慮
+  * [x] 副露している手牌に対応
   * [ ] 裏ドラ考慮
   * [ ] 向聴数が変化しない手変わり考慮
-  * [ ] 槓されている場合を考慮
 
 ## Requirements (依存ライブラリ)
 
