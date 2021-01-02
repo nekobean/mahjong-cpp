@@ -3,7 +3,11 @@
 #undef NDEBUG
 #include <algorithm>
 #include <assert.h>
+#include <fstream>
 #include <numeric>
+
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/split.hpp>
 
 #include "requiredtileselector.hpp"
 #include "syanten.hpp"
@@ -11,11 +15,29 @@
 namespace mahjong {
 
 ExpectedValueCalculator::ExpectedValueCalculator()
+    : enable_uradora_(true)
+    , enable_ippatu_(true)
+    , enable_haitei_(true)
 {
     discard_cache_.resize(5);  // 0(聴牌) ~ 4(4向聴)
     draw_cache_.resize(5);     // 0(聴牌) ~ 4(4向聴)
     discard_cache2_.resize(5); // 0(聴牌) ~ 4(4向聴)
     draw_cache2_.resize(5);    // 0(聴牌) ~ 4(4向聴)
+
+    uradora_prob_.resize(6);
+    std::ifstream ifs("uradora.txt");
+
+    std::string line;
+    int i = 1;
+    while (std::getline(ifs, line)) {
+        std::vector<std::string> tokens;
+        boost::split(tokens, line, boost::is_any_of(" "));
+
+        for (auto token : tokens) {
+            uradora_prob_[i].push_back(std::stod(token));
+        }
+        i++;
+    }
 }
 
 /**
@@ -165,7 +187,7 @@ ExpectedValueCalculator::draw(int n_extra_tumo, int syanten, Hand &hand,
         counts[tile]--;
 
         std::vector<double> next_tenpai_probs, next_win_probs, next_exp_values;
-        std::vector<int> scores;
+        std::vector<double> scores;
 
         if (syanten == 0) {
             const ScoreCache &cache = get_score(hand, tile);
@@ -192,10 +214,9 @@ ExpectedValueCalculator::draw(int n_extra_tumo, int syanten, Hand &hand,
                 if (syanten == 0) {
                     win_probs[i] += prob;
 
-                    size_t score_idx = (j == i) + (j == 16); // 一発、海底撈月を考慮
-                    if (score_idx >= scores.size())
-                        score_idx = scores.size() - 1;
-
+                    size_t score_idx =
+                        (j == i && enable_ippatu_) +
+                        (j == 16 && enable_haitei_); // 一発、海底撈月を考慮
                     exp_values[i] += prob * scores[score_idx];
                 }
                 else if (j < 16 && syanten > 0) {
@@ -428,14 +449,31 @@ const ScoreCache &ExpectedValueCalculator::get_score(const Hand &hand, int win_t
 
     Result result = score_.calc(hand, win_tile, hand_flag);
 
-    std::vector<int> scores;
-    if (result.success)
-        scores = score_.get_scores_for_exp(result);
-    else
-        scores = {0}; // 役なしは0点として計算
+    int n_uradora = 1;
+    for (const auto &meld : hand.melded_blocks)
+        n_uradora += meld.type >= MeldType::Ankan;
+
+    std::vector<double> scores(3, 0);
+    if (result.success) {
+        std::vector<int> up_scores = score_.get_scores_for_exp(result);
+
+        if (enable_uradora_) {
+            for (int base = 0; base < 3; ++base) {
+                for (int i = 0; i < 13; ++i) {
+                    int han_idx = std::min(base + i, int(up_scores.size() - 1));
+                    scores[base] += up_scores[han_idx] * uradora_prob_[n_uradora][i];
+                }
+            }
+        }
+        else {
+            for (int base = 0; base < 3; ++base) {
+                int han_idx = std::min(base, int(up_scores.size() - 1));
+                scores[base] += up_scores[han_idx];
+            }
+        }
+    }
 
     ScoreCache cache(scores);
-
     auto [itr, _] = score_cache_.insert_or_assign(key, cache);
 
     return itr->second;

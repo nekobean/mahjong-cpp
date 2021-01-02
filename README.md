@@ -18,7 +18,7 @@ Miscellaneous programs about Japanese Mahjong
   * [x] 向聴戻し考慮
   * [x] 一発、海底撈月考慮
   * [x] 副露している手牌に対応
-  * [ ] 裏ドラ考慮
+  * [x] 裏ドラ考慮 (近似)
   * [ ] 向聴数が変化しない手変わり考慮
 
 ## Requirements (依存ライブラリ)

@@ -125,12 +125,12 @@ struct ScoreKey {
 };
 
 struct ScoreCache {
-    ScoreCache(const std::vector<int> &scores)
+    ScoreCache(const std::vector<double> &scores)
         : scores(scores)
     {
     }
 
-    std::vector<int> scores;
+    std::vector<double> scores;
 };
 
 inline bool operator<(const Hand &lhs, const Hand &rhs)
@@ -182,6 +182,10 @@ private:
     /* 点数計算機 */
     ScoreCalculator score_;
 
+    bool enable_uradora_;
+    bool enable_ippatu_;
+    bool enable_haitei_;
+
     std::vector<std::map<Hand, std::vector<int>>> discard_cache_;
     std::vector<std::map<Hand, DrawTilesCache>> draw_cache_;
     std::vector<std::map<CacheKey, CacheValue>> discard_cache2_;
@@ -190,6 +194,7 @@ private:
 
     std::vector<std::vector<double>> tumo_probs_table_;
     std::vector<std::vector<double>> not_tumo_probs_table_;
+    std::vector<std::vector<double>> uradora_prob_;
 };
 
 } // namespace mahjong

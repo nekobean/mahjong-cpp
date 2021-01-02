@@ -39,7 +39,7 @@ int main(int, char **)
 
     int turn         = 1;
     int n_extra_tumo = 0;
-    Hand hand        = hand5;
+    Hand hand        = hand2;
 
     // 向聴数を計算する。
     auto [syanten_type, syanten] = SyantenCalculator::calc(hand, SyantenType::Normal);
