@@ -33,6 +33,7 @@ public:
     std::vector<std::tuple<std::string, int>>
     calc_fu_detail(const std::vector<Block> &blocks, int wait_type, bool is_menzen,
                    bool is_tumo) const;
+    std::vector<int> get_scores_for_exp(const Result &result);
 
     /* パラメータを設定・取得する関数 */
     void set_rules(int rule = RuleFlag::Null);

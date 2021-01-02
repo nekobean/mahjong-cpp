@@ -161,11 +161,11 @@ ExpectedValueCalculator::draw(int n_extra_tumo, int syanten, Hand &hand,
         counts[tile]--;
 
         std::vector<double> next_tenpai_probs, next_win_probs, next_exp_values;
-        double score;
+        std::vector<int> scores;
 
         if (syanten == 0) {
             const ScoreCache &cache = get_score(hand, tile);
-            score                   = cache.score;
+            scores                  = cache.scores;
         }
         else {
             std::tie(next_tenpai_probs, next_win_probs, next_exp_values) =
@@ -177,31 +177,28 @@ ExpectedValueCalculator::draw(int n_extra_tumo, int syanten, Hand &hand,
             not_tumo_probs_table_[sum_required_tiles];
 
         for (int i = 0; i < 17; ++i) {
-            double tenpai_prob = 0;
-            double win_prob    = 0;
-            double exp_value   = 0;
             for (int j = i; j < 17; ++j) {
                 double prob = tumo_probs[j] * not_tumo_probs[j] / not_tumo_probs[i];
 
-                if (syanten == 0)
-                    exp_value += prob * score;
-                else if (j < 16 && syanten > 0)
-                    exp_value += prob * next_exp_values[j + 1];
-
-                if (syanten == 0)
-                    win_prob += prob;
-                else if (j < 16 && syanten > 0)
-                    win_prob += prob * next_win_probs[j + 1];
-
                 if (syanten == 1)
-                    tenpai_prob += prob;
+                    tenpai_probs[i] += prob;
                 else if (j < 16 && syanten > 1)
-                    tenpai_prob += prob * next_tenpai_probs[j + 1];
-            }
+                    tenpai_probs[i] += prob * next_tenpai_probs[j + 1];
 
-            win_probs[i] += win_prob;
-            tenpai_probs[i] += tenpai_prob;
-            exp_values[i] += exp_value;
+                if (syanten == 0) {
+                    win_probs[i] += prob;
+
+                    size_t score_idx = (j == i) + (j == 16); // 一発、海底撈月を考慮
+                    if (score_idx >= scores.size())
+                        score_idx = scores.size() - 1;
+
+                    exp_values[i] += prob * scores[score_idx];
+                }
+                else if (j < 16 && syanten > 0) {
+                    win_probs[i] += prob * next_win_probs[j + 1];
+                    exp_values[i] += prob * next_exp_values[j + 1];
+                }
+            }
         }
 
         if (syanten == 0)
@@ -422,8 +419,9 @@ const ScoreCache &ExpectedValueCalculator::get_score(const Hand &hand, int win_t
         return itr->second; // キャッシュが存在する場合
 
     Result result = score_.calc(hand, win_tile, HandFlag::Reach | HandFlag::Tumo);
+    std::vector<int> scores = score_.get_scores_for_exp(result);
 
-    ScoreCache cache(result.score[0]);
+    ScoreCache cache(scores);
 
     auto [itr, _] = score_cache_.insert_or_assign(key, cache);
 

@@ -29,6 +29,10 @@ static inline std::map<int, int> Values = {
     {Null, -1}, {Hu20, 20}, {Hu25, 25}, {Hu30, 30}, {Hu40, 40},   {Hu50, 50},
     {Hu60, 60}, {Hu70, 70}, {Hu80, 80}, {Hu90, 90}, {Hu100, 100}, {Hu110, 110}};
 
+static inline std::map<int, int> Keys = {
+    {-1, Null}, {20, Hu20}, {25, Hu25}, {30, Hu30}, {40, Hu40},   {50, Hu50},
+    {60, Hu60}, {70, Hu70}, {80, Hu80}, {90, Hu90}, {100, Hu100}, {110, Hu110}};
+
 static inline std::map<int, std::string> Name = {
     {Null, "Null"}, {Hu20, "20符"}, {Hu25, "25符"},   {Hu30, "30符"},
     {Hu40, "40符"}, {Hu50, "50符"}, {Hu60, "60符"},   {Hu70, "70符"},

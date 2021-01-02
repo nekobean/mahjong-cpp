@@ -1399,4 +1399,25 @@ std::vector<int> ScoreCalculator::calc_score(bool is_tumo, int score_title, int 
     }
 }
 
+std::vector<int> ScoreCalculator::get_scores_for_exp(const Result &result)
+{
+    if (result.score_title >= ScoreTitle::KazoeYakuman)
+        return {result.score.front()};
+
+    int fu = Hu::Keys.at(result.fu);
+
+    std::vector<int> scores;
+    for (int han = result.han; han <= 13; ++han) {
+        // 点数のタイトルを計算する。
+        int score_title = ScoreTitle::get_score_title(fu, han);
+
+        // 点数を計算する。
+        auto score = calc_score(true, score_title, han, fu);
+
+        scores.push_back(score.front());
+    }
+
+    return scores;
+}
+
 } // namespace mahjong

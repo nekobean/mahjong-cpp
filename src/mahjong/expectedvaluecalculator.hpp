@@ -125,12 +125,12 @@ struct ScoreKey {
 };
 
 struct ScoreCache {
-    ScoreCache(double score)
-        : score(score)
+    ScoreCache(const std::vector<int> &scores)
+        : scores(scores)
     {
     }
 
-    double score;
+    std::vector<int> scores;
 };
 
 inline bool operator<(const Hand &lhs, const Hand &rhs)
