@@ -32,8 +32,8 @@ int main(int, char **)
                 Tile::Sozu6, Tile::Sozu7, Tile::Sozu7, Tile::Sozu8});
 
     int turn         = 1;
-    int n_extra_tumo = 0;
-    Hand hand        = hand2;
+    int n_extra_tumo = 1;
+    Hand hand        = hand4;
 
     // 向聴数を計算する。
     auto [syanten_type, syanten] = SyantenCalculator::calc(hand, SyantenType::Normal);
@@ -46,10 +46,11 @@ int main(int, char **)
     auto elapsed_ms =
         std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
 
-    // std::sort(candidates.begin(), candidates.end(),
-    //           [](const Candidate &a, const Candidate &b) {
-    //               return a.exp_values.front() > b.exp_values.front();
-    //           });
+    // 期待値が高い順にソートする。
+    std::sort(candidates.begin(), candidates.end(),
+              [](const Candidate &a, const Candidate &b) {
+                  return a.exp_values.front() > b.exp_values.front();
+              });
 
     // 結果を出力する。
     if (!success)
@@ -87,5 +88,5 @@ int main(int, char **)
         // }
     }
 
-    std::cout << fmt::format("計算時間: {}ms", elapsed_ms) << std::endl;
+    std::cout << fmt::format("計算時間: {}us", elapsed_ms) << std::endl;
 }
