@@ -66,9 +66,9 @@ public:
 
 #ifdef USE_UNORDERED_MAP
     /*! 数牌のテーブル */
-    static std::unordered_map<KeyType, Pattern> s_tbl_;
+    static std::unordered_map<key_type, Pattern> s_tbl_;
     /*! 字牌のテーブル */
-    static std::unordered_map<KeyType, Pattern> z_tbl_;
+    static std::unordered_map<key_type, Pattern> z_tbl_;
 #else
     /*! 数牌のテーブル */
     static std::vector<Pattern> s_tbl_;

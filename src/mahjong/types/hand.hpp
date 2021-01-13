@@ -19,9 +19,9 @@ namespace mahjong {
  * @brief 手牌
  */
 class Hand {
-    using KeyType = unsigned int;
-
 public:
+    using key_type = unsigned int;
+
     Hand();
     Hand(const std::vector<int> &tiles);
     Hand(const std::vector<int> &tiles, const std::vector<MeldedBlock> &melds);
@@ -50,22 +50,22 @@ public:
      * 00|000|000|000|000|000|000|000|000|000|000
      *        萬9 萬8 萬7 萬6 萬5 萬4 萬3 萬2 萬1
      */
-    KeyType manzu;
+    key_type manzu;
     /**
      * 00|000|000|000|000|000|000|000|000|000|000
      *        筒9 筒8 筒7 筒6 筒5 筒4 筒3 筒2 筒1
      */
-    KeyType pinzu;
+    key_type pinzu;
     /**
      * 00|000|000|000|000|000|000|000|000|000|000
      *        索9 索8 索7 索6 索5 索4 索3 索2 索1
      */
-    KeyType sozu;
+    key_type sozu;
     /**
      * 00|000|000|000|000|000|000|000|000|000|000
      *                中  發  白  北  西  南  東
      */
-    KeyType zihai;
+    key_type zihai;
 
     /* 赤の萬子5を持ってるかどうか */
     bool aka_manzu5;

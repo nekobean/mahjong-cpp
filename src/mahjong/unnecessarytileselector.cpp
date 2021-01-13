@@ -155,9 +155,9 @@ std::vector<int> UnnecessaryTileSelector::select_kokusi(const Hand &hand)
                   s_tbl[hand.sozu & Bit::RotohaiMask].n_ge2 + z_tbl[hand.zihai].n_ge2;
 
     for (int i = 0; i < 9; i += 8) {
-        int manzu = hand.manzu & Bit::mask[i];
-        int pinzu = hand.pinzu & Bit::mask[i];
-        int sozu  = hand.sozu & Bit::mask[i];
+        Hand::key_type manzu = hand.manzu & Bit::mask[i];
+        Hand::key_type pinzu = hand.pinzu & Bit::mask[i];
+        Hand::key_type sozu  = hand.sozu & Bit::mask[i];
 
         if (manzu >= Bit::tile3[i] || (n_toitu >= 2 && manzu >= Bit::tile2[i]))
             tiles.push_back(i);
@@ -170,7 +170,7 @@ std::vector<int> UnnecessaryTileSelector::select_kokusi(const Hand &hand)
     }
 
     for (int i = 0; i < 7; ++i) {
-        int zihai = hand.zihai & Bit::mask[i];
+        Hand::key_type zihai = hand.zihai & Bit::mask[i];
         if (zihai >= Bit::tile3[i] || (n_toitu >= 2 && zihai >= Bit::tile2[i]))
             tiles.push_back(i + Tile::Ton);
     }
