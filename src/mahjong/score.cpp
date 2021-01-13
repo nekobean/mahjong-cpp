@@ -903,7 +903,7 @@ bool ScoreCalculator::check_sukantu(const Hand &hand) const
 {
     // 「副露ブロックに4つの槓子がある」かどうかを調べる。
     int cnt = 0;
-    for (const auto &block : hand.melded_blocks)
+    for (const auto &block : hand.melds)
         cnt += MeldType::Ankan <= block.type; // enum の値で2以上が槓子であるため
 
     return cnt == 4;
@@ -1077,7 +1077,7 @@ bool ScoreCalculator::check_sankantu(const Hand &hand) const
 {
     // 「副露ブロックに3つの槓子がある」かどうかを調べる。
     int cnt = 0;
-    for (const auto &block : hand.melded_blocks)
+    for (const auto &block : hand.melds)
         cnt += MeldType::Ankan <= block.type; // enum の値で2以上が槓子であるため
 
     return cnt == 3;
@@ -1264,7 +1264,7 @@ int ScoreCalculator::count_dora(const Hand &hand, std::vector<int> dora_tiles) c
     for (const auto &dora : dora_tiles) {
         n_dora += hand.num_tiles(dora);
 
-        for (const auto &block : hand.melded_blocks) {
+        for (const auto &block : hand.melds) {
             for (auto tile : block.tiles) {
                 if (aka2normal(tile) == dora)
                     n_dora++;
@@ -1286,7 +1286,7 @@ int ScoreCalculator::count_akadora(const Hand &hand) const
 {
     int n_akadora = hand.aka_manzu5 + hand.aka_pinzu5 + hand.aka_sozu5;
 
-    for (const auto &block : hand.melded_blocks) {
+    for (const auto &block : hand.melds) {
         for (auto tile : block.tiles) {
             if (tile == Tile::AkaManzu5 || tile == Tile::AkaPinzu5 ||
                 tile == Tile::AkaSozu5) {
@@ -1310,7 +1310,7 @@ Hand ScoreCalculator::merge_hand(const Hand &hand) const
 {
     Hand norm_hand = hand;
 
-    for (const auto &block : norm_hand.melded_blocks) {
+    for (const auto &block : norm_hand.melds) {
         int min_tile = aka2normal(block.tiles.front()); // 赤ドラは通常の牌として扱う
 
         unsigned int *key;

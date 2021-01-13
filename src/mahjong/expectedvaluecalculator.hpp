@@ -9,6 +9,15 @@ namespace mahjong {
 class Candidate {
 public:
     Candidate(int tile, int sum_required_tiles,
+              const std::vector<std::tuple<int, int>> &required_tiles)
+        : tile(tile)
+        , sum_required_tiles(sum_required_tiles)
+        , required_tiles(required_tiles)
+        , syanten_down(false)
+    {
+    }
+
+    Candidate(int tile, int sum_required_tiles,
               const std::vector<std::tuple<int, int>> &required_tiles,
               std::vector<double> tenpai_probs, std::vector<double> win_probs,
               std::vector<double> exp_values, bool syanten_down)
@@ -148,29 +157,40 @@ inline bool operator<(const ScoreKey &lhs, const ScoreKey &rhs)
 }
 
 class ExpectedValueCalculator {
+    enum Flag {
+        Null            = 0,
+        CalcSyantenDown = 1,      /* 向聴落とし */
+        CalcTegawari    = 1 << 1, /* 手変わり */
+        CalcDoubleReach = 1 << 2, /* ダブル立直考慮 */
+        CalcIppatu      = 1 << 3, /* 一発考慮 */
+        CalcHaiteitumo  = 1 << 4, /* 海底撈月考慮 */
+        CalcUradora     = 1 << 5, /* 裏ドラ */
+    };
+
 public:
     ExpectedValueCalculator();
 
-    std::tuple<bool, std::vector<Candidate>> calc(const Hand &hand,
-                                                  const ScoreCalculator &score,
-                                                  int syanten_type, int n_extra_tumo);
+    std::tuple<bool, std::vector<Candidate>>
+    calc(const Hand &hand, const ScoreCalculator &score, int syanten_type, int flag);
 
-    std::tuple<int, std::vector<std::tuple<int, int>>>
+    static std::tuple<int, std::vector<std::tuple<int, int>>>
     get_required_tiles(const Hand &hand, int syanten_type,
                        const std::vector<int> &counts);
+
+    static std::vector<int> count_left_tiles(const Hand &hand,
+                                             const std::vector<int> &dora_tiles);
 
 private:
     void clear();
 
     std::vector<Candidate> analyze(int n_extra_tumo, int syanten, const Hand &hand);
+    std::vector<Candidate> analyze(int syanten, const Hand &hand);
     std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
     discard(int n_extra_tumo, int syanten, Hand &hand, std::vector<int> &counts);
     std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
     draw(int n_extra_tumo, int syanten, Hand &hand, std::vector<int> &counts);
 
     void create_prob_table(int n_left_tile);
-    std::vector<int> count_left_tiles(const Hand &hand,
-                                      const std::vector<int> &dora_tiles);
     const DrawTilesCache &get_draw_tiles(Hand &hand, int syanten);
     const std::vector<int> &get_discard_tiles(Hand &hand, int syanten);
     const ScoreCache &get_score(const Hand &hand, int win_tile);
@@ -181,6 +201,9 @@ private:
 
     /* 点数計算機 */
     ScoreCalculator score_;
+
+    /* フラグ */
+    int flag_;
 
     bool enable_uradora_;
     bool enable_ippatu_;

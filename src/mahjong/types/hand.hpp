@@ -24,7 +24,7 @@ class Hand {
 public:
     Hand();
     Hand(const std::vector<int> &tiles);
-    Hand(const std::vector<int> &tiles, const std::vector<MeldedBlock> &melded_blocks);
+    Hand(const std::vector<int> &tiles, const std::vector<MeldedBlock> &melds);
 
     bool is_menzen() const;
     bool is_melded() const;
@@ -36,7 +36,7 @@ public:
 private:
     void convert_from_hai34(const std::vector<int> &tiles);
     bool check_arguments(const std::vector<int> &tiles,
-                         const std::vector<MeldedBlock> &melded_blocks);
+                         const std::vector<MeldedBlock> &melds);
 
     friend std::ostream &operator<<(std::ostream &os, const Hand &hand);
 
@@ -77,7 +77,7 @@ public:
     bool aka_sozu5;
 
     /* 副露ブロック */
-    std::vector<MeldedBlock> melded_blocks;
+    std::vector<MeldedBlock> melds;
 };
 
 /**
@@ -102,7 +102,7 @@ inline Hand::Hand()
 inline Hand::Hand(const std::vector<int> &tiles)
 {
 #ifdef CHECK_ARGUMENT
-    if (!check_arguments(tiles, melded_blocks))
+    if (!check_arguments(tiles, melds))
         return;
 #endif
 
@@ -113,14 +113,13 @@ inline Hand::Hand(const std::vector<int> &tiles)
  * @brief 手牌を作成する。
  * 
  * @param[in] tiles 牌の一覧
- * @param[in] melded_blocks 副露ブロックの一覧
+ * @param[in] melds 副露ブロックの一覧
  */
-inline Hand::Hand(const std::vector<int> &tiles,
-                  const std::vector<MeldedBlock> &melded_blocks)
-    : melded_blocks(melded_blocks)
+inline Hand::Hand(const std::vector<int> &tiles, const std::vector<MeldedBlock> &melds)
+    : melds(melds)
 {
 #ifdef CHECK_ARGUMENT
-    if (!check_arguments(tiles, melded_blocks))
+    if (!check_arguments(tiles, melds))
         return;
 #endif
 
@@ -131,11 +130,11 @@ inline Hand::Hand(const std::vector<int> &tiles,
  * @brief 引数が問題ないかどうかを調べる。
  * 
  * @param[in] tiles 牌の一覧
- * @param melded_blocks 副露ブロックの一覧
+ * @param melds 副露ブロックの一覧
  * @return 引数が問題ない場合は true、そうでない場合は false を返す。
  */
 inline bool Hand::check_arguments(const std::vector<int> &tiles,
-                                  const std::vector<MeldedBlock> &melded_blocks)
+                                  const std::vector<MeldedBlock> &melds)
 {
     // 牌ごとの枚数及び合計枚数を数える。
     int n_tiles = 0;
@@ -146,8 +145,8 @@ inline bool Hand::check_arguments(const std::vector<int> &tiles,
         n_tiles++;
     }
 
-    n_tiles += int(melded_blocks.size()) * 3;
-    // for (const auto &block : melded_blocks) {
+    n_tiles += int(melds.size()) * 3;
+    // for (const auto &block : melds) {
     //     if (block.type & (BlockType::Kotu | BlockType::Kantu)) {
     //         count[block.min_tile] += 3;
     //     }
@@ -199,7 +198,7 @@ inline void Hand::convert_from_hai34(const std::vector<int> &tiles)
  */
 inline bool Hand::is_menzen() const
 {
-    for (const auto &block : melded_blocks) {
+    for (const auto &block : melds) {
         if (block.type != MeldType::Ankan)
             return false; // 暗槓以外の副露ブロックがある場合
     }
@@ -214,7 +213,7 @@ inline bool Hand::is_menzen() const
  */
 inline bool Hand::is_melded() const
 {
-    return !melded_blocks.empty();
+    return !melds.empty();
 }
 
 /**
@@ -322,9 +321,9 @@ inline std::string Hand::to_string() const
     }
 
     // 副露ブロック
-    if (!s.empty() && !melded_blocks.empty())
+    if (!s.empty() && !melds.empty())
         s += " ";
-    for (const auto &block : melded_blocks)
+    for (const auto &block : melds)
         s += block.to_string();
 
     return s;

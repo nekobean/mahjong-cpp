@@ -126,7 +126,7 @@ bool SyantenCalculator::initialize()
 int SyantenCalculator::calc_normal(const Hand &hand)
 {
     // 制約条件「面子 + 候補 <= 4」で「面子数 * 2 + 候補」の最大値を計算する。
-    int n_melds      = int(hand.melded_blocks.size());
+    int n_melds      = int(hand.melds.size());
     int n_mentu_base = n_melds + s_tbl_[hand.manzu].n_mentu +
                        s_tbl_[hand.pinzu].n_mentu + s_tbl_[hand.sozu].n_mentu +
                        z_tbl_[hand.zihai].n_mentu;

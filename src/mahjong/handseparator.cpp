@@ -51,7 +51,7 @@ HandSeparator::separate(const Hand &hand, int win_tile, bool tumo)
     int i = 0;
 
     // 副露ブロックをブロック一覧に追加する。
-    for (const auto &melded_block : hand.melded_blocks) {
+    for (const auto &melded_block : hand.melds) {
         if (melded_block.type == MeldType::Pon)
             blocks[i].type = BlockType::Kotu | BlockType::Open;
         else if (melded_block.type == MeldType::Ti)
