@@ -29,12 +29,12 @@ public:
     bool is_menzen() const;
     bool is_melded() const;
     bool contains(int tile) const;
-    int num_tiles(int hai) const;
+    int num_tiles(int tile) const;
     int num_tiles() const;
     std::string to_string() const;
 
 private:
-    void convert_from_hai34(const std::vector<int> &tiles);
+    void convert_from_tile34(const std::vector<int> &tiles);
     bool check_arguments(const std::vector<int> &tiles,
                          const std::vector<MeldedBlock> &melds);
 
@@ -106,7 +106,7 @@ inline Hand::Hand(const std::vector<int> &tiles)
         return;
 #endif
 
-    convert_from_hai34(tiles);
+    convert_from_tile34(tiles);
 }
 
 /**
@@ -123,7 +123,7 @@ inline Hand::Hand(const std::vector<int> &tiles, const std::vector<MeldedBlock> 
         return;
 #endif
 
-    convert_from_hai34(tiles);
+    convert_from_tile34(tiles);
 }
 
 /**
@@ -170,7 +170,7 @@ inline bool Hand::check_arguments(const std::vector<int> &tiles,
  * 
  * @param[in] tiles 牌の一覧
  */
-inline void Hand::convert_from_hai34(const std::vector<int> &tiles)
+inline void Hand::convert_from_tile34(const std::vector<int> &tiles)
 {
     manzu = pinzu = sozu = zihai = 0;
     aka_manzu5 = aka_pinzu5 = aka_sozu5 = false;
@@ -198,8 +198,8 @@ inline void Hand::convert_from_hai34(const std::vector<int> &tiles)
  */
 inline bool Hand::is_menzen() const
 {
-    for (const auto &block : melds) {
-        if (block.type != MeldType::Ankan)
+    for (const auto &meld : melds) {
+        if (meld.type != MeldType::Ankan)
             return false; // 暗槓以外の副露ブロックがある場合
     }
 
@@ -245,13 +245,13 @@ inline int Hand::num_tiles(int tile) const
     tile = aka2normal(tile);
 
     if (tile <= Tile::Manzu9)
-        return Bit::get_n_tile(manzu, tile);
+        return Bit::num_tiles(manzu, tile);
     else if (tile <= Tile::Pinzu9)
-        return Bit::get_n_tile(pinzu, tile - 9);
+        return Bit::num_tiles(pinzu, tile - 9);
     else if (tile <= Tile::Sozu9)
-        return Bit::get_n_tile(sozu, tile - 18);
+        return Bit::num_tiles(sozu, tile - 18);
     else
-        return Bit::get_n_tile(zihai, tile - 27);
+        return Bit::num_tiles(zihai, tile - 27);
 }
 
 /**
@@ -266,7 +266,7 @@ inline int Hand::num_tiles() const
 
 /**
  * @brief 手牌を表す MPS 表記の文字列を取得する。
- *        例: 1112r56789m 1122p
+ *        例: 1112r56789m1122p
  * 
  * @return std::string 文字列
  */
@@ -276,7 +276,7 @@ inline std::string Hand::to_string() const
 
     // 萬子
     for (int i = 0; i < 9; ++i) {
-        int n = Bit::get_n_tile(manzu, i);
+        int n = Bit::num_tiles(manzu, i);
 
         s += aka_manzu5 && i == 4 ? "r" : "";
         for (int j = 0; j < n; ++j)
@@ -286,10 +286,8 @@ inline std::string Hand::to_string() const
         s += "m";
 
     // 筒子
-    if (!s.empty() && pinzu)
-        s += " ";
     for (int i = 0; i < 9; ++i) {
-        int n = Bit::get_n_tile(pinzu, i);
+        int n = Bit::num_tiles(pinzu, i);
 
         s += aka_pinzu5 && i == 4 ? "r" : "";
         for (int j = 0; j < n; ++j)
@@ -299,10 +297,8 @@ inline std::string Hand::to_string() const
         s += "p";
 
     // 索子
-    if (!s.empty() && sozu)
-        s += " ";
     for (int i = 0; i < 9; ++i) {
-        int n = Bit::get_n_tile(sozu, i);
+        int n = Bit::num_tiles(sozu, i);
 
         s += aka_sozu5 && i == 4 ? "r" : "";
         for (int j = 0; j < n; ++j)
@@ -312,10 +308,8 @@ inline std::string Hand::to_string() const
         s += "s";
 
     // 字牌
-    if (!s.empty() && zihai)
-        s += " ";
     for (int i = 0; i < 9; ++i) {
-        int n = Bit::get_n_tile(zihai, i);
+        int n = Bit::num_tiles(zihai, i);
         for (int j = 0; j < n; ++j)
             s += Tile::Name.at(27 + i);
     }
@@ -327,13 +321,6 @@ inline std::string Hand::to_string() const
         s += block.to_string();
 
     return s;
-}
-
-inline std::ostream &operator<<(std::ostream &os, const Hand &hand)
-{
-    os << hand.to_string();
-
-    return os;
 }
 
 } // namespace mahjong

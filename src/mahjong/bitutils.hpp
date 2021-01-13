@@ -55,14 +55,6 @@ public:
         4 << 15, 4 << 18, 4 << 21, 4 << 24, 4 << 12, 4 << 12, 4 << 12,
     };
 
-    static inline const std::vector<key_type> ge2 = {
-        6,       6 << 3,  6 << 6,  6 << 9,  6 << 12, 6 << 15, 6 << 18, 6 << 21,
-        6 << 24, 6,       6 << 3,  6 << 6,  6 << 9,  6 << 12, 6 << 15, 6 << 18,
-        6 << 21, 6 << 24, 6,       6 << 3,  6 << 6,  6 << 9,  6 << 12, 6 << 15,
-        6 << 18, 6 << 21, 6 << 24, 6,       6 << 3,  6 << 6,  6 << 9,  6 << 12,
-        6 << 15, 6 << 18, 6 << 12, 6 << 12, 6 << 12,
-    };
-
     static void print_2digits(key_type x)
     {
         std::cout << std::bitset<27>(x) << std::endl;
@@ -72,7 +64,7 @@ public:
     {
         std::string s;
         for (int i = 0; i < 9; ++i)
-            s += std::to_string(Bit::get_n_tile(x, i));
+            s += std::to_string(Bit::num_tiles(x, i));
 
         return s;
     }
@@ -84,51 +76,9 @@ public:
      * @param[in] i 位置
      * @return int 牌の枚数
      */
-    static int get_n_tile(key_type x, int i)
+    static int num_tiles(key_type x, int i)
     {
         return (x & Bit::mask[i]) >> (i * 3);
-    }
-
-    /**
-     * @brief 指定した牌が2枚以上あるかどうか
-     * 
-     * @return 指定した牌が2枚以上ある場合は true、そうでない場合は false を返す。
-     */
-    static bool is_ge2(key_type x, int i)
-    {
-        return x & Bit::ge2[i];
-    }
-
-    /**
-     * @brief 1枚以上の牌の種類を取得する。
-     * 
-     * @param[in] x ビット列
-     * @return int 1枚以上の牌の種類
-     */
-    static int count_ge1(key_type x)
-    {
-        int cnt = x >> 2 | x >> 1 | x;
-        cnt     = (cnt >> 3 & 01010101) + (cnt & 01010101) + (cnt >> 24 & 1);
-        cnt     = (cnt >> 6 & 030003) + (cnt & 030003);
-        cnt     = (cnt >> 12 & 7) + (cnt & 7);
-
-        return cnt;
-    }
-
-    /**
-     * @brief 2枚以上の牌の種類を取得する。
-     * 
-     * @param[in] x ビット列
-     * @return int 2枚以上の牌の種類
-     */
-    static int count_ge2(key_type x)
-    {
-        int cnt = x >> 2 | x >> 1;
-        cnt     = (cnt >> 3 & 01010101) + (cnt & 01010101) + (cnt >> 24 & 1);
-        cnt     = (cnt >> 6 & 030003) + (cnt & 030003);
-        cnt     = (cnt >> 12 & 7) + (cnt & 7);
-
-        return cnt;
     }
 
     /**
@@ -150,23 +100,6 @@ public:
     static bool check_exclusive(unsigned long long x)
     {
         return !x || !(x & (x - 1));
-    }
-
-    /**
-     * @brief 3枚の牌の種類を取得する。
-     * 
-     * @param[in] x ビット列
-     * @return int 3枚の牌の種類
-     */
-    static int count_eq3(key_type x)
-    {
-        int cnt = x ^ 0555555555;
-        cnt &= cnt >> 2 & cnt >> 1;
-        cnt = (cnt >> 3 & 01010101) + (cnt & 01010101) + (cnt >> 24);
-        cnt = (cnt >> 6 & 030003) + (cnt & 030003);
-        cnt = (cnt >> 12 & 7) + (cnt & 7);
-
-        return cnt;
     }
 
     // 老頭牌のマスク
