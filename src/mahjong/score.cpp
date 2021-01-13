@@ -836,7 +836,7 @@ bool ScoreCalculator::check_tuiso(const Hand &hand) const
  */
 bool ScoreCalculator::check_tyurenpoto(const Hand &hand, int win_tile) const
 {
-    const auto &s_tbl = SyantenCalculator::s_tbl_;
+    auto &s_tbl = SyantenCalculator::s_tbl_;
 
     if (hand.is_melded())
         return false; // 副露している場合
@@ -863,8 +863,8 @@ bool ScoreCalculator::check_tyurenpoto(const Hand &hand, int win_tile) const
  */
 bool ScoreCalculator::check_suanko(const Hand &hand, int flag) const
 {
-    const auto &s_tbl = SyantenCalculator::s_tbl_;
-    const auto &z_tbl = SyantenCalculator::z_tbl_;
+    auto &s_tbl = SyantenCalculator::s_tbl_;
+    auto &z_tbl = SyantenCalculator::z_tbl_;
 
     if (!(flag & HandFlag::Tumo))
         return false; // ロンした場合、暗刻4つにならないので自摸和了限定
@@ -914,8 +914,8 @@ bool ScoreCalculator::check_sukantu(const Hand &hand) const
  */
 bool ScoreCalculator::check_suanko_tanki(const Hand &hand, int win_tile) const
 {
-    const auto &s_tbl = SyantenCalculator::s_tbl_;
-    const auto &z_tbl = SyantenCalculator::z_tbl_;
+    auto &s_tbl = SyantenCalculator::s_tbl_;
+    auto &z_tbl = SyantenCalculator::z_tbl_;
 
     if (!hand.is_menzen())
         return false; // 門前でない場合
@@ -1313,7 +1313,7 @@ Hand ScoreCalculator::merge_hand(const Hand &hand) const
     for (const auto &block : norm_hand.melded_blocks) {
         int min_tile = aka2normal(block.tiles.front()); // 赤ドラは通常の牌として扱う
 
-        int *key;
+        unsigned int *key;
         if (min_tile <= Tile::Manzu9)
             key = &norm_hand.manzu;
         else if (min_tile <= Tile::Pinzu9)

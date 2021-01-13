@@ -34,24 +34,18 @@ std::tuple<int, int> SyantenCalculator::calc(const Hand &hand, int type)
 
     if (type & SyantenType::Normal) {
         int syanten = calc_normal(hand);
-        if (syanten < std::get<1>(ret)) {
-            std::get<0>(ret) = SyantenType::Normal;
-            std::get<1>(ret) = syanten;
-        }
+        if (syanten < std::get<1>(ret))
+            ret = {SyantenType::Normal, syanten};
     }
     if (type & SyantenType::Tiitoi) {
         int syanten = calc_tiitoi(hand);
-        if (syanten < std::get<1>(ret)) {
-            std::get<0>(ret) = SyantenType::Tiitoi;
-            std::get<1>(ret) = syanten;
-        }
+        if (syanten < std::get<1>(ret))
+            ret = {SyantenType::Tiitoi, syanten};
     }
     if (type & SyantenType::Kokusi) {
         int syanten = calc_kokusi(hand);
-        if (syanten < std::get<1>(ret)) {
-            std::get<0>(ret) = SyantenType::Kokusi;
-            std::get<1>(ret) = syanten;
-        }
+        if (syanten < std::get<1>(ret))
+            ret = {SyantenType::Kokusi, syanten};
     }
 
     return ret;
@@ -64,20 +58,63 @@ std::tuple<int, int> SyantenCalculator::calc(const Hand &hand, int type)
  */
 bool SyantenCalculator::initialize()
 {
-    if (!s_tbl_.empty())
-        return true; // 初期化済み
+    boost::filesystem::path exe_path = boost::dll::program_location().parent_path();
 
-    boost::filesystem::path s_tbl_path =
-        boost::dll::program_location().parent_path() / "syupai_table.txt";
-    boost::filesystem::path z_tbl_path =
-        boost::dll::program_location().parent_path() / "zihai_table.txt";
+#ifdef USE_UNORDERED_MAP
+    if (s_tbl_.empty()) {
+        boost::filesystem::path path = exe_path / "syupai_table.bin";
+        std::ifstream ifs(path.string(), std::ios::binary);
+        for (size_t i = 0; i < ShuupaiPatternSize; ++i) {
+            unsigned int key;
+            Pattern pattern;
+            ifs.read((char *)&key, sizeof(unsigned int));
+            ifs.read((char *)&pattern, sizeof(Pattern));
 
-    // テーブルを初期化する。
-    s_tbl_.resize(ShuupaiTableSize);
-    z_tbl_.resize(ZihaiTableSize);
+            s_tbl_[key] = pattern;
+        }
+    }
 
-    return make_table(s_tbl_path.string(), s_tbl_) &&
-           make_table(z_tbl_path.string(), z_tbl_);
+    if (z_tbl_.empty()) {
+        boost::filesystem::path path = exe_path / "zihai_table.bin";
+        std::ifstream ifs(path.string(), std::ios::binary);
+
+        for (size_t i = 0; i < ZihaiPatternSize; ++i) {
+            unsigned int key;
+            Pattern pattern;
+            ifs.read((char *)&key, sizeof(unsigned int));
+            ifs.read((char *)&pattern, sizeof(Pattern));
+
+            z_tbl_[key] = pattern;
+        }
+    }
+#else
+    if (s_tbl_.empty()) {
+        s_tbl_.resize(ShuupaiTableSize);
+
+        boost::filesystem::path path = exe_path / "syupai_table.bin";
+        std::ifstream ifs(path.string(), std::ios::binary);
+        for (size_t i = 0; i < ShuupaiPatternSize; ++i) {
+            unsigned int key;
+            ifs.read((char *)&key, sizeof(unsigned int));
+            ifs.read((char *)&s_tbl_[key], sizeof(Pattern));
+        }
+    }
+
+    if (z_tbl_.empty()) {
+        z_tbl_.resize(ZihaiTableSize);
+
+        boost::filesystem::path path = exe_path / "zihai_table.bin";
+        std::ifstream ifs(path.string(), std::ios::binary);
+
+        for (size_t i = 0; i < ZihaiPatternSize; ++i) {
+            unsigned int key;
+            ifs.read((char *)&key, sizeof(unsigned int));
+            ifs.read((char *)&z_tbl_[key], sizeof(Pattern));
+        }
+    }
+#endif
+
+    return true;
 }
 
 /**
@@ -166,7 +203,7 @@ int SyantenCalculator::calc_kokusi(const Hand &hand)
     int sozu19  = hand.sozu & Bit::RotohaiMask;
 
     // 幺九牌の種類 (1枚以上の牌) を数える。
-    int n_yaochuhai = s_tbl_[manzu19].n_ge1 + s_tbl_[pinzu19].n_ge1 +
+    int n_yaotyuhai = s_tbl_[manzu19].n_ge1 + s_tbl_[pinzu19].n_ge1 +
                       s_tbl_[sozu19].n_ge1 + z_tbl_[hand.zihai].n_ge1;
 
     // 幺九牌の対子があるかどうか
@@ -175,56 +212,17 @@ int SyantenCalculator::calc_kokusi(const Hand &hand)
                  (sozu19 & 0b110'000'000'000'000'000'000'000'110) |
                  (hand.zihai & 0b110'110'110'110'110'110'110)) > 0;
 
-    return 13 - toitu - n_yaochuhai;
+    return 13 - toitu - n_yaotyuhai;
 }
 
-/**
- * @brief ハッシュテーブルを作成する。
- *
- * @param[in] path データのファイルパス
- * @param[out] table テーブル
- * @return テーブルの作成に成功した場合は true、そうでない場合は false を返す。
- */
-bool SyantenCalculator::make_table(const std::string &path, std::vector<Pattern> &table)
-{
-    std::ifstream ifs(path);
-    if (!ifs) {
-        spdlog::error("Failed to open {}.", path);
-        return false;
-    }
-
-    std::string line;
-    while (std::getline(ifs, line)) {
-        // ファイルの各行は `<キー> <面子数><面子候補数><1枚以上の数><2枚以上の数><3枚以上の数><4枚以上の数>`
-        // キーは数牌の場合: <牌1の数><牌2の数>...<牌9の数>
-        //       字牌の場合: <東の数><南の数><西の数><北の数><白の数><発の数><中の数>00
-
-        // ビット列に変換する。
-        // 例: [0, 2, 0, 2, 2, 1, 1, 1, 4] -> 69510160 (00|000|100|001|001|001|010|010|000|010|000)
-        //      牌1 牌2 ... 牌9                                牌9 牌8 牌7 牌6 牌5 牌4 牌3 牌2 牌1
-        size_t hash = 0;
-        for (size_t i = 9; i-- > 0;)
-            hash = hash * 8 + (line[i] - '0');
-        assert(table.size() > hash);
-
-        // テーブルに格納する。
-        table[hash].n_mentu      = line[10] - '0';
-        table[hash].n_kouho      = line[11] - '0';
-        table[hash].head         = line[12] - '0';
-        table[hash].n_mentu_diff = line[13] - '0' - table[hash].n_mentu;
-        table[hash].n_kouho_diff = line[14] - '0' - table[hash].n_kouho;
-        table[hash].n_ge1        = line[15] - '0';
-        table[hash].n_ge2        = line[16] - '0';
-        table[hash].n_ge3        = line[17] - '0';
-        table[hash].n_ge4        = line[18] - '0';
-        table[hash].n            = Bit::sum(int(hash));
-    }
-
-    return true;
-}
-
+#ifdef USE_UNORDERED_MAP
+std::unordered_map<unsigned int, SyantenCalculator::Pattern> SyantenCalculator::s_tbl_;
+std::unordered_map<unsigned int, SyantenCalculator::Pattern> SyantenCalculator::z_tbl_;
+#else
 std::vector<SyantenCalculator::Pattern> SyantenCalculator::s_tbl_;
 std::vector<SyantenCalculator::Pattern> SyantenCalculator::z_tbl_;
+#endif
+
 static SyantenCalculator inst;
 
 } // namespace mahjong

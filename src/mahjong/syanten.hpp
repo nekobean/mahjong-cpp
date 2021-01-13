@@ -3,10 +3,12 @@
 
 #include "types/types.hpp"
 
+//#define USE_UNORDERED_MAP // テーブルに std::unordered_map を使う場合
+
 namespace mahjong {
 
 /**
- * @brief 向聴の種類
+ * @brief 向聴数の種類
  */
 namespace SyantenType {
 
@@ -30,37 +32,16 @@ class SyantenCalculator {
      * @brief テーブルの情報
      */
     struct Pattern {
-        Pattern()
-            : n_mentu(-1)
-            , n_kouho(-1)
-            , head(-1)
-            , n_mentu_diff(-1)
-            , n_kouho_diff(-1)
-        {
-        }
-
-        Pattern(signed char n_mentu, signed char n_kouho, signed char head,
-                signed char n_mentu_diff, signed char n_kouho_diff)
-            : n_mentu(n_mentu)
-            , n_kouho(n_kouho)
-            , head(head)
-            , n_mentu_diff(n_mentu_diff)
-            , n_kouho_diff(n_kouho_diff)
-        {
-        }
-
         /*! 面子の数 */
         signed char n_mentu;
         /*! 面子候補の数 */
         signed char n_kouho;
-
         /*! 頭あり */
         signed char head;
         /*! 面子の数 */
         signed char n_mentu_diff;
         /*! 面子候補の数 */
         signed char n_kouho_diff;
-
         /*! 1枚以上の数 */
         signed char n_ge1;
         /*! 2枚以上の数 */
@@ -83,18 +64,27 @@ public:
     static int calc_tiitoi(const Hand &hand);
     static int calc_kokusi(const Hand &hand);
 
+#ifdef USE_UNORDERED_MAP
+    /*! 数牌のテーブル */
+    static std::unordered_map<KeyType, Pattern> s_tbl_;
+    /*! 字牌のテーブル */
+    static std::unordered_map<KeyType, Pattern> z_tbl_;
+#else
     /*! 数牌のテーブル */
     static std::vector<Pattern> s_tbl_;
     /*! 字牌のテーブル */
     static std::vector<Pattern> z_tbl_;
+#endif
 
 private:
-    static bool make_table(const std::string &path, std::vector<Pattern> &table);
-
     /*! 数牌のテーブルサイズ */
-    static const int ShuupaiTableSize = 76611584 + 1; // ハッシュ値の最大値 + 1
+    static const size_t ShuupaiTableSize = 76611584 + 1; // ハッシュ値の最大値 + 1
     /*! 字牌のテーブルサイズ */
-    static const int ZihaiTableSize = 1197056 + 1; // ハッシュ値の最大値 + 1
+    static const size_t ZihaiTableSize = 1197056 + 1; // ハッシュ値の最大値 + 1
+    /*! 数牌のパターン数 */
+    static const size_t ShuupaiPatternSize = 405350;
+    /*! 字牌のパターン数 */
+    static const size_t ZihaiPatternSize = 43130;
 };
 
 } // namespace mahjong
