@@ -129,11 +129,3 @@ TEST_CASE("すべての向聴数")
             SyantenCalculator::calc(hand);
     };
 }
-
-TEST_CASE("Initialize Syanten Table")
-{
-    // BENCHMARK("Syantan table initialization")
-    // {
-    //     return SyantenCalculator::initialize();
-    // };
-}

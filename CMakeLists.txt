@@ -25,14 +25,11 @@ find_package(Boost REQUIRED COMPONENTS
 )
 include_directories(${Boost_INCLUDE_DIRS} src)
 
-file(GLOB_RECURSE SRC_FILES src/core/*.cpp)
-#add_executable(${PROJECT_NAME} ${SRC_FILES} src/main.cpp)
-#target_link_libraries(${PROJECT_NAME} spdlog ${Boost_LIBRARIES})
-
-# 必要なファイルをビルドディレクトリにコピーする。
-#add_custom_command(TARGET sample_calculate_syanten PRE_BUILD
-#                   COMMAND ${CMAKE_COMMAND} -E copy_directory
-#                   ${CMAKE_SOURCE_DIR}/data/config/ $<TARGET_FILE_DIR:sample_calculate_syanten>)
+# サーバー
+option(BUILD_SERVER "build server programs." ON)
+if(BUILD_SERVER)
+  add_subdirectory(src/server)
+endif()
 
 # テスト
 option(BUILD_TEST "build test programs." ON)
@@ -40,6 +37,7 @@ if(BUILD_TEST)
   add_subdirectory(src/test)
 endif()
 
+# サンプル
 option(BUILD_SAMPLES "build sample programs." ON)
 if(BUILD_SAMPLES)
   add_subdirectory(src/samples)

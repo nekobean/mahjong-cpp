@@ -158,7 +158,7 @@ TEST_CASE("Constract Hand")
         REQUIRE(!hand.aka_manzu5);
         REQUIRE(!hand.aka_pinzu5);
         REQUIRE(!hand.aka_sozu5);
-        REQUIRE(hand.melded_blocks.empty());
+        REQUIRE(hand.melds.empty());
     }
 
     SECTION("Hand::Hand(const std::vector<int> &)")
@@ -178,7 +178,7 @@ TEST_CASE("Constract Hand")
             REQUIRE(hand.aka_manzu5 == aka_manzu5);
             REQUIRE(hand.aka_pinzu5 == aka_pinzu5);
             REQUIRE(hand.aka_sozu5 == aka_sozu5);
-            REQUIRE(hand.melded_blocks.empty());
+            REQUIRE(hand.melds.empty());
         }
     }
 }
