@@ -86,25 +86,44 @@ struct Block {
  */
 inline std::string Block::to_string() const
 {
-    std::string s;
-
-    s += "[";
+    std::vector<int> tiles;
     if (type & BlockType::Kotu) {
         for (int i = 0; i < 3; ++i)
-            s += Tile::Name.at(min_tile);
+            tiles.push_back(min_tile);
     }
     else if (type & BlockType::Syuntu) {
         for (int i = 0; i < 3; ++i)
-            s += Tile::Name.at(min_tile + i);
+            tiles.push_back(min_tile + i);
     }
     else if (type & BlockType::Kantu) {
         for (int i = 0; i < 4; ++i)
-            s += Tile::Name.at(min_tile);
+            tiles.push_back(min_tile);
     }
     else if (type & BlockType::Toitu) {
         for (int i = 0; i < 2; ++i)
-            s += Tile::Name.at(min_tile);
+            tiles.push_back(min_tile);
     }
+
+    std::string s;
+
+    s += "[";
+    for (auto tile : tiles) {
+        if (is_manzu(tile))
+            s += std::to_string(tile + 1);
+        else if (is_pinzu(tile))
+            s += std::to_string(tile - 8);
+        else if (is_sozu(tile))
+            s += std::to_string(tile - 17);
+        else
+            s += Tile::Name.at(tile);
+    }
+
+    if (is_manzu(tiles[0]))
+        s += "m";
+    else if (is_pinzu(tiles[0]))
+        s += "p";
+    else if (is_sozu(tiles[0]))
+        s += "s";
     s += fmt::format(", {}]", BlockType::Name.at(type));
 
     return s;
