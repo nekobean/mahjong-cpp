@@ -8,14 +8,6 @@ int main(int, char **)
 {
     ExpectedValueCalculator calculator;
 
-    // 点数計算の設定
-    ScoreCalculator score;
-    score.set_bakaze(Tile::Ton);
-    score.set_zikaze(Tile::Ton);
-    score.set_num_tumibo(0);
-    score.set_num_kyotakubo(0);
-    score.set_dora_tiles({Tile::Haku});
-
     Hand hand1({Tile::Manzu2, Tile::Manzu2, Tile::Manzu2, Tile::Manzu5, Tile::Manzu6,
                 Tile::Manzu7, Tile::Pinzu3, Tile::Pinzu4, Tile::Pinzu5, Tile::Sozu3,
                 Tile::Sozu3, Tile::Sozu6, Tile::Sozu6, Tile::Sozu7});
@@ -26,29 +18,27 @@ int main(int, char **)
                 Tile::Manzu7, Tile::Pinzu9, Tile::Sozu3, Tile::Sozu7, Tile::Sozu9,
                 Tile::Ton, Tile::Pe, Tile::Pe, Tile::Hatu});
 
-    // 向聴戻しが有効なケース
-    Hand hand4({Tile::Manzu2, Tile::Manzu3, Tile::Manzu4, Tile::Manzu5, Tile::Pinzu1,
-                Tile::Pinzu1, Tile::Pinzu3, Tile::Pinzu4, Tile::Pinzu7, Tile::Pinzu9,
-                Tile::Sozu6, Tile::Sozu7, Tile::Sozu7, Tile::Sozu8});
+    int bakaze                  = Tile::Ton;
+    int zikaze                  = Tile::Ton;
+    int turn                    = 1;
+    int syanten_type            = SyantenType::Normal;
+    int flag                    = 0;
+    std::vector<int> dora_tiles = {Tile::Sya};
+    Hand hand                   = hand1;
 
-    MeldedBlock block(MeldType::Kakan, {Tile::Ton, Tile::Ton, Tile::Ton, Tile::Ton});
-    Hand hand5({Tile::Manzu2, Tile::Manzu3, Tile::Manzu4, Tile::Manzu5, Tile::Pinzu1,
-                Tile::Pinzu1, Tile::Pinzu3, Tile::Pinzu4, Tile::Pinzu7, Tile::Pinzu9,
-                Tile::Sozu6},
-               {block});
-
-    int turn         = 1;
-    int n_extra_tumo = 0;
-    Hand hand        = hand2;
+    // 点数計算の設定
+    ScoreCalculator score;
+    score.set_bakaze(bakaze);
+    score.set_zikaze(zikaze);
+    score.set_dora_tiles(dora_tiles);
 
     // 向聴数を計算する。
-    auto [syanten_type, syanten] = SyantenCalculator::calc(hand, SyantenType::Normal);
+    auto [_, syanten] = SyantenCalculator::calc(hand, syanten_type);
 
     // 期待値を計算する。
-    auto begin = std::chrono::steady_clock::now();
-    auto [success, candidates] =
-        calculator.calc(hand, score, SyantenType::Normal, n_extra_tumo);
-    auto end = std::chrono::steady_clock::now();
+    auto begin                 = std::chrono::steady_clock::now();
+    auto [success, candidates] = calculator.calc(hand, score, syanten_type, flag);
+    auto end                   = std::chrono::steady_clock::now();
     auto elapsed_ms =
         std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
 

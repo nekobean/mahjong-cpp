@@ -10,44 +10,52 @@
 namespace mahjong {
 
 /**
- * @brief 手牌を表すビット表記の文字列を取得する。
- *        例: 111256789m 1122p
- * 
- * @return std::string 文字列
+ * @brief ドラとドラ表示牌の対応表
  */
-inline std::string to_bit_string(const Hand &hand)
-{
-    std::string s;
-    s += fmt::format("manzu: {:027b}\npinzu: {:027b}\n sozu: {:027b}\nzihai: {:027b}",
-                     hand.manzu, hand.pinzu, hand.sozu, hand.zihai);
+static inline const std::map<int, int> Dora2Indicator = {
+    {Tile::Manzu1, Tile::Manzu9},    {Tile::Manzu2, Tile::Manzu1},
+    {Tile::Manzu3, Tile::Manzu2},    {Tile::Manzu4, Tile::Manzu3},
+    {Tile::Manzu5, Tile::Manzu4},    {Tile::Manzu6, Tile::Manzu5},
+    {Tile::Manzu7, Tile::Manzu6},    {Tile::Manzu8, Tile::Manzu7},
+    {Tile::Manzu9, Tile::Manzu8},    {Tile::Pinzu1, Tile::Pinzu9},
+    {Tile::Pinzu2, Tile::Pinzu1},    {Tile::Pinzu3, Tile::Pinzu2},
+    {Tile::Pinzu4, Tile::Pinzu3},    {Tile::Pinzu5, Tile::Pinzu4},
+    {Tile::Pinzu6, Tile::Pinzu5},    {Tile::Pinzu7, Tile::Pinzu6},
+    {Tile::Pinzu8, Tile::Pinzu7},    {Tile::Pinzu9, Tile::Pinzu8},
+    {Tile::Sozu1, Tile::Sozu9},      {Tile::Sozu2, Tile::Sozu1},
+    {Tile::Sozu3, Tile::Sozu2},      {Tile::Sozu4, Tile::Sozu3},
+    {Tile::Sozu5, Tile::Sozu4},      {Tile::Sozu6, Tile::Sozu5},
+    {Tile::Sozu7, Tile::Sozu6},      {Tile::Sozu8, Tile::Sozu7},
+    {Tile::Sozu9, Tile::Sozu8},      {Tile::Ton, Tile::Pe},
+    {Tile::Nan, Tile::Ton},          {Tile::Sya, Tile::Nan},
+    {Tile::Pe, Tile::Sya},           {Tile::Haku, Tile::Tyun},
+    {Tile::Hatu, Tile::Haku},        {Tile::Tyun, Tile::Hatu},
+    {Tile::AkaManzu5, Tile::Manzu4}, {Tile::AkaPinzu5, Tile::Pinzu4},
+    {Tile::AkaSozu5, Tile::Sozu4}};
 
-    return s;
-}
-
-inline std::string to_count_string(const Hand &hand)
-{
-    std::string s;
-
-    s += "[";
-    // 萬子
-    for (int i = 0; i < 9; ++i)
-        s += fmt::format("{}{}", Bit::num_tiles(hand.manzu, i), i != 8 ? ", " : "|");
-
-    // 筒子
-    for (int i = 0; i < 9; ++i)
-        s += fmt::format("{}{}", Bit::num_tiles(hand.pinzu, i), i != 8 ? ", " : "|");
-
-    // 索子
-    for (int i = 0; i < 9; ++i)
-        s += fmt::format("{}{}", Bit::num_tiles(hand.sozu, i), i != 8 ? ", " : "|");
-
-    // 字牌
-    for (int i = 0; i < 7; ++i)
-        s += fmt::format("{}{}", Bit::num_tiles(hand.sozu, i), i != 6 ? ", " : "");
-    s += "]";
-
-    return s;
-}
+/**
+ * @brief ドラ表示牌とドラの対応表
+ */
+static inline const std::map<int, int> Indicator2Dora = {
+    {Tile::Manzu1, Tile::Manzu2},    {Tile::Manzu2, Tile::Manzu3},
+    {Tile::Manzu3, Tile::Manzu4},    {Tile::Manzu4, Tile::Manzu5},
+    {Tile::Manzu5, Tile::Manzu6},    {Tile::Manzu6, Tile::Manzu7},
+    {Tile::Manzu7, Tile::Manzu8},    {Tile::Manzu8, Tile::Manzu9},
+    {Tile::Manzu9, Tile::Manzu1},    {Tile::Pinzu1, Tile::Pinzu2},
+    {Tile::Pinzu2, Tile::Pinzu3},    {Tile::Pinzu3, Tile::Pinzu4},
+    {Tile::Pinzu4, Tile::Pinzu5},    {Tile::Pinzu5, Tile::Pinzu6},
+    {Tile::Pinzu6, Tile::Pinzu7},    {Tile::Pinzu7, Tile::Pinzu8},
+    {Tile::Pinzu8, Tile::Pinzu9},    {Tile::Pinzu9, Tile::Pinzu1},
+    {Tile::Sozu1, Tile::Sozu2},      {Tile::Sozu2, Tile::Sozu3},
+    {Tile::Sozu3, Tile::Sozu4},      {Tile::Sozu4, Tile::Sozu5},
+    {Tile::Sozu5, Tile::Sozu6},      {Tile::Sozu6, Tile::Sozu7},
+    {Tile::Sozu7, Tile::Sozu8},      {Tile::Sozu8, Tile::Sozu9},
+    {Tile::Sozu9, Tile::Sozu1},      {Tile::Ton, Tile::Nan},
+    {Tile::Nan, Tile::Sya},          {Tile::Sya, Tile::Pe},
+    {Tile::Pe, Tile::Ton},           {Tile::Haku, Tile::Hatu},
+    {Tile::Hatu, Tile::Tyun},        {Tile::Tyun, Tile::Haku},
+    {Tile::AkaManzu5, Tile::Manzu6}, {Tile::AkaPinzu5, Tile::Pinzu6},
+    {Tile::AkaSozu5, Tile::Sozu6}};
 
 /**
  * @brief 設定を文字列にして返す。

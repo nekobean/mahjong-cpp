@@ -69,6 +69,24 @@ struct Tile {
 };
 
 /**
+ * @brief 赤なしの牌を赤牌に変換する。
+ * 
+ * @param tile 赤牌
+ * @return int 赤なしの牌
+ */
+inline int normal2aka(int tile)
+{
+    if (tile == Tile::AkaManzu5)
+        return Tile::Manzu5;
+    else if (tile == Tile::AkaPinzu5)
+        return Tile::Pinzu5;
+    else if (tile == Tile::AkaSozu5)
+        return Tile::Sozu5;
+    else
+        return tile;
+}
+
+/**
  * @brief 赤牌を赤なしの牌に変換する。
  * 
  * @param tile 赤牌

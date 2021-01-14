@@ -1,5 +1,8 @@
 #include "server.hpp"
 
+#include "rapidjson/istreamwrapper.h"
+#include "rapidjson/schema.h"
+
 #include <chrono>
 #include <fstream>
 #include <sstream>
@@ -137,6 +140,12 @@ rapidjson::Document Server::create_response(const RequestData &req)
     return doc;
 }
 
+/**
+ * @brief JSON データを解析する。
+ * 
+ * @param[in] doc ドキュメント
+ * @return (成功したかどうか, リクエストデータ)
+ */
 std::tuple<bool, RequestData> Server::parse_json(const rapidjson::Document &doc)
 {
     RequestData req;
@@ -173,6 +182,12 @@ std::tuple<bool, RequestData> Server::parse_json(const rapidjson::Document &doc)
                req.syanten_type, req.hand.to_string(), req.flag)
         << std::endl;
 
+    auto counts = ExpectedValueCalculator::count_left_tiles(req.hand, req.dora_tiles);
+    for (auto x : counts) {
+        if (x < 0)
+            return {false, req};
+    }
+
     return {true, req};
 }
 
@@ -190,13 +205,33 @@ std::string Server::process_request(const std::string &json)
 {
     rapidjson::Document doc(rapidjson::kObjectType);
 
-    // JSON を読み込む。
+    // リクエストデータを読み込む。
     rapidjson::Document req_doc;
     req_doc.Parse(json.c_str());
     if (req_doc.HasParseError()) {
         doc.AddMember("success", false, doc.GetAllocator());
-        doc.AddMember("err_msg", "Failed to parse request json due to invalid format.",
+        doc.AddMember("err_msg", "Failed to parse request data (invalid json format).",
                       doc.GetAllocator());
+        return to_json_str(doc);
+    }
+
+    std::ifstream ifs("request_schema.json");
+    rapidjson::IStreamWrapper isw(ifs);
+    rapidjson::Document sd;
+    sd.ParseStream(isw);
+    rapidjson::SchemaDocument schema(sd);
+    rapidjson::SchemaValidator validator(schema);
+
+    if (!req_doc.Accept(validator)) {
+        // rapidjson::StringBuffer sb;
+        // validator.GetInvalidSchemaPointer().StringifyUriFragment(sb);
+        // printf("Invalid schema: %s\n", sb.GetString());
+        // printf("Invalid keyword: %s\n", validator.GetInvalidSchemaKeyword());
+        doc.AddMember("success", false, doc.GetAllocator());
+        doc.AddMember("request", req_doc.GetObject(), doc.GetAllocator());
+        doc.AddMember("err_msg", "Failed to parse request data (invalid value found).",
+                      doc.GetAllocator());
+        return to_json_str(doc);
     }
 
     // JSON を解析する。
@@ -204,8 +239,17 @@ std::string Server::process_request(const std::string &json)
     if (!success) {
         doc.AddMember("success", false, doc.GetAllocator());
         doc.AddMember("request", req_doc.GetObject(), doc.GetAllocator());
-        doc.AddMember("err_msg", "Failed to parse request json due to invalid value.",
+        doc.AddMember("err_msg", "Failed to parse request data (invalid hand found).",
                       doc.GetAllocator());
+        return to_json_str(doc);
+    }
+
+    // 向聴数を計算する。
+    auto [syanten_type, syanten] = SyantenCalculator::calc(req.hand, req.syanten_type);
+    if (syanten == -1) {
+        doc.AddMember("success", false, doc.GetAllocator());
+        doc.AddMember("request", req_doc.GetObject(), doc.GetAllocator());
+        doc.AddMember("err_msg", "和了形です。", doc.GetAllocator());
         return to_json_str(doc);
     }
 
@@ -218,18 +262,6 @@ std::string Server::process_request(const std::string &json)
     doc.AddMember("response", res_doc.GetObject(), doc.GetAllocator());
 
     return to_json_str(doc);
-}
-
-void Server::test()
-{
-    std::ifstream ifs("request.json");
-    std::stringstream ss;
-    ss << ifs.rdbuf();
-
-    auto future = pool_.enqueue([&] { return process_request(ss.str()); });
-    std::cout << "enqueue complete" << std::endl;
-    future.get();
-    std::cout << "finished" << std::endl;
 }
 
 // This function produces an HTTP response for the given

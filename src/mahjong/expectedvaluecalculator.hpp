@@ -157,6 +157,7 @@ inline bool operator<(const ScoreKey &lhs, const ScoreKey &rhs)
 }
 
 class ExpectedValueCalculator {
+public:
     enum Flag {
         Null            = 0,
         CalcSyantenDown = 1,      /* 向聴落とし */
@@ -167,11 +168,11 @@ class ExpectedValueCalculator {
         CalcUradora     = 1 << 5, /* 裏ドラ */
     };
 
-public:
     ExpectedValueCalculator();
 
-    std::tuple<bool, std::vector<Candidate>>
-    calc(const Hand &hand, const ScoreCalculator &score, int syanten_type, int flag);
+    std::tuple<bool, std::vector<Candidate>> calc(const Hand &hand,
+                                                  const ScoreCalculator &score,
+                                                  int syanten_type, int flag = 0);
 
     static std::tuple<int, std::vector<std::tuple<int, int>>>
     get_required_tiles(const Hand &hand, int syanten_type,
@@ -191,7 +192,8 @@ private:
     draw(int n_extra_tumo, int syanten, Hand &hand, std::vector<int> &counts);
 
     void create_prob_table(int n_left_tile);
-    const DrawTilesCache &get_draw_tiles(Hand &hand, int syanten);
+    const DrawTilesCache &get_draw_tiles(Hand &hand, int syanten,
+                                         const std::vector<int> &counts);
     const std::vector<int> &get_discard_tiles(Hand &hand, int syanten);
     const ScoreCache &get_score(const Hand &hand, int win_tile);
 

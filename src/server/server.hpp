@@ -1,6 +1,8 @@
 #ifndef MAHJONG_CPP_SERVER
 #define MAHJONG_CPP_SERVER
 
+#include <memory>
+
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/beast/core.hpp>
 #include <boost/beast/http.hpp>
@@ -10,6 +12,8 @@
 #include <rapidjson/istreamwrapper.h>
 #include <rapidjson/ostreamwrapper.h>
 #include <rapidjson/prettywriter.h>
+#include <rapidjson/schema.h>
+#include <rapidjson/stringbuffer.h>
 
 #include "ThreadPool.hpp"
 #include "mahjong/mahjong.hpp"
@@ -27,7 +31,7 @@ struct RequestData {
 class Server {
 public:
     Server();
-    void test();
+
     int run();
     std::string process_request(const std::string &json);
     ThreadPool pool_;
@@ -40,6 +44,7 @@ private:
                                 rapidjson::Document &doc);
     rapidjson::Document create_response(const RequestData &req);
     std::tuple<bool, RequestData> parse_json(const rapidjson::Document &doc);
+    bool validate_json(const rapidjson::Document &doc);
 };
 
 #endif /* MAHJONG_CPP_SERVER */
