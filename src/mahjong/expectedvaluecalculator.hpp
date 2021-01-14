@@ -157,6 +157,44 @@ inline bool operator<(const ScoreKey &lhs, const ScoreKey &rhs)
 }
 
 class ExpectedValueCalculator {
+
+    static inline const std::vector<int> DiscardPriorities = {
+        5, /*! 一萬 */
+        4, /*! 二萬 */
+        3, /*! 三萬 */
+        2, /*! 四萬 */
+        1, /*! 五萬 */
+        2, /*! 六萬 */
+        3, /*! 七萬 */
+        4, /*! 八萬 */
+        5, /*! 九萬 */
+        5, /*! 一筒 */
+        4, /*! 二筒 */
+        3, /*! 三筒 */
+        2, /*! 四筒 */
+        1, /*! 五筒 */
+        2, /*! 六筒 */
+        3, /*! 七筒 */
+        4, /*! 八筒 */
+        5, /*! 九筒 */
+        5, /*! 一索 */
+        4, /*! 二索 */
+        3, /*! 三索 */
+        2, /*! 四索 */
+        1, /*! 五索 */
+        2, /*! 六索 */
+        3, /*! 七索 */
+        4, /*! 八索 */
+        5, /*! 九索 */
+        5, /*! 東 */
+        5, /*! 南 */
+        5, /*! 西 */
+        5, /*! 北 */
+        5, /*! 白 */
+        5, /*! 発 */
+        5, /*! 中 */
+    };
+
 public:
     enum Flag {
         Null            = 0,
@@ -207,9 +245,12 @@ private:
     /* フラグ */
     int flag_;
 
-    bool enable_uradora_;
-    bool enable_ippatu_;
-    bool enable_haitei_;
+    bool calc_syanten_down_;
+    bool calc_tegawari_;
+    bool calc_double_reach_;
+    bool calc_ippatu_;
+    bool calc_haitei_;
+    bool calc_uradora_;
 
     std::vector<std::map<Hand, std::vector<int>>> discard_cache_;
     std::vector<std::map<Hand, DrawTilesCache>> draw_cache_;

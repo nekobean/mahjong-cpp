@@ -24,7 +24,7 @@ int main(int, char **)
     int syanten_type            = SyantenType::Normal;
     int flag                    = 0;
     std::vector<int> dora_tiles = {Tile::Sya};
-    Hand hand                   = hand1;
+    Hand hand                   = hand3;
 
     // 点数計算の設定
     ScoreCalculator score;

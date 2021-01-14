@@ -17,9 +17,12 @@
 namespace mahjong {
 
 ExpectedValueCalculator::ExpectedValueCalculator()
-    : enable_uradora_(false)
-    , enable_ippatu_(false)
-    , enable_haitei_(false)
+    : calc_syanten_down_(false)
+    , calc_tegawari_(false)
+    , calc_double_reach_(false)
+    , calc_ippatu_(false)
+    , calc_haitei_(false)
+    , calc_uradora_(false)
 {
     discard_cache_.resize(5);  // 0(聴牌) ~ 4(4向聴)
     draw_cache_.resize(5);     // 0(聴牌) ~ 4(4向聴)
@@ -105,8 +108,15 @@ ExpectedValueCalculator::calc(const Hand &hand, const ScoreCalculator &score,
     syanten_type_ = syanten_type;
     flag_         = flag;
 
+    calc_syanten_down_ = flag & CalcSyantenDown;
+    calc_tegawari_     = flag & CalcTegawari;
+    calc_double_reach_ = flag & CalcDoubleReach;
+    calc_ippatu_       = flag & CalcIppatu;
+    calc_haitei_       = flag & CalcHaiteitumo;
+    calc_uradora_      = flag & CalcUradora;
+
     // 追加で自摸できる回数
-    int n_extra_tumo = (flag_ & CalcSyantenDown) || (flag_ & CalcTegawari);
+    int n_extra_tumo = calc_syanten_down_ || calc_tegawari_;
 
     // 手牌の枚数を数える。
     int n_tiles = hand.num_tiles() + int(hand.melds.size()) * 3;
@@ -223,8 +233,8 @@ ExpectedValueCalculator::draw(int n_extra_tumo, int syanten, Hand &hand,
                     win_probs[i] += prob;
 
                     size_t score_idx =
-                        (j == i && enable_ippatu_) +
-                        (j == 16 && enable_haitei_); // 一発、海底撈月を考慮
+                        (i == 0 && calc_double_reach_) + (j == i && calc_ippatu_) +
+                        (j == 16 && calc_haitei_); // 一発、海底撈月を考慮
                     exp_values[i] += prob * scores[score_idx];
                 }
                 else if (j < 16 && syanten > 0) {
@@ -263,6 +273,7 @@ ExpectedValueCalculator::discard(int n_extra_tumo, int syanten, Hand &hand,
 
     // 期待値が最大となる打牌を選択する。
     std::vector<double> max_tenpai_probs, max_win_probs, max_exp_values;
+    int max_tile;
     for (int tile = 0; tile < 34; ++tile) {
         if (flags[tile] == 1) {
             // 向聴数が変化しない打牌
@@ -277,17 +288,21 @@ ExpectedValueCalculator::discard(int n_extra_tumo, int syanten, Hand &hand,
                 max_exp_values   = exp_values;
             }
         }
-        else if (flags[tile] == 2 && n_extra_tumo > 0) {
+        else if (calc_syanten_down_ && flags[tile] == 2 && n_extra_tumo > 0) {
             // 向聴戻しになる打牌
             remove_tile(hand, tile);
             auto [tenpai_probs, win_probs, exp_values] =
                 draw(n_extra_tumo - 1, syanten + 1, hand, counts);
             add_tile(hand, tile);
 
-            if (max_exp_values.empty() || exp_values.front() > max_exp_values.front()) {
+            if (max_exp_values.empty() ||
+                (std::abs(exp_values.front() - max_exp_values.front()) < 10e-10 &&
+                 DiscardPriorities[max_tile] < DiscardPriorities[tile]) ||
+                exp_values.front() > max_exp_values.front()) {
                 max_tenpai_probs = tenpai_probs;
                 max_win_probs    = win_probs;
                 max_exp_values   = exp_values;
+                max_tile         = tile;
             }
         }
     }
@@ -335,7 +350,7 @@ std::vector<Candidate> ExpectedValueCalculator::analyze(int n_extra_tumo, int sy
             candidates.emplace_back(discard_tile, sum_required_tiles, required_tiles,
                                     tenpai_probs, win_probs, exp_values, false);
         }
-        else if (flags[tile] == 2 && n_extra_tumo > 0) {
+        else if (calc_syanten_down_ && flags[tile] == 2 && n_extra_tumo > 0) {
             remove_tile(hand, tile);
 
             auto [sum_required_tiles, required_tiles] =
@@ -502,12 +517,12 @@ const ScoreCache &ExpectedValueCalculator::get_score(const Hand &hand, int win_t
     for (const auto &meld : hand.melds)
         n_uradora += meld.type >= MeldType::Ankan;
 
-    std::vector<double> scores(3, 0);
+    std::vector<double> scores(4, 0);
     if (result.success) {
         std::vector<int> up_scores = score_.get_scores_for_exp(result);
 
-        if (flag_ & CalcUradora) {
-            for (int base = 0; base < 3; ++base) {
+        if (calc_uradora_) {
+            for (int base = 0; base < 4; ++base) {
                 for (int i = 0; i < 13; ++i) {
                     int han_idx = std::min(base + i, int(up_scores.size() - 1));
                     scores[base] += up_scores[han_idx] * uradora_prob_[n_uradora][i];
@@ -515,7 +530,7 @@ const ScoreCache &ExpectedValueCalculator::get_score(const Hand &hand, int win_t
             }
         }
         else {
-            for (int base = 0; base < 3; ++base) {
+            for (int base = 0; base < 4; ++base) {
                 int han_idx = std::min(base, int(up_scores.size() - 1));
                 scores[base] += up_scores[han_idx];
             }

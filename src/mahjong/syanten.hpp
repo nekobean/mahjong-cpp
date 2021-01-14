@@ -38,9 +38,9 @@ class SyantenCalculator {
         signed char n_kouho;
         /*! 頭あり */
         signed char head;
-        /*! 面子の数 */
+        /*! 頭ありの場合の面子の数の変化数 */
         signed char n_mentu_diff;
-        /*! 面子候補の数 */
+        /*! 頭ありの場合の面子候補の数の変化数 */
         signed char n_kouho_diff;
         /*! 1枚以上の数 */
         signed char n_ge1;
