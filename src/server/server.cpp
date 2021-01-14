@@ -2,6 +2,9 @@
 
 #include "rapidjson/istreamwrapper.h"
 #include "rapidjson/schema.h"
+#include "spdlog/sinks/basic_file_sink.h"
+#include "spdlog/sinks/stdout_color_sinks.h"
+#include "spdlog/spdlog.h"
 
 #include <chrono>
 #include <fstream>
@@ -175,12 +178,10 @@ std::tuple<bool, RequestData> Server::parse_json(const rapidjson::Document &doc)
     req.hand = Hand(hand_tiles, melded_blocks);
     req.flag = doc["flag"].GetInt();
 
-    std::cout
-        << fmt::format(
-               "場風牌: {}, 自風牌: {}, 巡目: {}, 手牌の種類: {}, 手牌: {}, フラグ: {}",
-               Tile::Name.at(req.bakaze), Tile::Name.at(req.zikaze), req.turn,
-               req.syanten_type, req.hand.to_string(), req.flag)
-        << std::endl;
+    spdlog::get("logger")->info(
+        "場風牌: {}, 自風牌: {}, 巡目: {}, 手牌の種類: {}, 手牌: {}, フラグ: {}",
+        Tile::Name.at(req.bakaze), Tile::Name.at(req.zikaze), req.turn,
+        req.syanten_type, req.hand.to_string(), req.flag);
 
     auto counts = ExpectedValueCalculator::count_left_tiles(req.hand, req.dora_tiles);
     for (auto x : counts) {
@@ -407,6 +408,8 @@ void do_session(tcp::socket &socket, std::shared_ptr<std::string const> const &d
 
 int Server::run()
 {
+    spdlog::get("logger")->info("Launch server.");
+
     try {
         auto const address  = net::ip::make_address("0.0.0.0");
         auto const port     = static_cast<unsigned short>(std::atoi("8888"));
@@ -429,7 +432,7 @@ int Server::run()
         }
     }
     catch (const std::exception &e) {
-        std::cerr << "Error: " << e.what() << std::endl;
+        spdlog::get("logger")->error("Error: {}", e.what());
         return EXIT_FAILURE;
     }
 
@@ -438,5 +441,14 @@ int Server::run()
 
 int main()
 {
+    auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+    auto file_sink =
+        std::make_shared<spdlog::sinks::basic_file_sink_mt>("log.txt", false);
+    std::vector<spdlog::sink_ptr> sinks = {console_sink, file_sink};
+    auto logger =
+        std::make_shared<spdlog::logger>("logger", sinks.begin(), sinks.end());
+    spdlog::register_logger(logger);
+    spdlog::flush_every(std::chrono::seconds(3));
+
     return server.run();
 }
