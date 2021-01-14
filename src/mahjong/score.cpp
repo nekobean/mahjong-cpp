@@ -1284,12 +1284,20 @@ int ScoreCalculator::count_dora(const Hand &hand, std::vector<int> dora_tiles) c
  */
 int ScoreCalculator::count_akadora(const Hand &hand) const
 {
-    int n_akadora = hand.aka_manzu5 + hand.aka_pinzu5 + hand.aka_sozu5;
+    int n_akadora = 0;
 
+    // 手牌に含まれる赤牌を集計する。
+    if ((hand.manzu & Bit::mask[Tile::Manzu5]) && hand.aka_manzu5)
+        n_akadora += 1;
+    if ((hand.pinzu & Bit::mask[Tile::Pinzu5]) && hand.aka_pinzu5)
+        n_akadora += 1;
+    if ((hand.sozu & Bit::mask[Tile::Sozu5]) && hand.aka_sozu5)
+        n_akadora += 1;
+
+    // 副露ブロックに含まれる赤牌を集計する。
     for (const auto &block : hand.melds) {
         for (auto tile : block.tiles) {
-            if (tile == Tile::AkaManzu5 || tile == Tile::AkaPinzu5 ||
-                tile == Tile::AkaSozu5) {
+            if (is_akahai(tile)) {
                 n_akadora++;
                 break;
             }
