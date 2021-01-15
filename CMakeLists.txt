@@ -5,6 +5,10 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON) 
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE "Release")
+endif()
+
 if(MSVC)
   add_definitions(-D_CRT_SECURE_NO_WARNINGS)
   # MSVC の場合、UTF-8 として解釈するように指定する。
