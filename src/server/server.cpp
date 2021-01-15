@@ -5,6 +5,7 @@
 #include "spdlog/sinks/basic_file_sink.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/spdlog.h"
+#include <boost/dll.hpp>
 
 #include <chrono>
 #include <fstream>
@@ -216,7 +217,9 @@ std::string Server::process_request(const std::string &json)
         return to_json_str(doc);
     }
 
-    std::ifstream ifs("request_schema.json");
+    std::string schema_path =
+        (boost::dll::program_location().parent_path() / "request_schema.json").string();
+    std::ifstream ifs(schema_path);
     rapidjson::IStreamWrapper isw(ifs);
     rapidjson::Document sd;
     sd.ParseStream(isw);

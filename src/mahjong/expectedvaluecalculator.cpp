@@ -8,6 +8,7 @@
 
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
+#include <boost/dll.hpp>
 
 #include "requiredtileselector.hpp"
 #include "syanten.hpp"
@@ -30,7 +31,9 @@ ExpectedValueCalculator::ExpectedValueCalculator()
     draw_cache2_.resize(5);    // 0(聴牌) ~ 4(4向聴)
 
     uradora_prob_.resize(6);
-    std::ifstream ifs("uradora.txt");
+    std::string uradora_path =
+        (boost::dll::program_location().parent_path() / "uradora.txt").string();
+    std::ifstream ifs(uradora_path);
 
     std::string line;
     int i = 1;
