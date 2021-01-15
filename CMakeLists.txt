@@ -12,10 +12,7 @@ if(MSVC)
   add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
 endif()
 
-# 外部ライブラリ
-add_subdirectory(lib/spdlog)
-include_directories(lib/rapidjson/include)
-
+# Boost
 set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF)
@@ -23,7 +20,35 @@ find_package(Boost REQUIRED COMPONENTS
   system
   filesystem
 )
-include_directories(${Boost_INCLUDE_DIRS} src)
+include_directories(${Boost_INCLUDE_DIRS})
+
+# Fetch rapidjson
+include(FetchContent)
+FetchContent_Declare(
+    rapidjson
+    GIT_REPOSITORY https://github.com/Tencent/rapidjson.git
+    GIT_TAG        v1.1.0
+)
+FetchContent_GetProperties(rapidjson)
+if(NOT rapidjson_POPULATED)
+  FetchContent_Populate(rapidjson)
+endif()
+include_directories(${rapidjson_SOURCE_DIR}/include)
+
+# spdlog
+FetchContent_Declare(
+    spdlog
+    GIT_REPOSITORY https://github.com/gabime/spdlog.git
+    GIT_TAG        v1.x
+)
+FetchContent_GetProperties(spdlog)
+if (NOT spdlog_POPULATED)
+    FetchContent_Populate(spdlog)
+    add_subdirectory(${spdlog_SOURCE_DIR} ${spdlog_BINARY_DIR})
+endif()
+
+# mahjong
+include_directories(src)
 
 # サーバー
 option(BUILD_SERVER "build server programs." ON)
