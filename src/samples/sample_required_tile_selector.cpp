@@ -16,7 +16,7 @@ std::vector<int> count_left_tiles(const Hand &hand)
     for (int i = 0; i < 34; ++i)
         count[i] -= hand.num_tiles(i);
 
-    for (const auto &block : hand.melded_blocks) {
+    for (const auto &block : hand.melds) {
         for (auto tile : block.tiles) {
             tile = aka2normal(tile);
             count[tile] -= hand.num_tiles(tile);

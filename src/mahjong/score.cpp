@@ -1,7 +1,7 @@
 #include "score.hpp"
 
 #include "bitutils.hpp"
-#include "handSeparator.hpp"
+#include "handseparator.hpp"
 #include "syanten.hpp"
 
 namespace mahjong {

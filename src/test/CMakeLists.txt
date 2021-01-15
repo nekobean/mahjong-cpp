@@ -12,7 +12,7 @@ foreach(ENTRY_FILE ${ENTRY_FILES})
   get_filename_component(BASE_NAME ${ENTRY_FILE} NAME_WE)
 
   add_executable(${BASE_NAME} ${SRC_FILES} ${ENTRY_FILE})
-  target_link_libraries(${BASE_NAME} Catch2::Catch2 ${Boost_LIBRARIES} spdlog)
+  target_link_libraries(${BASE_NAME} Catch2::Catch2 ${Boost_LIBRARIES} spdlog ${CMAKE_DL_LIBS})
 
   add_custom_command(TARGET ${BASE_NAME} PRE_BUILD
                      COMMAND ${CMAKE_COMMAND} -E copy_directory

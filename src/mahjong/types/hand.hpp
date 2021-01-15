@@ -9,7 +9,7 @@
 
 #include <spdlog/spdlog.h>
 
-#include "bitutils.hpp"
+#include "mahjong/bitutils.hpp"
 #include "meld.hpp"
 #include "tile.hpp"
 
