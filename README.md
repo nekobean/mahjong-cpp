@@ -24,7 +24,7 @@ Miscellaneous programs about Japanese Mahjong
 
 ## Requirements (依存ライブラリ)
 
-* [Boost C++ Libraries](https://www.boost.org/) >= 1.61
+* [Boost C++ Libraries](https://www.boost.org/) >= 1.66
 * [CMake](https://cmake.org/) >= 3.1.1
 
 ## How to build (ビルド方法)
