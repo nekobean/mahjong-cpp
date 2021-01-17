@@ -6,6 +6,14 @@
 
 Miscellaneous programs about Japanese Mahjong
 
+## 麻雀何切るシミュレーター
+
+このライブラリを使った期待値計算機能を Web アプリにしたものを以下に公開しています。
+
+[麻雀何切るシミュレーター](https://pystyle.info/apps/mahjong-nanikiru-simulator/)
+
+![麻雀何切るシミュレーター](docs/mahjong-nanikiru-simulator.png)
+
 ## Features (機能)
 
 🚧This program is under development. Currently the following features have been implemented.🚧
