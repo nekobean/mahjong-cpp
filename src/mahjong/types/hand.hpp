@@ -13,13 +13,15 @@
 #include "meld.hpp"
 #include "tile.hpp"
 
-namespace mahjong {
+namespace mahjong
+{
 
 /**
  * @brief 手牌
  */
-class Hand {
-public:
+class Hand
+{
+  public:
     using key_type = unsigned int;
 
     Hand();
@@ -33,17 +35,17 @@ public:
     int num_tiles() const;
     std::string to_string() const;
 
-private:
+  private:
     void convert_from_tile34(const std::vector<int> &tiles);
     bool check_arguments(const std::vector<int> &tiles,
                          const std::vector<MeldedBlock> &melds);
 
     friend std::ostream &operator<<(std::ostream &os, const Hand &hand);
 
-public:
+  public:
     /*! ビット列にした手牌
-     *  例: [0, 2, 0, 2, 2, 1, 1, 1, 4] -> 69510160 (00|000|100|001|001|001|010|010|000|010|000)
-     *                                                      牌9 牌8 牌7 牌6 牌5 牌4 牌3 牌2 牌1
+     *  例: [0, 2, 0, 2, 2, 1, 1, 1, 4] -> 69510160
+     * (00|000|100|001|001|001|010|010|000|010|000) 牌9 牌8 牌7 牌6 牌5 牌4 牌3 牌2 牌1
      */
 
     /**
@@ -96,7 +98,7 @@ inline Hand::Hand()
 
 /**
  * @brief 手牌を作成する。
- * 
+ *
  * @param[in] tiles 牌の一覧
  */
 inline Hand::Hand(const std::vector<int> &tiles)
@@ -111,7 +113,7 @@ inline Hand::Hand(const std::vector<int> &tiles)
 
 /**
  * @brief 手牌を作成する。
- * 
+ *
  * @param[in] tiles 牌の一覧
  * @param[in] melds 副露ブロックの一覧
  */
@@ -128,7 +130,7 @@ inline Hand::Hand(const std::vector<int> &tiles, const std::vector<MeldedBlock> 
 
 /**
  * @brief 引数が問題ないかどうかを調べる。
- * 
+ *
  * @param[in] tiles 牌の一覧
  * @param melds 副露ブロックの一覧
  * @return 引数が問題ない場合は true、そうでない場合は false を返す。
@@ -167,7 +169,7 @@ inline bool Hand::check_arguments(const std::vector<int> &tiles,
 
 /**
  * @brief 牌の一覧からビット列を作成する。
- * 
+ *
  * @param[in] tiles 牌の一覧
  */
 inline void Hand::convert_from_tile34(const std::vector<int> &tiles)
@@ -193,7 +195,7 @@ inline void Hand::convert_from_tile34(const std::vector<int> &tiles)
 
 /**
  * @brief 門前かどうかを取得する。
- * 
+ *
  * @return 門前の場合は true、そうでない場合は false を返す。
  */
 inline bool Hand::is_menzen() const
@@ -208,17 +210,14 @@ inline bool Hand::is_menzen() const
 
 /**
  * @brief 副露しているかどうかを取得する。
- * 
+ *
  * @return 副露している場合は true、そうでない場合は false を返す。
  */
-inline bool Hand::is_melded() const
-{
-    return !melds.empty();
-}
+inline bool Hand::is_melded() const { return !melds.empty(); }
 
 /**
  * @brief 指定した牌が手牌に含まれるかどうかを調べる。赤牌は通常の牌は区別しません。
- * 
+ *
  * @param[in] tile 牌
  * @return 指定した牌が手牌に含まれる場合は true、そうでない場合は false を返す。
  */
@@ -236,7 +235,7 @@ inline bool Hand::contains(int tile) const
 
 /**
  * @brief 手牌にある指定した牌の枚数を取得する。赤牌は通常の牌は区別しません。
- * 
+ *
  * @param[in] tile 牌
  * @return int 牌の枚数
  */
@@ -256,7 +255,7 @@ inline int Hand::num_tiles(int tile) const
 
 /**
  * @brief 手牌にある牌の合計枚数を取得する。
- * 
+ *
  * @return int 牌の合計枚数
  */
 inline int Hand::num_tiles() const
@@ -267,7 +266,7 @@ inline int Hand::num_tiles() const
 /**
  * @brief 手牌を表す MPS 表記の文字列を取得する。
  *        例: 1112r56789m1122p
- * 
+ *
  * @return std::string 文字列
  */
 inline std::string Hand::to_string() const

@@ -4,7 +4,8 @@
 #include "handseparator.hpp"
 #include "syanten.hpp"
 
-namespace mahjong {
+namespace mahjong
+{
 
 /**
  * @brief 点数計算機を作成する。
@@ -20,7 +21,7 @@ ScoreCalculator::ScoreCalculator()
 
 /**
  * @brief 点数を計算する。
- * 
+ *
  * @param[in] hand 手牌
  * @param[in] win_tile 和了牌
  * @param[in] flag フラグ
@@ -71,17 +72,14 @@ Result ScoreCalculator::calc(const Hand &hand, int win_tile, int flag) const
 
 /**
  * @brief ルールを設定する。
- * 
+ *
  * @param[in] flag ルールのフラグ
  */
-void ScoreCalculator::set_rules(int flag)
-{
-    rules_ = flag;
-}
+void ScoreCalculator::set_rules(int flag) { rules_ = flag; }
 
 /**
  * @brief 特定のルールを設定する。
- * 
+ *
  * @param[in] flag ルールのフラグ
  * @param[in] enabled 有効にするかどうか
  */
@@ -92,97 +90,70 @@ void ScoreCalculator::set_rule(int flag, bool enabled)
 
 /**
  * @brief ルールを取得する。
- * 
+ *
  * @return int ルール
  */
-int ScoreCalculator::rules() const
-{
-    return rules_;
-}
+int ScoreCalculator::rules() const { return rules_; }
 
 /**
  * @brief 場風牌
- * 
+ *
  * @param[in] tile 牌
  */
-void ScoreCalculator::set_bakaze(int tile)
-{
-    bakaze_ = tile;
-}
+void ScoreCalculator::set_bakaze(int tile) { bakaze_ = tile; }
 
 /**
  * @brief 場風牌を取得する。
- * 
+ *
  * @return int 牌
  */
-int ScoreCalculator::bakaze() const
-{
-    return bakaze_;
-}
+int ScoreCalculator::bakaze() const { return bakaze_; }
 
 /**
  * @brief 自風牌を設定する
- * 
+ *
  * @param[in] tile 牌
  */
-void ScoreCalculator::set_zikaze(int tile)
-{
-    zikaze_ = tile;
-}
+void ScoreCalculator::set_zikaze(int tile) { zikaze_ = tile; }
 
 /**
  * @brief 自風牌を取得する。
- * 
+ *
  * @return int 牌
  */
-int ScoreCalculator::zikaze() const
-{
-    return zikaze_;
-}
+int ScoreCalculator::zikaze() const { return zikaze_; }
 
 /**
  * @brief 積み棒の数を設定する。
- * 
+ *
  * @param[in] n 積み棒の数
  */
-void ScoreCalculator::set_num_tumibo(int n)
-{
-    n_tumibo_ = n;
-}
+void ScoreCalculator::set_num_tumibo(int n) { n_tumibo_ = n; }
 
 /**
  * @brief 積み棒の数を取得する。
- * 
+ *
  * @return int 積み棒の数
  */
-int ScoreCalculator::num_tumibo() const
-{
-    return n_tumibo_;
-}
+int ScoreCalculator::num_tumibo() const { return n_tumibo_; }
 
 /**
  * @brief 供託棒の数を設定する。
- * 
+ *
  * @param[in] n 供託棒の数
  */
-void ScoreCalculator::set_num_kyotakubo(int n)
-{
-    n_kyotakubo_ = n;
-}
+void ScoreCalculator::set_num_kyotakubo(int n) { n_kyotakubo_ = n; }
 
 /**
  * @brief 供託棒の数を取得する。
- * 
+ *
  * @return int 供託棒の数
  */
-int ScoreCalculator::num_kyotakubo() const
-{
-    return n_kyotakubo_;
-}
+int ScoreCalculator::num_kyotakubo() const { return n_kyotakubo_; }
 
 /**
  * @brief 表ドラの一覧を設定する。
- * 
+ *
  * @param[in] tiles 表ドラの一覧
  */
 void ScoreCalculator::set_dora_tiles(const std::vector<int> &tiles)
@@ -192,17 +163,14 @@ void ScoreCalculator::set_dora_tiles(const std::vector<int> &tiles)
 
 /**
  * @brief 表ドラの一覧を取得する。
- * 
+ *
  * @return std::vector<int> 表ドラの一覧
  */
-const std::vector<int> &ScoreCalculator::dora_tiles() const
-{
-    return dora_tiles_;
-}
+const std::vector<int> &ScoreCalculator::dora_tiles() const { return dora_tiles_; }
 
 /**
  * @brief 裏ドラを設定する。
- * 
+ *
  * @param[in] tiles 裏ドラの一覧
  */
 void ScoreCalculator::set_uradora_tiles(const std::vector<int> &tiles)
@@ -212,7 +180,7 @@ void ScoreCalculator::set_uradora_tiles(const std::vector<int> &tiles)
 
 /**
  * @brief 裏ドラの一覧を取得する。
- * 
+ *
  * @return std::vector<int> 裏ドラの一覧
  */
 const std::vector<int> &ScoreCalculator::uradora_tiles() const
@@ -224,7 +192,7 @@ const std::vector<int> &ScoreCalculator::uradora_tiles() const
 
 /**
  * @brief 集計する。
- * 
+ *
  * @param[in] hand 手牌
  * @param[in] win_tile 和了牌
  * @param[in] yaku_list 成功した役一覧
@@ -268,7 +236,7 @@ Result ScoreCalculator::aggregate(const Hand &hand, int win_tile, int flag,
 
 /**
  * @brief 集計する。
- * 
+ *
  * @param[in] hand 手牌
  * @param[in] win_tile 和了牌
  * @param[in] yaku_list 成功した役一覧
@@ -325,7 +293,7 @@ Result ScoreCalculator::aggregate(const Hand &hand, int win_tile, int flag,
 
 /**
  * @brief 引数をチェックする。
- * 
+ *
  * @param[in] hand 手牌
  * @param[in] win_tile 和了牌
  * @param[in] int フラグ
@@ -394,7 +362,7 @@ ScoreCalculator::check_arguments(const Hand &hand, int win_tile, int flag) const
 
 /**
  * @brief 役満を判定する。
- * 
+ *
  * @param[in] hand 手牌 (正規化)
  * @param[in] win_tile 和了牌 (正規化)
  * @param[in] flag フラグ
@@ -460,7 +428,7 @@ YakuList ScoreCalculator::check_yakuman(const Hand &hand, int win_tile, int flag
 
 /**
  * @brief 面子構成に関係ない役を判定する。
- * 
+ *
  * @param[in] hand 手牌
  * @param[in] win_tile 和了牌
  * @param[in] flag フラグ
@@ -550,7 +518,7 @@ YakuList ScoreCalculator::check_not_pattern_yaku(const Hand &hand, int win_tile,
 
 /**
  * @brief 面子構成が関係ある役を判定する。
- * 
+ *
  * @param[in] hand 手牌
  * @param[in] win_tile 和了牌
  * @param[in] flag フラグ
@@ -574,14 +542,14 @@ ScoreCalculator::check_pattern_yaku(const Hand &hand, int win_tile, int flag,
 
     // 点数が最大となる面子構成を探す。
     int max_han = 0;
-    int max_fu  = Hu::Null;
+    int max_fu = Hu::Null;
     size_t max_idx;
     YakuList max_yaku_list;
     for (size_t i = 0; i < pattern.size(); ++i) {
         int han, fu;
         const std::vector<Block> &blocks = std::get<0>(pattern[i]);
-        int wait_type                    = std::get<1>(pattern[i]);
-        YakuList yaku_list               = Yaku::Null;
+        int wait_type = std::get<1>(pattern[i]);
+        YakuList yaku_list = Yaku::Null;
 
         // 平和形かどうかを判定する。
         bool is_pinhu = check_pinhu(blocks, wait_type);
@@ -630,9 +598,9 @@ ScoreCalculator::check_pattern_yaku(const Hand &hand, int win_tile, int flag,
                      is_pinhu);
 
         if (max_han < han || (max_han == han && max_fu < fu)) {
-            max_han       = han;
-            max_fu        = fu;
-            max_idx       = i;
+            max_han = han;
+            max_fu = fu;
+            max_idx = i;
             max_yaku_list = yaku_list;
         }
     }
@@ -643,7 +611,7 @@ ScoreCalculator::check_pattern_yaku(const Hand &hand, int win_tile, int flag,
 
 /**
  * @brief 符を計算する。
- * 
+ *
  * @param[in] blocks 面子構成
  * @param[in] win_tile 和了牌
  * @param[in] menzen 門前かどうか
@@ -852,8 +820,8 @@ bool ScoreCalculator::check_tyurenpoto(const Hand &hand, int win_tile) const
         return false; // 字牌
 
     // 「老頭牌が各3枚以上」かつ「中張牌が各1枚以上」かどうかを調べる。
-    int rotohai     = key & Bit::RotohaiMask; // 老頭牌
-    int tyuntyanhai = key & Bit::TanyaoMask;  // 中張牌
+    int rotohai = key & Bit::RotohaiMask;    // 老頭牌
+    int tyuntyanhai = key & Bit::TanyaoMask; // 中張牌
 
     return s_tbl[rotohai].n_ge3 == 2 && s_tbl[tyuntyanhai].n_ge1 == 7;
 }
@@ -983,7 +951,7 @@ bool ScoreCalculator::check_kokusi13(const Hand &hand, int win_tile) const
     // 「和了牌を除いた場合に幺九牌がすべて1個ずつある」かどうかを調べる。
     int manzu = hand.manzu;
     int pinzu = hand.pinzu;
-    int sozu  = hand.sozu;
+    int sozu = hand.sozu;
     int zihai = hand.zihai;
 
     if (win_tile <= Tile::Manzu9)
@@ -1253,7 +1221,7 @@ bool ScoreCalculator::check_sananko(const std::vector<Block> blocks) const
 
 /**
  * @brief ドラの数を数える。
- * 
+ *
  * @param[in] hand 手牌
  * @param[in] dora_tiles ドラ牌の一覧
  * @return int ドラの数
@@ -1277,7 +1245,7 @@ int ScoreCalculator::count_dora(const Hand &hand, std::vector<int> dora_tiles) c
 
 /**
  * @brief 赤ドラの数を数える。
- * 
+ *
  * @param[in] hand 手牌
  * @param[in] dora_tiles ドラ牌の一覧
  * @return int ドラの数
@@ -1310,7 +1278,7 @@ int ScoreCalculator::count_akadora(const Hand &hand) const
 /**
  * @brief 副露ブロックを統合した手牌を作成する。
  *        槓子は刻子と同じ扱いで3つの牌だけ手牌に加え、統合後の手牌の枚数が14枚となるようにする。
- * 
+ *
  * @param[in] hand 手牌
  * @return Hand 副露ブロックを統合した手牌
  */
@@ -1343,7 +1311,7 @@ Hand ScoreCalculator::merge_hand(const Hand &hand) const
 
 /**
  * @brief プレイヤーの収支を計算する。
- * 
+ *
  * @param[in] is_tumo 自摸和了かどうか
  * @param[in] score_title タイトル
  * @param[in] han 飜

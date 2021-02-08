@@ -14,7 +14,8 @@
 
 using namespace mahjong;
 
-struct TestCase {
+struct TestCase
+{
     // 場況
     int bakaze;
     int zikaze;
@@ -47,7 +48,7 @@ struct TestCase {
 
 /**
  * @brief 初期化する。
- * 
+ *
  * @param[in] path パス
  * @param[out] table テーブル
  * @return 初期化に成功した場合は true、そうでない場合は false を返す。
@@ -77,9 +78,9 @@ bool load_cases(const std::string &filename, std::vector<TestCase> &cases)
     for (auto &v : doc.GetArray()) {
         TestCase testcase;
 
-        testcase.bakaze        = v["bakaze"].GetInt();
-        testcase.zikaze        = v["zikaze"].GetInt();
-        testcase.num_tumibo    = v["num_tumibo"].GetInt();
+        testcase.bakaze = v["bakaze"].GetInt();
+        testcase.zikaze = v["zikaze"].GetInt();
+        testcase.num_tumibo = v["num_tumibo"].GetInt();
         testcase.num_kyotakubo = v["num_kyotakubo"].GetInt();
         for (auto &x : v["dora_tiles"].GetArray())
             testcase.dora_tiles.push_back(x.GetInt());
@@ -93,9 +94,9 @@ bool load_cases(const std::string &filename, std::vector<TestCase> &cases)
 
         for (auto &x : v["melded_blocks"].GetArray()) {
             MeldedBlock melded_block;
-            melded_block.type           = x["type"].GetInt();
+            melded_block.type = x["type"].GetInt();
             melded_block.discarded_tile = x["discarded_tile"].GetInt();
-            melded_block.from           = x["from"].GetInt();
+            melded_block.from = x["from"].GetInt();
 
             for (auto &y : x["tiles"].GetArray())
                 melded_block.tiles.push_back(y.GetInt());
@@ -103,30 +104,30 @@ bool load_cases(const std::string &filename, std::vector<TestCase> &cases)
             melded_blocks.push_back(melded_block);
         }
 
-        testcase.hand     = Hand(tiles, melded_blocks);
+        testcase.hand = Hand(tiles, melded_blocks);
         testcase.win_tile = v["win_tile"].GetInt();
-        testcase.flag     = v["flag"].GetInt();
+        testcase.flag = v["flag"].GetInt();
 
-        testcase.han         = v["han"].GetInt();
-        testcase.hu          = v["hu"].GetInt();
+        testcase.han = v["han"].GetInt();
+        testcase.hu = v["hu"].GetInt();
         testcase.score_title = v["score_title"].GetInt();
 
         for (auto &x : v["yaku_list"].GetArray()) {
             YakuList yaku = x.GetArray()[0].GetInt64();
-            int han       = x.GetArray()[1].GetInt();
+            int han = x.GetArray()[1].GetInt();
 
             testcase.yaku_list.emplace_back(yaku, han);
         }
 
-        testcase.win_player  = v["win_player"].GetInt();
+        testcase.win_player = v["win_player"].GetInt();
         testcase.lose_player = v["lose_player"].GetInt();
 
         for (auto &x : v["score"].GetArray())
             testcase.score.push_back(x.GetInt());
 
-        testcase.url            = v["url"].GetString();
+        testcase.url = v["url"].GetString();
         testcase.enable_akadora = v["akadora"].GetBool();
-        testcase.enable_kuitan  = v["kuitan"].GetBool();
+        testcase.enable_kuitan = v["kuitan"].GetBool();
 
         cases.push_back(testcase);
     }

@@ -4,18 +4,19 @@
 #include <utility>
 #include <vector>
 
-class SyantenTableGenerator {
-public:
+class SyantenTableGenerator
+{
+  public:
     std::vector<int> calc_pair_with_head(const std::vector<int> &key);
     std::vector<int> calc_pair(const std::vector<int> &key);
     std::vector<int> count(const std::vector<int> &key) const;
 
-private:
+  private:
     void cut_mentu(std::vector<int> &key, int n_mentu = 0, int n_kouho = 0, int i = 0);
     void cut_kouho(std::vector<int> &key, int n_mentu = 0, int n_kouho = 0, int i = 0);
     void aggregate(int n_mentu, int n_kouho);
 
-private:
+  private:
     int max_pair;
     int max_mentu;
     int max_kouho;
@@ -26,7 +27,7 @@ SyantenTableGenerator::calc_pair_with_head(const std::vector<int> &_key)
 {
     std::vector<int> key = _key;
     max_pair = max_mentu = max_kouho = 0;
-    int head                         = 0;
+    int head = 0;
 
     for (size_t i = 0; i < key.size(); ++i) {
         if (key[i] >= 2) {
@@ -115,7 +116,7 @@ void SyantenTableGenerator::aggregate(int n_mentu, int n_kouho)
     int pair = n_mentu * 2 + n_kouho;
 
     if (pair > max_pair || (pair == max_pair && n_mentu > max_mentu)) {
-        max_pair  = pair;
+        max_pair = pair;
         max_mentu = n_mentu;
         max_kouho = n_kouho;
     }
@@ -138,8 +139,9 @@ std::vector<int> SyantenTableGenerator::count(const std::vector<int> &key) const
     return {n_ge1, n_ge2, n_ge3, n_ge4};
 }
 
-class Product {
-public:
+class Product
+{
+  public:
     std::vector<std::vector<int>> generate(int n_keys)
     {
         keys_.clear();
@@ -151,7 +153,7 @@ public:
         return keys_;
     }
 
-private:
+  private:
     void product(std::vector<int> &key, int i = 0, int cnt = 0)
     {
         if (i == n_keys_) {
@@ -166,7 +168,7 @@ private:
         }
     }
 
-private:
+  private:
     std::vector<std::vector<int>> keys_;
     int n_keys_;
 };

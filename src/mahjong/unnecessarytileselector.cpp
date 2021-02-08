@@ -2,11 +2,12 @@
 
 #include "syanten.hpp"
 
-namespace mahjong {
+namespace mahjong
+{
 
 /**
  * @brief 不要牌を選択する。
- * 
+ *
  * @param[in] hand 手牌
  * @param[in] type 計算対象の向聴数の種類
  * @return std::vector<int> 牌一覧
@@ -157,7 +158,7 @@ std::vector<int> UnnecessaryTileSelector::select_kokusi(const Hand &hand)
     for (int i = 0; i < 9; i += 8) {
         Hand::key_type manzu = hand.manzu & Bit::mask[i];
         Hand::key_type pinzu = hand.pinzu & Bit::mask[i];
-        Hand::key_type sozu  = hand.sozu & Bit::mask[i];
+        Hand::key_type sozu = hand.sozu & Bit::mask[i];
 
         if (manzu >= Bit::tile3[i] || (n_toitu >= 2 && manzu >= Bit::tile2[i]))
             tiles.push_back(i);

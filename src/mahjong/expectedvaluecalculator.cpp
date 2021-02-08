@@ -15,7 +15,8 @@
 #include "unnecessarytileselector.hpp"
 #include "utils.hpp"
 
-namespace mahjong {
+namespace mahjong
+{
 
 ExpectedValueCalculator::ExpectedValueCalculator()
     : calc_syanten_down_(false)
@@ -107,16 +108,16 @@ std::tuple<bool, std::vector<Candidate>>
 ExpectedValueCalculator::calc(const Hand &hand, const ScoreCalculator &score,
                               int syanten_type, int flag)
 {
-    score_        = score;
+    score_ = score;
     syanten_type_ = syanten_type;
-    flag_         = flag;
+    flag_ = flag;
 
     calc_syanten_down_ = flag & CalcSyantenDown;
-    calc_tegawari_     = flag & CalcTegawari;
+    calc_tegawari_ = flag & CalcTegawari;
     calc_double_reach_ = flag & CalcDoubleReach;
-    calc_ippatu_       = flag & CalcIppatu;
-    calc_haitei_       = flag & CalcHaiteitumo;
-    calc_uradora_      = flag & CalcUradora;
+    calc_ippatu_ = flag & CalcIppatu;
+    calc_haitei_ = flag & CalcHaiteitumo;
+    calc_uradora_ = flag & CalcUradora;
 
     // 追加で自摸できる回数
     int n_extra_tumo = calc_syanten_down_ || calc_tegawari_;
@@ -133,7 +134,7 @@ ExpectedValueCalculator::calc(const Hand &hand, const ScoreCalculator &score,
 
     // 残り牌の枚数を数える。
     std::vector<int> counts = count_left_tiles(hand, score_.dora_tiles());
-    int sum_left_tiles      = std::accumulate(counts.begin(), counts.end(), 0);
+    int sum_left_tiles = std::accumulate(counts.begin(), counts.end(), 0);
 
     // 自摸確率のテーブルを作成する。
     create_prob_table(sum_left_tiles);
@@ -156,8 +157,8 @@ ExpectedValueCalculator::calc(const Hand &hand, const ScoreCalculator &score,
 }
 
 /**
- * @brief 
- * 
+ * @brief
+ *
  * @param[in] hand 手牌
  * @param[in] syanten_type 向聴数の種類
  * @param[in] counts 各牌の残り枚数
@@ -212,7 +213,7 @@ ExpectedValueCalculator::draw(int n_extra_tumo, int syanten, Hand &hand,
 
         if (syanten == 0) {
             const ScoreCache &cache = get_score(hand, tile);
-            scores                  = cache.scores;
+            scores = cache.scores;
         }
         else {
             std::tie(next_tenpai_probs, next_win_probs, next_exp_values) =
@@ -255,7 +256,7 @@ ExpectedValueCalculator::draw(int n_extra_tumo, int syanten, Hand &hand,
         remove_tile(hand, tile);
     }
 
-    auto value    = std::make_tuple(tenpai_probs, win_probs, exp_values);
+    auto value = std::make_tuple(tenpai_probs, win_probs, exp_values);
     auto [itr, _] = table.insert_or_assign(key, value);
 
     return itr->second;
@@ -287,8 +288,8 @@ ExpectedValueCalculator::discard(int n_extra_tumo, int syanten, Hand &hand,
 
             if (max_exp_values.empty() || exp_values.front() > max_exp_values.front()) {
                 max_tenpai_probs = tenpai_probs;
-                max_win_probs    = win_probs;
-                max_exp_values   = exp_values;
+                max_win_probs = win_probs;
+                max_exp_values = exp_values;
             }
         }
         else if (calc_syanten_down_ && flags[tile] == 2 && n_extra_tumo > 0) {
@@ -303,14 +304,14 @@ ExpectedValueCalculator::discard(int n_extra_tumo, int syanten, Hand &hand,
                  DiscardPriorities[max_tile] < DiscardPriorities[tile]) ||
                 exp_values.front() > max_exp_values.front()) {
                 max_tenpai_probs = tenpai_probs;
-                max_win_probs    = win_probs;
-                max_exp_values   = exp_values;
-                max_tile         = tile;
+                max_win_probs = win_probs;
+                max_exp_values = exp_values;
+                max_tile = tile;
             }
         }
     }
 
-    auto value    = std::make_tuple(max_tenpai_probs, max_win_probs, max_exp_values);
+    auto value = std::make_tuple(max_tenpai_probs, max_win_probs, max_exp_values);
     auto [itr, _] = table.insert_or_assign(key, value);
 
     return itr->second;
@@ -398,7 +399,7 @@ std::vector<Candidate> ExpectedValueCalculator::analyze(int syanten, const Hand 
 
 /**
  * @brief 各牌の残り枚数を数える。
- * 
+ *
  * @param[in] hand 手牌
  * @param[in] dora_tiles ドラ牌の一覧
  * @return std::vector<int> 各牌の残り枚数
@@ -427,7 +428,7 @@ ExpectedValueCalculator::count_left_tiles(const Hand &hand,
 
 /**
  * @brief 打牌一覧を取得する。
- * 
+ *
  * @param[in] hand 手牌
  * @param[in] syanten 手牌の向聴数
  * @return 打牌一覧
@@ -458,7 +459,7 @@ const std::vector<int> &ExpectedValueCalculator::get_discard_tiles(Hand &hand,
 
 /**
  * @brief 自摸牌一覧を取得する。
- * 
+ *
  * @param[in] hand 手牌
  * @param[in] syanten 手牌の向聴数
  * @return 自摸牌一覧
@@ -499,7 +500,7 @@ ExpectedValueCalculator::get_draw_tiles(Hand &hand, int syanten,
 
 /**
  * @brief 手牌の点数を取得する。
- * 
+ *
  * @param[in] hand 手牌
  * @param[in] win_tile 自摸牌
  * @return 点数

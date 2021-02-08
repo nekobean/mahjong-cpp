@@ -5,15 +5,18 @@
 
 //#define USE_UNORDERED_MAP // テーブルに std::unordered_map を使う場合
 
-namespace mahjong {
+namespace mahjong
+{
 
 /**
  * @brief 向聴数の種類
  */
-namespace SyantenType {
+namespace SyantenType
+{
 
-enum {
-    Null   = 0,
+enum
+{
+    Null = 0,
     Normal = 1, /* 通常手 */
     Tiitoi = 2, /* 七対子手 */
     Kokusi = 4, /* 国士無双手 */
@@ -27,11 +30,13 @@ static inline std::map<int, std::string> Name = {
 
 }; // namespace SyantenType
 
-class SyantenCalculator {
+class SyantenCalculator
+{
     /**
      * @brief テーブルの情報
      */
-    struct Pattern {
+    struct Pattern
+    {
         /*! 面子の数 */
         signed char n_mentu;
         /*! 面子候補の数 */
@@ -54,7 +59,7 @@ class SyantenCalculator {
         signed char n;
     };
 
-public:
+  public:
     SyantenCalculator();
     static std::tuple<int, int> calc(const Hand &hand, int type = SyantenType::Normal |
                                                                   SyantenType::Tiitoi |
@@ -76,7 +81,7 @@ public:
     static std::vector<Pattern> z_tbl_;
 #endif
 
-private:
+  private:
     /*! 数牌のテーブルサイズ */
     static const size_t ShuupaiTableSize = 76611584 + 1; // ハッシュ値の最大値 + 1
     /*! 字牌のテーブルサイズ */

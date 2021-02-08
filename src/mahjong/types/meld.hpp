@@ -7,14 +7,17 @@
 
 #include "tile.hpp"
 
-namespace mahjong {
+namespace mahjong
+{
 
 /**
  * @brief 副露の種類
  */
-namespace MeldType {
+namespace MeldType
+{
 
-enum {
+enum
+{
     Null = -1,
     Pon,    /* ポン */
     Ti,     /* チー */
@@ -33,9 +36,11 @@ static inline const std::map<int, std::string> Name = {
 /**
  * @brief プレイヤーの種類
  */
-namespace PlayerType {
+namespace PlayerType
+{
 
-enum {
+enum
+{
     Null = -1,
     Player0,
     Player1,
@@ -55,9 +60,11 @@ static inline const std::map<int, std::string> Name = {{Null, "Null"},
 /**
  * @brief 座席の種類
  */
-namespace SeatType {
+namespace SeatType
+{
 
-enum {
+enum
+{
     Null = -1,
     Zitya,   /* 自家 */
     Kamitya, /* 上家 */
@@ -77,11 +84,10 @@ static inline const std::map<int, std::string> Name = {{Null, "Null"},
 /**
  * @brief 副露ブロック
  */
-struct MeldedBlock {
+struct MeldedBlock
+{
     MeldedBlock()
-        : type(MeldType::Null)
-        , discarded_tile(Tile::Null)
-        , from(PlayerType::Null)
+        : type(MeldType::Null), discarded_tile(Tile::Null), from(PlayerType::Null)
     {
     }
 
@@ -94,10 +100,7 @@ struct MeldedBlock {
     }
 
     MeldedBlock(int type, std::vector<int> tiles, int discarded_tile, int from)
-        : type(type)
-        , tiles(tiles)
-        , discarded_tile(discarded_tile)
-        , from(from)
+        : type(type), tiles(tiles), discarded_tile(discarded_tile), from(from)
     {
     }
 

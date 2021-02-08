@@ -3,19 +3,21 @@
 
 #include "types/types.hpp"
 
-namespace mahjong {
+namespace mahjong
+{
 
 /**
  * @brief 手牌から面子パターンを生成する。
  */
-class HandSeparator {
-public:
+class HandSeparator
+{
+  public:
     HandSeparator();
     static bool initialize();
     static std::vector<std::tuple<std::vector<Block>, int>>
     separate(const Hand &hand, int win_tile, bool tumo);
 
-private:
+  private:
     static bool make_table(const std::string &path,
                            std::map<int, std::vector<std::vector<Block>>> &table);
     static std::vector<Block> get_blocks(const std::string &s);
@@ -24,7 +26,7 @@ private:
                           std::vector<std::tuple<std::vector<Block>, int>> &patterns,
                           std::vector<Block> &blocks, size_t i, int d = 0);
 
-private:
+  private:
     static std::map<int, std::vector<std::vector<Block>>> s_tbl_;
     static std::map<int, std::vector<std::vector<Block>>> z_tbl_;
 };

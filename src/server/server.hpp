@@ -18,7 +18,8 @@
 #include "ThreadPool.hpp"
 #include "mahjong/mahjong.hpp"
 
-struct RequestData {
+struct RequestData
+{
     int zikaze;
     int bakaze;
     int turn;
@@ -28,15 +29,16 @@ struct RequestData {
     int flag;
 };
 
-class Server {
-public:
+class Server
+{
+  public:
     Server();
 
     int run();
     std::string process_request(const std::string &json);
     ThreadPool pool_;
 
-private:
+  private:
     rapidjson::Value json_dumps(int total_count,
                                 const std::vector<std::tuple<int, int>> &tiles,
                                 rapidjson::Document &doc);

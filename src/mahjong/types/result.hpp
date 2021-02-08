@@ -12,31 +12,34 @@
 #include "tile.hpp"
 #include "yaku.hpp"
 
-namespace mahjong {
+namespace mahjong
+{
 
 /**
  * @brief 手牌に関するフラグ
- * 
+ *
  *    自摸和了の場合は門前かどうかに関わらず、Tumo を指定します。
  *    立直、ダブル立直はどれか1つのみ指定できます。
  *    搶槓、嶺上開花、海底撈月、河底撈魚はどれか1つのみ指定できます。
  *    天和、地和、人和はどれか1つのみ指定できます。
  */
-namespace HandFlag {
-enum {
-    Null         = 0,
-    Tumo         = 1 << 1,  /* 自摸和了 */
-    Reach        = 1 << 2,  /* 立直成立 */
-    Ippatu       = 1 << 3,  /* 一発成立 */
-    Tyankan      = 1 << 4,  /* 搶槓成立 */
-    Rinsyankaiho = 1 << 5,  /* 嶺上開花成立 */
-    Haiteitumo   = 1 << 6,  /* 海底撈月成立 */
-    Hoteiron     = 1 << 7,  /* 河底撈魚成立 */
-    DoubleReach  = 1 << 8,  /* ダブル立直成立 */
-    NagasiMangan = 1 << 9,  /* 流し満貫成立 */
-    Tenho        = 1 << 10, /* 天和成立 */
-    Tiho         = 1 << 11, /* 地和成立 */
-    Renho        = 1 << 12, /* 人和成立 */
+namespace HandFlag
+{
+enum
+{
+    Null = 0,
+    Tumo = 1 << 1,         /* 自摸和了 */
+    Reach = 1 << 2,        /* 立直成立 */
+    Ippatu = 1 << 3,       /* 一発成立 */
+    Tyankan = 1 << 4,      /* 搶槓成立 */
+    Rinsyankaiho = 1 << 5, /* 嶺上開花成立 */
+    Haiteitumo = 1 << 6,   /* 海底撈月成立 */
+    Hoteiron = 1 << 7,     /* 河底撈魚成立 */
+    DoubleReach = 1 << 8,  /* ダブル立直成立 */
+    NagasiMangan = 1 << 9, /* 流し満貫成立 */
+    Tenho = 1 << 10,       /* 天和成立 */
+    Tiho = 1 << 11,        /* 地和成立 */
+    Renho = 1 << 12,       /* 人和成立 */
 };
 
 static inline const std::map<int, std::string> Name = {{Null, "Null"},
@@ -57,10 +60,11 @@ static inline const std::map<int, std::string> Name = {{Null, "Null"},
 /**
  * @brief 結果
  */
-struct Result {
+struct Result
+{
     /**
      * @brief 通常役の結果
-     * 
+     *
      * @param[in] hand 手牌
      * @param[in] win_tile 和了牌
      * @param[in] flag フラグ
@@ -92,12 +96,12 @@ struct Result {
 
     /**
      * @brief 役満、流し満貫の結果
-     * 
+     *
      * @param[in] hand 手牌
      * @param[in] win_tile 和了牌
      * @param[in] flag フラグ
      * @param[in] yaku_list (成立した役, 飜) の一覧
-     * @param[in] score_title 点数のタイトル 
+     * @param[in] score_title 点数のタイトル
      * @param[in] score 点数
      */
     Result(const Hand &hand, int win_tile, int flag,
@@ -118,7 +122,7 @@ struct Result {
 
     /**
      * @brief エラーの結果
-     * 
+     *
      * @param[in] hand 手牌
      * @param[in] win_tile 和了牌
      * @param[in] flag フラグ

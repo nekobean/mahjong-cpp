@@ -14,7 +14,7 @@ using namespace mahjong;
 
 /**
  * @brief テストケースを読み込む。
- * 
+ *
  * @param[out] cases テストケース
  * @return 読み込みに成功した場合は true、そうでない場合は false を返す。
  */

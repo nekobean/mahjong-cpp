@@ -4,10 +4,12 @@
 #include "score.hpp"
 #include "types/types.hpp"
 
-namespace mahjong {
+namespace mahjong
+{
 
-class Candidate {
-public:
+class Candidate
+{
+  public:
     Candidate(int tile, int sum_required_tiles,
               const std::vector<std::tuple<int, int>> &required_tiles)
         : tile(tile)
@@ -77,14 +79,10 @@ inline void remove_tile(Hand &hand, int tile)
         hand.zihai -= Bit::tile1[tile];
 }
 
-struct CacheKey {
+struct CacheKey
+{
     CacheKey(const Hand &hand, const std::vector<int> &counts, int n_extra_tumo)
-        : hand(hand)
-        , manzu(0)
-        , pinzu(0)
-        , sozu(0)
-        , zihai(0)
-        , n_extra_tumo(n_extra_tumo)
+        : hand(hand), manzu(0), pinzu(0), sozu(0), zihai(0), n_extra_tumo(n_extra_tumo)
     {
         for (size_t i = 0; i < 9; ++i)
             manzu = manzu * 8 + counts[i];
@@ -117,27 +115,23 @@ inline bool operator<(const CacheKey &lhs, const CacheKey &rhs)
 using CacheValue =
     std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>;
 
-struct DrawTilesCache {
+struct DrawTilesCache
+{
     std::vector<int> hands1;
     std::vector<int> hands2;
 };
 
-struct ScoreKey {
-    ScoreKey(const Hand &hand, int win_tile)
-        : hand(hand)
-        , win_tile(win_tile)
-    {
-    }
+struct ScoreKey
+{
+    ScoreKey(const Hand &hand, int win_tile) : hand(hand), win_tile(win_tile) {}
 
     Hand hand;
     int win_tile;
 };
 
-struct ScoreCache {
-    ScoreCache(const std::vector<double> &scores)
-        : scores(scores)
-    {
-    }
+struct ScoreCache
+{
+    ScoreCache(const std::vector<double> &scores) : scores(scores) {}
 
     std::vector<double> scores;
 };
@@ -156,7 +150,8 @@ inline bool operator<(const ScoreKey &lhs, const ScoreKey &rhs)
                            rhs.hand.zihai, rhs.win_tile);
 }
 
-class ExpectedValueCalculator {
+class ExpectedValueCalculator
+{
 
     static inline const std::vector<int> DiscardPriorities = {
         5, /*! 一萬 */
@@ -195,15 +190,16 @@ class ExpectedValueCalculator {
         5, /*! 中 */
     };
 
-public:
-    enum Flag {
-        Null            = 0,
+  public:
+    enum Flag
+    {
+        Null = 0,
         CalcSyantenDown = 1,      /* 向聴落とし */
-        CalcTegawari    = 1 << 1, /* 手変わり */
+        CalcTegawari = 1 << 1,    /* 手変わり */
         CalcDoubleReach = 1 << 2, /* ダブル立直考慮 */
-        CalcIppatu      = 1 << 3, /* 一発考慮 */
-        CalcHaiteitumo  = 1 << 4, /* 海底撈月考慮 */
-        CalcUradora     = 1 << 5, /* 裏ドラ */
+        CalcIppatu = 1 << 3,      /* 一発考慮 */
+        CalcHaiteitumo = 1 << 4,  /* 海底撈月考慮 */
+        CalcUradora = 1 << 5,     /* 裏ドラ */
     };
 
     ExpectedValueCalculator();
@@ -219,7 +215,7 @@ public:
     static std::vector<int> count_left_tiles(const Hand &hand,
                                              const std::vector<int> &dora_tiles);
 
-private:
+  private:
     void clear();
 
     std::vector<Candidate> analyze(int n_extra_tumo, int syanten, const Hand &hand);
@@ -235,7 +231,7 @@ private:
     const std::vector<int> &get_discard_tiles(Hand &hand, int syanten);
     const ScoreCache &get_score(const Hand &hand, int win_tile);
 
-private:
+  private:
     /* 向聴数の種類 */
     int syanten_type_;
 

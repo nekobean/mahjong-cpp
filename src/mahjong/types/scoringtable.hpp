@@ -3,9 +3,11 @@
 
 #include <vector>
 
-namespace mahjong {
+namespace mahjong
+{
 
-struct ScoringTable {
+struct ScoringTable
+{
     // 満貫かどうかを判定するテーブル
     // clang-format off
     static const inline std::vector<std::vector<int>> IsMangan = {

@@ -2,11 +2,12 @@
 
 #include "syanten.hpp"
 
-namespace mahjong {
+namespace mahjong
+{
 
 /**
  * @brief 有効牌を選択する。
- * 
+ *
  * @param[in] hand 手牌
  * @param[in] type 計算対象の向聴数の種類
  * @return std::vector<int> 牌一覧

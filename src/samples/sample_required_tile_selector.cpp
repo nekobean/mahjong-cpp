@@ -4,7 +4,7 @@ using namespace mahjong;
 
 /**
  * @brief 各牌の残り枚数を数える。
- * 
+ *
  * @param[in] hand 手牌
  * @return std::vector<int> 各牌の残り枚数
  */
@@ -28,7 +28,7 @@ std::vector<int> count_left_tiles(const Hand &hand)
 
 /**
  * @brief 有効牌の合計枚数を数える。
- * 
+ *
  * @param[in] count 各牌の残り枚数
  * @param[in] tiles 有効牌の一覧
  * @return int 有効牌の合計枚数

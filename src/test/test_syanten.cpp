@@ -14,7 +14,7 @@ using namespace mahjong;
 
 /**
  * @brief テストケースを読み込む。
- * 
+ *
  * @param[out] cases テストケース
  * @return 読み込みに成功した場合は true、そうでない場合は false を返す。
  */
@@ -33,7 +33,8 @@ bool load_testcase(std::vector<std::tuple<Hand, int, int, int>> &cases)
     }
 
     // ファイルを読み込む。
-    // 形式は `<牌1> <牌2> ... <牌14> <一般手の向聴数> <国士手の向聴数> <七対子手の向聴数>`
+    // 形式は `<牌1> <牌2> ... <牌14> <一般手の向聴数> <国士手の向聴数>
+    // <七対子手の向聴数>`
     std::string line;
     while (std::getline(ifs, line)) {
         std::vector<std::string> tokens;

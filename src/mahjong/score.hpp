@@ -6,15 +6,18 @@
 #include "types/types.hpp"
 #include <spdlog/spdlog.h>
 
-namespace mahjong {
+namespace mahjong
+{
 
 /**
  * @brief ルールに関するフラグ
  */
-namespace RuleFlag {
-enum {
-    Null       = 0,
-    AkaDora    = 1 << 1, /* 赤ドラ有り */
+namespace RuleFlag
+{
+enum
+{
+    Null = 0,
+    AkaDora = 1 << 1,    /* 赤ドラ有り */
     OpenTanyao = 1 << 2, /* 喰い断有り */
 };
 
@@ -25,8 +28,9 @@ static inline const std::map<int, std::string> Name = {
 /**
  * @brief 点数計算機
  */
-class ScoreCalculator {
-public:
+class ScoreCalculator
+{
+  public:
     ScoreCalculator();
 
     Result calc(const Hand &hand, int win_tile, int flag = HandFlag::Null) const;
@@ -58,7 +62,7 @@ public:
     void set_num_kyotakubo(int n);
     int num_kyotakubo() const;
 
-public:
+  public:
     std::tuple<bool, std::string> check_arguments(const Hand &hand, int win_tile,
                                                   int yaku_list) const;
     YakuList check_yakuman(const Hand &hand, int win_tile, int flag,
@@ -109,7 +113,7 @@ public:
     int count_dora(const Hand &hand, std::vector<int> dora_list) const;
     int count_akadora(const Hand &hand) const;
 
-private:
+  private:
     /* ゲームルール */
     int rules_;
     /* 場風牌 */

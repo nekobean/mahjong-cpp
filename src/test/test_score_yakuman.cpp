@@ -14,7 +14,7 @@ using namespace mahjong;
 
 /**
  * @brief テストケースを読み込む。
- * 
+ *
  * @param[in] filename ファイル名
  * @param[out] cases テストケース
  * @return 読み込みに成功した場合は true、そうでない場合は false を返す。
@@ -244,9 +244,9 @@ TEST_CASE("四槓子")
                             PlayerType::Player1});
         Hand hand({Tile::Haku, Tile::Haku}, {block1, block2, block3, block4});
 
-        int win_tile  = Tile::Haku;
+        int win_tile = Tile::Haku;
         bool expected = true;
-        bool actual   = score.check_sukantu(hand);
+        bool actual = score.check_sukantu(hand);
         INFO(fmt::format("手牌: {}, 和了牌: {}", hand.to_string(),
                          Tile::Name.at(win_tile)));
         REQUIRE(actual == expected);
@@ -272,9 +272,9 @@ TEST_CASE("四槓子")
                             PlayerType::Player1});
         Hand hand({Tile::Haku, Tile::Haku}, {block1, block2, block3, block4});
 
-        int win_tile  = Tile::Haku;
+        int win_tile = Tile::Haku;
         bool expected = false;
-        bool actual   = score.check_sukantu(hand);
+        bool actual = score.check_sukantu(hand);
         INFO(fmt::format("手牌: {}, 和了牌: {}", hand.to_string(),
                          Tile::Name.at(win_tile)));
         REQUIRE(actual == expected);
@@ -297,9 +297,9 @@ TEST_CASE("四槓子")
         Hand hand({Tile::Haku, Tile::Haku, Tile::Tyun, Tile::Tyun, Tile::Tyun},
                   {block1, block2, block3});
 
-        int win_tile  = Tile::Haku;
+        int win_tile = Tile::Haku;
         bool expected = false;
-        bool actual   = score.check_sukantu(hand);
+        bool actual = score.check_sukantu(hand);
         INFO(fmt::format("手牌: {}, 和了牌: {}", hand.to_string(),
                          Tile::Name.at(win_tile)));
         REQUIRE(actual == expected);

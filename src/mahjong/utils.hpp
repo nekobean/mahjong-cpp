@@ -7,7 +7,8 @@
 
 #include "score.hpp"
 
-namespace mahjong {
+namespace mahjong
+{
 
 /**
  * @brief ドラとドラ表示牌の対応表
@@ -59,7 +60,7 @@ static inline const std::map<int, int> Indicator2Dora = {
 
 /**
  * @brief 設定を文字列にして返す。
- * 
+ *
  * @return std::string 文字列
  */
 inline std::string print_round_info(const ScoreCalculator &score)

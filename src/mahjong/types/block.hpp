@@ -9,20 +9,23 @@
 
 #include "tile.hpp"
 
-namespace mahjong {
+namespace mahjong
+{
 
 /**
  * @brief ブロックの種類
  */
-namespace BlockType {
+namespace BlockType
+{
 
-enum {
-    Null   = 0,
-    Kotu   = 1,  /* 刻子 */
-    Syuntu = 2,  /* 順子 */
-    Kantu  = 4,  /* 槓子 */
-    Toitu  = 8,  /* 対子 */
-    Open   = 16, /* 副露した牌が含まれるかどうか */
+enum
+{
+    Null = 0,
+    Kotu = 1,   /* 刻子 */
+    Syuntu = 2, /* 順子 */
+    Kantu = 4,  /* 槓子 */
+    Toitu = 8,  /* 対子 */
+    Open = 16,  /* 副露した牌が含まれるかどうか */
     Length = 6,
 };
 
@@ -37,9 +40,11 @@ static inline const std::map<int, std::string> Name = {
 /**
  * @brief 待ちの種類
  */
-namespace WaitType {
+namespace WaitType
+{
 
-enum {
+enum
+{
     Null = -1,
     Ryanmen, /* 両面待ち */
     Pentyan, /* 辺張待ち */
@@ -57,18 +62,11 @@ static inline const std::map<int, std::string> Name = {
 /**
  * @brief ブロック
  */
-struct Block {
-    Block()
-        : type(BlockType::Null)
-        , min_tile(Tile::Null)
-    {
-    }
+struct Block
+{
+    Block() : type(BlockType::Null), min_tile(Tile::Null) {}
 
-    Block(int type, int min_tile)
-        : type(type)
-        , min_tile(min_tile)
-    {
-    }
+    Block(int type, int min_tile) : type(type), min_tile(min_tile) {}
 
     /*! ブロックの種類 */
     int type;

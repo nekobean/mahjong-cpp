@@ -9,16 +9,14 @@
 #include <cstdio>
 #include <fstream>
 
-namespace mahjong {
-
-HandSeparator::HandSeparator()
+namespace mahjong
 {
-    initialize();
-}
+
+HandSeparator::HandSeparator() { initialize(); }
 
 /**
  * @brief 初期化する。
- * 
+ *
  * @return 初期化に成功した場合は true、そうでない場合は false を返す。
  */
 bool HandSeparator::initialize()
@@ -37,7 +35,7 @@ bool HandSeparator::initialize()
 
 /**
  * @brief 手牌の可能なブロック構成パターンを生成する。
- * 
+ *
  * @param[in] hand 手牌
  * @param[in] win_tile 和了牌
  * @param[in] tumo 自摸かどうか
@@ -73,7 +71,7 @@ HandSeparator::separate(const Hand &hand, int win_tile, bool tumo)
 
 /**
  * @brief 初期化する。
- * 
+ *
  * @param[in] path パス
  * @param[out] table テーブル
  * @return 初期化に成功した場合は true、そうでない場合は false を返す。
@@ -137,7 +135,7 @@ std::vector<Block> HandSeparator::get_blocks(const std::string &s)
 
 /**
  * @brief 役満かどうかを判定する。
- * 
+ *
  * @param[in] hand 手牌
  * @param[in] win_tile 和了牌
  * @param[in] flag 成立フラグ

@@ -3,14 +3,17 @@
 
 #include "scoringtable.hpp"
 
-namespace mahjong {
+namespace mahjong
+{
 
 /**
  * @brief 符の種類
  */
-namespace Hu {
+namespace Hu
+{
 
-enum Type {
+enum Type
+{
     Null = -1,
     Hu20,  /* 20符 */
     Hu25,  /* 25符 */
@@ -39,11 +42,11 @@ static inline std::map<int, std::string> Name = {
     {Hu80, "80符"}, {Hu90, "90符"}, {Hu100, "100符"}, {Hu110, "110符"}};
 
 /**
-     * @brief 符を切り上げる。
-     * 
-     * @param[in] hu 符
-     * @return int 切り上げた符
-     */
+ * @brief 符を切り上げる。
+ *
+ * @param[in] hu 符
+ * @return int 切り上げた符
+ */
 static inline int round_up_fu(int hu)
 {
     hu = int(std::ceil(hu / 10.)) * 10;
@@ -78,9 +81,11 @@ static inline int round_up_fu(int hu)
 
 } // namespace Hu
 
-namespace ScoreTitle {
+namespace ScoreTitle
+{
 
-enum Type {
+enum Type
+{
     Null = -1,
     Mangan,       /* 満貫 */
     Haneman,      /* 跳満 */
@@ -110,12 +115,12 @@ static inline std::map<int, std::string> Name = {{Null, "Null"},
                                                  {SixYakuman, "6倍役満"}};
 
 /**
-     * @brief 役満でない点数のタイトルを取得する。
-     * 
-     * @param[in] hu 符
-     * @param[in] han 飜
-     * @return int タイトル
-     */
+ * @brief 役満でない点数のタイトルを取得する。
+ *
+ * @param[in] hu 符
+ * @param[in] han 飜
+ * @return int タイトル
+ */
 static int get_score_title(int fu, int han)
 {
     if (han < 5)
@@ -133,11 +138,11 @@ static int get_score_title(int fu, int han)
 };
 
 /**
-     * @brief 役満のタイトルを取得する。
-     * 
-     * @param[in] n 何倍役満かを指定する
-     * @return int タイトル
-     */
+ * @brief 役満のタイトルを取得する。
+ *
+ * @param[in] n 何倍役満かを指定する
+ * @return int タイトル
+ */
 static int get_score_title(int n)
 {
     if (n == 1)

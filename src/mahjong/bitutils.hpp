@@ -6,15 +6,17 @@
 #include <string>
 #include <vector>
 
-namespace mahjong {
+namespace mahjong
+{
 /**
  * @brief ビット演算関係のヘルパー関数やマスクなどを定義
- * 
+ *
  */
-class Bit {
+class Bit
+{
     using key_type = unsigned int;
 
-public:
+  public:
     static inline const std::vector<key_type> mask = {
         7,       7 << 3,  7 << 6,  7 << 9,  7 << 12, 7 << 15, 7 << 18, 7 << 21,
         7 << 24, 7,       7 << 3,  7 << 6,  7 << 9,  7 << 12, 7 << 15, 7 << 18,
@@ -71,36 +73,30 @@ public:
 
     /**
      * @brief ビット列から i 要素目の牌の枚数を取得する。
-     * 
+     *
      * @param[in] x ビット列
      * @param[in] i 位置
      * @return int 牌の枚数
      */
-    static int num_tiles(key_type x, int i)
-    {
-        return (x & Bit::mask[i]) >> (i * 3);
-    }
+    static int num_tiles(key_type x, int i) { return (x & Bit::mask[i]) >> (i * 3); }
 
     /**
      * @brief 牌の合計数を数える。
-     * 
+     *
      * @param[in] x ビット列
      * @return int 牌の合計数
      */
     static int sum(key_type x)
     {
         int cnt = (x >> 3 & 07070707) + (x & 07070707);
-        cnt     = (cnt >> 6 & 0170017) + (cnt & 0170017);
-        cnt     = (cnt >> 12 & 037) + (cnt & 037);
+        cnt = (cnt >> 6 & 0170017) + (cnt & 0170017);
+        cnt = (cnt >> 12 & 037) + (cnt & 037);
         cnt += x >> 24;
 
         return cnt;
     }
 
-    static bool check_exclusive(unsigned long long x)
-    {
-        return !x || !(x & (x - 1));
-    }
+    static bool check_exclusive(unsigned long long x) { return !x || !(x & (x - 1)); }
 
     // 老頭牌のマスク
     //                                  | 9 | 8 | 7 | 6 | 5 | 4 | 3 | 2 | 1 |

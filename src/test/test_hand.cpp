@@ -15,7 +15,7 @@ using namespace mahjong;
 
 /**
  * @brief テストケースを読み込む。
- * 
+ *
  * @param[out] cases テストケース
  * @return 読み込みに成功した場合は true、そうでない場合は false を返す。
  */
@@ -58,7 +58,7 @@ bool load_constractor_testcase(
 
 /**
  * @brief テストケースを読み込む。
- * 
+ *
  * @param[out] cases テストケース
  * @return 読み込みに成功した場合は true、そうでない場合は false を返す。
  */
@@ -78,7 +78,8 @@ bool load_num_tiles_testcase(
     }
 
     // ファイルを読み込む。
-    // 形式は `<牌1> <牌2> ... <牌14> <萬子1の枚数> <萬子2の枚数> ... <赤五萬の枚数> <合計枚数>`
+    // 形式は `<牌1> <牌2> ... <牌14> <萬子1の枚数> <萬子2の枚数> ... <赤五萬の枚数>
+    // <合計枚数>`
     std::string line;
     while (std::getline(ifs, line)) {
         std::vector<std::string> tokens;
@@ -102,7 +103,7 @@ bool load_num_tiles_testcase(
 
 /**
  * @brief テストケースを読み込む。
- * 
+ *
  * @param[out] cases テストケース
  * @return 読み込みに成功した場合は true、そうでない場合は false を返す。
  */
@@ -129,7 +130,7 @@ bool load_to_string_testcase(
 
         namespace x3 = boost::spirit::x3;
 
-        auto const quoted   = '"' >> *~x3::char_('"') >> '"';
+        auto const quoted = '"' >> *~x3::char_('"') >> '"';
         auto const unquoted = *~x3::char_(' ');
         auto const segments = (quoted | unquoted) % ' ';
 

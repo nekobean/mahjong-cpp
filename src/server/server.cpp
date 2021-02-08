@@ -11,19 +11,16 @@
 #include <fstream>
 #include <sstream>
 
-namespace beast = boost::beast;         // from <boost/beast.hpp>
-namespace http  = beast::http;          // from <boost/beast/http.hpp>
-namespace net   = boost::asio;          // from <boost/asio.hpp>
-using tcp       = boost::asio::ip::tcp; // from <boost/asio/ip/tcp.hpp>
+namespace beast = boost::beast;   // from <boost/beast.hpp>
+namespace http = beast::http;     // from <boost/beast/http.hpp>
+namespace net = boost::asio;      // from <boost/asio.hpp>
+using tcp = boost::asio::ip::tcp; // from <boost/asio/ip/tcp.hpp>
 
 using namespace mahjong;
 
 Server server;
 
-Server::Server()
-    : pool_(3)
-{
-}
+Server::Server() : pool_(3) {}
 
 rapidjson::Value Server::json_dumps(int total_count,
                                     const std::vector<std::tuple<int, int>> &tiles,
@@ -146,7 +143,7 @@ rapidjson::Document Server::create_response(const RequestData &req)
 
 /**
  * @brief JSON データを解析する。
- * 
+ *
  * @param[in] doc ドキュメント
  * @return (成功したかどうか, リクエストデータ)
  */
@@ -154,9 +151,9 @@ std::tuple<bool, RequestData> Server::parse_json(const rapidjson::Document &doc)
 {
     RequestData req;
 
-    req.zikaze       = doc["zikaze"].GetInt();
-    req.bakaze       = doc["bakaze"].GetInt();
-    req.turn         = doc["turn"].GetInt();
+    req.zikaze = doc["zikaze"].GetInt();
+    req.bakaze = doc["bakaze"].GetInt();
+    req.turn = doc["turn"].GetInt();
     req.syanten_type = doc["syanten_type"].GetInt();
 
     for (auto &v : doc["dora_tiles"].GetArray())
@@ -173,7 +170,7 @@ std::tuple<bool, RequestData> Server::parse_json(const rapidjson::Document &doc)
         for (auto &v : v["tiles"].GetArray())
             tiles.push_back(v.GetInt());
         int discarded_tile = v["discarded_tile"].GetInt();
-        int from           = v["from"].GetInt();
+        int from = v["from"].GetInt();
         melded_blocks.emplace_back(meld_type, tiles, discarded_tile, from);
     }
     req.hand = Hand(hand_tiles, melded_blocks);
@@ -345,15 +342,14 @@ void fail(beast::error_code ec, char const *what)
 
 // This is the C++11 equivalent of a generic lambda.
 // The function object is used to send an HTTP message.
-template <class Stream> struct send_lambda {
+template <class Stream> struct send_lambda
+{
     Stream &stream_;
     bool &close_;
     beast::error_code &ec_;
 
     explicit send_lambda(Stream &stream, bool &close, beast::error_code &ec)
-        : stream_(stream)
-        , close_(close)
-        , ec_(ec)
+        : stream_(stream), close_(close), ec_(ec)
     {
     }
 
@@ -414,8 +410,8 @@ int Server::run()
     spdlog::get("logger")->info("Launch server.");
 
     try {
-        auto const address  = net::ip::make_address("0.0.0.0");
-        auto const port     = static_cast<unsigned short>(std::atoi("8888"));
+        auto const address = net::ip::make_address("0.0.0.0");
+        auto const port = static_cast<unsigned short>(std::atoi("8888"));
         auto const doc_root = std::make_shared<std::string>(".");
 
         // The io_context is required for all I/O

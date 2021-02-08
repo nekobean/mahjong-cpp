@@ -22,7 +22,8 @@ int main(int, char **)
 
     // 特定の手の向聴数を計算したい場合は第2引数にフラグで指定します。フラグは複数指定できます。
     // calc(hand, SyantenType::Normal) 通常手の向聴数を計算する。
-    // calc(hand, SyantenType::Normal | SyantenType::Tiitoi) 通常手及び七対子手の向聴数を計算する。
+    // calc(hand, SyantenType::Normal | SyantenType::Tiitoi)
+    // 通常手及び七対子手の向聴数を計算する。
 
     // 一般手の向聴数を計算する
     {

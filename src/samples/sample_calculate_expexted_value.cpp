@@ -18,13 +18,13 @@ int main(int, char **)
                 Tile::Manzu7, Tile::Pinzu9, Tile::Sozu3, Tile::Sozu7, Tile::Sozu9,
                 Tile::Ton, Tile::Pe, Tile::Pe, Tile::Hatu});
 
-    int bakaze                  = Tile::Ton;
-    int zikaze                  = Tile::Ton;
-    int turn                    = 1;
-    int syanten_type            = SyantenType::Normal;
-    int flag                    = 0;
+    int bakaze = Tile::Ton;
+    int zikaze = Tile::Ton;
+    int turn = 1;
+    int syanten_type = SyantenType::Normal;
+    int flag = 0;
     std::vector<int> dora_tiles = {Tile::Sya};
-    Hand hand                   = hand3;
+    Hand hand = hand3;
 
     // 点数計算の設定
     ScoreCalculator score;
@@ -36,9 +36,9 @@ int main(int, char **)
     auto [_, syanten] = SyantenCalculator::calc(hand, syanten_type);
 
     // 期待値を計算する。
-    auto begin                 = std::chrono::steady_clock::now();
+    auto begin = std::chrono::steady_clock::now();
     auto [success, candidates] = calculator.calc(hand, score, syanten_type, flag);
-    auto end                   = std::chrono::steady_clock::now();
+    auto end = std::chrono::steady_clock::now();
     auto elapsed_ms =
         std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
 

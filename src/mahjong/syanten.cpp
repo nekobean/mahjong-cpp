@@ -7,12 +7,10 @@
 
 #include "bitutils.hpp"
 
-namespace mahjong {
-
-SyantenCalculator::SyantenCalculator()
+namespace mahjong
 {
-    initialize();
-}
+
+SyantenCalculator::SyantenCalculator() { initialize(); }
 
 /**
  * @brief 向聴数を計算する。
@@ -53,7 +51,7 @@ std::tuple<int, int> SyantenCalculator::calc(const Hand &hand, int type)
 
 /**
  * @brief 初期化する。
- * 
+ *
  * @return 初期化に成功した場合は true、そうでない場合は false を返す。
  */
 bool SyantenCalculator::initialize()
@@ -126,7 +124,7 @@ bool SyantenCalculator::initialize()
 int SyantenCalculator::calc_normal(const Hand &hand)
 {
     // 制約条件「面子 + 候補 <= 4」で「面子数 * 2 + 候補」の最大値を計算する。
-    int n_melds      = int(hand.melds.size());
+    int n_melds = int(hand.melds.size());
     int n_mentu_base = n_melds + s_tbl_[hand.manzu].n_mentu +
                        s_tbl_[hand.pinzu].n_mentu + s_tbl_[hand.sozu].n_mentu +
                        z_tbl_[hand.zihai].n_mentu;
@@ -140,28 +138,28 @@ int SyantenCalculator::calc_normal(const Hand &hand)
         // 萬子の雀頭有り
         int n_mentu = n_mentu_base + s_tbl_[hand.manzu].n_mentu_diff;
         int n_kouho = n_kouho_base + s_tbl_[hand.manzu].n_kouho_diff;
-        max         = std::max(max, n_mentu * 2 + std::min(4 - n_mentu, n_kouho) + 1);
+        max = std::max(max, n_mentu * 2 + std::min(4 - n_mentu, n_kouho) + 1);
     }
 
     if (s_tbl_[hand.pinzu].head) {
         // 筒子の雀頭有り
         int n_mentu = n_mentu_base + s_tbl_[hand.pinzu].n_mentu_diff;
         int n_kouho = n_kouho_base + s_tbl_[hand.pinzu].n_kouho_diff;
-        max         = std::max(max, n_mentu * 2 + std::min(4 - n_mentu, n_kouho) + 1);
+        max = std::max(max, n_mentu * 2 + std::min(4 - n_mentu, n_kouho) + 1);
     }
 
     if (s_tbl_[hand.sozu].head) {
         // 索子の雀頭有り
         int n_mentu = n_mentu_base + s_tbl_[hand.sozu].n_mentu_diff;
         int n_kouho = n_kouho_base + s_tbl_[hand.sozu].n_kouho_diff;
-        max         = std::max(max, n_mentu * 2 + std::min(4 - n_mentu, n_kouho) + 1);
+        max = std::max(max, n_mentu * 2 + std::min(4 - n_mentu, n_kouho) + 1);
     }
 
     if (z_tbl_[hand.zihai].head) {
         // 字牌の雀頭有り
         int n_mentu = n_mentu_base + z_tbl_[hand.zihai].n_mentu_diff;
         int n_kouho = n_kouho_base + z_tbl_[hand.zihai].n_kouho_diff;
-        max         = std::max(max, n_mentu * 2 + std::min(4 - n_mentu, n_kouho) + 1);
+        max = std::max(max, n_mentu * 2 + std::min(4 - n_mentu, n_kouho) + 1);
     }
 
     return 8 - max;
@@ -200,7 +198,7 @@ int SyantenCalculator::calc_kokusi(const Hand &hand)
     // 老頭牌を抽出する。
     int manzu19 = hand.manzu & Bit::RotohaiMask;
     int pinzu19 = hand.pinzu & Bit::RotohaiMask;
-    int sozu19  = hand.sozu & Bit::RotohaiMask;
+    int sozu19 = hand.sozu & Bit::RotohaiMask;
 
     // 幺九牌の種類 (1枚以上の牌) を数える。
     int n_yaotyuhai = s_tbl_[manzu19].n_ge1 + s_tbl_[pinzu19].n_ge1 +

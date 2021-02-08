@@ -5,79 +5,83 @@
 #include <map>
 #include <string>
 
-namespace mahjong {
+namespace mahjong
+{
 
 using YakuList = unsigned long long;
 
 /**
  * @brief 役
  */
-struct Yaku {
+struct Yaku
+{
     /**
      * @brief 役の種類
      */
-    enum Type : YakuList {
-        Null           = 0ull,
-        Tumo           = 1ull,       /* 門前清自摸和 */
-        Reach          = 1ull << 1,  /* 立直 */
-        Ippatu         = 1ull << 2,  /* 一発 */
-        Tanyao         = 1ull << 3,  /* 断幺九 */
-        Pinhu          = 1ull << 4,  /* 平和 */
-        Ipeko          = 1ull << 5,  /* 一盃口 */
-        Tyankan        = 1ull << 6,  /* 槍槓 */
-        Rinsyankaiho   = 1ull << 7,  /* 嶺上開花 */
-        Haiteitumo     = 1ull << 8,  /* 海底摸月 */
-        Hoteiron       = 1ull << 9,  /* 河底撈魚 */
-        Dora           = 1ull << 10, /* ドラ */
-        UraDora        = 1ull << 11, /* 裏ドラ */
-        AkaDora        = 1ull << 12, /* 赤ドラ */
-        SangenhaiHaku  = 1ull << 13, /* 三元牌 (白) */
-        SangenhaiHatu  = 1ull << 14, /* 三元牌 (發) */
-        SangenhaiTyun  = 1ull << 15, /* 三元牌 (中) */
-        ZikazeTon      = 1ull << 16, /* 自風 (東) */
-        ZikazeNan      = 1ull << 17, /* 自風 (南) */
-        ZikazeSya      = 1ull << 18, /* 自風 (西) */
-        ZikazePe       = 1ull << 19, /* 自風 (北) */
-        BakazeTon      = 1ull << 20, /* 場風 (東) */
-        BakazeNan      = 1ull << 21, /* 場風 (南) */
-        BakazeSya      = 1ull << 22, /* 場風 (西) */
-        BakazePe       = 1ull << 23, /* 場風 (北) */
-        DoubleReach    = 1ull << 24, /* ダブル立直 */
-        Tiitoitu       = 1ull << 25, /* 七対子 */
-        Toitoiho       = 1ull << 26, /* 対々和 */
-        Sananko        = 1ull << 27, /* 三暗刻 */
-        SansyokuDoko   = 1ull << 28, /* 三色同刻 */
+    enum Type : YakuList
+    {
+        Null = 0ull,
+        Tumo = 1ull,                 /* 門前清自摸和 */
+        Reach = 1ull << 1,           /* 立直 */
+        Ippatu = 1ull << 2,          /* 一発 */
+        Tanyao = 1ull << 3,          /* 断幺九 */
+        Pinhu = 1ull << 4,           /* 平和 */
+        Ipeko = 1ull << 5,           /* 一盃口 */
+        Tyankan = 1ull << 6,         /* 槍槓 */
+        Rinsyankaiho = 1ull << 7,    /* 嶺上開花 */
+        Haiteitumo = 1ull << 8,      /* 海底摸月 */
+        Hoteiron = 1ull << 9,        /* 河底撈魚 */
+        Dora = 1ull << 10,           /* ドラ */
+        UraDora = 1ull << 11,        /* 裏ドラ */
+        AkaDora = 1ull << 12,        /* 赤ドラ */
+        SangenhaiHaku = 1ull << 13,  /* 三元牌 (白) */
+        SangenhaiHatu = 1ull << 14,  /* 三元牌 (發) */
+        SangenhaiTyun = 1ull << 15,  /* 三元牌 (中) */
+        ZikazeTon = 1ull << 16,      /* 自風 (東) */
+        ZikazeNan = 1ull << 17,      /* 自風 (南) */
+        ZikazeSya = 1ull << 18,      /* 自風 (西) */
+        ZikazePe = 1ull << 19,       /* 自風 (北) */
+        BakazeTon = 1ull << 20,      /* 場風 (東) */
+        BakazeNan = 1ull << 21,      /* 場風 (南) */
+        BakazeSya = 1ull << 22,      /* 場風 (西) */
+        BakazePe = 1ull << 23,       /* 場風 (北) */
+        DoubleReach = 1ull << 24,    /* ダブル立直 */
+        Tiitoitu = 1ull << 25,       /* 七対子 */
+        Toitoiho = 1ull << 26,       /* 対々和 */
+        Sananko = 1ull << 27,        /* 三暗刻 */
+        SansyokuDoko = 1ull << 28,   /* 三色同刻 */
         SansyokuDozyun = 1ull << 29, /* 三色同順 */
-        Honroto        = 1ull << 30, /* 混老頭 */
-        IkkiTukan      = 1ull << 31, /* 一気通貫 */
-        Tyanta         = 1ull << 32, /* 混全帯幺九 */
-        Syosangen      = 1ull << 33, /* 小三元 */
-        Sankantu       = 1ull << 34, /* 三槓子 */
-        Honiso         = 1ull << 35, /* 混一色 */
-        Zyuntyanta     = 1ull << 36, /* 純全帯幺九 */
-        Ryanpeko       = 1ull << 37, /* 二盃口 */
-        NagasiMangan   = 1ull << 38, /* 流し満貫 */
-        Tiniso         = 1ull << 39, /* 清一色 */
-        Tenho          = 1ull << 40, /* 天和 */
-        Tiho           = 1ull << 41, /* 地和 */
-        Renho          = 1ull << 42, /* 人和 */
-        Ryuiso         = 1ull << 43, /* 緑一色 */
-        Daisangen      = 1ull << 44, /* 大三元 */
-        Syosusi        = 1ull << 45, /* 小四喜 */
-        Tuiso          = 1ull << 46, /* 字一色 */
-        Kokusimuso     = 1ull << 47, /* 国士無双 */
-        Tyurenpoto     = 1ull << 48, /* 九連宝燈 */
-        Suanko         = 1ull << 49, /* 四暗刻 */
-        Tinroto        = 1ull << 50, /* 清老頭 */
-        Sukantu        = 1ull << 51, /* 四槓子 */
-        SuankoTanki    = 1ull << 52, /* 四暗刻単騎 */
-        Daisusi        = 1ull << 53, /* 大四喜 */
-        Tyurenpoto9    = 1ull << 54, /* 純正九連宝燈 */
-        Kokusimuso13   = 1ull << 55, /* 国士無双13面待ち */
-        Length         = 56ull,
+        Honroto = 1ull << 30,        /* 混老頭 */
+        IkkiTukan = 1ull << 31,      /* 一気通貫 */
+        Tyanta = 1ull << 32,         /* 混全帯幺九 */
+        Syosangen = 1ull << 33,      /* 小三元 */
+        Sankantu = 1ull << 34,       /* 三槓子 */
+        Honiso = 1ull << 35,         /* 混一色 */
+        Zyuntyanta = 1ull << 36,     /* 純全帯幺九 */
+        Ryanpeko = 1ull << 37,       /* 二盃口 */
+        NagasiMangan = 1ull << 38,   /* 流し満貫 */
+        Tiniso = 1ull << 39,         /* 清一色 */
+        Tenho = 1ull << 40,          /* 天和 */
+        Tiho = 1ull << 41,           /* 地和 */
+        Renho = 1ull << 42,          /* 人和 */
+        Ryuiso = 1ull << 43,         /* 緑一色 */
+        Daisangen = 1ull << 44,      /* 大三元 */
+        Syosusi = 1ull << 45,        /* 小四喜 */
+        Tuiso = 1ull << 46,          /* 字一色 */
+        Kokusimuso = 1ull << 47,     /* 国士無双 */
+        Tyurenpoto = 1ull << 48,     /* 九連宝燈 */
+        Suanko = 1ull << 49,         /* 四暗刻 */
+        Tinroto = 1ull << 50,        /* 清老頭 */
+        Sukantu = 1ull << 51,        /* 四槓子 */
+        SuankoTanki = 1ull << 52,    /* 四暗刻単騎 */
+        Daisusi = 1ull << 53,        /* 大四喜 */
+        Tyurenpoto9 = 1ull << 54,    /* 純正九連宝燈 */
+        Kokusimuso13 = 1ull << 55,   /* 国士無双13面待ち */
+        Length = 56ull,
     };
 
-    struct YakuInfo {
+    struct YakuInfo
+    {
         /* 名前 */
         std::string name;
         /* 通常役: (門前の飜数, 非門前の飜数)、役満: (何倍役満か, 未使用) */

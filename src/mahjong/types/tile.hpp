@@ -4,13 +4,16 @@
 #include <string>
 #include <vector>
 
-namespace mahjong {
+namespace mahjong
+{
 
-struct Tile {
+struct Tile
+{
     /**
      * @brief 牌の種類
      */
-    enum Type {
+    enum Type
+    {
         Null = -1,
         Manzu1,    /*! 一萬 */
         Manzu2,    /*! 二萬 */
@@ -70,7 +73,7 @@ struct Tile {
 
 /**
  * @brief 赤なしの牌を赤牌に変換する。
- * 
+ *
  * @param tile 赤牌
  * @return int 赤なしの牌
  */
@@ -88,7 +91,7 @@ inline int normal2aka(int tile)
 
 /**
  * @brief 赤牌を赤なしの牌に変換する。
- * 
+ *
  * @param tile 赤牌
  * @return int 赤なしの牌
  */
@@ -106,18 +109,15 @@ inline int aka2normal(int tile)
 
 /**
  * @brief 赤牌かどうかを判定する。
- * 
+ *
  * @param tile 牌
  * @return bool 赤牌かどうか
  */
-inline bool is_akahai(int tile)
-{
-    return tile >= Tile::AkaManzu5;
-}
+inline bool is_akahai(int tile) { return tile >= Tile::AkaManzu5; }
 
 /**
  * @brief 萬子かどうかを判定する。
- * 
+ *
  * @param tile 牌
  * @return bool 萬子かどうか
  */
@@ -128,7 +128,7 @@ inline bool is_manzu(int tile)
 
 /**
  * @brief 筒子かどうかを判定する。
- * 
+ *
  * @param tile 牌
  * @return bool 筒子かどうか
  */
@@ -139,7 +139,7 @@ inline bool is_pinzu(int tile)
 
 /**
  * @brief 索子かどうかを判定する。
- * 
+ *
  * @param tile 牌
  * @return bool 索子かどうか
  */
@@ -150,25 +150,19 @@ inline bool is_sozu(int tile)
 
 /**
  * @brief 数牌かどうかを判定する。
- * 
+ *
  * @param tile 牌
  * @return bool 数牌かどうか
  */
-inline bool is_syuhai(int tile)
-{
-    return tile < Tile::Ton || tile > Tile::Tyun;
-}
+inline bool is_syuhai(int tile) { return tile < Tile::Ton || tile > Tile::Tyun; }
 
 /**
  * @brief 字牌かどうかを判定する。
- * 
+ *
  * @param tile 牌
  * @return bool 字牌かどうか
  */
-inline bool is_zihai(int tile)
-{
-    return Tile::Ton <= tile && tile <= Tile::Tyun;
-}
+inline bool is_zihai(int tile) { return Tile::Ton <= tile && tile <= Tile::Tyun; }
 
 } // namespace mahjong
 
