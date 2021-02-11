@@ -8,23 +8,26 @@ int main(int, char **)
 {
     ExpectedValueCalculator calculator;
 
-    Hand hand1({Tile::Manzu2, Tile::Manzu2, Tile::Manzu2, Tile::Manzu5, Tile::Manzu6,
-                Tile::Manzu7, Tile::Pinzu3, Tile::Pinzu4, Tile::Pinzu5, Tile::Sozu3,
-                Tile::Sozu3, Tile::Sozu6, Tile::Sozu6, Tile::Sozu7});
-    Hand hand2({Tile::Manzu2, Tile::Manzu2, Tile::Manzu2, Tile::Manzu5, Tile::Manzu6,
-                Tile::Manzu7, Tile::Pinzu3, Tile::Pinzu4, Tile::Sozu3, Tile::Sozu3,
-                Tile::Sozu6, Tile::Sozu6, Tile::Sozu7, Tile::Pe});
-    Hand hand3({Tile::Manzu1, Tile::Manzu1, Tile::Manzu2, Tile::Manzu4, Tile::Manzu5,
-                Tile::Manzu7, Tile::Pinzu9, Tile::Sozu3, Tile::Sozu7, Tile::Sozu9,
-                Tile::Ton, Tile::Pe, Tile::Pe, Tile::Hatu});
+    Hand hand1({Tile::Manzu2, Tile::Manzu2, Tile::Manzu2, Tile::Manzu5, Tile::Manzu6, Tile::Manzu7,
+                Tile::Pinzu3, Tile::Pinzu4, Tile::Pinzu5, Tile::Sozu3, Tile::Sozu3, Tile::Sozu6,
+                Tile::Sozu6, Tile::Sozu7});
+    Hand hand2({Tile::Manzu2, Tile::Manzu2, Tile::Manzu2, Tile::Manzu5, Tile::Manzu6, Tile::Manzu7,
+                Tile::Pinzu3, Tile::Pinzu4, Tile::Sozu3, Tile::Sozu3, Tile::Sozu6, Tile::Sozu6,
+                Tile::Sozu7, Tile::Pe});
+    Hand hand3({Tile::Manzu1, Tile::Manzu1, Tile::Manzu2, Tile::Manzu4, Tile::Manzu5, Tile::Manzu7,
+                Tile::Pinzu9, Tile::Sozu3, Tile::Sozu7, Tile::Sozu9, Tile::Ton, Tile::Pe, Tile::Pe,
+                Tile::Hatu});
+    Hand hand4({Tile::Manzu1, Tile::Manzu2, Tile::Manzu3, Tile::Manzu3, Tile::Manzu4, Tile::Manzu9,
+                Tile::Pinzu3, Tile::Pinzu6, Tile::Pinzu8, Tile::Pinzu8, Tile::Sozu1, Tile::Sozu2,
+                Tile::Sozu4, Tile::Sozu5});
 
     int bakaze = Tile::Ton;
     int zikaze = Tile::Ton;
     int turn = 1;
     int syanten_type = SyantenType::Normal;
-    int flag = 0;
+    int flag = 61;
     std::vector<int> dora_tiles = {Tile::Sya};
-    Hand hand = hand3;
+    Hand hand = hand4;
 
     // 点数計算の設定
     ScoreCalculator score;
@@ -39,14 +42,12 @@ int main(int, char **)
     auto begin = std::chrono::steady_clock::now();
     auto [success, candidates] = calculator.calc(hand, score, syanten_type, flag);
     auto end = std::chrono::steady_clock::now();
-    auto elapsed_ms =
-        std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
+    auto elapsed_ms = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
 
     // 期待値が高い順にソートする。
-    std::sort(candidates.begin(), candidates.end(),
-              [](const Candidate &a, const Candidate &b) {
-                  return a.exp_values.front() > b.exp_values.front();
-              });
+    std::sort(candidates.begin(), candidates.end(), [](const Candidate &a, const Candidate &b) {
+        return a.win_probs.front() > b.win_probs.front();
+    });
 
     // 結果を出力する。
     if (!success) {
@@ -54,25 +55,22 @@ int main(int, char **)
         return 1;
     }
 
-    std::cout << fmt::format("手牌: {}, 向聴数: {}, 巡目: {}", hand.to_string(),
-                             syanten, turn)
+    std::cout << fmt::format("手牌: {}, 向聴数: {}, 巡目: {}", hand.to_string(), syanten, turn)
               << std::endl;
 
     for (const auto &candidate : candidates) {
-        std::cout << fmt::format("[打 {}{}]", Tile::Name.at(candidate.tile),
-                                 candidate.syanten_down ? " (向聴戻し)" : "")
-                  << " ";
+        std::cout << fmt::format("[打 {}]", Tile::Name.at(candidate.tile)) << " ";
 
         std::cout << fmt::format(
-            "有効牌: {}種{}枚, 聴牌確率: {:.2f}%, 和了確率: "
-            "{:.2f}%, 期待値: {:.2f} ",
+            "有効牌: {:>2d}種{:>2d}枚, 聴牌確率: {:>5.2f}%, 和了確率: "
+            "{:>5.2f}%, 期待値: {:>7.2f} {}",
             candidate.required_tiles.size(), candidate.sum_required_tiles,
             candidate.tenpai_probs[turn - 1] * 100, candidate.win_probs[turn - 1] * 100,
-            candidate.exp_values[turn - 1]);
+            candidate.exp_values[turn - 1], candidate.syanten_down ? " (向聴戻し)" : "");
 
-        std::cout << "有効牌";
-        for (const auto [tile, n] : candidate.required_tiles)
-            std::cout << fmt::format(" {}", Tile::Name.at(tile));
+        // std::cout << "有効牌";
+        // for (const auto [tile, n] : candidate.required_tiles)
+        //     std::cout << fmt::format(" {}", Tile::Name.at(tile));
         std::cout << std::endl;
 
         // std::cout << "巡目ごとの聴牌確率、和了確率、期待値" << std::endl;
