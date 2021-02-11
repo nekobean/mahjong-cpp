@@ -81,11 +81,12 @@ void ExpectedValueCalculator::create_prob_table(int n_left_tiles)
  */
 void ExpectedValueCalculator::clear_cache()
 {
-    spdlog::info("点数: {}", score_cache_.size());
-    for (size_t i = 0; i < 5; ++i)
-        spdlog::info("向聴数{} 打牌: {}, 自摸: {} 打牌2: {}, 自摸2: {}", i,
-                     discard_cache_[i].size(), draw_cache_[i].size(), discard_cache2_[i].size(),
-                     draw_cache2_[i].size());
+    // デバッグ用
+    // spdlog::info("点数: {}", score_cache_.size());
+    // for (size_t i = 0; i < 5; ++i)
+    //     spdlog::info("向聴数{} 打牌候補: {}, 自摸候補: {} 打牌: {}, 自摸: {}", i,
+    //                  discard_cache_[i].size(), draw_cache_[i].size(), discard_cache2_[i].size(),
+    //                  draw_cache2_[i].size());
 
     std::for_each(discard_cache_.begin(), discard_cache_.end(), [](auto &x) { x.clear(); });
     std::for_each(draw_cache_.begin(), draw_cache_.end(), [](auto &x) { x.clear(); });
@@ -184,6 +185,12 @@ ExpectedValueCalculator::draw_without_tegawari(int n_extra_tumo, int syanten, Ha
 {
     std::vector<double> tenpai_probs(17, 0), win_probs(17, 0), exp_values(17, 0);
 
+    auto &table = draw_cache2_[syanten];
+
+    CacheKey key(hand, counts, n_extra_tumo);
+    if (auto itr = table.find(key); itr != table.end())
+        return itr->second; // キャッシュが存在する場合
+
     // 自摸候補を取得する。
     const DrawTilesCache &cache = get_draw_tiles(hand, syanten, counts);
 
@@ -239,7 +246,9 @@ ExpectedValueCalculator::draw_without_tegawari(int n_extra_tumo, int syanten, Ha
         remove_tile(hand, tile);
     }
 
-    return {tenpai_probs, win_probs, exp_values};
+    auto [itr, _] = table.try_emplace(key, tenpai_probs, win_probs, exp_values);
+
+    return itr->second;
 }
 
 /**
@@ -250,12 +259,20 @@ ExpectedValueCalculator::draw_without_tegawari(int n_extra_tumo, int syanten, Ha
  * @param[in] hand 手牌
  * @param[in] counts 各牌の残り枚数
  * @return (各巡目の聴牌確率, 各巡目の和了確率, 各巡目の期待値)
+ * 
+ * この関数が呼ばれた時点で向聴戻しは行われていない
  */
 std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
 ExpectedValueCalculator::draw_with_tegawari(int n_extra_tumo, int syanten, Hand &hand,
                                             std::vector<int> &counts)
 {
     std::vector<double> tenpai_probs(17, 0), win_probs(17, 0), exp_values(17, 0);
+
+    auto &table = draw_cache2_[syanten];
+
+    CacheKey key(hand, counts, n_extra_tumo);
+    if (auto itr = table.find(key); itr != table.end())
+        return itr->second; // キャッシュが存在する場合
 
     // 自摸候補を取得する。
     const DrawTilesCache &cache = get_draw_tiles(hand, syanten, counts);
@@ -328,29 +345,18 @@ ExpectedValueCalculator::draw_with_tegawari(int n_extra_tumo, int syanten, Hand 
         remove_tile(hand, tile);
     }
 
-    return {tenpai_probs, win_probs, exp_values};
+    auto [itr, _] = table.try_emplace(key, tenpai_probs, win_probs, exp_values);
+
+    return itr->second;
 }
 
 std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
 ExpectedValueCalculator::draw(int n_extra_tumo, int syanten, Hand &hand, std::vector<int> &counts)
 {
-    auto &table = draw_cache2_[syanten];
-
-    CacheKey key(hand, counts, n_extra_tumo);
-    if (auto itr = table.find(key); itr != table.end())
-        return itr->second; // キャッシュが存在する場合
-
-    std::vector<double> tenpai_probs, win_probs, exp_values;
-    if (n_extra_tumo == 1)
-        std::tie(tenpai_probs, win_probs, exp_values) =
-            draw_without_tegawari(n_extra_tumo, syanten, hand, counts);
+    if (calc_tegawari_ && n_extra_tumo == 0)
+        return draw_with_tegawari(n_extra_tumo, syanten, hand, counts);
     else
-        std::tie(tenpai_probs, win_probs, exp_values) =
-            draw_with_tegawari(n_extra_tumo, syanten, hand, counts);
-
-    auto [itr, _] = table.try_emplace(key, tenpai_probs, win_probs, exp_values);
-
-    return itr->second;
+        return draw_without_tegawari(n_extra_tumo, syanten, hand, counts);
 }
 
 /**
@@ -428,6 +434,7 @@ std::vector<Candidate> ExpectedValueCalculator::analyze(int n_extra_tumo, int sy
     // 各牌の残り枚数を数える。
     std::vector<int> counts = count_left_tiles(hand, score_.dora_tiles());
 
+    // 打牌候補を取得する。
     const std::vector<int> &flags = get_discard_tiles(hand, syanten);
 
     for (int tile = 0; tile < 34; ++tile) {

@@ -6,8 +6,6 @@ using namespace mahjong;
 
 int main(int, char **)
 {
-    ExpectedValueCalculator calculator;
-
     Hand hand1({Tile::Manzu2, Tile::Manzu2, Tile::Manzu2, Tile::Manzu5, Tile::Manzu6, Tile::Manzu7,
                 Tile::Pinzu3, Tile::Pinzu4, Tile::Pinzu5, Tile::Sozu3, Tile::Sozu3, Tile::Sozu6,
                 Tile::Sozu6, Tile::Sozu7});
@@ -21,28 +19,42 @@ int main(int, char **)
                 Tile::Pinzu3, Tile::Pinzu6, Tile::Pinzu8, Tile::Pinzu8, Tile::Sozu1, Tile::Sozu2,
                 Tile::Sozu4, Tile::Sozu5});
 
-    int bakaze = Tile::Ton;
-    int zikaze = Tile::Ton;
-    int turn = 1;
-    int syanten_type = SyantenType::Normal;
-    int flag = 61;
-    std::vector<int> dora_tiles = {Tile::Sya};
-    Hand hand = hand4;
+    int bakaze = Tile::Ton;                 // 場風
+    int zikaze = Tile::Ton;                 // 自風
+    int turn = 1;                           // 巡目
+    int syanten_type = SyantenType::Normal; // 向聴数の種類
+    // 考慮する項目
+    int flag = ExpectedValueCalculator::CalcSyantenDown   // 向聴戻し考慮
+               | ExpectedValueCalculator::CalcTegawari    // 手変わり考慮
+               | ExpectedValueCalculator::CalcDoubleReach // ダブル立直考慮
+               | ExpectedValueCalculator::CalcIppatu      // 一発考慮
+               | ExpectedValueCalculator::CalcHaiteitumo  // 海底撈月考慮
+               | ExpectedValueCalculator::CalcUradora;    // 裏ドラ考慮
+    std::vector<int> dora_tiles = {Tile::Sya};            // ドラ
+    Hand hand = hand4;                                    // 手牌
+
+    ExpectedValueCalculator exp_value_calculator;
+    ScoreCalculator score_calculator;
 
     // 点数計算の設定
-    ScoreCalculator score;
-    score.set_bakaze(bakaze);
-    score.set_zikaze(zikaze);
-    score.set_dora_tiles(dora_tiles);
+    score_calculator.set_bakaze(bakaze);
+    score_calculator.set_zikaze(zikaze);
+    score_calculator.set_dora_tiles(dora_tiles);
 
     // 向聴数を計算する。
     auto [_, syanten] = SyantenCalculator::calc(hand, syanten_type);
 
     // 期待値を計算する。
     auto begin = std::chrono::steady_clock::now();
-    auto [success, candidates] = calculator.calc(hand, score, syanten_type, flag);
+    auto [success, candidates] =
+        exp_value_calculator.calc(hand, score_calculator, syanten_type, flag);
     auto end = std::chrono::steady_clock::now();
     auto elapsed_ms = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
+
+    if (!success) {
+        std::cout << "エラー" << std::endl;
+        return 1;
+    }
 
     // 期待値が高い順にソートする。
     std::sort(candidates.begin(), candidates.end(), [](const Candidate &a, const Candidate &b) {
@@ -50,11 +62,7 @@ int main(int, char **)
     });
 
     // 結果を出力する。
-    if (!success) {
-        std::cout << "エラー" << std::endl;
-        return 1;
-    }
-
+    ////////////////////////////////////////////////////////////////////////////////////
     std::cout << fmt::format("手牌: {}, 向聴数: {}, 巡目: {}", hand.to_string(), syanten, turn)
               << std::endl;
 
