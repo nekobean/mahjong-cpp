@@ -6,15 +6,19 @@ using namespace mahjong;
 
 int main(int, char **)
 {
+    // 聴牌の手牌
     Hand hand1({Tile::Manzu2, Tile::Manzu2, Tile::Manzu2, Tile::Manzu5, Tile::Manzu6, Tile::Manzu7,
                 Tile::Pinzu3, Tile::Pinzu4, Tile::Pinzu5, Tile::Sozu3, Tile::Sozu3, Tile::Sozu6,
                 Tile::Sozu6, Tile::Sozu7});
+    // 1向聴数の手牌
     Hand hand2({Tile::Manzu2, Tile::Manzu2, Tile::Manzu2, Tile::Manzu5, Tile::Manzu6, Tile::Manzu7,
                 Tile::Pinzu3, Tile::Pinzu4, Tile::Sozu3, Tile::Sozu3, Tile::Sozu6, Tile::Sozu6,
                 Tile::Sozu7, Tile::Pe});
+    // 3向聴数の手牌
     Hand hand3({Tile::Manzu1, Tile::Manzu1, Tile::Manzu2, Tile::Manzu4, Tile::Manzu5, Tile::Manzu7,
                 Tile::Pinzu9, Tile::Sozu3, Tile::Sozu7, Tile::Sozu9, Tile::Ton, Tile::Pe, Tile::Pe,
                 Tile::Hatu});
+    // 2向聴数の手牌
     Hand hand4({Tile::Manzu1, Tile::Manzu2, Tile::Manzu3, Tile::Manzu3, Tile::Manzu4, Tile::Manzu9,
                 Tile::Pinzu3, Tile::Pinzu6, Tile::Pinzu8, Tile::Pinzu8, Tile::Sozu1, Tile::Sozu2,
                 Tile::Sozu4, Tile::Sozu5});
@@ -33,7 +37,7 @@ int main(int, char **)
         //| ExpectedValueCalculator::MaximaizeWinProb; // 和了確率を最大化
         ;
     std::vector<int> dora_tiles = {Tile::Sya}; // ドラ
-    Hand hand = hand4;                         // 手牌
+    Hand hand = hand1;                         // 手牌
 
     ExpectedValueCalculator exp_value_calculator;
     ScoreCalculator score_calculator;

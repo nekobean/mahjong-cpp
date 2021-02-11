@@ -467,6 +467,9 @@ std::vector<Candidate> ExpectedValueCalculator::analyze(int n_extra_tumo, int sy
 
             add_tile(hand, tile);
 
+            if (syanten == 0) // すでに聴牌している場合の例外処理
+                std::fill(tenpai_probs.begin(), tenpai_probs.end(), 1);
+
             candidates.emplace_back(discard_tile, sum_required_tiles, required_tiles, tenpai_probs,
                                     win_probs, exp_values, false);
         }
