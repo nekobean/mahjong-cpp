@@ -192,12 +192,13 @@ class ExpectedValueCalculator
     enum Flag
     {
         Null = 0,
-        CalcSyantenDown = 1,      /* 向聴落とし */
-        CalcTegawari = 1 << 1,    /* 手変わり */
+        CalcSyantenDown = 1,      /* 向聴落とし考慮 */
+        CalcTegawari = 1 << 1,    /* 手変わり考慮 */
         CalcDoubleReach = 1 << 2, /* ダブル立直考慮 */
         CalcIppatu = 1 << 3,      /* 一発考慮 */
         CalcHaiteitumo = 1 << 4,  /* 海底撈月考慮 */
-        CalcUradora = 1 << 5,     /* 裏ドラ */
+        CalcUradora = 1 << 5,     /* 裏ドラ考慮 */
+        MaximaizeWinProb = 1 << 6, /* 和了確率を最大化 (指定されていない場合は期待値を最大化) */
     };
 
     ExpectedValueCalculator();
@@ -235,13 +236,26 @@ class ExpectedValueCalculator
     /* 点数計算機 */
     ScoreCalculator score_;
 
-    /* フラグ */
+    /* 向聴落とし考慮 */
     bool calc_syanten_down_;
+
+    /* 手変わり考慮 */
     bool calc_tegawari_;
+
+    /* ダブル立直考慮 */
     bool calc_double_reach_;
+
+    /* 一発考慮 */
     bool calc_ippatu_;
+
+    /* 海底撈月考慮 */
     bool calc_haitei_;
+
+    /* 裏ドラ考慮 */
     bool calc_uradora_;
+
+    /* 和了確率を最大化 */
+    bool maximize_win_prob_;
 
     /* この巡目で有効牌を引ける確率のテーブル */
     std::vector<std::vector<double>> tumo_probs_table_;

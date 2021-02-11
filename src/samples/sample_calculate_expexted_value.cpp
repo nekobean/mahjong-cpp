@@ -29,9 +29,11 @@ int main(int, char **)
                | ExpectedValueCalculator::CalcDoubleReach // ダブル立直考慮
                | ExpectedValueCalculator::CalcIppatu      // 一発考慮
                | ExpectedValueCalculator::CalcHaiteitumo  // 海底撈月考慮
-               | ExpectedValueCalculator::CalcUradora;    // 裏ドラ考慮
-    std::vector<int> dora_tiles = {Tile::Sya};            // ドラ
-    Hand hand = hand4;                                    // 手牌
+               | ExpectedValueCalculator::CalcUradora     // 裏ドラ考慮
+        //| ExpectedValueCalculator::MaximaizeWinProb; // 和了確率を最大化
+        ;
+    std::vector<int> dora_tiles = {Tile::Sya}; // ドラ
+    Hand hand = hand4;                         // 手牌
 
     ExpectedValueCalculator exp_value_calculator;
     ScoreCalculator score_calculator;
@@ -75,11 +77,12 @@ int main(int, char **)
             candidate.required_tiles.size(), candidate.sum_required_tiles,
             candidate.tenpai_probs[turn - 1] * 100, candidate.win_probs[turn - 1] * 100,
             candidate.exp_values[turn - 1], candidate.syanten_down ? " (向聴戻し)" : "");
+        std::cout << std::endl;
 
         // std::cout << "有効牌";
         // for (const auto [tile, n] : candidate.required_tiles)
         //     std::cout << fmt::format(" {}", Tile::Name.at(tile));
-        std::cout << std::endl;
+        // std::cout << std::endl;
 
         // std::cout << "巡目ごとの聴牌確率、和了確率、期待値" << std::endl;
         // for (size_t i = 0; i < 17; ++i) {
