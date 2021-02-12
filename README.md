@@ -14,6 +14,9 @@ Miscellaneous programs about Japanese Mahjong
 
 ![麻雀何切るシミュレーター](docs/mahjong-nanikiru-simulator.png)
 
+* アプリの紹介: [麻雀 - 期待値計算ツール 何切るシミュレーター](https://pystyle.info/mahjong-nanikiru-simulator/)
+* 期待値計算の詳細: [麻雀における期待値の計算方法](https://pystyle.info/mahjong-expected-value-in-mahjong/)
+
 ## Features (機能)
 
 🚧This program is under development. Currently the following features have been implemented.🚧
