@@ -2,7 +2,7 @@
 
 ## About (概要)
 
-日本のリーチ麻雀のプログラム置き場
+日本のリーチ麻雀のルールで、点数や期待値計算を行う C++ ライブラリです。
 
 Miscellaneous programs about Japanese Mahjong
 
