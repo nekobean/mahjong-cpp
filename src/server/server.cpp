@@ -145,7 +145,8 @@ std::tuple<bool, RequestData> Server::parse_json(const rapidjson::Document &doc)
 {
     RequestData req;
 
-    req.ip = doc["ip"].GetString();
+    if (doc.HasMember("ip"))
+        req.ip = doc["ip"].GetString();
     req.zikaze = doc["zikaze"].GetInt();
     req.bakaze = doc["bakaze"].GetInt();
     req.turn = doc["turn"].GetInt();

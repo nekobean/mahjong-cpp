@@ -224,7 +224,8 @@ ExpectedValueCalculator::draw_without_tegawari(int n_extra_tumo, int syanten, Ha
                 else if (j < 16 && syanten > 1)
                     tenpai_probs[i] += prob * next_tenpai_probs[j + 1];
 
-                if (syanten == 0) { // 聴牌の場合は次で和了
+                // scores[0] == 0 の場合は役なしなので、和了確率、期待値は0
+                if (syanten == 0 && scores[0] != 0) { // 聴牌の場合は次で和了
                     // i 巡目で聴牌の場合はダブル立直成立
                     bool win_double_reach = i == 0 && calc_double_reach_;
                     // i 巡目で聴牌し、次の巡目で和了の場合は一発成立
@@ -394,8 +395,8 @@ ExpectedValueCalculator::discard(int n_extra_tumo, int syanten, Hand &hand,
     // 期待値が最大となる打牌を選択する。
     std::vector<double> max_tenpai_probs, max_win_probs, max_exp_values;
     std::vector<double> tenpai_probs, win_probs, exp_values;
-    int max_tile;
-    double max_value = std::numeric_limits<double>::min();
+    int max_tile = -1;
+    double max_value = -1;
     for (int tile = 0; tile < 34; ++tile) {
         if (flags[tile] == 1) {
             // 向聴数が変化しない打牌
@@ -417,11 +418,13 @@ ExpectedValueCalculator::discard(int n_extra_tumo, int syanten, Hand &hand,
         }
 
         // 向聴戻し、手変わりは巡目がずれるので、1つ手前にずらす。(このやり方で正しいのか要検証)
-        double value = maximize_win_prob_ ? win_probs[n_extra_tumo] : exp_values[n_extra_tumo];
-        if ((std::abs(value - max_value) < 10e-5 &&
-             DiscardPriorities[max_tile] < DiscardPriorities[tile]) ||
+
+        // 和了確率は下2桁まで一致していれば同じ、期待値は下0桁まで一致していれば同じとみなす。
+        double value = maximize_win_prob_ ? int(win_probs[n_extra_tumo] * 10000)
+                                          : int(exp_values[n_extra_tumo]);
+        if ((value == max_value && DiscardPriorities[max_tile] < DiscardPriorities[tile]) ||
             value > max_value) {
-            // 期待値が同等なら、DiscardPriorities が高い牌を優先して選択する。
+            // 値が同等なら、DiscardPriorities が高い牌を優先して選択する。
             max_tenpai_probs = tenpai_probs;
             max_win_probs = win_probs;
             max_exp_values = exp_values;
@@ -641,7 +644,7 @@ const ScoreCache &ExpectedValueCalculator::get_score(const Hand &hand, int win_t
     if (auto itr = score_cache_.find(key); itr != score_cache_.end())
         return itr->second; // キャッシュが存在する場合
 
-    int hand_flag = HandFlag::Tumo;
+    int hand_flag = HandFlag::Tumo; // 自摸和了のみ
     if (hand.is_menzen())
         hand_flag |= HandFlag::Reach; // 門前の場合は立直している
 
@@ -651,8 +654,11 @@ const ScoreCache &ExpectedValueCalculator::get_score(const Hand &hand, int win_t
     for (const auto &meld : hand.melds)
         n_uradora += meld.type >= MeldType::Ankan;
 
+    // ダブル立直、一発、海底撈月で最大3翻まで増加するので、
+    // ベースとなる点数、+1翻の点数、+2翻の点数、+3翻の点数も計算しておく。
     std::vector<double> scores(4, 0);
     if (result.success) {
+        // 役ありの場合
         std::vector<int> up_scores = score_.get_scores_for_exp(result);
 
         if (calc_uradora_) {
