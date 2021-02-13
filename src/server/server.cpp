@@ -22,8 +22,7 @@ Server server;
 
 Server::Server() : pool_(3) {}
 
-rapidjson::Value Server::json_dumps(int total_count,
-                                    const std::vector<std::tuple<int, int>> &tiles,
+rapidjson::Value Server::json_dumps(int total_count, const std::vector<std::tuple<int, int>> &tiles,
                                     rapidjson::Document &doc)
 {
     rapidjson::Value value(rapidjson::kArrayType);
@@ -38,16 +37,14 @@ rapidjson::Value Server::json_dumps(int total_count,
     return value;
 }
 
-rapidjson::Value Server::json_dumps(const Candidate &candidate,
-                                    rapidjson::Document &doc)
+rapidjson::Value Server::json_dumps(const Candidate &candidate, rapidjson::Document &doc)
 {
     rapidjson::Value value(rapidjson::kObjectType);
     value.AddMember("tile", candidate.tile, doc.GetAllocator());
     value.AddMember("syanten_down", candidate.syanten_down, doc.GetAllocator());
-    value.AddMember(
-        "required_tiles",
-        json_dumps(candidate.sum_required_tiles, candidate.required_tiles, doc),
-        doc.GetAllocator());
+    value.AddMember("required_tiles",
+                    json_dumps(candidate.sum_required_tiles, candidate.required_tiles, doc),
+                    doc.GetAllocator());
 
     if (!candidate.exp_values.empty()) {
         value.AddMember("exp_values", rapidjson::kArrayType, doc.GetAllocator());
@@ -86,8 +83,7 @@ rapidjson::Document Server::create_response(const RequestData &req)
         auto begin = std::chrono::steady_clock::now();
 
         // 向聴数を計算する。
-        auto [syanten_type, syanten] =
-            SyantenCalculator::calc(req.hand, req.syanten_type);
+        auto [syanten_type, syanten] = SyantenCalculator::calc(req.hand, req.syanten_type);
 
         // 各牌の残り枚数を数える。
         std::vector<int> counts =
@@ -95,8 +91,7 @@ rapidjson::Document Server::create_response(const RequestData &req)
 
         // 有効牌を求める。
         auto [total_count, required_tiles] =
-            ExpectedValueCalculator::get_required_tiles(req.hand, req.syanten_type,
-                                                        counts);
+            ExpectedValueCalculator::get_required_tiles(req.hand, req.syanten_type, counts);
 
         auto end = std::chrono::steady_clock::now();
         auto elapsed_ms =
@@ -112,8 +107,7 @@ rapidjson::Document Server::create_response(const RequestData &req)
         auto begin = std::chrono::steady_clock::now();
 
         // 向聴数を計算する。
-        auto [syanten_type, syanten] =
-            SyantenCalculator::calc(req.hand, req.syanten_type);
+        auto [syanten_type, syanten] = SyantenCalculator::calc(req.hand, req.syanten_type);
 
         // 点数計算の設定
         score_calc.set_bakaze(req.bakaze);
@@ -151,6 +145,7 @@ std::tuple<bool, RequestData> Server::parse_json(const rapidjson::Document &doc)
 {
     RequestData req;
 
+    req.ip = doc["ip"].GetString();
     req.zikaze = doc["zikaze"].GetInt();
     req.bakaze = doc["bakaze"].GetInt();
     req.turn = doc["turn"].GetInt();
@@ -176,10 +171,13 @@ std::tuple<bool, RequestData> Server::parse_json(const rapidjson::Document &doc)
     req.hand = Hand(hand_tiles, melded_blocks);
     req.flag = doc["flag"].GetInt();
 
+    std::string dora_tiles = "";
+    for (const auto &tile : req.dora_tiles)
+        dora_tiles += Tile::Name.at(tile) + (&tile != &req.dora_tiles.back() ? " " : "");
     spdlog::get("logger")->info(
-        "場風牌: {}, 自風牌: {}, 巡目: {}, 手牌の種類: {}, 手牌: {}, フラグ: {}",
-        Tile::Name.at(req.bakaze), Tile::Name.at(req.zikaze), req.turn,
-        req.syanten_type, req.hand.to_string(), req.flag);
+        "IP: {}, 場風牌: {}, 自風牌: {}, 巡目: {}, 手牌の種類: {}, 手牌: {}, フラグ: {}, ドラ: {}",
+        req.ip, Tile::Name.at(req.bakaze), Tile::Name.at(req.zikaze), req.turn, req.syanten_type,
+        req.hand.to_string(), req.flag, dora_tiles);
 
     auto counts = ExpectedValueCalculator::count_left_tiles(req.hand, req.dora_tiles);
     for (auto x : counts) {
@@ -271,8 +269,7 @@ std::string Server::process_request(const std::string &json)
 // caller to pass a generic lambda for receiving the response.
 template <class Body, class Allocator, class Send>
 void handle_request(beast::string_view doc_root,
-                    http::request<Body, http::basic_fields<Allocator>> &&req,
-                    Send &&send)
+                    http::request<Body, http::basic_fields<Allocator>> &&req, Send &&send)
 {
     // Returns a bad request response
     auto const bad_request = [&req](beast::string_view why) {
@@ -298,8 +295,7 @@ void handle_request(beast::string_view doc_root,
 
     // Returns a server error response
     auto const server_error = [&req](beast::string_view what) {
-        http::response<http::string_body> res{http::status::internal_server_error,
-                                              req.version()};
+        http::response<http::string_body> res{http::status::internal_server_error, req.version()};
         res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
         res.set(http::field::content_type, "text/html");
         res.keep_alive(req.keep_alive());
@@ -317,15 +313,14 @@ void handle_request(beast::string_view doc_root,
         req.target().find("..") != beast::string_view::npos)
         return send(bad_request("Illegal request-target"));
 
-    auto future =
-        server.pool_.enqueue([&] { return server.process_request(req.body()); });
+    auto future = server.pool_.enqueue([&] { return server.process_request(req.body()); });
     http::string_body::value_type body;
     body = future.get();
 
     // Respond to GET request
-    http::response<http::string_body> res{
-        std::piecewise_construct, std::make_tuple(std::move(body)),
-        std::make_tuple(http::status::ok, req.version())};
+    http::response<http::string_body> res{std::piecewise_construct,
+                                          std::make_tuple(std::move(body)),
+                                          std::make_tuple(http::status::ok, req.version())};
     res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
     res.set(http::field::content_type, "application/json");
     res.set(http::field::access_control_allow_origin, "*");
@@ -441,11 +436,9 @@ int Server::run()
 int main()
 {
     auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-    auto file_sink =
-        std::make_shared<spdlog::sinks::basic_file_sink_mt>("log.txt", false);
+    auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>("log.txt", false);
     std::vector<spdlog::sink_ptr> sinks = {console_sink, file_sink};
-    auto logger =
-        std::make_shared<spdlog::logger>("logger", sinks.begin(), sinks.end());
+    auto logger = std::make_shared<spdlog::logger>("logger", sinks.begin(), sinks.end());
     spdlog::register_logger(logger);
     spdlog::flush_every(std::chrono::seconds(3));
 

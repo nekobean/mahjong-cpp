@@ -12,6 +12,9 @@
     ],
     "additionalProperties": false,
     "properties": {
+        "ip": {
+            "type": "string"
+        },
         "zikaze": {
             "type": "integer",
             "enum": [

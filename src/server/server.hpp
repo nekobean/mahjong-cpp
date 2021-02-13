@@ -27,6 +27,7 @@ struct RequestData
     std::vector<int> dora_tiles;
     mahjong::Hand hand;
     int flag;
+    std::string ip;
 };
 
 class Server
@@ -39,11 +40,9 @@ class Server
     ThreadPool pool_;
 
   private:
-    rapidjson::Value json_dumps(int total_count,
-                                const std::vector<std::tuple<int, int>> &tiles,
+    rapidjson::Value json_dumps(int total_count, const std::vector<std::tuple<int, int>> &tiles,
                                 rapidjson::Document &doc);
-    rapidjson::Value json_dumps(const mahjong::Candidate &candidate,
-                                rapidjson::Document &doc);
+    rapidjson::Value json_dumps(const mahjong::Candidate &candidate, rapidjson::Document &doc);
     rapidjson::Document create_response(const RequestData &req);
     std::tuple<bool, RequestData> parse_json(const rapidjson::Document &doc);
     bool validate_json(const rapidjson::Document &doc);
