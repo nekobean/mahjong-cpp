@@ -219,7 +219,7 @@ ExpectedValueCalculator::draw_without_tegawari(int n_extra_tumo, int syanten, Ha
         std::vector<double> next_tenpai_probs, next_win_probs, next_exp_values;
         std::vector<double> scores;
         if (syanten == 0) {
-            const ScoreCache &cache = get_score(hand, tile);
+            const ScoreCache &cache = get_score(hand, tile, counts);
             scores = cache.scores;
         }
         else {
@@ -303,7 +303,7 @@ ExpectedValueCalculator::draw_with_tegawari(int n_extra_tumo, int syanten, Hand 
         std::vector<double> scores;
 
         if (syanten == 0) {
-            const ScoreCache &cache = get_score(hand, tile);
+            const ScoreCache &cache = get_score(hand, tile, counts);
             scores = cache.scores;
         }
         else {
@@ -651,7 +651,8 @@ const DrawTilesCache &ExpectedValueCalculator::get_draw_tiles(Hand &hand, int sy
  * @param[in] win_tile 自摸牌
  * @return 点数
  */
-const ScoreCache &ExpectedValueCalculator::get_score(const Hand &hand, int win_tile)
+const ScoreCache &ExpectedValueCalculator::get_score(const Hand &hand, int win_tile,
+                                                     const std::vector<int> &counts)
 {
     ScoreKey key(hand, win_tile);
     if (auto itr = score_cache_.find(key); itr != score_cache_.end())
@@ -675,10 +676,30 @@ const ScoreCache &ExpectedValueCalculator::get_score(const Hand &hand, int win_t
 
         if (calc_uradora_ && n_dora == 1) {
             // 裏ドラ考慮ありかつ表ドラが1枚以上の場合は、厳密に計算する。
+            std::vector<double> n_indicators(5, 0);
+            int sum_indicators = 0;
+            for (int tile = 0; tile < 34; ++tile) {
+                int n = hand.num_tiles(tile);
+                if (n > 0) {
+                    // ドラ表示牌の枚数を数える。
+                    n_indicators[n] += counts[Dora2Indicator.at(tile)];
+                    sum_indicators += counts[Dora2Indicator.at(tile)];
+                }
+            }
+
+            // 裏ドラの乗る確率を枚数ごとに計算する。
+            std::vector<double> uradora_probs(5, 0);
+
+            // 厳密に計算するなら残り枚数は数えるべきだが、あまり影響がないので121枚で固定
+            int n_left_tiles = 121;
+            uradora_probs[0] = double(n_left_tiles - sum_indicators) / n_left_tiles;
+            for (int i = 1; i < 5; ++i)
+                uradora_probs[i] = double(n_indicators[i]) / n_left_tiles;
+
             for (int base = 0; base < 4; ++base) {
-                for (int i = 0; i < 13; ++i) {
+                for (int i = 0; i < 5; ++i) { // 裏ドラ1枚の場合、最大4翻まで乗る可能性がある
                     int han_idx = std::min(base + i, int(up_scores.size() - 1));
-                    scores[base] += up_scores[han_idx] * uradora_prob_[n_dora][i];
+                    scores[base] += up_scores[han_idx] * uradora_probs[i];
                 }
             }
         }

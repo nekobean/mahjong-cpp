@@ -229,7 +229,7 @@ class ExpectedValueCalculator
 
     const DrawTilesCache &get_draw_tiles(Hand &hand, int syanten, const std::vector<int> &counts);
     const std::vector<int> &get_discard_tiles(Hand &hand, int syanten);
-    const ScoreCache &get_score(const Hand &hand, int win_tile);
+    const ScoreCache &get_score(const Hand &hand, int win_tile, const std::vector<int> &counts);
 
   private:
     /* 向聴数の種類 */
