@@ -203,6 +203,8 @@ class ExpectedValueCalculator
 
     ExpectedValueCalculator();
 
+    static bool make_uradora_table();
+
     std::tuple<bool, std::vector<Candidate>> calc(const Hand &hand, const ScoreCalculator &score,
                                                   int syanten_type, int flag = 0);
 
@@ -264,7 +266,7 @@ class ExpectedValueCalculator
     std::vector<std::vector<double>> not_tumo_probs_table_;
 
     /* 裏ドラの乗る確率のテーブル */
-    std::vector<std::vector<double>> uradora_prob_;
+    static std::vector<std::vector<double>> uradora_prob_;
 
     /* キャッシュ */
     std::vector<std::map<Hand, std::vector<int>>> discard_cache_;

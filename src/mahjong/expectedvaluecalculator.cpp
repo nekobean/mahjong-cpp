@@ -30,24 +30,37 @@ ExpectedValueCalculator::ExpectedValueCalculator()
     , discard_cache2_(5) // 0(聴牌) ~ 4(4向聴)
     , draw_cache2_(5)    // 0(聴牌) ~ 4(4向聴)
 {
+    make_uradora_table();
+}
+
+/**
+ * @brief 初期化する。
+ *
+ * @return 初期化に成功した場合は true、そうでない場合は false を返す。
+ */
+bool ExpectedValueCalculator::make_uradora_table()
+{
+    if (!uradora_prob_.empty())
+        return true;
+
     uradora_prob_.resize(6);
-    std::string uradora_path =
-        (boost::dll::program_location().parent_path() / "uradora.txt").string();
-    std::ifstream ifs(uradora_path);
+
+    boost::filesystem::path path = boost::dll::program_location().parent_path() / "uradora.txt";
+    std::ifstream ifs(path.string());
 
     std::string line;
-    int i = 1;
+    int i = 0;
     while (std::getline(ifs, line)) {
         std::vector<std::string> tokens;
         boost::split(tokens, line, boost::is_any_of(" "));
 
-        for (auto token : tokens) {
+        for (auto token : tokens)
             uradora_prob_[i].push_back(std::stod(token));
-        }
         i++;
     }
-}
 
+    return true;
+}
 /**
  * @brief テーブルを初期化する。
  * 
@@ -644,15 +657,14 @@ const ScoreCache &ExpectedValueCalculator::get_score(const Hand &hand, int win_t
     if (auto itr = score_cache_.find(key); itr != score_cache_.end())
         return itr->second; // キャッシュが存在する場合
 
-    int hand_flag = HandFlag::Tumo; // 自摸和了のみ
-    if (hand.is_menzen())
-        hand_flag |= HandFlag::Reach; // 門前の場合は立直している
+    // 非門前の場合は自摸のみ
+    int hand_flag = hand.is_menzen() ? (HandFlag::Tumo | HandFlag::Reach) : HandFlag::Tumo;
 
+    // 点数計算を行う。
     Result result = score_.calc(hand, win_tile, hand_flag);
 
-    int n_uradora = 1;
-    for (const auto &meld : hand.melds)
-        n_uradora += meld.type >= MeldType::Ankan;
+    // 表ドラの数
+    int n_dora = int(score_.dora_tiles().size());
 
     // ダブル立直、一発、海底撈月で最大3翻まで増加するので、
     // ベースとなる点数、+1翻の点数、+2翻の点数、+3翻の点数も計算しておく。
@@ -661,15 +673,26 @@ const ScoreCache &ExpectedValueCalculator::get_score(const Hand &hand, int win_t
         // 役ありの場合
         std::vector<int> up_scores = score_.get_scores_for_exp(result);
 
-        if (calc_uradora_) {
+        if (calc_uradora_ && n_dora == 1) {
+            // 裏ドラ考慮ありかつ表ドラが1枚以上の場合は、厳密に計算する。
             for (int base = 0; base < 4; ++base) {
                 for (int i = 0; i < 13; ++i) {
                     int han_idx = std::min(base + i, int(up_scores.size() - 1));
-                    scores[base] += up_scores[han_idx] * uradora_prob_[n_uradora][i];
+                    scores[base] += up_scores[han_idx] * uradora_prob_[n_dora][i];
+                }
+            }
+        }
+        else if (calc_uradora_ && n_dora > 1) {
+            // 裏ドラ考慮ありかつ表ドラが2枚以上の場合、統計データを利用する。
+            for (int base = 0; base < 4; ++base) {
+                for (int i = 0; i < 13; ++i) {
+                    int han_idx = std::min(base + i, int(up_scores.size() - 1));
+                    scores[base] += up_scores[han_idx] * uradora_prob_[n_dora][i];
                 }
             }
         }
         else {
+            // 裏ドラ考慮なしまたは表ドラが0枚の場合
             for (int base = 0; base < 4; ++base) {
                 int han_idx = std::min(base, int(up_scores.size() - 1));
                 scores[base] += up_scores[han_idx];
@@ -682,5 +705,7 @@ const ScoreCache &ExpectedValueCalculator::get_score(const Hand &hand, int win_t
 
     return itr->second;
 }
+
+std::vector<std::vector<double>> ExpectedValueCalculator::uradora_prob_;
 
 } // namespace mahjong

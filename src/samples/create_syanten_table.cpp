@@ -1,4 +1,3 @@
-
 #include <fstream>
 #include <iostream>
 #include <utility>
@@ -22,8 +21,7 @@ class SyantenTableGenerator
     int max_kouho;
 };
 
-std::vector<int>
-SyantenTableGenerator::calc_pair_with_head(const std::vector<int> &_key)
+std::vector<int> SyantenTableGenerator::calc_pair_with_head(const std::vector<int> &_key)
 {
     std::vector<int> key = _key;
     max_pair = max_mentu = max_kouho = 0;
@@ -51,8 +49,7 @@ std::vector<int> SyantenTableGenerator::calc_pair(const std::vector<int> &_key)
     return {max_mentu, max_kouho};
 }
 
-void SyantenTableGenerator::cut_mentu(std::vector<int> &key, int n_mentu, int n_kouho,
-                                      int i)
+void SyantenTableGenerator::cut_mentu(std::vector<int> &key, int n_mentu, int n_kouho, int i)
 {
     if (i == key.size()) {
         cut_kouho(key, n_mentu, n_kouho);
@@ -78,8 +75,7 @@ void SyantenTableGenerator::cut_mentu(std::vector<int> &key, int n_mentu, int n_
     cut_mentu(key, n_mentu, n_kouho, i + 1);
 }
 
-void SyantenTableGenerator::cut_kouho(std::vector<int> &key, int n_mentu, int n_kouho,
-                                      int i)
+void SyantenTableGenerator::cut_kouho(std::vector<int> &key, int n_mentu, int n_kouho, int i)
 {
     if (i == key.size()) {
         aggregate(n_mentu, n_kouho);

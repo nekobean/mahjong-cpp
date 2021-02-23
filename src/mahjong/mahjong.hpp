@@ -6,5 +6,6 @@
 #include "score.hpp"
 #include "syanten.hpp"
 #include "unnecessarytileselector.hpp"
+#include "utils.hpp"
 
 #endif /* MAHJONG_CPP_MAHJONG */
