@@ -69,7 +69,8 @@ void write_output_data(const std::vector<RequestData> &req_data_list)
         rapidjson::Value res_value = dump_discard_response(res_data, res_doc);
         res_doc.PushBack(res_value, res_doc.GetAllocator());
     }
-    std::ofstream ofs("test_expected_calclation_output.json");
+    std::ofstream ofs(
+        R"(F:\work\cpp-apps\mahjong-cpp\data\testcase\test_expected_calclation_output.json)");
     rapidjson::OStreamWrapper osw(ofs);
     rapidjson::PrettyWriter<rapidjson::OStreamWrapper> writer(osw);
     res_doc.Accept(writer);
@@ -95,7 +96,8 @@ TEST_CASE("期待値計算")
     std::vector<RequestData> req_data_list;
     if (!load_input_data(req_data_list))
         return;
-    //write_output_data(req_data_list);
+    // write_output_data(req_data_list);
+    // return;
 
     std::vector<DiscardResponseData> res_data_list;
     if (!load_output_data(res_data_list))
@@ -106,7 +108,8 @@ TEST_CASE("期待値計算")
         const DiscardResponseData &expected = res_data_list[i];
 
         REQUIRE(actual.syanten == expected.syanten);
-        std::cout << double(expected.time_us) / double(actual.time_us) << std::endl;
+        spdlog::info("{} {} -> {}", double(actual.time_us) / double(expected.time_us),
+                     expected.time_us / 1000, actual.time_us / 1000);
         //REQUIRE(double(expected.time_us) / double(actual.time_us) < 1.1);
 
         for (size_t i = 0; i < actual.candidates.size(); ++i)

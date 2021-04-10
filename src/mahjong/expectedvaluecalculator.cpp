@@ -95,11 +95,11 @@ void ExpectedValueCalculator::create_prob_table(int n_left_tiles)
 void ExpectedValueCalculator::clear_cache()
 {
     // デバッグ用
-    spdlog::info("点数: {}", score_cache_.size());
-    for (size_t i = 0; i < 5; ++i)
-        spdlog::info("向聴数{} 打牌候補: {}, 自摸候補: {} 打牌: {}, 自摸: {}", i,
-                     discard_cache_[i].size(), draw_cache_[i].size(), discard_node_cache_[i].size(),
-                     draw_node_cache_[i].size());
+    // spdlog::info("点数: {}", score_cache_.size());
+    // for (size_t i = 0; i < 5; ++i)
+    //     spdlog::info("向聴数{} 打牌候補: {}, 自摸候補: {} 打牌: {}, 自摸: {}", i,
+    //                  discard_cache_[i].size(), draw_cache_[i].size(), discard_node_cache_[i].size(),
+    //                  draw_node_cache_[i].size());
 
     std::for_each(discard_cache_.begin(), discard_cache_.end(), [](auto &x) { x.clear(); });
     std::for_each(draw_cache_.begin(), draw_cache_.end(), [](auto &x) { x.clear(); });
@@ -204,12 +204,25 @@ ExpectedValueCalculator::draw_without_tegawari(int n_extra_tumo, int syanten, Ha
     if (auto itr = table.find(key); itr != table.end())
         return itr->second; // キャッシュが存在する場合
 
-    // 自摸候補を取得する。
-    const DrawTilesCache &cache = get_draw_tiles(hand, syanten, counts);
+        // 自摸候補を取得する。
+#ifdef ENABLE_DRAW_TILES_CACHE
+    const std::vector<int> &flags = get_draw_tiles(hand, syanten, counts);
+#else
+    std::vector<int> flags = get_draw_tiles(hand, syanten, counts);
+#endif
 
-    for (const auto &tile : cache.hands1) {
+    int sum_required_tiles = 0;
+    for (int tile = 0; tile < 34; ++tile) {
+        if (counts[tile] > 0 && flags[tile] == -1)
+            sum_required_tiles += counts[tile];
+    }
+
+    for (int tile = 0; tile < 34; ++tile) {
+        if (counts[tile] == 0 || flags[tile] != -1)
+            continue;
+
         const std::vector<double> &tumo_probs = tumo_probs_table_[counts[tile]];
-        const std::vector<double> &not_tumo_probs = not_tumo_probs_table_[cache.sum_required_tiles];
+        const std::vector<double> &not_tumo_probs = not_tumo_probs_table_[sum_required_tiles];
 
         // 手牌に加える
         add_tile(hand, tile);
@@ -288,10 +301,17 @@ ExpectedValueCalculator::draw_with_tegawari(int n_extra_tumo, int syanten, Hand 
     if (auto itr = table.find(key); itr != table.end())
         return itr->second; // キャッシュが存在する場合
 
-    // 自摸候補を取得する。
-    const DrawTilesCache &cache = get_draw_tiles(hand, syanten, counts);
+        // 自摸候補を取得する。
+#ifdef ENABLE_DRAW_TILES_CACHE
+    const std::vector<int> &flags = get_draw_tiles(hand, syanten, counts);
+#else
+    std::vector<int> flags = get_draw_tiles(hand, syanten, counts);
+#endif
 
-    for (const auto &tile : cache.hands1) {
+    for (int tile = 0; tile < 34; ++tile) {
+        if (counts[tile] == 0 || flags[tile] != -1)
+            continue;
+
         const std::vector<double> &tumo_probs = tumo_probs_table_[counts[tile]];
 
         // 手牌に加える
@@ -338,7 +358,10 @@ ExpectedValueCalculator::draw_with_tegawari(int n_extra_tumo, int syanten, Hand 
         remove_tile(hand, tile);
     }
 
-    for (const auto &tile : cache.hands2) {
+    for (int tile = 0; tile < 34; ++tile) {
+        if (counts[tile] == 0 || flags[tile] != 0)
+            continue;
+
         const std::vector<double> &tumo_probs = tumo_probs_table_[counts[tile]];
 
         // 手牌に加える
@@ -642,41 +665,50 @@ std::vector<int> ExpectedValueCalculator::get_discard_tiles(Hand &hand, int syan
  * @param[in] syanten 手牌の向聴数
  * @return 自摸牌一覧
  */
-const DrawTilesCache &ExpectedValueCalculator::get_draw_tiles(Hand &hand, int syanten,
-                                                              const std::vector<int> &counts)
+#ifdef ENABLE_DRAW_TILES_CACHE
+const std::vector<int> &ExpectedValueCalculator::get_draw_tiles(Hand &hand, int syanten,
+                                                                const std::vector<int> &counts)
 {
-    auto &table = draw_cache_[syanten];
+    auto &cache = draw_cache_[syanten];
 
-    if (auto itr = table.find(hand); itr != table.end())
+    if (auto itr = cache.find(hand); itr != cache.end())
         return itr->second; // キャッシュが存在する場合
 
-    DrawTilesCache cache;
-    cache.hands1.reserve(34);
-    cache.hands2.reserve(34);
-    cache.sum_required_tiles = 0;
+    std::vector<int> flags(34);
 
     for (int tile = 0; tile < 34; ++tile) {
-        if (counts[tile] == 0)
+        if (hand.num_tiles(tile) == 4)
             continue; // 残り牌がない場合
 
         add_tile(hand, tile);
-
         auto [_, syanten_after] = SyantenCalculator::calc(hand, syanten_type_);
-
-        if (syanten > syanten_after) {
-            cache.sum_required_tiles += counts[tile];
-            cache.hands1.push_back(tile);
-        }
-        else
-            cache.hands2.push_back(tile);
-
         remove_tile(hand, tile);
+        flags[tile] = syanten_after - syanten;
     }
 
-    auto [itr, _] = table.insert_or_assign(hand, cache);
+    auto [itr, _] = cache.insert_or_assign(hand, flags);
 
     return itr->second;
 }
+#else
+std::vector<int> ExpectedValueCalculator::get_draw_tiles(Hand &hand, int syanten,
+                                                         const std::vector<int> &counts)
+{
+    std::vector<int> flags(34);
+
+    for (int tile = 0; tile < 34; ++tile) {
+        if (hand.num_tiles(tile) == 4)
+            continue; // 残り牌がない場合
+
+        add_tile(hand, tile);
+        auto [_, syanten_after] = SyantenCalculator::calc(hand, syanten_type_);
+        remove_tile(hand, tile);
+        flags[tile] = syanten_after - syanten;
+    }
+
+    return flags;
+}
+#endif
 
 /**
  * @brief 手牌の点数を取得する。

@@ -9,7 +9,6 @@
 
 #include <chrono>
 #include <fstream>
-#include <sstream>
 
 namespace beast = boost::beast;   // from <boost/beast.hpp>
 namespace http = beast::http;     // from <boost/beast/http.hpp>
@@ -22,119 +21,6 @@ Server server;
 
 Server::Server() : pool_(3) {}
 
-rapidjson::Value Server::json_dumps(int total_count, const std::vector<std::tuple<int, int>> &tiles,
-                                    rapidjson::Document &doc)
-{
-    rapidjson::Value value(rapidjson::kArrayType);
-    for (auto [tile, count] : tiles) {
-        rapidjson::Value v(rapidjson::kObjectType);
-        v.AddMember("tile", tile, doc.GetAllocator());
-        v.AddMember("count", count, doc.GetAllocator());
-
-        value.PushBack(v, doc.GetAllocator());
-    }
-
-    return value;
-}
-
-rapidjson::Value Server::json_dumps(const Candidate &candidate, rapidjson::Document &doc)
-{
-    rapidjson::Value value(rapidjson::kObjectType);
-    value.AddMember("tile", candidate.tile, doc.GetAllocator());
-    value.AddMember("syanten_down", candidate.syanten_down, doc.GetAllocator());
-    value.AddMember("required_tiles",
-                    json_dumps(candidate.sum_required_tiles, candidate.required_tiles, doc),
-                    doc.GetAllocator());
-
-    if (!candidate.exp_values.empty()) {
-        value.AddMember("exp_values", rapidjson::kArrayType, doc.GetAllocator());
-        for (auto p : candidate.exp_values)
-            value["exp_values"].PushBack(p, doc.GetAllocator());
-    }
-
-    if (!candidate.win_probs.empty()) {
-        value.AddMember("win_probs", rapidjson::kArrayType, doc.GetAllocator());
-        for (auto p : candidate.win_probs)
-            value["win_probs"].PushBack(p, doc.GetAllocator());
-    }
-
-    if (!candidate.tenpai_probs.empty()) {
-        value.AddMember("tenpai_probs", rapidjson::kArrayType, doc.GetAllocator());
-        for (auto p : candidate.tenpai_probs)
-            value["tenpai_probs"].PushBack(p, doc.GetAllocator());
-    }
-
-    return value;
-}
-
-rapidjson::Document Server::create_response(const RequestData &req)
-{
-    ScoreCalculator score_calc;
-    ExpectedValueCalculator exp_value_calc;
-
-    rapidjson::Document doc;
-    doc.SetObject();
-
-    // 手牌の枚数を求める。
-    int n_tiles = req.hand.num_tiles() + int(req.hand.melds.size()) * 3;
-
-    if (n_tiles == 13) {
-        // 13枚の場合は有効牌を求める。
-        auto begin = std::chrono::steady_clock::now();
-
-        // 向聴数を計算する。
-        auto [syanten_type, syanten] = SyantenCalculator::calc(req.hand, req.syanten_type);
-
-        // 各牌の残り枚数を数える。
-        std::vector<int> counts =
-            ExpectedValueCalculator::count_left_tiles(req.hand, req.dora_tiles);
-
-        // 有効牌を求める。
-        auto [total_count, required_tiles] =
-            ExpectedValueCalculator::get_required_tiles(req.hand, req.syanten_type, counts);
-
-        auto end = std::chrono::steady_clock::now();
-        auto elapsed_ms =
-            std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
-
-        doc.AddMember("result_type", 0, doc.GetAllocator());
-        doc.AddMember("syanten", syanten, doc.GetAllocator());
-        doc.AddMember("time", elapsed_ms, doc.GetAllocator());
-        doc.AddMember("required_tiles", json_dumps(total_count, required_tiles, doc),
-                      doc.GetAllocator());
-    }
-    else if (n_tiles == 14) {
-        auto begin = std::chrono::steady_clock::now();
-
-        // 向聴数を計算する。
-        auto [syanten_type, syanten] = SyantenCalculator::calc(req.hand, req.syanten_type);
-
-        // 点数計算の設定
-        score_calc.set_bakaze(req.bakaze);
-        score_calc.set_zikaze(req.zikaze);
-        score_calc.set_num_tumibo(0);
-        score_calc.set_num_kyotakubo(0);
-        score_calc.set_dora_tiles(req.dora_tiles);
-
-        // 各打牌を分析する。
-        auto [success, candidates] =
-            exp_value_calc.calc(req.hand, score_calc, req.syanten_type, req.flag);
-
-        auto end = std::chrono::steady_clock::now();
-        auto elapsed_ms =
-            std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
-
-        doc.AddMember("result_type", 1, doc.GetAllocator());
-        doc.AddMember("syanten", syanten, doc.GetAllocator());
-        doc.AddMember("time", elapsed_ms, doc.GetAllocator());
-        doc.AddMember("candidates", rapidjson::kArrayType, doc.GetAllocator());
-        for (const auto &candidate : candidates)
-            doc["candidates"].PushBack(json_dumps(candidate, doc), doc.GetAllocator());
-    }
-
-    return doc;
-}
-
 /**
  * @brief JSON データを解析する。
  *
@@ -143,44 +29,18 @@ rapidjson::Document Server::create_response(const RequestData &req)
  */
 std::tuple<bool, RequestData> Server::parse_json(const rapidjson::Document &doc)
 {
-    RequestData req;
+    RequestData req = parse_request(doc);
 
-    if (doc.HasMember("ip"))
-        req.ip = doc["ip"].GetString();
-    req.zikaze = doc["zikaze"].GetInt();
-    req.bakaze = doc["bakaze"].GetInt();
-    req.turn = doc["turn"].GetInt();
-    req.syanten_type = doc["syanten_type"].GetInt();
+    std::string dora_indicators = "";
+    for (const auto &tile : req.dora_indicators)
+        dora_indicators += Tile::Name.at(tile) + (&tile != &req.dora_indicators.back() ? " " : "");
+    spdlog::get("logger")->info("IP: {}, 場風牌: {}, 自風牌: {}, 巡目: {}, 手牌の種類: {}, 手牌: "
+                                "{}, フラグ: {}, ドラ表示牌: {}",
+                                req.ip, Tile::Name.at(req.bakaze), Tile::Name.at(req.zikaze),
+                                req.turn, req.syanten_type, req.hand.to_string(), req.flag,
+                                dora_indicators);
 
-    for (auto &v : doc["dora_tiles"].GetArray())
-        req.dora_tiles.push_back(v.GetInt());
-
-    std::vector<int> hand_tiles;
-    for (auto &v : doc["hand_tiles"].GetArray())
-        hand_tiles.push_back(v.GetInt());
-
-    std::vector<MeldedBlock> melded_blocks;
-    for (auto &v : doc["melded_blocks"].GetArray()) {
-        int meld_type = v["type"].GetInt();
-        std::vector<int> tiles;
-        for (auto &v : v["tiles"].GetArray())
-            tiles.push_back(v.GetInt());
-        int discarded_tile = v["discarded_tile"].GetInt();
-        int from = v["from"].GetInt();
-        melded_blocks.emplace_back(meld_type, tiles, discarded_tile, from);
-    }
-    req.hand = Hand(hand_tiles, melded_blocks);
-    req.flag = doc["flag"].GetInt();
-
-    std::string dora_tiles = "";
-    for (const auto &tile : req.dora_tiles)
-        dora_tiles += Tile::Name.at(tile) + (&tile != &req.dora_tiles.back() ? " " : "");
-    spdlog::get("logger")->info(
-        "IP: {}, 場風牌: {}, 自風牌: {}, 巡目: {}, 手牌の種類: {}, 手牌: {}, フラグ: {}, ドラ: {}",
-        req.ip, Tile::Name.at(req.bakaze), Tile::Name.at(req.zikaze), req.turn, req.syanten_type,
-        req.hand.to_string(), req.flag, dora_tiles);
-
-    auto counts = ExpectedValueCalculator::count_left_tiles(req.hand, req.dora_tiles);
+    auto counts = ExpectedValueCalculator::count_left_tiles(req.hand, req.dora_indicators);
     for (auto x : counts) {
         if (x < 0)
             return {false, req};
@@ -189,18 +49,11 @@ std::tuple<bool, RequestData> Server::parse_json(const rapidjson::Document &doc)
     return {true, req};
 }
 
-std::string to_json_str(rapidjson::Document &doc)
-{
-    std::stringstream ss;
-    rapidjson::OStreamWrapper osw(ss);
-    rapidjson::PrettyWriter<rapidjson::OStreamWrapper> writer(osw);
-    doc.Accept(writer);
-
-    return ss.str();
-}
-
 std::string Server::process_request(const std::string &json)
 {
+    std::cout << json << std::endl;
+    std::cout << "===========================" << std::endl;
+
     rapidjson::Document doc(rapidjson::kObjectType);
 
     // リクエストデータを読み込む。
@@ -254,12 +107,12 @@ std::string Server::process_request(const std::string &json)
     }
 
     // 計算する。
-    rapidjson::Document res_doc = create_response(req);
+    rapidjson::Value res_doc = create_response(req, doc);
 
     // 出力用 JSON を作成する。
     doc.AddMember("success", true, doc.GetAllocator());
     doc.AddMember("request", req_doc.GetObject(), doc.GetAllocator());
-    doc.AddMember("response", res_doc.GetObject(), doc.GetAllocator());
+    doc.AddMember("response", res_doc, doc.GetAllocator());
 
     return to_json_str(doc);
 }

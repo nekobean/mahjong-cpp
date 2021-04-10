@@ -133,5 +133,32 @@
             32
         ],
         "melded_blocks": []
+    },
+    {
+        "zikaze": 27,
+        "bakaze": 27,
+        "turn": 1,
+        "syanten_type": 1,
+        "dora_indicators": [
+            27
+        ],
+        "flag": 3,
+        "hand_tiles": [
+            1,
+            34,
+            8,
+            9,
+            12,
+            35,
+            13,
+            14,
+            15,
+            16,
+            20,
+            20,
+            36,
+            23
+        ],
+        "melded_blocks": []
     }
 ]

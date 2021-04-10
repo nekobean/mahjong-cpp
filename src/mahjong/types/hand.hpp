@@ -35,10 +35,15 @@ class Hand
     int num_tiles() const;
     std::string to_string() const;
 
+    bool operator==(const Hand &other) const
+    {
+        return manzu == other.manzu && pinzu == other.pinzu && sozu == other.sozu &&
+               zihai == other.zihai;
+    }
+
   private:
     void convert_from_tile34(const std::vector<int> &tiles);
-    bool check_arguments(const std::vector<int> &tiles,
-                         const std::vector<MeldedBlock> &melds);
+    bool check_arguments(const std::vector<int> &tiles, const std::vector<MeldedBlock> &melds);
 
     friend std::ostream &operator<<(std::ostream &os, const Hand &hand);
 
@@ -86,13 +91,7 @@ class Hand
  * @brief 手牌を作成する。
  */
 inline Hand::Hand()
-    : manzu(0)
-    , pinzu(0)
-    , sozu(0)
-    , zihai(0)
-    , aka_manzu5(false)
-    , aka_pinzu5(false)
-    , aka_sozu5(false)
+    : manzu(0), pinzu(0), sozu(0), zihai(0), aka_manzu5(false), aka_pinzu5(false), aka_sozu5(false)
 {
 }
 

@@ -5,7 +5,7 @@
         "bakaze",
         "turn",
         "syanten_type",
-        "dora_tiles",
+        "dora_indicators",
         "flag",
         "hand_tiles",
         "melded_blocks"
@@ -46,7 +46,7 @@
                 4
             ]
         },
-        "dora_tiles": {
+        "dora_indicators": {
             "type": "array",
             "items": {
                 "type": "integer",
