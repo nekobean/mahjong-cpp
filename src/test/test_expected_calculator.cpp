@@ -95,18 +95,18 @@ TEST_CASE("期待値計算")
     std::vector<RequestData> req_data_list;
     if (!load_input_data(req_data_list))
         return;
+    //write_output_data(req_data_list);
 
     std::vector<DiscardResponseData> res_data_list;
     if (!load_output_data(res_data_list))
         return;
-
-    //write_output_data(req_data_list);
 
     for (size_t i = 0; i < req_data_list.size(); ++i) {
         DiscardResponseData actual = create_discard_response(req_data_list[i]);
         const DiscardResponseData &expected = res_data_list[i];
 
         REQUIRE(actual.syanten == expected.syanten);
+        std::cout << double(expected.time_us) / double(actual.time_us) << std::endl;
         REQUIRE(double(expected.time_us) / double(actual.time_us) < 1.1);
 
         for (size_t i = 0; i < actual.candidates.size(); ++i)
