@@ -202,7 +202,8 @@ class ExpectedValueCalculator
 
     static std::tuple<int, std::vector<std::tuple<int, int>>>
     get_required_tiles(const Hand &hand, int syanten_type, const std::vector<int> &counts);
-    static std::vector<int> count_left_tiles(const Hand &hand, const std::vector<int> &dora_tiles);
+    static std::vector<int> count_left_tiles(const Hand &hand,
+                                             const std::vector<int> &dora_indicators);
 
   private:
     void create_prob_table(int n_left_tiles);

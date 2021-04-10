@@ -144,7 +144,7 @@ ExpectedValueCalculator::calc(const Hand &hand, const ScoreCalculator &score,
 
     // 残り牌の枚数を数える。
     std::vector<int> counts = count_left_tiles(hand, dora_indicators_);
-    int sum_left_tiles = std::accumulate(counts.begin(), counts.end(), 0);
+    int sum_left_tiles = std::accumulate(counts.begin(), counts.begin() + 34, 0);
 
     // 自摸確率のテーブルを作成する。
     create_prob_table(sum_left_tiles);
@@ -555,20 +555,33 @@ std::vector<Candidate> ExpectedValueCalculator::analyze(int syanten, const Hand 
 std::vector<int> ExpectedValueCalculator::count_left_tiles(const Hand &hand,
                                                            const std::vector<int> &dora_indicators)
 {
-    std::vector<int> counts(34, 4);
+    std::vector<int> counts(37, 4);
+    counts[Tile::AkaManzu5] = counts[Tile::AkaPinzu5] = counts[Tile::AkaSozu5] = 1;
 
+    // 手牌を除く。
     for (int i = 0; i < 34; ++i)
         counts[i] -= hand.num_tiles(i);
+    counts[Tile::AkaManzu5] -= hand.aka_manzu5;
+    counts[Tile::AkaPinzu5] -= hand.aka_pinzu5;
+    counts[Tile::AkaSozu5] -= hand.aka_sozu5;
 
+    // 副露ブロックを除く。
     for (const auto &block : hand.melds) {
         for (auto tile : block.tiles) {
-            tile = aka2normal(tile);
-            counts[tile]--;
+            counts[aka2normal(tile)]--;
+            counts[Tile::AkaManzu5] -= tile == Tile::AkaManzu5;
+            counts[Tile::AkaPinzu5] -= tile == Tile::AkaPinzu5;
+            counts[Tile::AkaSozu5] -= tile == Tile::AkaSozu5;
         }
     }
 
-    for (auto tile : dora_indicators)
-        counts[tile]--;
+    // ドラ表示牌を除く。
+    for (auto tile : dora_indicators) {
+        counts[aka2normal(tile)]--;
+        counts[Tile::AkaManzu5] -= tile == Tile::AkaManzu5;
+        counts[Tile::AkaPinzu5] -= tile == Tile::AkaPinzu5;
+        counts[Tile::AkaSozu5] -= tile == Tile::AkaSozu5;
+    }
 
     return counts;
 }

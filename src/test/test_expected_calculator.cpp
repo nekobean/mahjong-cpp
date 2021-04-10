@@ -90,7 +90,7 @@ void test_candidate(const Candidate &expected, const Candidate &actual)
     REQUIRE(expected.syanten_down == actual.syanten_down);
 }
 
-TEST_CASE("Expected Calculation")
+TEST_CASE("期待値計算")
 {
     std::vector<RequestData> req_data_list;
     if (!load_input_data(req_data_list))
@@ -111,5 +111,194 @@ TEST_CASE("Expected Calculation")
 
         for (size_t i = 0; i < actual.candidates.size(); ++i)
             test_candidate(expected.candidates[i], actual.candidates[i]);
+    }
+}
+
+TEST_CASE("Count Left Tiles")
+{
+    SECTION("赤ドラなし")
+    {
+        Hand hand({Tile::Manzu1, Tile::Manzu2, Tile::Manzu3, Tile::Manzu3, Tile::Manzu4,
+                   Tile::Manzu9, Tile::Pinzu3, Tile::Pinzu6, Tile::Pinzu8, Tile::Pinzu8,
+                   Tile::Sozu1, Tile::Sozu2, Tile::Sozu4, Tile::Sozu5});
+        std::vector<int> dora_indicators = {Tile::Ton};
+
+        std::vector<int> actual = ExpectedValueCalculator::count_left_tiles(hand, dora_indicators);
+        std::vector<int> expected = {3, 3, 2, 3, 4, 4, 4, 4, 3, // 萬子
+                                     4, 4, 3, 4, 4, 3, 4, 2, 4, // 筒子
+                                     3, 3, 4, 3, 3, 4, 4, 4, 4, // 索子
+                                     3, 4, 4, 4, 4, 4, 4,       // 字牌
+                                     1, 1, 1};
+
+        for (size_t i = 0; i < 37; ++i)
+            REQUIRE(actual[i] == expected[i]);
+    }
+
+    SECTION("赤五萬が手牌にある")
+    {
+        Hand hand({Tile::Manzu1, Tile::Manzu2, Tile::Manzu3, Tile::Manzu3, Tile::AkaManzu5,
+                   Tile::Manzu9, Tile::Pinzu3, Tile::Pinzu6, Tile::Pinzu8, Tile::Pinzu8,
+                   Tile::Sozu1, Tile::Sozu2, Tile::Sozu4, Tile::Sozu5});
+        std::vector<int> dora_indicators = {Tile::Ton};
+
+        std::vector<int> actual = ExpectedValueCalculator::count_left_tiles(hand, dora_indicators);
+        std::vector<int> expected = {3, 3, 2, 4, 3, 4, 4, 4, 3, // 萬子
+                                     4, 4, 3, 4, 4, 3, 4, 2, 4, // 筒子
+                                     3, 3, 4, 3, 3, 4, 4, 4, 4, // 索子
+                                     3, 4, 4, 4, 4, 4, 4,       // 字牌
+                                     0, 1, 1};
+
+        for (size_t i = 0; i < 37; ++i)
+            REQUIRE(actual[i] == expected[i]);
+    }
+
+    SECTION("赤五筒が手牌にある")
+    {
+        Hand hand({Tile::Manzu1, Tile::Manzu2, Tile::Manzu3, Tile::Manzu3, Tile::Manzu4,
+                   Tile::Manzu9, Tile::Pinzu3, Tile::AkaPinzu5, Tile::Pinzu8, Tile::Pinzu8,
+                   Tile::Sozu1, Tile::Sozu2, Tile::Sozu4, Tile::Sozu5});
+        std::vector<int> dora_indicators = {Tile::Ton};
+
+        std::vector<int> actual = ExpectedValueCalculator::count_left_tiles(hand, dora_indicators);
+        std::vector<int> expected = {3, 3, 2, 3, 4, 4, 4, 4, 3, // 萬子
+                                     4, 4, 3, 4, 3, 4, 4, 2, 4, // 筒子
+                                     3, 3, 4, 3, 3, 4, 4, 4, 4, // 索子
+                                     3, 4, 4, 4, 4, 4, 4,       // 字牌
+                                     1, 0, 1};
+
+        for (size_t i = 0; i < 37; ++i)
+            REQUIRE(actual[i] == expected[i]);
+    }
+
+    SECTION("赤五索が手牌にある")
+    {
+        Hand hand({Tile::Manzu1, Tile::Manzu2, Tile::Manzu3, Tile::Manzu3, Tile::Manzu4,
+                   Tile::Manzu9, Tile::Pinzu3, Tile::Pinzu6, Tile::Pinzu8, Tile::Pinzu8,
+                   Tile::Sozu1, Tile::Sozu2, Tile::Sozu4, Tile::AkaSozu5});
+        std::vector<int> dora_indicators = {Tile::Ton};
+
+        std::vector<int> actual = ExpectedValueCalculator::count_left_tiles(hand, dora_indicators);
+        std::vector<int> expected = {3, 3, 2, 3, 4, 4, 4, 4, 3, // 萬子
+                                     4, 4, 3, 4, 4, 3, 4, 2, 4, // 筒子
+                                     3, 3, 4, 3, 3, 4, 4, 4, 4, // 索子
+                                     3, 4, 4, 4, 4, 4, 4,       // 字牌
+                                     1, 1, 0};
+
+        for (size_t i = 0; i < 37; ++i)
+            REQUIRE(actual[i] == expected[i]);
+    }
+
+    SECTION("赤五萬が副露ブロックにある")
+    {
+        MeldedBlock meld(
+            {MeldType::Ankan, {Tile::AkaManzu5, Tile::Manzu5, Tile::Manzu5, Tile::Manzu5}});
+        Hand hand({Tile::Manzu3, Tile::Manzu4, Tile::Manzu9, Tile::Pinzu3, Tile::Pinzu6,
+                   Tile::Pinzu8, Tile::Pinzu8, Tile::Sozu1, Tile::Sozu2, Tile::Sozu4, Tile::Sozu5},
+                  {meld});
+        std::vector<int> dora_indicators = {Tile::Ton};
+
+        std::vector<int> actual = ExpectedValueCalculator::count_left_tiles(hand, dora_indicators);
+        std::vector<int> expected = {4, 4, 3, 3, 0, 4, 4, 4, 3, // 萬子
+                                     4, 4, 3, 4, 4, 3, 4, 2, 4, // 筒子
+                                     3, 3, 4, 3, 3, 4, 4, 4, 4, // 索子
+                                     3, 4, 4, 4, 4, 4, 4,       // 字牌
+                                     0, 1, 1};
+
+        for (size_t i = 0; i < 37; ++i)
+            REQUIRE(actual[i] == expected[i]);
+    }
+
+    SECTION("赤五筒が副露ブロックにある")
+    {
+        MeldedBlock meld(
+            {MeldType::Ankan, {Tile::AkaPinzu5, Tile::Pinzu5, Tile::Pinzu5, Tile::Pinzu5}});
+        Hand hand({Tile::Manzu3, Tile::Manzu4, Tile::Manzu9, Tile::Pinzu3, Tile::Pinzu6,
+                   Tile::Pinzu8, Tile::Pinzu8, Tile::Sozu1, Tile::Sozu2, Tile::Sozu4, Tile::Sozu4},
+                  {meld});
+        std::vector<int> dora_indicators = {Tile::Ton};
+
+        std::vector<int> actual = ExpectedValueCalculator::count_left_tiles(hand, dora_indicators);
+        std::vector<int> expected = {4, 4, 3, 3, 4, 4, 4, 4, 3, // 萬子
+                                     4, 4, 3, 4, 0, 3, 4, 2, 4, // 筒子
+                                     3, 3, 4, 2, 4, 4, 4, 4, 4, // 索子
+                                     3, 4, 4, 4, 4, 4, 4,       // 字牌
+                                     1, 0, 1};
+
+        for (size_t i = 0; i < 37; ++i)
+            REQUIRE(actual[i] == expected[i]);
+    }
+
+    SECTION("赤五索が副露ブロックにある")
+    {
+        MeldedBlock meld(
+            {MeldType::Ankan, {Tile::AkaSozu5, Tile::Sozu5, Tile::Sozu5, Tile::Sozu5}});
+        Hand hand({Tile::Manzu3, Tile::Manzu4, Tile::Manzu9, Tile::Pinzu3, Tile::Pinzu6,
+                   Tile::Pinzu8, Tile::Pinzu8, Tile::Sozu1, Tile::Sozu2, Tile::Sozu4, Tile::Sozu4},
+                  {meld});
+        std::vector<int> dora_indicators = {Tile::Ton};
+
+        std::vector<int> actual = ExpectedValueCalculator::count_left_tiles(hand, dora_indicators);
+        std::vector<int> expected = {4, 4, 3, 3, 4, 4, 4, 4, 3, // 萬子
+                                     4, 4, 3, 4, 4, 3, 4, 2, 4, // 筒子
+                                     3, 3, 4, 2, 0, 4, 4, 4, 4, // 索子
+                                     3, 4, 4, 4, 4, 4, 4,       // 字牌
+                                     1, 1, 0};
+
+        for (size_t i = 0; i < 37; ++i)
+            REQUIRE(actual[i] == expected[i]);
+    }
+
+    SECTION("赤五萬がドラ表示牌にある")
+    {
+        Hand hand({Tile::Manzu1, Tile::Manzu2, Tile::Manzu3, Tile::Manzu3, Tile::Manzu4,
+                   Tile::Manzu9, Tile::Pinzu3, Tile::Pinzu6, Tile::Pinzu8, Tile::Pinzu8,
+                   Tile::Sozu1, Tile::Sozu2, Tile::Sozu4, Tile::Sozu5});
+        std::vector<int> dora_indicators = {Tile::Ton, Tile::AkaManzu5};
+
+        std::vector<int> actual = ExpectedValueCalculator::count_left_tiles(hand, dora_indicators);
+        std::vector<int> expected = {3, 3, 2, 3, 3, 4, 4, 4, 3, // 萬子
+                                     4, 4, 3, 4, 4, 3, 4, 2, 4, // 筒子
+                                     3, 3, 4, 3, 3, 4, 4, 4, 4, // 索子
+                                     3, 4, 4, 4, 4, 4, 4,       // 字牌
+                                     0, 1, 1};
+
+        for (size_t i = 0; i < 37; ++i)
+            REQUIRE(actual[i] == expected[i]);
+    }
+
+    SECTION("赤五筒がドラ表示牌にある")
+    {
+        Hand hand({Tile::Manzu1, Tile::Manzu2, Tile::Manzu3, Tile::Manzu3, Tile::Manzu4,
+                   Tile::Manzu9, Tile::Pinzu3, Tile::Pinzu6, Tile::Pinzu8, Tile::Pinzu8,
+                   Tile::Sozu1, Tile::Sozu2, Tile::Sozu4, Tile::Sozu5});
+        std::vector<int> dora_indicators = {Tile::Ton, Tile::AkaPinzu5};
+
+        std::vector<int> actual = ExpectedValueCalculator::count_left_tiles(hand, dora_indicators);
+        std::vector<int> expected = {3, 3, 2, 3, 4, 4, 4, 4, 3, // 萬子
+                                     4, 4, 3, 4, 3, 3, 4, 2, 4, // 筒子
+                                     3, 3, 4, 3, 3, 4, 4, 4, 4, // 索子
+                                     3, 4, 4, 4, 4, 4, 4,       // 字牌
+                                     1, 0, 1};
+
+        for (size_t i = 0; i < 37; ++i)
+            REQUIRE(actual[i] == expected[i]);
+    }
+
+    SECTION("赤五索がドラ表示牌にある")
+    {
+        Hand hand({Tile::Manzu1, Tile::Manzu2, Tile::Manzu3, Tile::Manzu3, Tile::Manzu4,
+                   Tile::Manzu9, Tile::Pinzu3, Tile::Pinzu6, Tile::Pinzu8, Tile::Pinzu8,
+                   Tile::Sozu1, Tile::Sozu2, Tile::Sozu4, Tile::Sozu5});
+        std::vector<int> dora_indicators = {Tile::Ton, Tile::AkaSozu5};
+
+        std::vector<int> actual = ExpectedValueCalculator::count_left_tiles(hand, dora_indicators);
+        std::vector<int> expected = {3, 3, 2, 3, 4, 4, 4, 4, 3, // 萬子
+                                     4, 4, 3, 4, 4, 3, 4, 2, 4, // 筒子
+                                     3, 3, 4, 3, 2, 4, 4, 4, 4, // 索子
+                                     3, 4, 4, 4, 4, 4, 4,       // 字牌
+                                     1, 1, 0};
+
+        for (size_t i = 0; i < 37; ++i)
+            REQUIRE(actual[i] == expected[i]);
     }
 }
