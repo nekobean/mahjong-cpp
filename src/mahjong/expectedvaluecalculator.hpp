@@ -197,6 +197,7 @@ class ExpectedValueCalculator
     static bool make_uradora_table();
 
     std::tuple<bool, std::vector<Candidate>> calc(const Hand &hand, const ScoreCalculator &score,
+                                                  const std::vector<int> &dora_indicators,
                                                   int syanten_type, int flag = 0);
 
     static std::tuple<int, std::vector<std::tuple<int, int>>>
@@ -228,6 +229,9 @@ class ExpectedValueCalculator
 
     /* 点数計算機 */
     ScoreCalculator score_;
+
+    /* ドラ表示牌 */
+    std::vector<int> dora_indicators_;
 
     /* 向聴落とし考慮 */
     bool calc_syanten_down_;

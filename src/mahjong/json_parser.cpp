@@ -40,8 +40,8 @@ RequestData parse_request(const rapidjson::Value &doc)
     req.turn = doc["turn"].GetInt();
     req.syanten_type = doc["syanten_type"].GetInt();
 
-    for (auto &x : doc["dora_tiles"].GetArray())
-        req.dora_tiles.push_back(x.GetInt());
+    for (auto &x : doc["dora_indicators"].GetArray())
+        req.dora_indicators.push_back(x.GetInt());
 
     req.flag = doc["flag"].GetInt();
 
@@ -163,7 +163,8 @@ DrawResponseData create_draw_response(const RequestData &req)
     auto [syanten_type, syanten] = SyantenCalculator::calc(req.hand, req.syanten_type);
 
     // 各牌の残り枚数を数える。
-    std::vector<int> counts = ExpectedValueCalculator::count_left_tiles(req.hand, req.dora_tiles);
+    std::vector<int> counts =
+        ExpectedValueCalculator::count_left_tiles(req.hand, req.dora_indicators);
 
     // 有効牌を求める。
     auto [total_count, required_tiles] =
@@ -195,11 +196,11 @@ DiscardResponseData create_discard_response(const RequestData &req)
     score_calc.set_zikaze(req.zikaze);
     score_calc.set_num_tumibo(0);
     score_calc.set_num_kyotakubo(0);
-    score_calc.set_dora_tiles(req.dora_tiles);
+    score_calc.set_dora_indicators(req.dora_indicators);
 
     // 各打牌を分析する。
     auto [success, candidates] =
-        exp_value_calc.calc(req.hand, score_calc, req.syanten_type, req.flag);
+        exp_value_calc.calc(req.hand, score_calc, req.dora_indicators, req.syanten_type, req.flag);
 
     auto end = std::chrono::steady_clock::now();
     auto elapsed_us = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();

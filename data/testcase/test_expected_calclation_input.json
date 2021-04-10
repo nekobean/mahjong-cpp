@@ -4,8 +4,8 @@
         "bakaze": 27,
         "turn": 1,
         "syanten_type": 1,
-        "dora_tiles": [
-            28
+        "dora_indicators": [
+            27
         ],
         "flag": 3,
         "hand_tiles": [
@@ -31,8 +31,8 @@
         "bakaze": 27,
         "turn": 1,
         "syanten_type": 1,
-        "dora_tiles": [
-            28
+        "dora_indicators": [
+            27
         ],
         "flag": 3,
         "hand_tiles": [
@@ -58,8 +58,8 @@
         "bakaze": 27,
         "turn": 1,
         "syanten_type": 1,
-        "dora_tiles": [
-            28
+        "dora_indicators": [
+            27
         ],
         "flag": 3,
         "hand_tiles": [
@@ -85,8 +85,8 @@
         "bakaze": 27,
         "turn": 1,
         "syanten_type": 1,
-        "dora_tiles": [
-            28
+        "dora_indicators": [
+            27
         ],
         "flag": 3,
         "hand_tiles": [

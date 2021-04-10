@@ -117,9 +117,9 @@ void ExpectedValueCalculator::clear_cache()
  * @param[in] n_extra_tumo 交換枚数 (手変わりまたは向聴戻しを行える回数)
  * @return 各打牌の情報
  */
-std::tuple<bool, std::vector<Candidate>> ExpectedValueCalculator::calc(const Hand &hand,
-                                                                       const ScoreCalculator &score,
-                                                                       int syanten_type, int flag)
+std::tuple<bool, std::vector<Candidate>>
+ExpectedValueCalculator::calc(const Hand &hand, const ScoreCalculator &score,
+                              const std::vector<int> &dora_indicators, int syanten_type, int flag)
 {
     score_ = score;
     syanten_type_ = syanten_type;
@@ -130,6 +130,7 @@ std::tuple<bool, std::vector<Candidate>> ExpectedValueCalculator::calc(const Han
     calc_haitei_ = flag & CalcHaiteitumo;
     calc_uradora_ = flag & CalcUradora;
     maximize_win_prob_ = flag & MaximaizeWinProb;
+    dora_indicators_ = dora_indicators;
 
     // 手牌の枚数を数える。
     int n_tiles = hand.num_tiles() + int(hand.melds.size()) * 3;
@@ -142,7 +143,7 @@ std::tuple<bool, std::vector<Candidate>> ExpectedValueCalculator::calc(const Han
         return {false, {}}; // 手牌が和了形または4向聴以上
 
     // 残り牌の枚数を数える。
-    std::vector<int> counts = count_left_tiles(hand, score_.dora_tiles());
+    std::vector<int> counts = count_left_tiles(hand, dora_indicators_);
     int sum_left_tiles = std::accumulate(counts.begin(), counts.end(), 0);
 
     // 自摸確率のテーブルを作成する。
@@ -460,7 +461,7 @@ std::vector<Candidate> ExpectedValueCalculator::analyze(int n_extra_tumo, int sy
     Hand hand = _hand;
 
     // 各牌の残り枚数を数える。
-    std::vector<int> counts = count_left_tiles(hand, score_.dora_tiles());
+    std::vector<int> counts = count_left_tiles(hand, dora_indicators_);
 
     // 打牌候補を取得する。
     const std::vector<int> &flags = get_discard_tiles(hand, syanten);
@@ -527,7 +528,7 @@ std::vector<Candidate> ExpectedValueCalculator::analyze(int syanten, const Hand 
     Hand hand = _hand;
 
     // 各牌の残り枚数を数える。
-    std::vector<int> counts = count_left_tiles(hand, score_.dora_tiles());
+    std::vector<int> counts = count_left_tiles(hand, dora_indicators_);
 
     std::vector<int> tiles = UnnecessaryTileSelector::select(hand, syanten_type_);
 
@@ -548,11 +549,11 @@ std::vector<Candidate> ExpectedValueCalculator::analyze(int syanten, const Hand 
  * @brief 各牌の残り枚数を数える。
  *
  * @param[in] hand 手牌
- * @param[in] dora_tiles ドラ牌の一覧
+ * @param[in] dora_indicators ドラ牌の一覧
  * @return std::vector<int> 各牌の残り枚数
  */
 std::vector<int> ExpectedValueCalculator::count_left_tiles(const Hand &hand,
-                                                           const std::vector<int> &dora_tiles)
+                                                           const std::vector<int> &dora_indicators)
 {
     std::vector<int> counts(34, 4);
 
@@ -566,8 +567,8 @@ std::vector<int> ExpectedValueCalculator::count_left_tiles(const Hand &hand,
         }
     }
 
-    for (auto tile : dora_tiles)
-        counts[Dora2Indicator.at(tile)]--;
+    for (auto tile : dora_indicators)
+        counts[tile]--;
 
     return counts;
 }
@@ -666,7 +667,7 @@ const ScoreCache &ExpectedValueCalculator::get_score(const Hand &hand, int win_t
     Result result = score_.calc(hand, win_tile, hand_flag);
 
     // 表ドラの数
-    int n_dora = int(score_.dora_tiles().size());
+    int n_dora = int(dora_indicators_.size());
 
     // ダブル立直、一発、海底撈月で最大3翻まで増加するので、
     // ベースとなる点数、+1翻の点数、+2翻の点数、+3翻の点数も計算しておく。
