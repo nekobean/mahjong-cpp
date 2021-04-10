@@ -139,17 +139,6 @@ inline bool operator<(const ScoreKey &lhs, const ScoreKey &rhs)
                                                            rhs.win_tile);
 }
 
-#define ENABLE_DISCARD_TILES_CACHE
-#define ENABLE_DRAW_TILES_CACHE
-
-struct hand_hash
-{
-    std::size_t operator()(const Hand &hand) const
-    {
-        return boost::hash_value(std::make_tuple(hand.manzu, hand.pinzu, hand.sozu, hand.zihai));
-    }
-};
-
 class ExpectedValueCalculator
 {
 
@@ -231,17 +220,8 @@ class ExpectedValueCalculator
     std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
     draw_with_tegawari(int n_extra_tumo, int syanten, Hand &hand, std::vector<int> &counts);
 
-#ifdef ENABLE_DRAW_TILES_CACHE
-    const std::vector<int> &get_draw_tiles(Hand &hand, int syanten, const std::vector<int> &counts);
-#else
     std::vector<int> get_draw_tiles(Hand &hand, int syanten, const std::vector<int> &counts);
-#endif
-
-#ifdef ENABLE_DISCARD_TILES_CACHE
-    const std::vector<int> &get_discard_tiles(Hand &hand, int syanten);
-#else
     std::vector<int> get_discard_tiles(Hand &hand, int syanten);
-#endif
 
     const ScoreCache &get_score(const Hand &hand, int win_tile, const std::vector<int> &counts);
 
@@ -286,8 +266,6 @@ class ExpectedValueCalculator
     static std::vector<std::vector<double>> uradora_prob_;
 
     /* キャッシュ */
-    std::vector<std::unordered_map<Hand, std::vector<int>, hand_hash>> discard_cache_;
-    std::vector<std::unordered_map<Hand, std::vector<int>, hand_hash>> draw_cache_;
     std::vector<std::map<CacheKey, CacheValue>> discard_node_cache_;
     std::vector<std::map<CacheKey, CacheValue>> draw_node_cache_;
     std::map<ScoreKey, ScoreCache> score_cache_;

@@ -35,12 +35,6 @@ class Hand
     int num_tiles() const;
     std::string to_string() const;
 
-    bool operator==(const Hand &other) const
-    {
-        return manzu == other.manzu && pinzu == other.pinzu && sozu == other.sozu &&
-               zihai == other.zihai;
-    }
-
   private:
     void convert_from_tile34(const std::vector<int> &tiles);
     bool check_arguments(const std::vector<int> &tiles, const std::vector<MeldedBlock> &melds);
