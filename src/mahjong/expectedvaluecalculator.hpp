@@ -10,21 +10,15 @@ namespace mahjong
 class Candidate
 {
   public:
-    Candidate(int tile, int sum_required_tiles,
-              const std::vector<std::tuple<int, int>> &required_tiles)
-        : tile(tile)
-        , sum_required_tiles(sum_required_tiles)
-        , required_tiles(required_tiles)
-        , syanten_down(false)
+    Candidate(int tile, const std::vector<std::tuple<int, int>> &required_tiles)
+        : tile(tile), required_tiles(required_tiles), syanten_down(false)
     {
     }
 
-    Candidate(int tile, int sum_required_tiles,
-              const std::vector<std::tuple<int, int>> &required_tiles,
+    Candidate(int tile, const std::vector<std::tuple<int, int>> &required_tiles,
               std::vector<double> tenpai_probs, std::vector<double> win_probs,
               std::vector<double> exp_values, bool syanten_down)
         : tile(tile)
-        , sum_required_tiles(sum_required_tiles)
         , required_tiles(required_tiles)
         , tenpai_probs(tenpai_probs)
         , win_probs(win_probs)
@@ -47,9 +41,6 @@ class Candidate
 
     /*! 有効牌及び枚数の一覧 */
     std::vector<std::tuple<int, int>> required_tiles;
-
-    /*! 有効牌の合計枚数 */
-    int sum_required_tiles;
 
     /*! 向聴戻しになるかどうか */
     bool syanten_down;
@@ -271,8 +262,8 @@ class ExpectedValueCalculator
     /* キャッシュ */
     std::vector<std::map<Hand, std::vector<int>>> discard_cache_;
     std::vector<std::map<Hand, DrawTilesCache>> draw_cache_;
-    std::vector<std::map<CacheKey, CacheValue>> discard_cache2_;
-    std::vector<std::map<CacheKey, CacheValue>> draw_cache2_;
+    std::vector<std::map<CacheKey, CacheValue>> discard_node_cache_;
+    std::vector<std::map<CacheKey, CacheValue>> draw_node_cache_;
     std::map<ScoreKey, ScoreCache> score_cache_;
 };
 
