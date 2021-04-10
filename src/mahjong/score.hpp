@@ -34,9 +34,9 @@ class ScoreCalculator
     ScoreCalculator();
 
     Result calc(const Hand &hand, int win_tile, int flag = HandFlag::Null) const;
-    std::vector<std::tuple<std::string, int>>
-    calc_fu_detail(const std::vector<Block> &blocks, int wait_type, bool is_menzen,
-                   bool is_tumo) const;
+    std::vector<std::tuple<std::string, int>> calc_fu_detail(const std::vector<Block> &blocks,
+                                                             int wait_type, bool is_menzen,
+                                                             bool is_tumo) const;
     std::vector<int> get_scores_for_exp(const Result &result);
 
     /* パラメータを設定・取得する関数 */
@@ -45,6 +45,7 @@ class ScoreCalculator
     int rules() const;
 
     void set_dora_tiles(const std::vector<int> &tiles);
+    void set_dora_indicators(const std::vector<int> &tiles);
     const std::vector<int> &dora_tiles() const;
 
     void set_uradora_tiles(const std::vector<int> &tiles);
@@ -65,22 +66,18 @@ class ScoreCalculator
   public:
     std::tuple<bool, std::string> check_arguments(const Hand &hand, int win_tile,
                                                   int yaku_list) const;
-    YakuList check_yakuman(const Hand &hand, int win_tile, int flag,
-                           int syanten_type) const;
+    YakuList check_yakuman(const Hand &hand, int win_tile, int flag, int syanten_type) const;
     YakuList check_not_pattern_yaku(const Hand &hand, int win_tile, int flag,
                                     int syanten_type) const;
     std::tuple<YakuList, int, std::vector<Block>, int>
-    check_pattern_yaku(const Hand &hand, int win_tile, int flag,
-                       int syanten_type) const;
+    check_pattern_yaku(const Hand &hand, int win_tile, int flag, int syanten_type) const;
     Hand merge_hand(const Hand &hand) const;
-    int calc_fu(const std::vector<Block> &blocks, int wait_type, bool is_menzen,
-                bool is_tumo, bool is_pinhu) const;
-    std::vector<int> calc_score(bool is_tumo, int score_type, int han = 0,
-                                int fu = 0) const;
-    Result aggregate(const Hand &hand, int win_tile, int flag,
-                     YakuList yaku_list) const;
-    Result aggregate(const Hand &hand, int win_tile, int flag, YakuList yaku_list,
-                     int fu, const std::vector<Block> &blocks, int wait_type) const;
+    int calc_fu(const std::vector<Block> &blocks, int wait_type, bool is_menzen, bool is_tumo,
+                bool is_pinhu) const;
+    std::vector<int> calc_score(bool is_tumo, int score_type, int han = 0, int fu = 0) const;
+    Result aggregate(const Hand &hand, int win_tile, int flag, YakuList yaku_list) const;
+    Result aggregate(const Hand &hand, int win_tile, int flag, YakuList yaku_list, int fu,
+                     const std::vector<Block> &blocks, int wait_type) const;
 
     // 役満をチェックする関数
     bool check_ryuiso(const Hand &hand) const;
