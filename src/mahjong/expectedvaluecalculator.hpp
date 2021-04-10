@@ -139,6 +139,8 @@ inline bool operator<(const ScoreKey &lhs, const ScoreKey &rhs)
                                                            rhs.win_tile);
 }
 
+#define ENABLE_DISCARD_TILES_CACHE
+
 class ExpectedValueCalculator
 {
 
@@ -200,8 +202,8 @@ class ExpectedValueCalculator
                                                   const std::vector<int> &dora_indicators,
                                                   int syanten_type, int flag = 0);
 
-    static std::tuple<int, std::vector<std::tuple<int, int>>>
-    get_required_tiles(const Hand &hand, int syanten_type, const std::vector<int> &counts);
+    static std::vector<std::tuple<int, int>> get_required_tiles(const Hand &hand, int syanten_type,
+                                                                const std::vector<int> &counts);
     static std::vector<int> count_left_tiles(const Hand &hand,
                                              const std::vector<int> &dora_indicators);
 
@@ -221,7 +223,12 @@ class ExpectedValueCalculator
     draw_with_tegawari(int n_extra_tumo, int syanten, Hand &hand, std::vector<int> &counts);
 
     const DrawTilesCache &get_draw_tiles(Hand &hand, int syanten, const std::vector<int> &counts);
+
+#ifdef ENABLE_DISCARD_TILES_CACHE
     const std::vector<int> &get_discard_tiles(Hand &hand, int syanten);
+#else
+    std::vector<int> get_discard_tiles(Hand &hand, int syanten);
+#endif
     const ScoreCache &get_score(const Hand &hand, int win_tile, const std::vector<int> &counts);
 
   private:

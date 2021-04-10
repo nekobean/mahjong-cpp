@@ -95,11 +95,11 @@ void ExpectedValueCalculator::create_prob_table(int n_left_tiles)
 void ExpectedValueCalculator::clear_cache()
 {
     // デバッグ用
-    // spdlog::info("点数: {}", score_cache_.size());
-    // for (size_t i = 0; i < 5; ++i)
-    //     spdlog::info("向聴数{} 打牌候補: {}, 自摸候補: {} 打牌: {}, 自摸: {}", i,
-    //                  discard_cache_[i].size(), draw_cache_[i].size(), discard_node_cache_[i].size(),
-    //                  draw_node_cache_[i].size());
+    spdlog::info("点数: {}", score_cache_.size());
+    for (size_t i = 0; i < 5; ++i)
+        spdlog::info("向聴数{} 打牌候補: {}, 自摸候補: {} 打牌: {}, 自摸: {}", i,
+                     discard_cache_[i].size(), draw_cache_[i].size(), discard_node_cache_[i].size(),
+                     draw_node_cache_[i].size());
 
     std::for_each(discard_cache_.begin(), discard_cache_.end(), [](auto &x) { x.clear(); });
     std::for_each(draw_cache_.begin(), draw_cache_.end(), [](auto &x) { x.clear(); });
@@ -169,7 +169,7 @@ ExpectedValueCalculator::calc(const Hand &hand, const ScoreCalculator &score,
  * @param[in] counts 各牌の残り枚数
  * @return (有効牌の合計枚数, 有効牌の一覧)
  */
-std::tuple<int, std::vector<std::tuple<int, int>>>
+std::vector<std::tuple<int, int>>
 ExpectedValueCalculator::get_required_tiles(const Hand &hand, int syanten_type,
                                             const std::vector<int> &counts)
 {
@@ -177,13 +177,10 @@ ExpectedValueCalculator::get_required_tiles(const Hand &hand, int syanten_type,
     std::vector<int> tiles = RequiredTileSelector::select(hand, syanten_type);
 
     std::vector<std::tuple<int, int>> required_tiles;
-    int sum_required_tiles = 0;
-    for (auto tile : tiles) {
+    for (auto tile : tiles)
         required_tiles.emplace_back(tile, counts[tile]);
-        sum_required_tiles += counts[tile];
-    }
 
-    return {sum_required_tiles, required_tiles};
+    return required_tiles;
 }
 
 /**
@@ -404,8 +401,12 @@ ExpectedValueCalculator::discard(int n_extra_tumo, int syanten, Hand &hand,
     if (auto itr = table.find(key); itr != table.end())
         return itr->second; // キャッシュが存在する場合
 
-    // 打牌候補を取得する。
+        // 打牌候補を取得する。
+#ifdef ENABLE_DISCARD_TILES_CACHE
     const std::vector<int> &flags = get_discard_tiles(hand, syanten);
+#else
+    const std::vector<int> flags = get_discard_tiles(hand, syanten);
+#endif
 
     // 期待値が最大となる打牌を選択する。
     std::vector<double> max_tenpai_probs, max_win_probs, max_exp_values;
@@ -464,7 +465,11 @@ std::vector<Candidate> ExpectedValueCalculator::analyze(int n_extra_tumo, int sy
     std::vector<int> counts = count_left_tiles(hand, dora_indicators_);
 
     // 打牌候補を取得する。
+#ifdef ENABLE_DISCARD_TILES_CACHE
     const std::vector<int> &flags = get_discard_tiles(hand, syanten);
+#else
+    const std::vector<int> flags = get_discard_tiles(hand, syanten);
+#endif
 
     for (int tile = 0; tile < 34; ++tile) {
         int discard_tile = tile;
@@ -478,8 +483,7 @@ std::vector<Candidate> ExpectedValueCalculator::analyze(int n_extra_tumo, int sy
         if (flags[tile] == 0) {
             remove_tile(hand, tile);
 
-            auto [sum_required_tiles, required_tiles] =
-                get_required_tiles(hand, syanten_type_, counts);
+            auto required_tiles = get_required_tiles(hand, syanten_type_, counts);
 
             auto [tenpai_probs, win_probs, exp_values] = draw(n_extra_tumo, syanten, hand, counts);
 
@@ -494,8 +498,7 @@ std::vector<Candidate> ExpectedValueCalculator::analyze(int n_extra_tumo, int sy
         else if (calc_syanten_down_ && flags[tile] == 1 && n_extra_tumo == 0) {
             remove_tile(hand, tile);
 
-            auto [sum_required_tiles, required_tiles] =
-                get_required_tiles(hand, syanten_type_, counts);
+            auto required_tiles = get_required_tiles(hand, syanten_type_, counts);
 
             auto [tenpai_probs, win_probs, exp_values] =
                 draw(n_extra_tumo + 1, syanten + 1, hand, counts);
@@ -535,7 +538,7 @@ std::vector<Candidate> ExpectedValueCalculator::analyze(int syanten, const Hand 
     for (auto tile : tiles) {
         remove_tile(hand, tile);
 
-        auto [sum_required_tiles, required_tiles] = get_required_tiles(hand, syanten_type_, counts);
+        auto required_tiles = get_required_tiles(hand, syanten_type_, counts);
 
         add_tile(hand, tile);
 
@@ -549,13 +552,13 @@ std::vector<Candidate> ExpectedValueCalculator::analyze(int syanten, const Hand 
  * @brief 各牌の残り枚数を数える。
  *
  * @param[in] hand 手牌
- * @param[in] dora_indicators ドラ牌の一覧
+ * @param[in] dora_indicators ドラ表示牌の一覧
  * @return std::vector<int> 各牌の残り枚数
  */
 std::vector<int> ExpectedValueCalculator::count_left_tiles(const Hand &hand,
                                                            const std::vector<int> &dora_indicators)
 {
-    std::vector<int> counts(37, 4);
+    std::vector<int> counts(37, 4); // 34 = 36 は赤牌が残っていれば1
     counts[Tile::AkaManzu5] = counts[Tile::AkaPinzu5] = counts[Tile::AkaSozu5] = 1;
 
     // 手牌を除く。
@@ -593,6 +596,7 @@ std::vector<int> ExpectedValueCalculator::count_left_tiles(const Hand &hand,
  * @param[in] syanten 手牌の向聴数
  * @return 向聴戻し: 1、向聴数変化なし: 0、それ以外: inf
  */
+#ifdef ENABLE_DISCARD_TILES_CACHE
 const std::vector<int> &ExpectedValueCalculator::get_discard_tiles(Hand &hand, int syanten)
 {
     auto &cache = discard_cache_[syanten];
@@ -606,7 +610,6 @@ const std::vector<int> &ExpectedValueCalculator::get_discard_tiles(Hand &hand, i
             remove_tile(hand, tile);
             auto [_, syanten_after] = SyantenCalculator::calc(hand, syanten_type_);
             add_tile(hand, tile);
-
             flags[tile] = syanten_after - syanten;
         }
     }
@@ -615,6 +618,22 @@ const std::vector<int> &ExpectedValueCalculator::get_discard_tiles(Hand &hand, i
 
     return itr->second;
 }
+#else
+std::vector<int> ExpectedValueCalculator::get_discard_tiles(Hand &hand, int syanten)
+{
+    std::vector<int> flags(34, std::numeric_limits<int>::max());
+    for (int tile = 0; tile < 34; ++tile) {
+        if (hand.contains(tile)) {
+            remove_tile(hand, tile);
+            auto [_, syanten_after] = SyantenCalculator::calc(hand, syanten_type_);
+            add_tile(hand, tile);
+            flags[tile] = syanten_after - syanten;
+        }
+    }
+
+    return flags;
+}
+#endif
 
 /**
  * @brief 自摸牌一覧を取得する。

@@ -167,7 +167,7 @@ DrawResponseData create_draw_response(const RequestData &req)
         ExpectedValueCalculator::count_left_tiles(req.hand, req.dora_indicators);
 
     // 有効牌を求める。
-    auto [total_count, required_tiles] =
+    auto required_tiles =
         ExpectedValueCalculator::get_required_tiles(req.hand, req.syanten_type, counts);
 
     auto end = std::chrono::steady_clock::now();
