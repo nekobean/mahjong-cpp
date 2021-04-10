@@ -25,8 +25,8 @@ ExpectedValueCalculator::ExpectedValueCalculator()
     , calc_ippatu_(false)
     , calc_haitei_(false)
     , calc_uradora_(false)
-    , discard_node_cache_(5) // 0(聴牌) ~ 4(4向聴)
-    , draw_node_cache_(5)    // 0(聴牌) ~ 4(4向聴)
+    , discard_cache_(5) // 0(聴牌) ~ 4(4向聴)
+    , draw_cache_(5)    // 0(聴牌) ~ 4(4向聴)
 {
     make_uradora_table();
 }
@@ -95,12 +95,11 @@ void ExpectedValueCalculator::clear_cache()
     // デバッグ用
     // spdlog::info("点数: {}", score_cache_.size());
     // for (size_t i = 0; i < 5; ++i)
-    //     spdlog::info("向聴数{} 打牌: {}, 自摸: {}", i, discard_node_cache_[i].size(),
-    //                  draw_node_cache_[i].size());
+    //     spdlog::info("向聴数{} 打牌: {}, 自摸: {}", i, discard_cache_[i].size(),
+    //                  draw_cache_[i].size());
 
-    std::for_each(discard_node_cache_.begin(), discard_node_cache_.end(),
-                  [](auto &x) { x.clear(); });
-    std::for_each(draw_node_cache_.begin(), draw_node_cache_.end(), [](auto &x) { x.clear(); });
+    std::for_each(discard_cache_.begin(), discard_cache_.end(), [](auto &x) { x.clear(); });
+    std::for_each(draw_cache_.begin(), draw_cache_.end(), [](auto &x) { x.clear(); });
     score_cache_.clear();
 }
 
@@ -191,7 +190,7 @@ std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
 ExpectedValueCalculator::draw_without_tegawari(int n_extra_tumo, int syanten, Hand &hand,
                                                std::vector<int> &counts)
 {
-    auto &table = draw_node_cache_[syanten];
+    auto &table = draw_cache_[syanten];
 
     CacheKey key(hand, counts, n_extra_tumo);
     if (auto itr = table.find(key); itr != table.end())
@@ -202,6 +201,7 @@ ExpectedValueCalculator::draw_without_tegawari(int n_extra_tumo, int syanten, Ha
     // 自摸候補を取得する。
     std::vector<int> flags = get_draw_tiles(hand, syanten, counts);
 
+    // 有効牌の合計枚数を計算する。
     int sum_required_tiles = 0;
     for (int tile = 0; tile < 34; ++tile) {
         if (flags[tile] == -1)
@@ -284,7 +284,7 @@ std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
 ExpectedValueCalculator::draw_with_tegawari(int n_extra_tumo, int syanten, Hand &hand,
                                             std::vector<int> &counts)
 {
-    auto &table = draw_node_cache_[syanten];
+    auto &table = draw_cache_[syanten];
 
     CacheKey key(hand, counts, n_extra_tumo);
     if (auto itr = table.find(key); itr != table.end())
@@ -405,7 +405,7 @@ std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
 ExpectedValueCalculator::discard(int n_extra_tumo, int syanten, Hand &hand,
                                  std::vector<int> &counts)
 {
-    auto &table = discard_node_cache_[syanten];
+    auto &table = discard_cache_[syanten];
 
     CacheKey key(hand, counts, n_extra_tumo);
     if (auto itr = table.find(key); itr != table.end())

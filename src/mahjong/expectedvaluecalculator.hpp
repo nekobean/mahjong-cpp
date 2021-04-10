@@ -104,12 +104,6 @@ inline bool operator<(const CacheKey &lhs, const CacheKey &rhs)
 
 using CacheValue = std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>;
 
-struct DrawTilesCache
-{
-    std::vector<int> hands1;
-    std::vector<int> hands2;
-};
-
 struct ScoreKey
 {
     ScoreKey(const Hand &hand, int win_tile) : hand(hand), win_tile(win_tile) {}
@@ -125,12 +119,6 @@ struct ScoreCache
     std::vector<double> scores;
 };
 
-inline bool operator<(const Hand &lhs, const Hand &rhs)
-{
-    return std::make_tuple(lhs.manzu, lhs.pinzu, lhs.sozu, lhs.zihai) <
-           std::make_tuple(rhs.manzu, rhs.pinzu, rhs.sozu, rhs.zihai);
-}
-
 inline bool operator<(const ScoreKey &lhs, const ScoreKey &rhs)
 {
     return std::make_tuple(lhs.hand.manzu, lhs.hand.pinzu, lhs.hand.sozu, lhs.hand.zihai,
@@ -141,7 +129,6 @@ inline bool operator<(const ScoreKey &lhs, const ScoreKey &rhs)
 
 class ExpectedValueCalculator
 {
-
     static inline const std::vector<int> DiscardPriorities = {
         5, /*! 一萬 */
         4, /*! 二萬 */
@@ -266,8 +253,8 @@ class ExpectedValueCalculator
     static std::vector<std::vector<double>> uradora_prob_;
 
     /* キャッシュ */
-    std::vector<std::map<CacheKey, CacheValue>> discard_node_cache_;
-    std::vector<std::map<CacheKey, CacheValue>> draw_node_cache_;
+    std::vector<std::map<CacheKey, CacheValue>> discard_cache_;
+    std::vector<std::map<CacheKey, CacheValue>> draw_cache_;
     std::map<ScoreKey, ScoreCache> score_cache_;
 };
 
