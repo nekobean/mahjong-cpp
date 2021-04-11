@@ -51,8 +51,8 @@ std::tuple<bool, RequestData> Server::parse_json(const rapidjson::Document &doc)
 
 std::string Server::process_request(const std::string &json)
 {
-    std::cout << json << std::endl;
-    std::cout << "===========================" << std::endl;
+    // std::cout << json << std::endl;
+    // std::cout << "===========================" << std::endl;
 
     rapidjson::Document doc(rapidjson::kObjectType);
 

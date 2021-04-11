@@ -498,7 +498,7 @@ std::vector<Candidate> ExpectedValueCalculator::analyze(int n_extra_tumo, int sy
             candidates.emplace_back(discard_tile, required_tiles, tenpai_probs, win_probs,
                                     exp_values, false);
         }
-        else if (calc_syanten_down_ && flags[tile] == 1 && n_extra_tumo == 0) {
+        else if (calc_syanten_down_ && flags[tile] == 1 && n_extra_tumo == 0 && syanten < 3) {
             remove_tile(hand, tile);
 
             auto required_tiles = get_required_tiles(hand, syanten_type_, counts);
