@@ -1,6 +1,7 @@
 #include "mahjong/mahjong.hpp"
 
 #include <chrono>
+#include <numeric>
 
 using namespace mahjong;
 
@@ -36,8 +37,8 @@ int main(int, char **)
                | ExpectedValueCalculator::CalcUradora     // 裏ドラ考慮
         //| ExpectedValueCalculator::MaximaizeWinProb; // 和了確率を最大化
         ;
-    std::vector<int> dora_tiles = {Tile::Sya}; // ドラ
-    Hand hand = hand1;                         // 手牌
+    std::vector<int> dora_indicators = {Tile::Ton}; // ドラ表示牌
+    Hand hand = hand1;                              // 手牌
 
     ExpectedValueCalculator exp_value_calculator;
     ScoreCalculator score_calculator;
@@ -45,7 +46,7 @@ int main(int, char **)
     // 点数計算の設定
     score_calculator.set_bakaze(bakaze);
     score_calculator.set_zikaze(zikaze);
-    score_calculator.set_dora_tiles(dora_tiles);
+    score_calculator.set_dora_indicators(dora_indicators);
 
     // 向聴数を計算する。
     auto [_, syanten] = SyantenCalculator::calc(hand, syanten_type);
@@ -53,7 +54,7 @@ int main(int, char **)
     // 期待値を計算する。
     auto begin = std::chrono::steady_clock::now();
     auto [success, candidates] =
-        exp_value_calculator.calc(hand, score_calculator, syanten_type, flag);
+        exp_value_calculator.calc(hand, score_calculator, dora_indicators, syanten_type, flag);
     auto end = std::chrono::steady_clock::now();
     auto elapsed_ms = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
 
@@ -73,12 +74,16 @@ int main(int, char **)
               << std::endl;
 
     for (const auto &candidate : candidates) {
+        int sum_required_tiles =
+            std::accumulate(candidate.required_tiles.begin(), candidate.required_tiles.end(), 0,
+                            [](auto &a, auto &b) { return a + std::get<1>(b); });
+
         std::cout << fmt::format("[打 {}]", Tile::Name.at(candidate.tile)) << " ";
 
         std::cout << fmt::format(
             "有効牌: {:>2d}種{:>2d}枚, 聴牌確率: {:>5.2f}%, 和了確率: "
             "{:>5.2f}%, 期待値: {:>7.2f} {}",
-            candidate.required_tiles.size(), candidate.sum_required_tiles,
+            candidate.required_tiles.size(), sum_required_tiles,
             candidate.tenpai_probs[turn - 1] * 100, candidate.win_probs[turn - 1] * 100,
             candidate.exp_values[turn - 1], candidate.syanten_down ? " (向聴戻し)" : "");
         std::cout << std::endl;

@@ -74,7 +74,7 @@ inline void remove_tile(Hand &hand, int tile)
 struct CacheKey
 {
     CacheKey(const Hand &hand, const std::vector<int> &counts, int n_extra_tumo)
-        : hand(hand), manzu(0), pinzu(0), sozu(0), zihai(0), n_extra_tumo(n_extra_tumo)
+        : hand(hand), manzu(0), pinzu(0), sozu(0), zihai(0)
     {
         for (size_t i = 0; i < 9; ++i)
             manzu = manzu * 8 + counts[i];
@@ -82,8 +82,9 @@ struct CacheKey
             pinzu = pinzu * 8 + counts[i];
         for (size_t i = 18; i < 27; ++i)
             sozu = sozu * 8 + counts[i];
-        for (size_t i = 27; i < 34; ++i)
+        for (size_t i = 27; i < 37; ++i)
             zihai = zihai * 8 + counts[i];
+        zihai |= n_extra_tumo << 31;
     }
 
     Hand hand;
@@ -91,7 +92,6 @@ struct CacheKey
     int pinzu;
     int sozu;
     int zihai;
-    int n_extra_tumo;
 };
 
 using CacheValue = std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>;
@@ -99,9 +99,9 @@ using CacheValue = std::tuple<std::vector<double>, std::vector<double>, std::vec
 inline bool operator<(const CacheKey &lhs, const CacheKey &rhs)
 {
     return std::make_tuple(lhs.hand.manzu, lhs.hand.pinzu, lhs.hand.sozu, lhs.hand.zihai, lhs.manzu,
-                           lhs.pinzu, lhs.sozu, lhs.zihai, lhs.n_extra_tumo) <
+                           lhs.pinzu, lhs.sozu, lhs.zihai) <
            std::make_tuple(rhs.hand.manzu, rhs.hand.pinzu, rhs.hand.sozu, rhs.hand.zihai, rhs.manzu,
-                           rhs.pinzu, rhs.sozu, rhs.zihai, rhs.n_extra_tumo);
+                           rhs.pinzu, rhs.sozu, rhs.zihai);
 }
 
 struct ScoreKey
@@ -129,6 +129,9 @@ inline bool operator<(const ScoreKey &lhs, const ScoreKey &rhs)
 
 class ExpectedValueCalculator
 {
+    /**
+     * @brief 期待値 (和了確率) が同じ場合はこの値が高い牌を優先して打牌する。
+     */
     static inline const std::vector<int> DiscardPriorities = {
         5, /*! 一萬 */
         4, /*! 二萬 */
