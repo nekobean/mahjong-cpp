@@ -59,6 +59,7 @@ bool ExpectedValueCalculator::make_uradora_table()
 
     return true;
 }
+
 /**
  * @brief テーブルを初期化する。
  * 
@@ -535,11 +536,8 @@ std::vector<Candidate> ExpectedValueCalculator::analyze(int syanten, const Hand 
 
     for (auto tile : tiles) {
         remove_tile(hand, tile);
-
         auto required_tiles = get_required_tiles(hand, syanten_type_, counts);
-
         add_tile(hand, tile);
-
         candidates.emplace_back(tile, required_tiles);
     }
 
@@ -556,7 +554,7 @@ std::vector<Candidate> ExpectedValueCalculator::analyze(int syanten, const Hand 
 std::vector<int> ExpectedValueCalculator::count_left_tiles(const Hand &hand,
                                                            const std::vector<int> &dora_indicators)
 {
-    std::vector<int> counts(37, 4); // 34 = 36 は赤牌が残っていれば1
+    std::vector<int> counts(37, 4);
     counts[Tile::AkaManzu5] = counts[Tile::AkaPinzu5] = counts[Tile::AkaSozu5] = 1;
 
     // 手牌を除く。

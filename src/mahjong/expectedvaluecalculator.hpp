@@ -94,6 +94,8 @@ struct CacheKey
     int n_extra_tumo;
 };
 
+using CacheValue = std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>;
+
 inline bool operator<(const CacheKey &lhs, const CacheKey &rhs)
 {
     return std::make_tuple(lhs.hand.manzu, lhs.hand.pinzu, lhs.hand.sozu, lhs.hand.zihai, lhs.manzu,
@@ -101,8 +103,6 @@ inline bool operator<(const CacheKey &lhs, const CacheKey &rhs)
            std::make_tuple(rhs.hand.manzu, rhs.hand.pinzu, rhs.hand.sozu, rhs.hand.zihai, rhs.manzu,
                            rhs.pinzu, rhs.sozu, rhs.zihai, rhs.n_extra_tumo);
 }
-
-using CacheValue = std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>;
 
 struct ScoreKey
 {
@@ -181,8 +181,6 @@ class ExpectedValueCalculator
 
     ExpectedValueCalculator();
 
-    static bool make_uradora_table();
-
     std::tuple<bool, std::vector<Candidate>> calc(const Hand &hand, const ScoreCalculator &score,
                                                   const std::vector<int> &dora_indicators,
                                                   int syanten_type, int flag = 0);
@@ -193,9 +191,9 @@ class ExpectedValueCalculator
                                              const std::vector<int> &dora_indicators);
 
   private:
+    static bool make_uradora_table();
     void create_prob_table(int n_left_tiles);
     void clear_cache();
-
     std::vector<Candidate> analyze(int n_extra_tumo, int syanten, const Hand &hand);
     std::vector<Candidate> analyze(int syanten, const Hand &hand);
     std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
@@ -206,10 +204,8 @@ class ExpectedValueCalculator
     draw_without_tegawari(int n_extra_tumo, int syanten, Hand &hand, std::vector<int> &counts);
     std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
     draw_with_tegawari(int n_extra_tumo, int syanten, Hand &hand, std::vector<int> &counts);
-
     std::vector<int> get_draw_tiles(Hand &hand, int syanten, const std::vector<int> &counts);
     std::vector<int> get_discard_tiles(Hand &hand, int syanten);
-
     const ScoreCache &get_score(const Hand &hand, int win_tile, const std::vector<int> &counts);
 
   private:
