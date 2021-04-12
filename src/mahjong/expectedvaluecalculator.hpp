@@ -73,8 +73,8 @@ inline void remove_tile(Hand &hand, int tile)
 
 struct CacheKey
 {
-    CacheKey(const Hand &hand, const std::vector<int> &counts, int n_extra_tumo, int win_tile = 0)
-        : hand(hand), manzu(0), pinzu(0), sozu(0), zihai(0), win_tile(win_tile)
+    CacheKey(const Hand &hand, const std::vector<int> &counts, int n_extra_tumo)
+        : hand(hand), manzu(0), pinzu(0), sozu(0), zihai(0)
     {
         for (size_t i = 0; i < 9; ++i)
             manzu = manzu * 8 + counts[i];
@@ -100,38 +100,14 @@ struct CacheKey
     int pinzu;
     int sozu;
     int zihai;
-    int win_tile;
 };
 
 inline bool operator<(const CacheKey &lhs, const CacheKey &rhs)
 {
     return std::make_tuple(lhs.hand.manzu, lhs.hand.pinzu, lhs.hand.sozu, lhs.hand.zihai, lhs.manzu,
-                           lhs.pinzu, lhs.sozu, lhs.zihai, lhs.win_tile) <
+                           lhs.pinzu, lhs.sozu, lhs.zihai) <
            std::make_tuple(rhs.hand.manzu, rhs.hand.pinzu, rhs.hand.sozu, rhs.hand.zihai, rhs.manzu,
-                           rhs.pinzu, rhs.sozu, rhs.zihai, rhs.win_tile);
-}
-
-struct ScoreKey
-{
-    ScoreKey(const Hand &hand, int win_tile) : hand(hand), win_tile(win_tile) {}
-
-    Hand hand;
-    int win_tile;
-};
-
-struct ScoreCache
-{
-    ScoreCache(const std::vector<double> &scores) : scores(scores) {}
-
-    std::vector<double> scores;
-};
-
-inline bool operator<(const ScoreKey &lhs, const ScoreKey &rhs)
-{
-    return std::make_tuple(lhs.hand.manzu, lhs.hand.pinzu, lhs.hand.sozu, lhs.hand.zihai,
-                           lhs.win_tile) < std::make_tuple(rhs.hand.manzu, rhs.hand.pinzu,
-                                                           rhs.hand.sozu, rhs.hand.zihai,
-                                                           rhs.win_tile);
+                           rhs.pinzu, rhs.sozu, rhs.zihai);
 }
 
 #define ENABLE_DRAW_CACHE
@@ -209,9 +185,11 @@ class ExpectedValueCalculator
     void clear_cache();
     std::vector<int> get_draw_tiles(Hand &hand, int syanten, const std::vector<int> &counts);
     std::vector<int> get_discard_tiles(Hand &hand, int syanten);
+    std::vector<double> get_score(const Hand &hand, int win_tile, const std::vector<int> &counts);
 
     std::vector<Candidate> analyze(int n_extra_tumo, int syanten, const Hand &hand);
     std::vector<Candidate> analyze(int syanten, const Hand &hand);
+
     std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
     discard(int n_extra_tumo, int syanten, Hand &hand, std::vector<int> &counts);
     std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
@@ -220,8 +198,6 @@ class ExpectedValueCalculator
     draw_without_tegawari(int n_extra_tumo, int syanten, Hand &hand, std::vector<int> &counts);
     std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
     draw_with_tegawari(int n_extra_tumo, int syanten, Hand &hand, std::vector<int> &counts);
-
-    std::vector<double> get_score(const Hand &hand, int win_tile, const std::vector<int> &counts);
 
     // private:
     /* 点数計算機 */
@@ -264,10 +240,9 @@ class ExpectedValueCalculator
     static std::vector<std::vector<double>> uradora_prob_table_;
 
     /* キャッシュ */
-    using NodeCacheValue =
-        std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>;
-    std::vector<std::map<CacheKey, NodeCacheValue>> discard_cache_;
-    std::vector<std::map<CacheKey, NodeCacheValue>> draw_cache_;
+    using CacheValue = std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>;
+    std::vector<std::map<CacheKey, CacheValue>> discard_cache_;
+    std::vector<std::map<CacheKey, CacheValue>> draw_cache_;
 };
 
 } // namespace mahjong

@@ -217,7 +217,6 @@ void ExpectedValueCalculator::clear_cache()
     // for (size_t i = 0; i < 5; ++i)
     //     spdlog::info("向聴数{} 打牌: {}, 自摸: {}", i, discard_cache_[i].size(),
     //                  draw_cache_[i].size());
-
     std::for_each(discard_cache_.begin(), discard_cache_.end(), [](auto &x) { x.clear(); });
     std::for_each(draw_cache_.begin(), draw_cache_.end(), [](auto &x) { x.clear(); });
 }
@@ -268,6 +267,83 @@ std::vector<int> ExpectedValueCalculator::get_discard_tiles(Hand &hand, int syan
     }
 
     return flags;
+}
+
+/**
+ * @brief 手牌の点数を取得する。
+ *
+ * @param[in] hand 手牌
+ * @param[in] win_tile 自摸牌
+ * @param[in] counts 各牌の残り枚数
+ * @return 点数
+ */
+std::vector<double> ExpectedValueCalculator::get_score(const Hand &hand, int win_tile,
+                                                       const std::vector<int> &counts)
+{
+    // 非門前の場合は自摸のみ
+    int hand_flag = hand.is_menzen() ? (HandFlag::Tumo | HandFlag::Reach) : HandFlag::Tumo;
+
+    // 点数計算を行う。
+    Result result = score_calculator_.calc(hand, win_tile, hand_flag);
+
+    // 表ドラの数
+    int n_dora = int(dora_indicators_.size());
+
+    // ダブル立直、一発、海底撈月で最大3翻まで増加するので、
+    // ベースとなる点数、+1翻の点数、+2翻の点数、+3翻の点数も計算しておく。
+    std::vector<double> scores(4, 0);
+    if (result.success) {
+        // 役ありの場合
+        std::vector<int> up_scores = score_calculator_.get_scores_for_exp(result);
+
+        if (calc_uradora_ && n_dora == 1) {
+            // 裏ドラ考慮ありかつ表ドラが1枚以上の場合は、厳密に計算する。
+            std::vector<double> n_indicators(5, 0);
+            int sum_indicators = 0;
+            for (int tile = 0; tile < 34; ++tile) {
+                int n = hand.num_tiles(tile);
+                if (n > 0) {
+                    // ドラ表示牌の枚数を数える。
+                    n_indicators[n] += counts[Dora2Indicator.at(tile)];
+                    sum_indicators += counts[Dora2Indicator.at(tile)];
+                }
+            }
+
+            // 裏ドラの乗る確率を枚数ごとに計算する。
+            std::vector<double> uradora_probs(5, 0);
+
+            // 厳密に計算するなら残り枚数は数えるべきだが、あまり影響がないので121枚で固定
+            int n_left_tiles = 121;
+            uradora_probs[0] = double(n_left_tiles - sum_indicators) / n_left_tiles;
+            for (int i = 1; i < 5; ++i)
+                uradora_probs[i] = double(n_indicators[i]) / n_left_tiles;
+
+            for (int base = 0; base < 4; ++base) {
+                for (int i = 0; i < 5; ++i) { // 裏ドラ1枚の場合、最大4翻まで乗る可能性がある
+                    int han_idx = std::min(base + i, int(up_scores.size() - 1));
+                    scores[base] += up_scores[han_idx] * uradora_probs[i];
+                }
+            }
+        }
+        else if (calc_uradora_ && n_dora > 1) {
+            // 裏ドラ考慮ありかつ表ドラが2枚以上の場合、統計データを利用する。
+            for (int base = 0; base < 4; ++base) {
+                for (int i = 0; i < 13; ++i) {
+                    int han_idx = std::min(base + i, int(up_scores.size() - 1));
+                    scores[base] += up_scores[han_idx] * uradora_prob_table_[n_dora][i];
+                }
+            }
+        }
+        else {
+            // 裏ドラ考慮なしまたは表ドラが0枚の場合
+            for (int base = 0; base < 4; ++base) {
+                int han_idx = std::min(base, int(up_scores.size() - 1));
+                scores[base] += up_scores[han_idx];
+            }
+        }
+    }
+
+    return scores;
 }
 
 /**
@@ -650,82 +726,6 @@ std::vector<Candidate> ExpectedValueCalculator::analyze(int syanten, const Hand 
     }
 
     return candidates;
-}
-
-/**
- * @brief 手牌の点数を取得する。
- *
- * @param[in] hand 手牌
- * @param[in] win_tile 自摸牌
- * @return 点数
- */
-std::vector<double> ExpectedValueCalculator::get_score(const Hand &hand, int win_tile,
-                                                       const std::vector<int> &counts)
-{
-    // 非門前の場合は自摸のみ
-    int hand_flag = hand.is_menzen() ? (HandFlag::Tumo | HandFlag::Reach) : HandFlag::Tumo;
-
-    // 点数計算を行う。
-    Result result = score_calculator_.calc(hand, win_tile, hand_flag);
-
-    // 表ドラの数
-    int n_dora = int(dora_indicators_.size());
-
-    // ダブル立直、一発、海底撈月で最大3翻まで増加するので、
-    // ベースとなる点数、+1翻の点数、+2翻の点数、+3翻の点数も計算しておく。
-    std::vector<double> scores(4, 0);
-    if (result.success) {
-        // 役ありの場合
-        std::vector<int> up_scores = score_calculator_.get_scores_for_exp(result);
-
-        if (calc_uradora_ && n_dora == 1) {
-            // 裏ドラ考慮ありかつ表ドラが1枚以上の場合は、厳密に計算する。
-            std::vector<double> n_indicators(5, 0);
-            int sum_indicators = 0;
-            for (int tile = 0; tile < 34; ++tile) {
-                int n = hand.num_tiles(tile);
-                if (n > 0) {
-                    // ドラ表示牌の枚数を数える。
-                    n_indicators[n] += counts[Dora2Indicator.at(tile)];
-                    sum_indicators += counts[Dora2Indicator.at(tile)];
-                }
-            }
-
-            // 裏ドラの乗る確率を枚数ごとに計算する。
-            std::vector<double> uradora_probs(5, 0);
-
-            // 厳密に計算するなら残り枚数は数えるべきだが、あまり影響がないので121枚で固定
-            int n_left_tiles = 121;
-            uradora_probs[0] = double(n_left_tiles - sum_indicators) / n_left_tiles;
-            for (int i = 1; i < 5; ++i)
-                uradora_probs[i] = double(n_indicators[i]) / n_left_tiles;
-
-            for (int base = 0; base < 4; ++base) {
-                for (int i = 0; i < 5; ++i) { // 裏ドラ1枚の場合、最大4翻まで乗る可能性がある
-                    int han_idx = std::min(base + i, int(up_scores.size() - 1));
-                    scores[base] += up_scores[han_idx] * uradora_probs[i];
-                }
-            }
-        }
-        else if (calc_uradora_ && n_dora > 1) {
-            // 裏ドラ考慮ありかつ表ドラが2枚以上の場合、統計データを利用する。
-            for (int base = 0; base < 4; ++base) {
-                for (int i = 0; i < 13; ++i) {
-                    int han_idx = std::min(base + i, int(up_scores.size() - 1));
-                    scores[base] += up_scores[han_idx] * uradora_prob_table_[n_dora][i];
-                }
-            }
-        }
-        else {
-            // 裏ドラ考慮なしまたは表ドラが0枚の場合
-            for (int base = 0; base < 4; ++base) {
-                int han_idx = std::min(base, int(up_scores.size() - 1));
-                scores[base] += up_scores[han_idx];
-            }
-        }
-    }
-
-    return scores;
 }
 
 std::vector<std::vector<double>> ExpectedValueCalculator::uradora_prob_table_;
