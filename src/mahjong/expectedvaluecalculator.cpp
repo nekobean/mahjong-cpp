@@ -319,8 +319,7 @@ ExpectedValueCalculator::draw_without_tegawari(int n_extra_tumo, int syanten, Ha
         std::vector<double> next_tenpai_probs, next_win_probs, next_exp_values;
         std::vector<double> scores;
         if (syanten == 0) {
-            const ScoreCache &cache = get_score(hand, tile, counts);
-            scores = cache.scores;
+            scores = get_score(hand, tile, counts);
         }
         else {
             std::tie(next_tenpai_probs, next_win_probs, next_exp_values) =
@@ -412,8 +411,7 @@ ExpectedValueCalculator::draw_with_tegawari(int n_extra_tumo, int syanten, Hand 
         std::vector<double> scores;
 
         if (syanten == 0) {
-            const ScoreCache &cache = get_score(hand, tile, counts);
-            scores = cache.scores;
+            scores = get_score(hand, tile, counts);
         }
         else {
             std::tie(next_tenpai_probs, next_win_probs, next_exp_values) =
@@ -663,12 +661,14 @@ std::vector<Candidate> ExpectedValueCalculator::analyze(int syanten, const Hand 
  * @param[in] win_tile 自摸牌
  * @return 点数
  */
-const ScoreCache &ExpectedValueCalculator::get_score(const Hand &hand, int win_tile,
-                                                     const std::vector<int> &counts)
+std::vector<double> ExpectedValueCalculator::get_score(const Hand &hand, int win_tile,
+                                                       const std::vector<int> &counts)
 {
+#ifdef ENABLE_SCORE_CACHE
     ScoreKey key(hand, win_tile);
     if (auto itr = score_cache_.find(key); itr != score_cache_.end())
         return itr->second; // キャッシュが存在する場合
+#endif
 
     // 非門前の場合は自摸のみ
     int hand_flag = hand.is_menzen() ? (HandFlag::Tumo | HandFlag::Reach) : HandFlag::Tumo;
@@ -733,10 +733,13 @@ const ScoreCache &ExpectedValueCalculator::get_score(const Hand &hand, int win_t
         }
     }
 
-    ScoreCache cache(scores);
-    auto [itr, _] = score_cache_.insert_or_assign(key, cache);
+#ifdef ENABLE_SCORE_CACHE
+    auto [itr, _] = score_cache_.insert_or_assign(key, scores);
 
     return itr->second;
+#else
+    return scores;
+#endif
 }
 
 std::vector<std::vector<double>> ExpectedValueCalculator::uradora_prob_table_;
