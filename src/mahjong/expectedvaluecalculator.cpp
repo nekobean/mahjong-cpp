@@ -285,11 +285,13 @@ std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
 ExpectedValueCalculator::draw_without_tegawari(int n_extra_tumo, int syanten, Hand &hand,
                                                std::vector<int> &counts)
 {
+#ifdef ENABLE_DRAW_CACHE
     auto &table = draw_cache_[syanten];
 
     CacheKey key(hand, counts, n_extra_tumo);
     if (auto itr = table.find(key); itr != table.end())
         return itr->second; // キャッシュが存在する場合
+#endif
 
     std::vector<double> tenpai_probs(17, 0), win_probs(17, 0), exp_values(17, 0);
 
@@ -299,12 +301,12 @@ ExpectedValueCalculator::draw_without_tegawari(int n_extra_tumo, int syanten, Ha
     // 有効牌の合計枚数を計算する。
     int sum_required_tiles = 0;
     for (int tile = 0; tile < 34; ++tile) {
-        if (flags[tile] == -1)
+        if (flags[tile] == -1) // 有効牌以外の場合
             sum_required_tiles += counts[tile];
     }
 
     for (int tile = 0; tile < 34; ++tile) {
-        if (flags[tile] != -1)
+        if (flags[tile] != -1) // 有効牌以外の場合
             continue;
 
         const std::vector<double> &tumo_probs = tumo_prob_table_[counts[tile]];
@@ -332,7 +334,7 @@ ExpectedValueCalculator::draw_without_tegawari(int n_extra_tumo, int syanten, Ha
 
                 if (syanten == 1) // 1向聴の場合は次で聴牌
                     tenpai_probs[i] += prob;
-                else if (j < 16 && syanten > 1)
+                else if (j < 16 && syanten > 1) // 2向聴以上で16巡目以下の場合
                     tenpai_probs[i] += prob * next_tenpai_probs[j + 1];
 
                 // scores[0] == 0 の場合は役なしなので、和了確率、期待値は0
@@ -347,7 +349,7 @@ ExpectedValueCalculator::draw_without_tegawari(int n_extra_tumo, int syanten, Ha
                     win_probs[i] += prob;
                     exp_values[i] += prob * scores[win_double_reach + win_ippatu + win_haitei];
                 }
-                else if (j < 16 && syanten > 0) {
+                else if (j < 16 && syanten > 0) { // 聴牌以上で16巡目以下の場合
                     win_probs[i] += prob * next_win_probs[j + 1];
                     exp_values[i] += prob * next_exp_values[j + 1];
                 }
@@ -359,9 +361,13 @@ ExpectedValueCalculator::draw_without_tegawari(int n_extra_tumo, int syanten, Ha
         remove_tile(hand, tile);
     }
 
+#ifdef ENABLE_DRAW_CACHE
     auto [itr, _] = table.try_emplace(key, tenpai_probs, win_probs, exp_values);
 
     return itr->second;
+#else
+    return {tenpai_probs, win_probs, exp_values};
+#endif
 }
 
 /**
@@ -379,11 +385,13 @@ std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
 ExpectedValueCalculator::draw_with_tegawari(int n_extra_tumo, int syanten, Hand &hand,
                                             std::vector<int> &counts)
 {
+#ifdef ENABLE_DRAW_CACHE
     auto &table = draw_cache_[syanten];
 
     CacheKey key(hand, counts, n_extra_tumo);
     if (auto itr = table.find(key); itr != table.end())
         return itr->second; // キャッシュが存在する場合
+#endif
 
     std::vector<double> tenpai_probs(17, 0), win_probs(17, 0), exp_values(17, 0);
 
@@ -464,9 +472,13 @@ ExpectedValueCalculator::draw_with_tegawari(int n_extra_tumo, int syanten, Hand 
         remove_tile(hand, tile);
     }
 
+#ifdef ENABLE_DRAW_CACHE
     auto [itr, _] = table.try_emplace(key, tenpai_probs, win_probs, exp_values);
 
     return itr->second;
+#else
+    return {tenpai_probs, win_probs, exp_values};
+#endif
 }
 
 /**
@@ -500,11 +512,13 @@ std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
 ExpectedValueCalculator::discard(int n_extra_tumo, int syanten, Hand &hand,
                                  std::vector<int> &counts)
 {
+#ifdef ENABLE_DISCARD_CACHE
     auto &table = discard_cache_[syanten];
 
     CacheKey key(hand, counts, n_extra_tumo);
     if (auto itr = table.find(key); itr != table.end())
         return itr->second; // キャッシュが存在する場合
+#endif
 
     // 打牌候補を取得する。
     const std::vector<int> flags = get_discard_tiles(hand, syanten);
@@ -551,9 +565,13 @@ ExpectedValueCalculator::discard(int n_extra_tumo, int syanten, Hand &hand,
         }
     }
 
+#ifdef ENABLE_DISCARD_CACHE
     auto [itr, _] = table.try_emplace(key, max_tenpai_probs, max_win_probs, max_exp_values);
 
     return itr->second;
+#else
+    return {max_tenpai_probs, max_win_probs, max_exp_values};
+#endif
 }
 
 std::vector<Candidate> ExpectedValueCalculator::analyze(int n_extra_tumo, int syanten,

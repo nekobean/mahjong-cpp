@@ -127,6 +127,9 @@ inline bool operator<(const ScoreKey &lhs, const ScoreKey &rhs)
                                                            rhs.win_tile);
 }
 
+#define ENABLE_DRAW_CACHE
+#define ENABLE_DISCARD_CACHE
+
 class ExpectedValueCalculator
 {
     /**
@@ -193,13 +196,13 @@ class ExpectedValueCalculator
     static std::vector<int> count_left_tiles(const Hand &hand,
                                              const std::vector<int> &dora_indicators);
 
-  private:
+    // private:
     static bool make_uradora_table();
     void create_prob_table(int n_left_tiles);
     void clear_cache();
     std::vector<int> get_draw_tiles(Hand &hand, int syanten, const std::vector<int> &counts);
     std::vector<int> get_discard_tiles(Hand &hand, int syanten);
-    
+
     std::vector<Candidate> analyze(int n_extra_tumo, int syanten, const Hand &hand);
     std::vector<Candidate> analyze(int syanten, const Hand &hand);
     std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
@@ -213,7 +216,7 @@ class ExpectedValueCalculator
 
     const ScoreCache &get_score(const Hand &hand, int win_tile, const std::vector<int> &counts);
 
-  private:
+    // private:
     /* 点数計算機 */
     ScoreCalculator score_calculator_;
 
