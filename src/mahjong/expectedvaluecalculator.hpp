@@ -95,6 +95,61 @@ inline void remove_tile(Hand &hand, int tile)
     }
 }
 
+inline void add_tile(Hand &hand, int tile, std::vector<int> &counts)
+{
+    counts[tile]--;
+    if (tile <= Tile::Manzu9)
+        hand.manzu += Bit::tile1[tile];
+    else if (tile <= Tile::Pinzu9)
+        hand.pinzu += Bit::tile1[tile];
+    else if (tile <= Tile::Sozu9)
+        hand.sozu += Bit::tile1[tile];
+    else if (tile <= Tile::Tyun)
+        hand.zihai += Bit::tile1[tile];
+    else if (tile == Tile::AkaManzu5) {
+        hand.manzu += Bit::tile1[Tile::Manzu5];
+        hand.aka_manzu5 = true;
+        counts[Tile::Manzu5] -= 1;
+    }
+    else if (tile == Tile::AkaPinzu5) {
+        hand.pinzu += Bit::tile1[Tile::Pinzu5];
+        hand.aka_pinzu5 = true;
+        counts[Tile::Pinzu5] -= 1;
+    }
+    else if (tile == Tile::AkaSozu5) {
+        hand.sozu += Bit::tile1[Tile::Sozu5];
+        hand.aka_sozu5 = true;
+        counts[Tile::Sozu5] -= 1;
+    }
+}
+
+inline void remove_tile(Hand &hand, int tile, std::vector<int> &counts)
+{
+    counts[tile]++;
+    if (tile <= Tile::Manzu9)
+        hand.manzu -= Bit::tile1[tile];
+    else if (tile <= Tile::Pinzu9)
+        hand.pinzu -= Bit::tile1[tile];
+    else if (tile <= Tile::Sozu9)
+        hand.sozu -= Bit::tile1[tile];
+    else if (tile <= Tile::Tyun)
+        hand.zihai -= Bit::tile1[tile];
+    else if (tile == Tile::AkaManzu5) {
+        hand.manzu -= Bit::tile1[Tile::Manzu5];
+        hand.aka_manzu5 = false;
+        counts[Tile::Manzu5] += 1;
+    }
+    else if (tile == Tile::AkaPinzu5) {
+        hand.pinzu -= Bit::tile1[Tile::Pinzu5];
+        hand.aka_pinzu5 = false;
+        counts[Tile::Pinzu5] += 1;
+    }
+    else if (tile == Tile::AkaSozu5) {
+        hand.sozu -= Bit::tile1[Tile::Sozu5];
+        hand.aka_sozu5 = false;
+        counts[Tile::Sozu5] += 1;
+    }
+}
 struct CacheKey
 {
     CacheKey(const Hand &hand, const std::vector<int> &counts, int n_extra_tumo)
