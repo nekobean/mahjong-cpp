@@ -214,14 +214,12 @@ void ExpectedValueCalculator::create_prob_table(int n_left_tiles)
 void ExpectedValueCalculator::clear_cache()
 {
     // デバッグ用
-    // spdlog::info("点数: {}", score_cache_.size());
     // for (size_t i = 0; i < 5; ++i)
     //     spdlog::info("向聴数{} 打牌: {}, 自摸: {}", i, discard_cache_[i].size(),
     //                  draw_cache_[i].size());
 
     std::for_each(discard_cache_.begin(), discard_cache_.end(), [](auto &x) { x.clear(); });
     std::for_each(draw_cache_.begin(), draw_cache_.end(), [](auto &x) { x.clear(); });
-    score_cache_.clear();
 }
 
 /**
@@ -664,12 +662,6 @@ std::vector<Candidate> ExpectedValueCalculator::analyze(int syanten, const Hand 
 std::vector<double> ExpectedValueCalculator::get_score(const Hand &hand, int win_tile,
                                                        const std::vector<int> &counts)
 {
-#ifdef ENABLE_SCORE_CACHE
-    ScoreKey key(hand, win_tile);
-    if (auto itr = score_cache_.find(key); itr != score_cache_.end())
-        return itr->second; // キャッシュが存在する場合
-#endif
-
     // 非門前の場合は自摸のみ
     int hand_flag = hand.is_menzen() ? (HandFlag::Tumo | HandFlag::Reach) : HandFlag::Tumo;
 
@@ -733,13 +725,7 @@ std::vector<double> ExpectedValueCalculator::get_score(const Hand &hand, int win
         }
     }
 
-#ifdef ENABLE_SCORE_CACHE
-    auto [itr, _] = score_cache_.insert_or_assign(key, scores);
-
-    return itr->second;
-#else
     return scores;
-#endif
 }
 
 std::vector<std::vector<double>> ExpectedValueCalculator::uradora_prob_table_;

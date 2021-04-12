@@ -136,7 +136,6 @@ inline bool operator<(const ScoreKey &lhs, const ScoreKey &rhs)
 
 #define ENABLE_DRAW_CACHE
 #define ENABLE_DISCARD_CACHE
-#define ENABLE_SCORE_CACHE
 
 class ExpectedValueCalculator
 {
@@ -269,9 +268,6 @@ class ExpectedValueCalculator
         std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>;
     std::vector<std::map<CacheKey, NodeCacheValue>> discard_cache_;
     std::vector<std::map<CacheKey, NodeCacheValue>> draw_cache_;
-
-    using ScoreCacheValue = std::vector<double>;
-    std::map<ScoreKey, ScoreCacheValue> score_cache_;
 };
 
 } // namespace mahjong
