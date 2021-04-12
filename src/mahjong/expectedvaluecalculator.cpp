@@ -199,10 +199,11 @@ void ExpectedValueCalculator::create_prob_table(int n_left_tiles)
     not_tumo_prob_table_.resize(n_left_tiles, std::vector<double>(17));
     for (int i = 0; i < n_left_tiles; ++i) {
         not_tumo_prob_table_[i][0] = 1;
-        for (int j = 1; j < 17; ++j) {
-            not_tumo_prob_table_[i][j] = not_tumo_prob_table_[i][j - 1] *
-                                         double(n_left_tiles - i - (j - 1)) /
-                                         double(n_left_tiles - (j - 1));
+        // n_left_tiles - i - j > 0 は残りはすべて有効牌の場合を考慮
+        for (int j = 0; j < 16 && n_left_tiles - i - j > 0; ++j) {
+            not_tumo_prob_table_[i][j + 1] = not_tumo_prob_table_[i][j] *
+                                             double(n_left_tiles - i - j) /
+                                             double(n_left_tiles - j);
         }
     }
 }

@@ -305,3 +305,74 @@ TEST_CASE("Count Left Tiles")
             REQUIRE(actual[i] == expected[i]);
     }
 }
+
+TEST_CASE("create_prob_table")
+{
+    SECTION("tumo_prob_table")
+    {
+        ExpectedValueCalculator caclulator;
+
+        int N = 121; // 残り牌の合計枚数
+        caclulator.create_prob_table(N);
+        for (int r = 0; r <= 4; ++r) {
+            for (int i = 0; i < 17; ++i) {
+                double expected = double(r) / double(N - i);
+                REQUIRE(caclulator.tumo_prob_table_[r][i] == Approx(expected));
+            }
+        }
+    }
+
+    SECTION("not_tumo_prob_table")
+    {
+        ExpectedValueCalculator caclulator;
+
+        for (int N = 100; N < 121; ++N) { // N は残り牌の合計枚数
+            caclulator.create_prob_table(N);
+
+            // for (int R = 0; R < N; ++R) {
+            //     for (int i = 0; i < 17; ++i)
+            //         std::cout << fmt::format("{:4.2f} ", caclulator.not_tumo_prob_table_[R][i]);
+            //     std::cout << std::endl;
+            // }
+
+            for (int R = 0; R < N; ++R) {
+                for (int i = 0; i < 17; ++i) { // t は現在の巡目
+                    // i 巡目までに有効牌以外を連続して引く確率
+                    double not_tumo_prob = 1;
+                    for (int j = 0; j < i && N - R - j > 0; ++j) {
+                        REQUIRE(N - R - j >= 0);
+                        REQUIRE(N - j > 0);
+                        not_tumo_prob *= double(N - R - j) / double(N - j);
+                    }
+
+                    if (caclulator.not_tumo_prob_table_[R][i] > 10e-12 && not_tumo_prob > 10e-12) {
+                        INFO(fmt::format("R={}, i={}, {} {}", R, i,
+                                         caclulator.not_tumo_prob_table_[R][i], not_tumo_prob));
+                        REQUIRE(caclulator.not_tumo_prob_table_[R][i] == Approx(not_tumo_prob));
+                    }
+                }
+            }
+
+            for (int R = 1; R < N; ++R) {
+                for (int t = 0; t < 17; ++t) { // t は現在の巡目
+                    for (int i = t; i < 17 && N - R - i > 0; ++i) {
+                        // i 巡目までに有効牌以外を連続して引く確率
+                        double expected = 1;
+                        for (int j = t; j < i; ++j)
+                            expected *= double(N - R - j) / double(N - j);
+
+                        double actual = caclulator.not_tumo_prob_table_[R][i] /
+                                        caclulator.not_tumo_prob_table_[R][t];
+
+                        REQUIRE(caclulator.not_tumo_prob_table_[R][t] > 0);
+                        if (expected > 10e-12 && actual > 10e-12) {
+                            INFO(fmt::format("R={}, i={}, t={}, {}", R, i, t,
+                                             caclulator.not_tumo_prob_table_[R][t]));
+                            REQUIRE(expected == Approx(actual));
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
