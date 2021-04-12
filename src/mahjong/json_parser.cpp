@@ -243,12 +243,12 @@ rapidjson::Value create_response(const RequestData &req, rapidjson::Document &do
     // 手牌の枚数を求める。
     int n_tiles = req.hand.num_tiles() + int(req.hand.melds.size()) * 3;
 
-    if (n_tiles == 13) {
-        DrawResponseData res = create_draw_response(req);
-        return dump_draw_response(res, doc);
-    }
-    else if (n_tiles == 14) {
+    if (n_tiles == 14) {
         DiscardResponseData res = create_discard_response(req);
         return dump_discard_response(res, doc);
+    }
+    else {
+        DrawResponseData res = create_draw_response(req);
+        return dump_draw_response(res, doc);
     }
 }
