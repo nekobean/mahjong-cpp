@@ -184,10 +184,10 @@ class ExpectedValueCalculator
 
     ExpectedValueCalculator();
 
-    std::tuple<bool, std::vector<Candidate>> calc(const Hand &hand, const ScoreCalculator &score,
+    std::tuple<bool, std::vector<Candidate>> calc(const Hand &hand,
+                                                  const ScoreCalculator &score_calculator,
                                                   const std::vector<int> &dora_indicators,
                                                   int syanten_type, int flag = 0);
-
     static std::vector<std::tuple<int, int>> get_required_tiles(const Hand &hand, int syanten_type,
                                                                 const std::vector<int> &counts);
     static std::vector<int> count_left_tiles(const Hand &hand,
@@ -197,6 +197,9 @@ class ExpectedValueCalculator
     static bool make_uradora_table();
     void create_prob_table(int n_left_tiles);
     void clear_cache();
+    std::vector<int> get_draw_tiles(Hand &hand, int syanten, const std::vector<int> &counts);
+    std::vector<int> get_discard_tiles(Hand &hand, int syanten);
+    
     std::vector<Candidate> analyze(int n_extra_tumo, int syanten, const Hand &hand);
     std::vector<Candidate> analyze(int syanten, const Hand &hand);
     std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
@@ -207,16 +210,15 @@ class ExpectedValueCalculator
     draw_without_tegawari(int n_extra_tumo, int syanten, Hand &hand, std::vector<int> &counts);
     std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
     draw_with_tegawari(int n_extra_tumo, int syanten, Hand &hand, std::vector<int> &counts);
-    std::vector<int> get_draw_tiles(Hand &hand, int syanten, const std::vector<int> &counts);
-    std::vector<int> get_discard_tiles(Hand &hand, int syanten);
+
     const ScoreCache &get_score(const Hand &hand, int win_tile, const std::vector<int> &counts);
 
   private:
+    /* 点数計算機 */
+    ScoreCalculator score_calculator_;
+
     /* 向聴数の種類 */
     int syanten_type_;
-
-    /* 点数計算機 */
-    ScoreCalculator score_;
 
     /* ドラ表示牌 */
     std::vector<int> dora_indicators_;
@@ -243,13 +245,13 @@ class ExpectedValueCalculator
     bool maximize_win_prob_;
 
     /* この巡目で有効牌を引ける確率のテーブル */
-    std::vector<std::vector<double>> tumo_probs_table_;
+    std::vector<std::vector<double>> tumo_prob_table_;
 
     /* これまでの巡目で有効牌が引けなかった確率のテーブル */
-    std::vector<std::vector<double>> not_tumo_probs_table_;
+    std::vector<std::vector<double>> not_tumo_prob_table_;
 
     /* 裏ドラの乗る確率のテーブル */
-    static std::vector<std::vector<double>> uradora_prob_;
+    static std::vector<std::vector<double>> uradora_prob_table_;
 
     /* キャッシュ */
     std::vector<std::map<CacheKey, CacheValue>> discard_cache_;

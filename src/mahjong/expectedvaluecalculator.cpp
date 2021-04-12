@@ -32,16 +32,135 @@ ExpectedValueCalculator::ExpectedValueCalculator()
 }
 
 /**
- * @brief 初期化する。
+ * @brief 期待値を計算する。
+ * 
+ * @param hand 手牌
+ * @param score_calculator 点数計算機
+ * @param dora_indicators ドラ表示牌の一覧
+ * @param syanten_type 向聴数の種類
+ * @param flag フラグ
+ * @return 各打牌の情報
+ */
+std::tuple<bool, std::vector<Candidate>>
+ExpectedValueCalculator::calc(const Hand &hand, const ScoreCalculator &score_calculator,
+                              const std::vector<int> &dora_indicators, int syanten_type, int flag)
+{
+    std::vector<Candidate> candidates;
+
+    score_calculator_ = score_calculator;
+    syanten_type_ = syanten_type;
+    dora_indicators_ = dora_indicators;
+    calc_syanten_down_ = flag & CalcSyantenDown;
+    calc_tegawari_ = flag & CalcTegawari;
+    calc_double_reach_ = flag & CalcDoubleReach;
+    calc_ippatu_ = flag & CalcIppatu;
+    calc_haitei_ = flag & CalcHaiteitumo;
+    calc_uradora_ = flag & CalcUradora;
+    maximize_win_prob_ = flag & MaximaizeWinProb;
+
+    // 手牌の枚数を数える。
+    int n_tiles = hand.num_tiles() + int(hand.melds.size()) * 3;
+    if (n_tiles != 14)
+        return {false, {}}; // 手牌が14枚ではない場合
+
+    // 現在の向聴数を計算する。
+    auto [_, syanten] = SyantenCalculator::calc(hand, syanten_type_);
+    if (syanten == -1)
+        return {false, {}}; // 手牌が和了形の場合
+
+    // 各牌の残り枚数を数える。
+    std::vector<int> counts = count_left_tiles(hand, dora_indicators_);
+    int sum_left_tiles = std::accumulate(counts.begin(), counts.begin() + 34, 0);
+
+    // 自摸確率のテーブルを作成する。
+    create_prob_table(sum_left_tiles);
+
+    if (syanten > 3) // 3向聴以下は聴牌確率、和了確率、期待値を計算する。
+        candidates = analyze(syanten, hand);
+    else // 4向聴以上は受入枚数のみ計算する。
+        candidates = analyze(0, syanten, hand);
+
+    // キャッシュをクリアする。
+    clear_cache();
+
+    return {true, candidates};
+}
+
+/**
+ * @brief 有効牌の一覧を取得する。
+ *
+ * @param[in] hand 手牌
+ * @param[in] syanten_type 向聴数の種類
+ * @param[in] counts 各牌の残り枚数
+ * @return 有効牌の一覧
+ */
+std::vector<std::tuple<int, int>>
+ExpectedValueCalculator::get_required_tiles(const Hand &hand, int syanten_type,
+                                            const std::vector<int> &counts)
+{
+    std::vector<std::tuple<int, int>> required_tiles;
+
+    // 有効牌の一覧を取得する。
+    std::vector<int> tiles = RequiredTileSelector::select(hand, syanten_type);
+
+    for (auto tile : tiles)
+        required_tiles.emplace_back(tile, counts[tile]);
+
+    return required_tiles;
+}
+
+/**
+ * @brief 各牌の残り枚数を数える。
+ *
+ * @param[in] hand 手牌
+ * @param[in] dora_indicators ドラ表示牌の一覧
+ * @return 各牌の残り枚数
+ */
+std::vector<int> ExpectedValueCalculator::count_left_tiles(const Hand &hand,
+                                                           const std::vector<int> &dora_indicators)
+{
+    std::vector<int> counts(37, 4);
+    counts[Tile::AkaManzu5] = counts[Tile::AkaPinzu5] = counts[Tile::AkaSozu5] = 1;
+
+    // 手牌を除く。
+    for (int i = 0; i < 34; ++i)
+        counts[i] -= hand.num_tiles(i);
+    counts[Tile::AkaManzu5] -= hand.aka_manzu5;
+    counts[Tile::AkaPinzu5] -= hand.aka_pinzu5;
+    counts[Tile::AkaSozu5] -= hand.aka_sozu5;
+
+    // 副露ブロックを除く。
+    for (const auto &block : hand.melds) {
+        for (auto tile : block.tiles) {
+            counts[aka2normal(tile)]--;
+            counts[Tile::AkaManzu5] -= tile == Tile::AkaManzu5;
+            counts[Tile::AkaPinzu5] -= tile == Tile::AkaPinzu5;
+            counts[Tile::AkaSozu5] -= tile == Tile::AkaSozu5;
+        }
+    }
+
+    // ドラ表示牌を除く。
+    for (auto tile : dora_indicators) {
+        counts[aka2normal(tile)]--;
+        counts[Tile::AkaManzu5] -= tile == Tile::AkaManzu5;
+        counts[Tile::AkaPinzu5] -= tile == Tile::AkaPinzu5;
+        counts[Tile::AkaSozu5] -= tile == Tile::AkaSozu5;
+    }
+
+    return counts;
+}
+
+/**
+ * @brief 裏ドラ確率のテーブルを初期化する。
  *
  * @return 初期化に成功した場合は true、そうでない場合は false を返す。
  */
 bool ExpectedValueCalculator::make_uradora_table()
 {
-    if (!uradora_prob_.empty())
+    if (!uradora_prob_table_.empty())
         return true;
 
-    uradora_prob_.resize(6);
+    uradora_prob_table_.resize(6);
 
     boost::filesystem::path path = boost::dll::program_location().parent_path() / "uradora.txt";
     std::ifstream ifs(path.string());
@@ -53,7 +172,7 @@ bool ExpectedValueCalculator::make_uradora_table()
         boost::split(tokens, line, boost::is_any_of(" "));
 
         for (auto token : tokens)
-            uradora_prob_[i].push_back(std::stod(token));
+            uradora_prob_table_[i].push_back(std::stod(token));
         i++;
     }
 
@@ -61,29 +180,29 @@ bool ExpectedValueCalculator::make_uradora_table()
 }
 
 /**
- * @brief テーブルを初期化する。
+ * @brief 自摸確率のテーブルを初期化する。
  * 
- * @param[in] n_left_tiles 1巡目時点の残り枚数
+ * @param[in] n_left_tiles 1巡目時点の残り枚数の合計
  */
 void ExpectedValueCalculator::create_prob_table(int n_left_tiles)
 {
     // 有効牌の枚数ごとに、この巡目で有効牌を引ける確率のテーブルを作成する
-    // tumo_probs_table_[i][j] = 有効牌の枚数が i 枚の場合に j 巡目に有効牌が引ける確率
-    tumo_probs_table_.resize(5, std::vector<double>(17));
+    // tumo_prob_table_[i][j] = 有効牌の枚数が i 枚の場合に j 巡目に有効牌が引ける確率
+    tumo_prob_table_.resize(5, std::vector<double>(17));
     for (int i = 0; i < 5; ++i) {
         for (int j = 0; j < 17; ++j)
-            tumo_probs_table_[i][j] = double(i) / double(n_left_tiles - j);
+            tumo_prob_table_[i][j] = double(i) / double(n_left_tiles - j);
     }
 
     // 有効牌の合計枚数ごとに、これまでの巡目で有効牌が引けなかった確率のテーブルを作成する
-    // not_tumo_probs_table_[i][j] = 有効牌の合計枚数が i 枚の場合に j - 1 巡目までに有効牌が引けなかった確率
-    not_tumo_probs_table_.resize(n_left_tiles, std::vector<double>(17));
+    // not_tumo_prob_table_[i][j] = 有効牌の合計枚数が i 枚の場合に j - 1 巡目までに有効牌が引けなかった確率
+    not_tumo_prob_table_.resize(n_left_tiles, std::vector<double>(17));
     for (int i = 0; i < n_left_tiles; ++i) {
-        not_tumo_probs_table_[i][0] = 1;
+        not_tumo_prob_table_[i][0] = 1;
         for (int j = 1; j < 17; ++j) {
-            not_tumo_probs_table_[i][j] = not_tumo_probs_table_[i][j - 1] *
-                                          double(n_left_tiles - i - (j - 1)) /
-                                          double(n_left_tiles - (j - 1));
+            not_tumo_prob_table_[i][j] = not_tumo_prob_table_[i][j - 1] *
+                                         double(n_left_tiles - i - (j - 1)) /
+                                         double(n_left_tiles - (j - 1));
         }
     }
 }
@@ -105,77 +224,51 @@ void ExpectedValueCalculator::clear_cache()
 }
 
 /**
- * @brief 期待値を計算する。
+ * @brief 自摸牌一覧を取得する。
+ *
  * @param[in] hand 手牌
- * @param[in] score 点数計算機
- * @param[in] syanten_type 向聴数の種類
- * @param[in] n_extra_tumo 交換枚数 (手変わりまたは向聴戻しを行える回数)
- * @return 各打牌の情報
+ * @param[in] syanten 手牌の向聴数
+ * @param[in] counts 各牌の残り枚数
+ * @return 自摸牌一覧 (有効牌: -1、向聴数変化なし: 0)
  */
-std::tuple<bool, std::vector<Candidate>>
-ExpectedValueCalculator::calc(const Hand &hand, const ScoreCalculator &score,
-                              const std::vector<int> &dora_indicators, int syanten_type, int flag)
+std::vector<int> ExpectedValueCalculator::get_draw_tiles(Hand &hand, int syanten,
+                                                         const std::vector<int> &counts)
 {
-    score_ = score;
-    syanten_type_ = syanten_type;
-    calc_syanten_down_ = flag & CalcSyantenDown;
-    calc_tegawari_ = flag & CalcTegawari;
-    calc_double_reach_ = flag & CalcDoubleReach;
-    calc_ippatu_ = flag & CalcIppatu;
-    calc_haitei_ = flag & CalcHaiteitumo;
-    calc_uradora_ = flag & CalcUradora;
-    maximize_win_prob_ = flag & MaximaizeWinProb;
-    dora_indicators_ = dora_indicators;
+    std::vector<int> flags(34);
 
-    // 手牌の枚数を数える。
-    int n_tiles = hand.num_tiles() + int(hand.melds.size()) * 3;
-    if (n_tiles != 14)
-        return {false, {}}; // 手牌が14枚ではない
+    for (int tile = 0; tile < 34; ++tile) {
+        if (counts[tile] > 0) {
+            add_tile(hand, tile);
+            auto [_, syanten_after] = SyantenCalculator::calc(hand, syanten_type_);
+            remove_tile(hand, tile);
+            flags[tile] = syanten_after - syanten;
+        }
+    }
 
-    // 現在の向聴数を計算する。
-    auto [_, syanten] = SyantenCalculator::calc(hand, syanten_type_);
-    if (syanten == -1)
-        return {false, {}}; // 手牌が和了形または4向聴以上
-
-    // 残り牌の枚数を数える。
-    std::vector<int> counts = count_left_tiles(hand, dora_indicators_);
-    int sum_left_tiles = std::accumulate(counts.begin(), counts.begin() + 34, 0);
-
-    // 自摸確率のテーブルを作成する。
-    create_prob_table(sum_left_tiles);
-
-    std::vector<Candidate> candidates;
-    if (syanten > 3) // 3向聴以下は聴牌確率、和了確率、期待値を計算する。
-        candidates = analyze(syanten, hand);
-    else // 4向聴以上は受け入れ枚数のみ計算する。
-        candidates = analyze(0, syanten, hand);
-
-    // キャッシュをクリアする。
-    clear_cache();
-
-    return {true, candidates};
+    return flags;
 }
 
 /**
- * @brief
+ * @brief 打牌一覧を取得する。
  *
  * @param[in] hand 手牌
- * @param[in] syanten_type 向聴数の種類
- * @param[in] counts 各牌の残り枚数
- * @return 有効牌の一覧
+ * @param[in] syanten 手牌の向聴数
+ * @return 打牌一覧 (向聴戻し: 1、向聴数変化なし: 0、手牌に存在しない: inf)
  */
-std::vector<std::tuple<int, int>>
-ExpectedValueCalculator::get_required_tiles(const Hand &hand, int syanten_type,
-                                            const std::vector<int> &counts)
+std::vector<int> ExpectedValueCalculator::get_discard_tiles(Hand &hand, int syanten)
 {
-    // 有効牌の一覧を取得する。
-    std::vector<int> tiles = RequiredTileSelector::select(hand, syanten_type);
+    std::vector<int> flags(34, std::numeric_limits<int>::max());
 
-    std::vector<std::tuple<int, int>> required_tiles;
-    for (auto tile : tiles)
-        required_tiles.emplace_back(tile, counts[tile]);
+    for (int tile = 0; tile < 34; ++tile) {
+        if (hand.contains(tile)) {
+            remove_tile(hand, tile);
+            auto [_, syanten_after] = SyantenCalculator::calc(hand, syanten_type_);
+            add_tile(hand, tile);
+            flags[tile] = syanten_after - syanten;
+        }
+    }
 
-    return required_tiles;
+    return flags;
 }
 
 /**
@@ -213,8 +306,8 @@ ExpectedValueCalculator::draw_without_tegawari(int n_extra_tumo, int syanten, Ha
         if (flags[tile] != -1)
             continue;
 
-        const std::vector<double> &tumo_probs = tumo_probs_table_[counts[tile]];
-        const std::vector<double> &not_tumo_probs = not_tumo_probs_table_[sum_required_tiles];
+        const std::vector<double> &tumo_probs = tumo_prob_table_[counts[tile]];
+        const std::vector<double> &not_tumo_probs = not_tumo_prob_table_[sum_required_tiles];
 
         // 手牌に加える
         add_tile(hand, tile);
@@ -300,7 +393,7 @@ ExpectedValueCalculator::draw_with_tegawari(int n_extra_tumo, int syanten, Hand 
         if (flags[tile] != -1)
             continue;
 
-        const std::vector<double> &tumo_probs = tumo_probs_table_[counts[tile]];
+        const std::vector<double> &tumo_probs = tumo_prob_table_[counts[tile]];
 
         // 手牌に加える
         add_tile(hand, tile);
@@ -350,7 +443,7 @@ ExpectedValueCalculator::draw_with_tegawari(int n_extra_tumo, int syanten, Hand 
         if (flags[tile] != 0)
             continue;
 
-        const std::vector<double> &tumo_probs = tumo_probs_table_[counts[tile]];
+        const std::vector<double> &tumo_probs = tumo_prob_table_[counts[tile]];
 
         // 手牌に加える
         add_tile(hand, tile);
@@ -545,95 +638,6 @@ std::vector<Candidate> ExpectedValueCalculator::analyze(int syanten, const Hand 
 }
 
 /**
- * @brief 各牌の残り枚数を数える。
- *
- * @param[in] hand 手牌
- * @param[in] dora_indicators ドラ表示牌の一覧
- * @return std::vector<int> 各牌の残り枚数
- */
-std::vector<int> ExpectedValueCalculator::count_left_tiles(const Hand &hand,
-                                                           const std::vector<int> &dora_indicators)
-{
-    std::vector<int> counts(37, 4);
-    counts[Tile::AkaManzu5] = counts[Tile::AkaPinzu5] = counts[Tile::AkaSozu5] = 1;
-
-    // 手牌を除く。
-    for (int i = 0; i < 34; ++i)
-        counts[i] -= hand.num_tiles(i);
-    counts[Tile::AkaManzu5] -= hand.aka_manzu5;
-    counts[Tile::AkaPinzu5] -= hand.aka_pinzu5;
-    counts[Tile::AkaSozu5] -= hand.aka_sozu5;
-
-    // 副露ブロックを除く。
-    for (const auto &block : hand.melds) {
-        for (auto tile : block.tiles) {
-            counts[aka2normal(tile)]--;
-            counts[Tile::AkaManzu5] -= tile == Tile::AkaManzu5;
-            counts[Tile::AkaPinzu5] -= tile == Tile::AkaPinzu5;
-            counts[Tile::AkaSozu5] -= tile == Tile::AkaSozu5;
-        }
-    }
-
-    // ドラ表示牌を除く。
-    for (auto tile : dora_indicators) {
-        counts[aka2normal(tile)]--;
-        counts[Tile::AkaManzu5] -= tile == Tile::AkaManzu5;
-        counts[Tile::AkaPinzu5] -= tile == Tile::AkaPinzu5;
-        counts[Tile::AkaSozu5] -= tile == Tile::AkaSozu5;
-    }
-
-    return counts;
-}
-
-/**
- * @brief 打牌一覧を取得する。
- *
- * @param[in] hand 手牌
- * @param[in] syanten 手牌の向聴数
- * @return 打牌一覧 (向聴戻し: 1、向聴数変化なし: 0、手牌に存在しない: inf)
- */
-std::vector<int> ExpectedValueCalculator::get_discard_tiles(Hand &hand, int syanten)
-{
-    std::vector<int> flags(34, std::numeric_limits<int>::max());
-
-    for (int tile = 0; tile < 34; ++tile) {
-        if (hand.contains(tile)) {
-            remove_tile(hand, tile);
-            auto [_, syanten_after] = SyantenCalculator::calc(hand, syanten_type_);
-            add_tile(hand, tile);
-            flags[tile] = syanten_after - syanten;
-        }
-    }
-
-    return flags;
-}
-
-/**
- * @brief 自摸牌一覧を取得する。
- *
- * @param[in] hand 手牌
- * @param[in] syanten 手牌の向聴数
- * @param[in] counts 各牌の残り枚数
- * @return 自摸牌一覧 (有効牌: -1、向聴数変化なし: 0)
- */
-std::vector<int> ExpectedValueCalculator::get_draw_tiles(Hand &hand, int syanten,
-                                                         const std::vector<int> &counts)
-{
-    std::vector<int> flags(34);
-
-    for (int tile = 0; tile < 34; ++tile) {
-        if (counts[tile] > 0) {
-            add_tile(hand, tile);
-            auto [_, syanten_after] = SyantenCalculator::calc(hand, syanten_type_);
-            remove_tile(hand, tile);
-            flags[tile] = syanten_after - syanten;
-        }
-    }
-
-    return flags;
-}
-
-/**
  * @brief 手牌の点数を取得する。
  *
  * @param[in] hand 手牌
@@ -651,7 +655,7 @@ const ScoreCache &ExpectedValueCalculator::get_score(const Hand &hand, int win_t
     int hand_flag = hand.is_menzen() ? (HandFlag::Tumo | HandFlag::Reach) : HandFlag::Tumo;
 
     // 点数計算を行う。
-    Result result = score_.calc(hand, win_tile, hand_flag);
+    Result result = score_calculator_.calc(hand, win_tile, hand_flag);
 
     // 表ドラの数
     int n_dora = int(dora_indicators_.size());
@@ -661,7 +665,7 @@ const ScoreCache &ExpectedValueCalculator::get_score(const Hand &hand, int win_t
     std::vector<double> scores(4, 0);
     if (result.success) {
         // 役ありの場合
-        std::vector<int> up_scores = score_.get_scores_for_exp(result);
+        std::vector<int> up_scores = score_calculator_.get_scores_for_exp(result);
 
         if (calc_uradora_ && n_dora == 1) {
             // 裏ドラ考慮ありかつ表ドラが1枚以上の場合は、厳密に計算する。
@@ -697,7 +701,7 @@ const ScoreCache &ExpectedValueCalculator::get_score(const Hand &hand, int win_t
             for (int base = 0; base < 4; ++base) {
                 for (int i = 0; i < 13; ++i) {
                     int han_idx = std::min(base + i, int(up_scores.size() - 1));
-                    scores[base] += up_scores[han_idx] * uradora_prob_[n_dora][i];
+                    scores[base] += up_scores[han_idx] * uradora_prob_table_[n_dora][i];
                 }
             }
         }
@@ -716,6 +720,6 @@ const ScoreCache &ExpectedValueCalculator::get_score(const Hand &hand, int win_t
     return itr->second;
 }
 
-std::vector<std::vector<double>> ExpectedValueCalculator::uradora_prob_;
+std::vector<std::vector<double>> ExpectedValueCalculator::uradora_prob_table_;
 
 } // namespace mahjong
