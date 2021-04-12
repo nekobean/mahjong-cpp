@@ -55,8 +55,20 @@ inline void add_tile(Hand &hand, int tile)
         hand.pinzu += Bit::tile1[tile];
     else if (tile <= Tile::Sozu9)
         hand.sozu += Bit::tile1[tile];
-    else
+    else if (tile <= Tile::Tyun)
         hand.zihai += Bit::tile1[tile];
+    else if (tile == Tile::AkaManzu5) {
+        hand.manzu += Bit::tile1[Tile::Manzu5];
+        hand.aka_manzu5 = true;
+    }
+    else if (tile == Tile::AkaPinzu5) {
+        hand.pinzu += Bit::tile1[Tile::Pinzu5];
+        hand.aka_pinzu5 = true;
+    }
+    else if (tile == Tile::AkaSozu5) {
+        hand.sozu += Bit::tile1[Tile::Sozu5];
+        hand.aka_sozu5 = true;
+    }
 }
 
 inline void remove_tile(Hand &hand, int tile)
@@ -67,8 +79,20 @@ inline void remove_tile(Hand &hand, int tile)
         hand.pinzu -= Bit::tile1[tile];
     else if (tile <= Tile::Sozu9)
         hand.sozu -= Bit::tile1[tile];
-    else
+    else if (tile <= Tile::Tyun)
         hand.zihai -= Bit::tile1[tile];
+    else if (tile == Tile::AkaManzu5) {
+        hand.manzu -= Bit::tile1[Tile::Manzu5];
+        hand.aka_manzu5 = false;
+    }
+    else if (tile == Tile::AkaPinzu5) {
+        hand.pinzu -= Bit::tile1[Tile::Pinzu5];
+        hand.aka_pinzu5 = false;
+    }
+    else if (tile == Tile::AkaSozu5) {
+        hand.sozu -= Bit::tile1[Tile::Sozu5];
+        hand.aka_sozu5 = false;
+    }
 }
 
 struct CacheKey
@@ -183,7 +207,8 @@ class ExpectedValueCalculator
     static bool make_uradora_table();
     void create_prob_table(int n_left_tiles);
     void clear_cache();
-    std::vector<int> get_draw_tiles(Hand &hand, int syanten, const std::vector<int> &counts);
+    std::vector<std::tuple<int, int, int>> get_draw_tiles(Hand &hand, int syanten,
+                                                          const std::vector<int> &counts);
     std::vector<int> get_discard_tiles(Hand &hand, int syanten);
     std::vector<double> get_score(const Hand &hand, int win_tile, const std::vector<int> &counts);
 
