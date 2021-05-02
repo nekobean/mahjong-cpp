@@ -1,0 +1,102 @@
+{
+    "type": "object",
+    "required": [
+        "zikaze",
+        "bakaze",
+        "turn",
+        "syanten_type",
+        "dora_indicators",
+        "flag",
+        "hand_tiles",
+        "melded_blocks"
+    ],
+    "additionalProperties": false,
+    "properties": {
+        "ip": {
+            "type": "string"
+        },
+        "zikaze": {
+            "type": "integer",
+            "enum": [
+                27,
+                28,
+                29,
+                30
+            ]
+        },
+        "bakaze": {
+            "type": "integer",
+            "enum": [
+                27,
+                28,
+                29,
+                30
+            ]
+        },
+        "turn": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 17
+        },
+        "syanten_type": {
+            "type": "integer",
+            "enum": [
+                1,
+                2,
+                4
+            ]
+        },
+        "dora_indicators": {
+            "type": "array",
+            "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 36
+            }
+        },
+        "flag": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 127
+        },
+        "hand_tiles": {
+            "type": "array",
+            "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 36
+            }
+        },
+        "melded_blocks": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "type": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 4
+                    },
+                    "tiles": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 36
+                        }
+                    },
+                    "discarded_tile": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 36
+                    },
+                    "from": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 3
+                    }
+                }
+            }
+        }
+    }
+}
