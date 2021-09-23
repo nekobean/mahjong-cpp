@@ -518,8 +518,8 @@ ExpectedValueCalculator::draw_with_tegawari(int n_extra_tumo, int syanten, Hand 
     // 自摸候補を取得する。
     std::vector<std::tuple<int, int, int>> flags = get_draw_tiles(hand, syanten, counts);
 
-    for (auto &[tile, count, diff] : flags) {
-        if (diff != -1)
+    for (auto &[tile, count, syanten_diff] : flags) {
+        if (syanten_diff != -1)
             continue; // 有効牌以外の場合
 
         const std::vector<double> &tumo_probs = tumo_prob_table_[count];
@@ -565,8 +565,8 @@ ExpectedValueCalculator::draw_with_tegawari(int n_extra_tumo, int syanten, Hand 
         remove_tile(hand, tile, counts);
     }
 
-    for (auto &[tile, count, diff] : flags) {
-        if (diff != 0)
+    for (auto &[tile, count, syanten_diff] : flags) {
+        if (syanten_diff != 0)
             continue; // 有効牌の場合
 
         const std::vector<double> &tumo_probs = tumo_prob_table_[count];
