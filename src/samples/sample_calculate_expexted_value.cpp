@@ -1,5 +1,6 @@
 #include "mahjong/mahjong.hpp"
 
+#include <algorithm>
 #include <chrono>
 #include <numeric>
 

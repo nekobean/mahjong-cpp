@@ -227,7 +227,7 @@ void ExpectedValueCalculator::clear_cache()
  * @param[in] hand 手牌
  * @param[in] syanten 手牌の向聴数
  * @param[in] counts 各牌の残り枚数
- * @return 自摸牌一覧 (有効牌: -1、向聴数変化なし: 0)
+ * @return 自摸牌候補の一覧。各要素は (牌, 残り枚数, 向聴数の変化) を表す。
  */
 std::vector<std::tuple<int, int, int>>
 ExpectedValueCalculator::get_draw_tiles(Hand &hand, int syanten, const std::vector<int> &counts)
@@ -240,41 +240,42 @@ ExpectedValueCalculator::get_draw_tiles(Hand &hand, int syanten, const std::vect
             add_tile(hand, tile);
             auto [_, syanten_after] = SyantenCalculator::calc(hand, syanten_type_);
             remove_tile(hand, tile);
+            int syanten_diff = syanten_after - syanten; // 向聴数の変化
 
             if (tile == Tile::Manzu5 && counts[Tile::AkaManzu5] == 1) {
                 // 赤五萬が残っている場合
                 if (counts[Tile::Manzu5] >= 2) {
                     // 普通の牌と赤牌の両方が残っている
-                    flags.emplace_back(tile, counts[tile] - 1, syanten_after - syanten);
-                    flags.emplace_back(Tile::AkaManzu5, 1, syanten_after - syanten);
+                    flags.emplace_back(tile, counts[tile] - 1, syanten_diff);
+                    flags.emplace_back(Tile::AkaManzu5, 1, syanten_diff);
                 }
                 else if (counts[Tile::Manzu5] == 1) {
                     // 赤牌のみ残っている
-                    flags.emplace_back(Tile::AkaManzu5, 1, syanten_after - syanten);
+                    flags.emplace_back(Tile::AkaManzu5, 1, syanten_diff);
                 }
             }
             else if (tile == Tile::Pinzu5 && counts[Tile::AkaPinzu5] == 1) {
                 // 赤五筒が残っている場合
                 if (counts[Tile::Pinzu5] >= 2) {
                     // 普通の牌と赤牌の両方が残っている
-                    flags.emplace_back(tile, counts[tile] - 1, syanten_after - syanten);
-                    flags.emplace_back(Tile::AkaPinzu5, 1, syanten_after - syanten);
+                    flags.emplace_back(tile, counts[tile] - 1, syanten_diff);
+                    flags.emplace_back(Tile::AkaPinzu5, 1, syanten_diff);
                 }
                 else if (counts[Tile::Pinzu5] == 1) {
                     // 赤牌のみ残っている
-                    flags.emplace_back(Tile::AkaPinzu5, 1, syanten_after - syanten);
+                    flags.emplace_back(Tile::AkaPinzu5, 1, syanten_diff);
                 }
             }
             else if (tile == Tile::Sozu5 && counts[Tile::AkaSozu5] == 1) {
                 // 赤五索が残っている場合
                 if (counts[Tile::Sozu5] >= 2) {
                     // 普通の牌と赤牌の両方が残っている
-                    flags.emplace_back(tile, counts[tile] - 1, syanten_after - syanten);
-                    flags.emplace_back(Tile::AkaSozu5, 1, syanten_after - syanten);
+                    flags.emplace_back(tile, counts[tile] - 1, syanten_diff);
+                    flags.emplace_back(Tile::AkaSozu5, 1, syanten_diff);
                 }
                 else if (counts[Tile::Sozu5] == 1) {
                     // 赤牌のみ残っている
-                    flags.emplace_back(Tile::AkaSozu5, 1, syanten_after - syanten);
+                    flags.emplace_back(Tile::AkaSozu5, 1, syanten_diff);
                 }
             }
             else {
@@ -566,7 +567,7 @@ ExpectedValueCalculator::draw_with_tegawari(int n_extra_tumo, int syanten, Hand 
 
     for (auto &[tile, count, diff] : flags) {
         if (diff != 0)
-            continue;
+            continue; // 有効牌の場合
 
         const std::vector<double> &tumo_probs = tumo_prob_table_[count];
 
@@ -644,6 +645,7 @@ ExpectedValueCalculator::discard(int n_extra_tumo, int syanten, Hand &hand,
     double max_value = -1;
     for (int tile = 0; tile < 34; ++tile) {
         int discard_tile = tile;
+        // 赤牌以外が残っている場合はそちらを先に捨てる。
         if (tile == Tile::Manzu5 && hand.aka_manzu5 && hand.num_tiles(Tile::Manzu5) == 1)
             discard_tile = Tile::AkaManzu5;
         else if (tile == Tile::Pinzu5 && hand.aka_pinzu5 && hand.num_tiles(Tile::Pinzu5) == 1)
@@ -696,6 +698,14 @@ ExpectedValueCalculator::discard(int n_extra_tumo, int syanten, Hand &hand,
 #endif
 }
 
+/**
+ * @brief 手牌の推移パターンを和了まですべて解析する。
+ * 
+ * @param [in]n_extra_tumo 
+ * @param [in]syanten 向聴数
+ * @param [in]_hand 手牌
+ * @return std::vector<Candidate> 打牌候補の一覧
+ */
 std::vector<Candidate> ExpectedValueCalculator::analyze(int n_extra_tumo, int syanten,
                                                         const Hand &_hand)
 {
@@ -710,6 +720,7 @@ std::vector<Candidate> ExpectedValueCalculator::analyze(int n_extra_tumo, int sy
 
     for (int tile = 0; tile < 34; ++tile) {
         int discard_tile = tile;
+        // 赤牌以外が残っている場合はそちらを先に捨てる。
         if (tile == Tile::Manzu5 && hand.aka_manzu5 && hand.num_tiles(Tile::Manzu5) == 1)
             discard_tile = Tile::AkaManzu5;
         else if (tile == Tile::Pinzu5 && hand.aka_pinzu5 && hand.num_tiles(Tile::Pinzu5) == 1)
@@ -758,6 +769,13 @@ std::vector<Candidate> ExpectedValueCalculator::analyze(int n_extra_tumo, int sy
     return candidates;
 }
 
+/**
+ * @brief 手牌の推移パターンを1手先まで解析する。
+ * 
+ * @param [in]syanten 向聴数
+ * @param [in]_hand 手牌
+ * @return std::vector<Candidate> 打牌候補の一覧
+ */
 std::vector<Candidate> ExpectedValueCalculator::analyze(int syanten, const Hand &_hand)
 {
     std::vector<Candidate> candidates;
