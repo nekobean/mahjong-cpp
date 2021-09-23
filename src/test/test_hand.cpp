@@ -20,8 +20,7 @@ using namespace mahjong;
  * @return 読み込みに成功した場合は true、そうでない場合は false を返す。
  */
 bool load_constractor_testcase(
-    std::vector<std::tuple<std::vector<int>, int, int, int, int, bool, bool, bool>>
-        &cases)
+    std::vector<std::tuple<std::vector<int>, int, int, int, int, bool, bool, bool>> &cases)
 {
     cases.clear();
 
@@ -48,9 +47,8 @@ bool load_constractor_testcase(
             tiles[i] = std::stoi(tokens[i]);
 
         cases.emplace_back(tiles, std::stoi(tokens[14]), std::stoi(tokens[15]),
-                           std::stoi(tokens[16]), std::stoi(tokens[17]),
-                           std::stoi(tokens[18]), std::stoi(tokens[19]),
-                           std::stoi(tokens[20]));
+                           std::stoi(tokens[16]), std::stoi(tokens[17]), std::stoi(tokens[18]),
+                           std::stoi(tokens[19]), std::stoi(tokens[20]));
     }
 
     return true;
@@ -107,8 +105,7 @@ bool load_num_tiles_testcase(
  * @param[out] cases テストケース
  * @return 読み込みに成功した場合は true、そうでない場合は false を返す。
  */
-bool load_to_string_testcase(
-    std::vector<std::tuple<std::vector<int>, std::string>> &cases)
+bool load_to_string_testcase(std::vector<std::tuple<std::vector<int>, std::string>> &cases)
 {
     cases.clear();
 
@@ -164,13 +161,11 @@ TEST_CASE("Constract Hand")
 
     SECTION("Hand::Hand(const std::vector<int> &)")
     {
-        std::vector<std::tuple<std::vector<int>, int, int, int, int, bool, bool, bool>>
-            cases;
+        std::vector<std::tuple<std::vector<int>, int, int, int, int, bool, bool, bool>> cases;
         if (!load_constractor_testcase(cases))
             return;
 
-        for (auto &[tiles, manzu, pinzu, sozu, zihai, aka_manzu5, aka_pinzu5,
-                    aka_sozu5] : cases) {
+        for (auto &[tiles, manzu, pinzu, sozu, zihai, aka_manzu5, aka_pinzu5, aka_sozu5] : cases) {
             Hand hand(tiles);
             REQUIRE(hand.manzu == manzu);
             REQUIRE(hand.pinzu == pinzu);
@@ -188,10 +183,9 @@ TEST_CASE("is_menzen()")
 {
     SECTION("鳴いていない場合は門前")
     {
-        Hand hand({Tile::Manzu1, Tile::Manzu1, Tile::Manzu2, Tile::Manzu2,
-                   Tile::AkaManzu5, Tile::Manzu6, Tile::Manzu7, Tile::Manzu8,
-                   Tile::Manzu9, Tile::Pinzu1, Tile::Pinzu1, Tile::Pinzu2,
-                   Tile::Pinzu2});
+        Hand hand({Tile::Manzu1, Tile::Manzu1, Tile::Manzu2, Tile::Manzu2, Tile::AkaManzu5,
+                   Tile::Manzu6, Tile::Manzu7, Tile::Manzu8, Tile::Manzu9, Tile::Pinzu1,
+                   Tile::Pinzu1, Tile::Pinzu2, Tile::Pinzu2});
 
         REQUIRE(hand.is_menzen());
     }
@@ -213,10 +207,8 @@ TEST_CASE("is_menzen()")
 
     SECTION("副露ブロックに暗槓以外がある場合は門前でない")
     {
-        MeldedBlock block1 = {MeldType::Ankan,
-                              {Tile::Pinzu1, Tile::Pinzu1, Tile::Pinzu1},
-                              Tile::Pinzu1,
-                              0};
+        MeldedBlock block1 = {
+            MeldType::Ankan, {Tile::Pinzu1, Tile::Pinzu1, Tile::Pinzu1}, Tile::Pinzu1, 0};
         MeldedBlock block2 = {MeldType::Ankan,
                               {Tile::Pinzu8, Tile::Pinzu8, Tile::Pinzu8, Tile::Pinzu8},
                               Tile::Pinzu1,
@@ -233,10 +225,9 @@ TEST_CASE("is_melded()")
 {
     SECTION("鳴いていない")
     {
-        Hand hand({Tile::Manzu1, Tile::Manzu1, Tile::Manzu2, Tile::Manzu2,
-                   Tile::AkaManzu5, Tile::Manzu6, Tile::Manzu7, Tile::Manzu8,
-                   Tile::Manzu9, Tile::Pinzu1, Tile::Pinzu1, Tile::Pinzu2,
-                   Tile::Pinzu2});
+        Hand hand({Tile::Manzu1, Tile::Manzu1, Tile::Manzu2, Tile::Manzu2, Tile::AkaManzu5,
+                   Tile::Manzu6, Tile::Manzu7, Tile::Manzu8, Tile::Manzu9, Tile::Pinzu1,
+                   Tile::Pinzu1, Tile::Pinzu2, Tile::Pinzu2});
 
         REQUIRE(!hand.is_melded());
     }
@@ -258,10 +249,8 @@ TEST_CASE("is_melded()")
 
     SECTION("副露ブロックに暗槓以外がある")
     {
-        MeldedBlock block1 = {MeldType::Ankan,
-                              {Tile::Pinzu1, Tile::Pinzu1, Tile::Pinzu1},
-                              Tile::Pinzu1,
-                              0};
+        MeldedBlock block1 = {
+            MeldType::Ankan, {Tile::Pinzu1, Tile::Pinzu1, Tile::Pinzu1}, Tile::Pinzu1, 0};
         MeldedBlock block2 = {MeldType::Ankan,
                               {Tile::Pinzu8, Tile::Pinzu8, Tile::Pinzu8, Tile::Pinzu8},
                               Tile::Pinzu1,

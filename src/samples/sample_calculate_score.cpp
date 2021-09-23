@@ -35,8 +35,7 @@ int main(int, char **)
         ////////////////////////////////////////////////////////////////////////////////
 
         // 手牌
-        MeldedBlock block(MeldType::Kakan,
-                          {Tile::Ton, Tile::Ton, Tile::Ton, Tile::Ton});
+        MeldedBlock block(MeldType::Kakan, {Tile::Ton, Tile::Ton, Tile::Ton, Tile::Ton});
         Hand hand({Tile::Manzu1, Tile::Manzu2, Tile::Manzu3, //
                    Tile::Pinzu3, Tile::Pinzu4, Tile::Pinzu5, //
                    Tile::Sozu1, Tile::Sozu2, Tile::Sozu3,    //

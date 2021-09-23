@@ -27,9 +27,9 @@ enum
     Length,
 };
 
-static inline const std::map<int, std::string> Name = {
-    {Null, "Null"},  {Pon, "ポン"},    {Ti, "チー"},
-    {Ankan, "暗槓"}, {Minkan, "明槓"}, {Kakan, "加槓"}};
+static inline const std::map<int, std::string> Name = {{Null, "Null"},   {Pon, "ポン"},
+                                                       {Ti, "チー"},     {Ankan, "暗槓"},
+                                                       {Minkan, "明槓"}, {Kakan, "加槓"}};
 
 } // namespace MeldType
 
@@ -73,11 +73,8 @@ enum
     Length,
 };
 
-static inline const std::map<int, std::string> Name = {{Null, "Null"},
-                                                       {Zitya, "自家"},
-                                                       {Kamitya, "上家"},
-                                                       {Toimen, "対面"},
-                                                       {Simotya, "下家"}};
+static inline const std::map<int, std::string> Name = {
+    {Null, "Null"}, {Zitya, "自家"}, {Kamitya, "上家"}, {Toimen, "対面"}, {Simotya, "下家"}};
 
 } // namespace SeatType
 
@@ -86,10 +83,7 @@ static inline const std::map<int, std::string> Name = {{Null, "Null"},
  */
 struct MeldedBlock
 {
-    MeldedBlock()
-        : type(MeldType::Null), discarded_tile(Tile::Null), from(PlayerType::Null)
-    {
-    }
+    MeldedBlock() : type(MeldType::Null), discarded_tile(Tile::Null), from(PlayerType::Null) {}
 
     MeldedBlock(int type, std::vector<int> tiles)
         : type(type)

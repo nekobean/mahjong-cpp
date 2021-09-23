@@ -29,8 +29,7 @@ bool HandSeparator::initialize()
     boost::filesystem::path z_tbl_path =
         boost::dll::program_location().parent_path() / "zihai_pattern.json";
 
-    return make_table(s_tbl_path.string(), s_tbl_) &&
-           make_table(z_tbl_path.string(), z_tbl_);
+    return make_table(s_tbl_path.string(), s_tbl_) && make_table(z_tbl_path.string(), z_tbl_);
 }
 
 /**
@@ -41,8 +40,8 @@ bool HandSeparator::initialize()
  * @param[in] tumo 自摸かどうか
  * @return std::vector<std::vector<Block>> 面子構成の一覧
  */
-std::vector<std::tuple<std::vector<Block>, int>>
-HandSeparator::separate(const Hand &hand, int win_tile, bool tumo)
+std::vector<std::tuple<std::vector<Block>, int>> HandSeparator::separate(const Hand &hand,
+                                                                         int win_tile, bool tumo)
 {
     std::vector<std::tuple<std::vector<Block>, int>> pattern;
     std::vector<Block> blocks(5);
@@ -142,10 +141,9 @@ std::vector<Block> HandSeparator::get_blocks(const std::string &s)
  * @param[in] syanten_type 和了形の種類
  * @return YakuList 成立した役一覧
  */
-void HandSeparator::create_block_patterns(
-    const Hand &hand, int win_tile, bool tumo,
-    std::vector<std::tuple<std::vector<Block>, int>> &pattern,
-    std::vector<Block> &blocks, size_t i, int d)
+void HandSeparator::create_block_patterns(const Hand &hand, int win_tile, bool tumo,
+                                          std::vector<std::tuple<std::vector<Block>, int>> &pattern,
+                                          std::vector<Block> &blocks, size_t i, int d)
 {
     if (d == 4) {
         for (auto &block : blocks) {
@@ -163,8 +161,7 @@ void HandSeparator::create_block_patterns(
                     block.type &= ~BlockType::Open;
                 }
             }
-            else if (block.type == BlockType::Syuntu &&
-                     block.min_tile + 1 == win_tile) {
+            else if (block.type == BlockType::Syuntu && block.min_tile + 1 == win_tile) {
                 // 嵌張待ち
                 if (tumo) {
                     pattern.emplace_back(blocks, WaitType::Kantyan);
@@ -175,10 +172,8 @@ void HandSeparator::create_block_patterns(
                     block.type &= ~BlockType::Open;
                 }
             }
-            else if (block.type == BlockType::Syuntu &&
-                     block.min_tile + 2 == win_tile &&
-                     (block.min_tile == Tile::Manzu1 ||
-                      block.min_tile == Tile::Pinzu1 ||
+            else if (block.type == BlockType::Syuntu && block.min_tile + 2 == win_tile &&
+                     (block.min_tile == Tile::Manzu1 || block.min_tile == Tile::Pinzu1 ||
                       block.min_tile == Tile::Sozu1)) {
                 // 辺張待ち 123
                 if (tumo) {
@@ -191,8 +186,7 @@ void HandSeparator::create_block_patterns(
                 }
             }
             else if (block.type == BlockType::Syuntu && block.min_tile == win_tile &&
-                     (block.min_tile == Tile::Manzu7 ||
-                      block.min_tile == Tile::Pinzu7 ||
+                     (block.min_tile == Tile::Manzu7 || block.min_tile == Tile::Pinzu7 ||
                       block.min_tile == Tile::Sozu7)) {
                 // 辺張待ち 789
                 if (tumo) {

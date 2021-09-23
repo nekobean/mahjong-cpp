@@ -89,20 +89,17 @@ struct Yaku
     };
 
     static inline std::vector<YakuList> NormalYaku = {
-        Tumo,          Reach,          Ippatu,        Tanyao,     Pinhu,
-        Ipeko,         Tyankan,        Rinsyankaiho,  Haiteitumo, Hoteiron,
-        SangenhaiHaku, SangenhaiHatu,  SangenhaiTyun, ZikazeTon,  ZikazeNan,
-        ZikazeSya,     ZikazePe,       BakazeTon,     BakazeNan,  BakazeSya,
-        BakazePe,      DoubleReach,    Tiitoitu,      Toitoiho,   Sananko,
-        SansyokuDoko,  SansyokuDozyun, Honroto,       IkkiTukan,  Tyanta,
-        Syosangen,     Sankantu,       Honiso,        Zyuntyanta, Ryanpeko,
-        Tiniso,
+        Tumo,          Reach,        Ippatu,         Tanyao,      Pinhu,         Ipeko,
+        Tyankan,       Rinsyankaiho, Haiteitumo,     Hoteiron,    SangenhaiHaku, SangenhaiHatu,
+        SangenhaiTyun, ZikazeTon,    ZikazeNan,      ZikazeSya,   ZikazePe,      BakazeTon,
+        BakazeNan,     BakazeSya,    BakazePe,       DoubleReach, Tiitoitu,      Toitoiho,
+        Sananko,       SansyokuDoko, SansyokuDozyun, Honroto,     IkkiTukan,     Tyanta,
+        Syosangen,     Sankantu,     Honiso,         Zyuntyanta,  Ryanpeko,      Tiniso,
     };
 
     static inline std::vector<YakuList> Yakuman = {
-        Tenho,       Tiho,       Renho,       Ryuiso,       Daisangen, Syosusi,
-        Tuiso,       Kokusimuso, Tyurenpoto,  Suanko,       Tinroto,   Sukantu,
-        SuankoTanki, Daisusi,    Tyurenpoto9, Kokusimuso13,
+        Tenho,      Tiho,   Renho,   Ryuiso,  Daisangen,   Syosusi, Tuiso,       Kokusimuso,
+        Tyurenpoto, Suanko, Tinroto, Sukantu, SuankoTanki, Daisusi, Tyurenpoto9, Kokusimuso13,
     };
 
     /**
