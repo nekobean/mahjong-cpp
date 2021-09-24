@@ -33,6 +33,7 @@ struct DiscardResponseData
 
 RequestData parse_request(const rapidjson::Value &doc);
 DiscardResponseData parse_response(const rapidjson::Value &doc);
+std::string to_json_str(rapidjson::Value &value);
 std::string to_json_str(rapidjson::Document &doc);
 rapidjson::Value dump_required_tiles(const std::vector<std::tuple<int, int>> &tiles,
                                      rapidjson::Document &doc);

@@ -15,6 +15,22 @@ using namespace mahjong;
  * @param[in] doc ドキュメント
  * @return std::string JSON ドキュメント
  */
+std::string to_json_str(rapidjson::Value &value)
+{
+    std::stringstream ss;
+    rapidjson::OStreamWrapper osw(ss);
+    rapidjson::PrettyWriter<rapidjson::OStreamWrapper> writer(osw);
+    value.Accept(writer);
+
+    return ss.str();
+}
+
+/**
+ * @brief JSON ドキュメントを文字列にする。
+ * 
+ * @param[in] doc ドキュメント
+ * @return std::string JSON ドキュメント
+ */
 std::string to_json_str(rapidjson::Document &doc)
 {
     std::stringstream ss;
