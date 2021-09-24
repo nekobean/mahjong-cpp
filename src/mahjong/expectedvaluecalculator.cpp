@@ -510,12 +510,11 @@ ExpectedValueCalculator::draw_with_tegawari(int n_extra_tumo, int syanten, Hand 
     // 自摸候補を取得する。
     std::vector<std::tuple<int, int, int>> flags = get_draw_tiles(hand, syanten, counts);
 
-    // 有効牌の合計枚数を計算する。【暫定対応】
-    int sum_left_tiles = std::accumulate(counts.begin(), counts.begin() + 34, 0);
-
     for (auto &[tile, count, syanten_diff] : flags) {
         if (syanten_diff != -1)
             continue; // 有効牌以外の場合
+
+        const std::vector<double> &tumo_probs = tumo_prob_table_[count];
 
         // 手牌に加える
         add_tile(hand, tile, counts);
@@ -531,21 +530,11 @@ ExpectedValueCalculator::draw_with_tegawari(int n_extra_tumo, int syanten, Hand 
                 discard(n_extra_tumo, syanten - 1, hand, counts);
         }
 
-        const std::vector<double> &tumo_probs = tumo_prob_table_[count];
-
-        // 【暫定対応】 (2021/9/24)
-        // draw_without_tegawari() で有効牌が引けない場合、有効牌以外のどの牌を引いたのかということは考慮していないため、
-        // counts で管理している各牌の残りの合計枚数 > 現在の巡目の残り枚数という状況が発生し、結果的に確率値が1を超えてしまう。実際に正しい確率値を求めるには、draw_without_tegawari() でどの牌を引いたのかをすべてシミュレーションする必要があるが、計算量的に難しいので、巡目に関係なく、
-        // 「自摸の確率 = 牌の残り枚数 / 残り枚数の合計」で確率値が1を超えないように暫定対応した。
-
         for (int i = 0; i < 17; ++i) {
-            double tumo_prob = tumo_probs[i];
-            // double tump_prob = double(count) / sum_left_tiles;
-
             if (syanten == 1) // 1向聴の場合は次で聴牌
-                tenpai_probs[i] += tumo_prob;
+                tenpai_probs[i] += tumo_probs[i];
             else if (i < 16 && syanten > 1)
-                tenpai_probs[i] += tumo_prob * next_tenpai_probs[i + 1];
+                tenpai_probs[i] += tumo_probs[i] * next_tenpai_probs[i + 1];
 
             if (syanten == 0) { // 聴牌の場合は次で和了
                 // i 巡目で聴牌の場合はダブル立直成立
@@ -555,12 +544,12 @@ ExpectedValueCalculator::draw_with_tegawari(int n_extra_tumo, int syanten, Hand 
                 // 最後の巡目で和了の場合は海底撈月成立
                 bool win_haitei = i == 16 && calc_haitei_;
 
-                win_probs[i] += tumo_prob;
-                exp_values[i] += tumo_prob * scores[win_double_reach + win_ippatu + win_haitei];
+                win_probs[i] += tumo_probs[i];
+                exp_values[i] += tumo_probs[i] * scores[win_double_reach + win_ippatu + win_haitei];
             }
             else if (i < 16 && syanten > 0) {
-                win_probs[i] += tumo_prob * next_win_probs[i + 1];
-                exp_values[i] += tumo_prob * next_exp_values[i + 1];
+                win_probs[i] += tumo_probs[i] * next_win_probs[i + 1];
+                exp_values[i] += tumo_probs[i] * next_exp_values[i + 1];
             }
         }
 
@@ -581,12 +570,9 @@ ExpectedValueCalculator::draw_with_tegawari(int n_extra_tumo, int syanten, Hand 
             discard(n_extra_tumo + 1, syanten, hand, counts);
 
         for (int i = 0; i < 16; ++i) {
-            double tumo_prob = tumo_probs[i];
-            // double tump_prob = double(count) / sum_left_tiles; // 【暫定対応】 (2021/9/24)
-
-            tenpai_probs[i] += tumo_prob * next_tenpai_probs[i + 1];
-            win_probs[i] += tumo_prob * next_win_probs[i + 1];
-            exp_values[i] += tumo_prob * next_exp_values[i + 1];
+            tenpai_probs[i] += tumo_probs[i] * next_tenpai_probs[i + 1];
+            win_probs[i] += tumo_probs[i] * next_win_probs[i + 1];
+            exp_values[i] += tumo_probs[i] * next_exp_values[i + 1];
         }
 
         // 手牌から除く
@@ -762,6 +748,14 @@ std::vector<Candidate> ExpectedValueCalculator::analyze(int n_extra_tumo, int sy
                 draw(n_extra_tumo + 1, syanten + 1, hand, counts);
 
             add_tile(hand, discard_tile);
+
+            // 向聴戻しは巡目がずれるので、1つ手前にずらす。(このやり方で正しいのか要検証)
+            std::rotate(tenpai_probs.begin(), tenpai_probs.begin() + 1, tenpai_probs.end());
+            tenpai_probs.back() = 0;
+            std::rotate(win_probs.begin(), win_probs.begin() + 1, win_probs.end());
+            win_probs.back() = 0;
+            std::rotate(exp_values.begin(), exp_values.begin() + 1, exp_values.end());
+            exp_values.back() = 0;
 
             candidates.emplace_back(discard_tile, required_tiles, tenpai_probs, win_probs,
                                     exp_values, true);
