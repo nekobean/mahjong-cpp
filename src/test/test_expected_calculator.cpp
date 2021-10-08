@@ -10,6 +10,7 @@
 #include <rapidjson/prettywriter.h>
 #include <rapidjson/stringbuffer.h>
 
+#include "mahjong/expectedvaluecalculator2.hpp"
 #include "mahjong/json_parser.hpp"
 #include "mahjong/mahjong.hpp"
 
@@ -91,7 +92,118 @@ void test_candidate(const Candidate &expected, const Candidate &actual)
     REQUIRE(expected.syanten_down == actual.syanten_down);
 }
 
+DiscardResponseData create_discard_response2(const RequestData &req)
+{
+    ScoreCalculator score_calc;
+    ExpectedValueCalculator2 exp_value_calc;
+
+    auto begin = std::chrono::steady_clock::now();
+
+    // 向聴数を計算する。
+    auto [syanten_type, syanten] = SyantenCalculator::calc(req.hand, req.syanten_type);
+
+    // 点数計算の設定
+    score_calc.set_bakaze(req.bakaze);
+    score_calc.set_zikaze(req.zikaze);
+    score_calc.set_num_tumibo(0);
+    score_calc.set_num_kyotakubo(0);
+    score_calc.set_dora_indicators(req.dora_indicators);
+
+    // 各打牌を分析する。
+    auto [success, candidates] = exp_value_calc.calc(req.hand, score_calc, req.dora_indicators,
+                                                     req.syanten_type, req.turn, req.flag);
+
+    auto end = std::chrono::steady_clock::now();
+    auto elapsed_us = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
+
+    DiscardResponseData res;
+    res.syanten = syanten;
+    res.time_us = elapsed_us;
+    res.candidates = candidates;
+
+    return res;
+}
+
+// TEST_CASE("期待値計算2")
+// {
+//     RequestData req;
+//     req.bakaze = Tile::Ton;
+//     req.zikaze = Tile::Ton;
+//     req.syanten_type = SyantenType::Normal;
+//     req.dora_indicators = {Tile::Ton};
+//     req.flag |= ExpectedValueCalculator::CalcTegawari;
+//     req.hand = Hand({Tile::Manzu2, Tile::Manzu3, Tile::Manzu4, Tile::Manzu7, Tile::Pinzu6,
+//                      Tile::Pinzu6, Tile::Pinzu6, Tile::Pinzu7, Tile::Sozu7, Tile::Sozu8,
+//                      Tile::Sozu8, Tile::Sozu8, Tile::Sozu9, Tile::Sozu9});
+//     for (int turn = 1; turn < 18; ++turn) {
+//         req.flag = ExpectedValueCalculator::CalcTegawari;
+//         req.turn = turn;
+
+//         DiscardResponseData expected1 = create_discard_response(req);
+//         const DiscardResponseData &expected2 = create_discard_response2(req);
+
+//         REQUIRE(expected1.syanten == expected2.syanten);
+//         spdlog::info("{} {} -> {}", double(expected1.time_us) / double(expected2.time_us),
+//                      expected2.time_us / 1000, expected1.time_us / 1000);
+
+//         for (size_t i = 0; i < expected1.candidates.size(); ++i) {
+//             REQUIRE(expected1.candidates[i].win_probs[turn - 1] ==
+//                     Approx(expected2.candidates[i].win_probs[turn - 1]));
+//         }
+
+//         for (size_t i = 0; i < expected1.candidates.size(); ++i) {
+//             REQUIRE(expected1.candidates[i].exp_values[turn - 1] ==
+//                     Approx(expected2.candidates[i].exp_values[turn - 1]));
+//         }
+
+//         for (size_t i = 4; i < 5; ++i) {
+//             REQUIRE(expected1.candidates[i].tenpai_probs[turn - 1] ==
+//                     Approx(expected2.candidates[i].tenpai_probs[turn - 1]));
+
+//             spdlog::info("turn={} {:.6f}", turn, expected2.candidates[i].tenpai_probs[turn - 1]);
+//             //REQUIRE(expected1.candidates[i].tenpai_probs[turn - 1] <= 1);
+//         }
+//     }
+// }
+
 TEST_CASE("期待値計算")
+{
+    std::vector<RequestData> req_data_list;
+    if (!load_input_data(req_data_list))
+        return;
+
+    for (size_t i = 0; i < 5; ++i) {
+        for (int turn = 1; turn < 18; ++turn) {
+            if (turn != 12)
+                continue;
+            spdlog::info("test no: {}, turn: {}", i, turn);
+
+            req_data_list[i].flag = 0;
+            req_data_list[i].flag =
+                ExpectedValueCalculator::CalcDoubleReach | ExpectedValueCalculator::CalcIppatu |
+                ExpectedValueCalculator::CalcHaiteitumo | ExpectedValueCalculator::CalcSyantenDown;
+            // req_data_list[i].flag |= ExpectedValueCalculator::MaximaizeWinProb;
+            // req_data_list[i].flag |= ExpectedValueCalculator::CalcTegawari;
+            req_data_list[i].turn = turn;
+
+            DiscardResponseData expected1 = create_discard_response(req_data_list[i]);
+            DiscardResponseData expected2 = create_discard_response2(req_data_list[i]);
+            spdlog::info("{} {} -> {}", double(expected1.time_us) / double(expected2.time_us),
+                         expected1.time_us / 1000, expected2.time_us / 1000);
+
+            for (size_t i = 0; i < expected1.candidates.size(); ++i) {
+                REQUIRE(expected1.candidates[i].win_probs[turn - 1] ==
+                        Approx(expected2.candidates[i].win_probs[turn - 1]));
+                REQUIRE(expected1.candidates[i].exp_values[turn - 1] ==
+                        Approx(expected2.candidates[i].exp_values[turn - 1]));
+                REQUIRE(expected1.candidates[i].tenpai_probs[turn - 1] ==
+                        Approx(expected2.candidates[i].tenpai_probs[turn - 1]));
+            }
+        }
+    }
+}
+
+TEST_CASE("期待値計算2")
 {
     std::vector<RequestData> req_data_list;
     if (!load_input_data(req_data_list))
@@ -110,10 +222,10 @@ TEST_CASE("期待値計算")
         REQUIRE(actual.syanten == expected.syanten);
         spdlog::info("{} {} -> {}", double(actual.time_us) / double(expected.time_us),
                      expected.time_us / 1000, actual.time_us / 1000);
-        //REQUIRE(double(expected.time_us) / double(actual.time_us) < 1.1);
+        REQUIRE(double(expected.time_us) / double(actual.time_us) < 1.1);
 
-        for (size_t i = 0; i < actual.candidates.size(); ++i)
-            test_candidate(expected.candidates[i], actual.candidates[i]);
+        // for (size_t i = 0; i < actual.candidates.size(); ++i)
+        //     test_candidate(expected.candidates[i], actual.candidates[i]);
     }
 }
 

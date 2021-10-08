@@ -18,6 +18,48 @@
 namespace mahjong
 {
 
+std::ofstream ofs(R"(C:\Users\papillon\Desktop\output.txt)");
+
+std::string syanten_to_str(int syanten)
+{
+    return syanten == 0 ? "聴牌" : std::to_string(syanten) + "向聴";
+}
+
+void print_init(int syanten, const Hand &hand, int n_extra_tumo)
+{
+    ofs << fmt::format("- {}, {}向聴, {}", syanten_to_str(syanten), hand.to_string(), n_extra_tumo)
+        << std::endl;
+}
+
+void print_draw(int tile, std::vector<int> counts, int syanten, const Hand &hand, int n_extra_tumo)
+{
+    for (int i = 0; i < 3 - syanten; i++)
+        ofs << "    ";
+    ofs << fmt::format("- 自摸 {}{}枚, {}, {}, {}", Tile::Name.at(tile), counts[tile] + 1,
+                       syanten_to_str(syanten), hand.to_string(), n_extra_tumo)
+        << std::endl;
+}
+
+void print_draw(int tile, std::vector<int> counts, int syanten, const Hand &hand, int n_extra_tumo,
+                Result result)
+{
+    for (int i = 0; i < 3 - syanten; i++)
+        ofs << "    ";
+    std::string ret = fmt::format("{}符{}翻{}点", result.fu, result.han, result.score[0]);
+    ofs << fmt::format("- 自摸 {}{}枚, {}, 和了, {}, {}", Tile::Name.at(tile), counts[tile] + 1,
+                       hand.to_string(), ret, n_extra_tumo)
+        << std::endl;
+}
+
+void print_discard(int tile, int syanten, const Hand &hand, int n_extra_tumo)
+{
+    for (int i = 0; i < 3 - syanten; i++)
+        ofs << "    ";
+    ofs << fmt::format("  - 打牌 {},  {}, {}, {}", Tile::Name.at(tile), syanten_to_str(syanten),
+                       hand.to_string(), n_extra_tumo)
+        << std::endl;
+}
+
 ExpectedValueCalculator::ExpectedValueCalculator()
     : calc_syanten_down_(false)
     , calc_tegawari_(false)
@@ -33,7 +75,7 @@ ExpectedValueCalculator::ExpectedValueCalculator()
 
 /**
  * @brief 期待値を計算する。
- * 
+ *
  * @param hand 手牌
  * @param score_calculator 点数計算機
  * @param dora_indicators ドラ表示牌の一覧
@@ -74,6 +116,10 @@ ExpectedValueCalculator::calc(const Hand &hand, const ScoreCalculator &score_cal
 
     // 自摸確率のテーブルを作成する。
     create_prob_table(sum_left_tiles);
+
+#ifdef PRINT_TREE
+    print_init(syanten, hand, 0);
+#endif
 
     if (syanten > 3) // 3向聴以下は聴牌確率、和了確率、期待値を計算する。
         candidates = analyze(syanten, hand);
@@ -181,7 +227,7 @@ bool ExpectedValueCalculator::make_uradora_table()
 
 /**
  * @brief 自摸確率のテーブルを初期化する。
- * 
+ *
  * @param[in] n_left_tiles 1巡目時点の残り枚数の合計
  */
 void ExpectedValueCalculator::create_prob_table(int n_left_tiles)
@@ -384,13 +430,17 @@ std::vector<double> ExpectedValueCalculator::get_score(const Hand &hand, int win
         }
     }
 
+#ifdef PRINT_TREE
+    print_draw(win_tile, counts, -1, hand, 1, result);
+#endif
+
     return scores;
 }
 
 /**
  * @brief 自摸する。(手変わりを考慮しない)
- * 
- * @param[in] n_extra_tumo 
+ *
+ * @param[in] n_extra_tumo
  * @param[in] syanten 向聴数
  * @param[in] hand 手牌
  * @param[in] counts 各牌の残り枚数
@@ -436,6 +486,9 @@ ExpectedValueCalculator::draw_without_tegawari(int n_extra_tumo, int syanten, Ha
             scores = get_score(hand, tile, counts);
         }
         else {
+#ifdef PRINT_TREE
+            print_draw(tile, counts, syanten - 1, hand, n_extra_tumo);
+#endif
             std::tie(next_tenpai_probs, next_win_probs, next_exp_values) =
                 discard(n_extra_tumo, syanten - 1, hand, counts);
         }
@@ -484,13 +537,13 @@ ExpectedValueCalculator::draw_without_tegawari(int n_extra_tumo, int syanten, Ha
 
 /**
  * @brief 自摸する。(手変わりを考慮する)
- * 
- * @param[in] n_extra_tumo 
+ *
+ * @param[in] n_extra_tumo
  * @param[in] syanten 向聴数
  * @param[in] hand 手牌
  * @param[in] counts 各牌の残り枚数
  * @return (各巡目の聴牌確率, 各巡目の和了確率, 各巡目の期待値)
- * 
+ *
  * この関数が呼ばれた時点で向聴戻しは行われていない
  */
 std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
@@ -535,11 +588,14 @@ ExpectedValueCalculator::draw_with_tegawari(int n_extra_tumo, int syanten, Hand 
         // draw_without_tegawari() で有効牌が引けない場合、有効牌以外のどの牌を引いたのかということは考慮していないため、
         // counts で管理している各牌の残りの合計枚数 > 現在の巡目の残り枚数という状況が発生し、結果的に確率値が1を超えてしまう。実際に正しい確率値を求めるには、draw_without_tegawari() でどの牌を引いたのかをすべてシミュレーションする必要があるが、計算量的に難しいので、巡目に関係なく、
         // 「自摸の確率 = 牌の残り枚数 / 残り枚数の合計」で確率値が1を超えないように暫定対応した。
-        // const std::vector<double> &tumo_probs = tumo_prob_table_[count];
-        // tumo_prob = tumo_probs[i];
-        double tump_prob = double(count) / sum_left_tiles;
 
         for (int i = 0; i < 17; ++i) {
+#ifdef TEGAWARI_PROB
+            double tump_prob = double(count) / sum_left_tiles; // 【暫定対応】 (2021/9/24)
+#else
+            double tump_prob = tumo_prob_table_[count][i];
+#endif
+
             if (syanten == 1) // 1向聴の場合は次で聴牌
                 tenpai_probs[i] += tump_prob;
             else if (i < 16 && syanten > 1)
@@ -570,10 +626,6 @@ ExpectedValueCalculator::draw_with_tegawari(int n_extra_tumo, int syanten, Hand 
         if (syanten_diff != 0)
             continue; // 有効牌の場合
 
-        const std::vector<double> &tumo_probs = tumo_prob_table_[count];
-
-        double tump_prob = double(count) / sum_left_tiles; // 【暫定対応】 (2021/9/24)
-
         // 手牌に加える
         add_tile(hand, tile, counts);
 
@@ -581,6 +633,12 @@ ExpectedValueCalculator::draw_with_tegawari(int n_extra_tumo, int syanten, Hand 
             discard(n_extra_tumo + 1, syanten, hand, counts);
 
         for (int i = 0; i < 16; ++i) {
+#ifdef TEGAWARI_PROB
+            double tump_prob = double(count) / sum_left_tiles; // 【暫定対応】 (2021/9/24)
+#else
+            double tump_prob = tumo_prob_table_[count][i];
+#endif
+
             tenpai_probs[i] += tump_prob * next_tenpai_probs[i + 1];
             win_probs[i] += tump_prob * next_win_probs[i + 1];
             exp_values[i] += tump_prob * next_exp_values[i + 1];
@@ -601,8 +659,8 @@ ExpectedValueCalculator::draw_with_tegawari(int n_extra_tumo, int syanten, Hand 
 
 /**
  * @brief 自摸する。
- * 
- * @param[in] n_extra_tumo 
+ *
+ * @param[in] n_extra_tumo
  * @param[in] syanten 向聴数
  * @param[in] hand 手牌
  * @param[in] counts 各牌の残り枚数
@@ -619,8 +677,8 @@ ExpectedValueCalculator::draw(int n_extra_tumo, int syanten, Hand &hand, std::ve
 
 /**
  * @brief 打牌する。
- * 
- * @param[in] n_extra_tumo 
+ *
+ * @param[in] n_extra_tumo
  * @param[in] syanten 向聴数
  * @param[in] hand 手牌
  * @param[in] counts 各牌の残り枚数
@@ -662,6 +720,9 @@ ExpectedValueCalculator::discard(int n_extra_tumo, int syanten, Hand &hand,
         if (flags[tile] == 0) {
             // 向聴数が変化しない打牌
             remove_tile(hand, discard_tile);
+#ifdef PRINT_TREE
+            print_discard(discard_tile, syanten, hand, n_extra_tumo);
+#endif
             std::tie(tenpai_probs, win_probs, exp_values) =
                 draw(n_extra_tumo, syanten, hand, counts);
             add_tile(hand, discard_tile);
@@ -669,6 +730,9 @@ ExpectedValueCalculator::discard(int n_extra_tumo, int syanten, Hand &hand,
         else if (calc_syanten_down_ && n_extra_tumo == 0 && flags[tile] == 1) {
             // 向聴戻しになる打牌
             remove_tile(hand, discard_tile);
+#ifdef PRINT_TREE
+            print_discard(discard_tile, syanten, hand, n_extra_tumo + 1);
+#endif
             std::tie(tenpai_probs, win_probs, exp_values) =
                 draw(n_extra_tumo + 1, syanten + 1, hand, counts);
             add_tile(hand, discard_tile);
@@ -707,8 +771,8 @@ ExpectedValueCalculator::discard(int n_extra_tumo, int syanten, Hand &hand,
 
 /**
  * @brief 手牌の推移パターンを和了まですべて解析する。
- * 
- * @param [in]n_extra_tumo 
+ *
+ * @param [in]n_extra_tumo
  * @param [in]syanten 向聴数
  * @param [in]_hand 手牌
  * @return std::vector<Candidate> 打牌候補の一覧
@@ -737,6 +801,9 @@ std::vector<Candidate> ExpectedValueCalculator::analyze(int n_extra_tumo, int sy
 
         if (flags[tile] == 0) {
             remove_tile(hand, discard_tile);
+#ifdef PRINT_TREE
+            print_discard(discard_tile, syanten, hand, n_extra_tumo);
+#endif
 
             auto required_tiles = get_required_tiles(hand, syanten_type_, counts);
 
@@ -752,6 +819,9 @@ std::vector<Candidate> ExpectedValueCalculator::analyze(int n_extra_tumo, int sy
         }
         else if (calc_syanten_down_ && flags[tile] == 1 && n_extra_tumo == 0 && syanten < 3) {
             remove_tile(hand, discard_tile);
+#ifdef PRINT_TREE
+            print_discard(discard_tile, syanten + 1, hand, n_extra_tumo);
+#endif
 
             auto required_tiles = get_required_tiles(hand, syanten_type_, counts);
 
@@ -761,12 +831,12 @@ std::vector<Candidate> ExpectedValueCalculator::analyze(int n_extra_tumo, int sy
             add_tile(hand, discard_tile);
 
             // 向聴戻しは巡目がずれるので、1つ手前にずらす。(このやり方で正しいのか要検証)
-            std::rotate(tenpai_probs.begin(), tenpai_probs.begin() + 1, tenpai_probs.end());
-            tenpai_probs.back() = 0;
-            std::rotate(win_probs.begin(), win_probs.begin() + 1, win_probs.end());
-            win_probs.back() = 0;
-            std::rotate(exp_values.begin(), exp_values.begin() + 1, exp_values.end());
-            exp_values.back() = 0;
+            // std::rotate(tenpai_probs.begin(), tenpai_probs.begin() + 1, tenpai_probs.end());
+            // tenpai_probs.back() = 0;
+            // std::rotate(win_probs.begin(), win_probs.begin() + 1, win_probs.end());
+            // win_probs.back() = 0;
+            // std::rotate(exp_values.begin(), exp_values.begin() + 1, exp_values.end());
+            // exp_values.back() = 0;
 
             candidates.emplace_back(discard_tile, required_tiles, tenpai_probs, win_probs,
                                     exp_values, true);
@@ -778,7 +848,7 @@ std::vector<Candidate> ExpectedValueCalculator::analyze(int n_extra_tumo, int sy
 
 /**
  * @brief 手牌の推移パターンを1手先まで解析する。
- * 
+ *
  * @param [in]syanten 向聴数
  * @param [in]_hand 手牌
  * @return std::vector<Candidate> 打牌候補の一覧

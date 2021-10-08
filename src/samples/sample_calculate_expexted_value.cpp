@@ -25,9 +25,13 @@ int main(int, char **)
                 Tile::Pinzu3, Tile::Pinzu6, Tile::Pinzu8, Tile::Pinzu8, Tile::Sozu1, Tile::Sozu2,
                 Tile::Sozu4, Tile::Sozu5});
 
+    Hand hand5({Tile::Manzu1, Tile::Manzu2, Tile::Manzu4, Tile::Manzu5, Tile::Manzu5, Tile::Pinzu3,
+                Tile::Pinzu4, Tile::Pinzu5, Tile::Pinzu6, Tile::Pinzu7, Tile::Sozu6, Tile::Sozu7,
+                Tile::Sozu7, Tile::Sozu7});
+
     int bakaze = Tile::Ton;                 // 場風
     int zikaze = Tile::Ton;                 // 自風
-    int turn = 1;                           // 巡目
+    int turn = 3;                           // 巡目
     int syanten_type = SyantenType::Normal; // 向聴数の種類
     // 考慮する項目
     int flag = ExpectedValueCalculator::CalcSyantenDown   // 向聴戻し考慮
@@ -39,7 +43,7 @@ int main(int, char **)
         //| ExpectedValueCalculator::MaximaizeWinProb; // 和了確率を最大化
         ;
     std::vector<int> dora_indicators = {Tile::Ton}; // ドラ表示牌
-    Hand hand = hand1;                              // 手牌
+    Hand hand = hand5;                              // 手牌
 
     ExpectedValueCalculator exp_value_calculator;
     ScoreCalculator score_calculator;

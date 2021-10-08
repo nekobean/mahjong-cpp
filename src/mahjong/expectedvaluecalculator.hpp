@@ -1,5 +1,5 @@
-#ifndef MAHJONG_CPP_EXPECTEDVALUECALCULATOR
-#define MAHJONG_CPP_EXPECTEDVALUECALCULATOR
+#ifndef EXPECTEDVALUECALCULATOR
+#define EXPECTEDVALUECALCULATOR
 
 #include "score.hpp"
 #include "types/types.hpp"
@@ -191,6 +191,8 @@ inline bool operator<(const CacheKey &lhs, const CacheKey &rhs)
 
 #define ENABLE_DRAW_CACHE
 #define ENABLE_DISCARD_CACHE
+// #define PRINT_TREE
+// #define TEGAWARI_PROB
 
 class ExpectedValueCalculator
 {
@@ -327,4 +329,4 @@ class ExpectedValueCalculator
 
 } // namespace mahjong
 
-#endif /* MAHJONG_CPP_EXPECTEDVALUECALCULATOR */
+#endif // EXPECTEDVALUECALCULATOR
