@@ -323,14 +323,6 @@ std::vector<int> ExpectedValueCalculator2::get_discard_tiles(Hand &hand, int sya
 std::vector<double> ExpectedValueCalculator2::get_score(const Hand &hand, int win_tile,
                                                         const std::vector<int> &counts)
 {
-    // 赤牌が残っていないかどうか (あとで消す)
-    // if (hand.aka_manzu5)
-    //     assert(hand.num_tiles(Tile::Manzu5));
-    // if (hand.aka_pinzu5)
-    //     assert(hand.num_tiles(Tile::Pinzu5));
-    // if (hand.aka_sozu5)
-    //     assert(hand.num_tiles(Tile::Sozu5));
-
     // 非門前の場合は自摸のみ
     int hand_flag = hand.is_menzen() ? (HandFlag::Tumo | HandFlag::Reach) : HandFlag::Tumo;
 

@@ -5,6 +5,13 @@
 #include "types/types.hpp"
 #include <boost/functional/hash.hpp>
 
+#define ENABLE_DRAW_CACHE
+#define ENABLE_DISCARD_CACHE
+//#define PRINT_TREE
+#define AKATILE
+// #define TEGAWARI_PROB
+// #define SYANTEN_DOWN
+
 namespace mahjong
 {
 
@@ -188,11 +195,6 @@ inline bool operator<(const CacheKey &lhs, const CacheKey &rhs)
            std::make_tuple(rhs.hand.manzu, rhs.hand.pinzu, rhs.hand.sozu, rhs.hand.zihai, rhs.manzu,
                            rhs.pinzu, rhs.sozu, rhs.zihai);
 }
-
-#define ENABLE_DRAW_CACHE
-#define ENABLE_DISCARD_CACHE
-// #define PRINT_TREE
-// #define TEGAWARI_PROB
 
 class ExpectedValueCalculator
 {

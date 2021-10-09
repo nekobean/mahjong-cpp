@@ -288,6 +288,7 @@ ExpectedValueCalculator::get_draw_tiles(Hand &hand, int syanten, const std::vect
             remove_tile(hand, tile);
             int syanten_diff = syanten_after - syanten; // 向聴数の変化
 
+#ifdef AKATILE
             if (tile == Tile::Manzu5 && counts[Tile::AkaManzu5] == 1) {
                 // 赤五萬が残っている場合
                 if (counts[Tile::Manzu5] >= 2) {
@@ -327,6 +328,9 @@ ExpectedValueCalculator::get_draw_tiles(Hand &hand, int syanten, const std::vect
             else {
                 flags.emplace_back(tile, counts[tile], syanten_after - syanten);
             }
+#else
+            flags.emplace_back(tile, counts[tile], syanten_after - syanten);
+#endif
         }
     }
 
@@ -830,13 +834,15 @@ std::vector<Candidate> ExpectedValueCalculator::analyze(int n_extra_tumo, int sy
 
             add_tile(hand, discard_tile);
 
+#ifdef SYANTEN_DOWN
             // 向聴戻しは巡目がずれるので、1つ手前にずらす。(このやり方で正しいのか要検証)
-            // std::rotate(tenpai_probs.begin(), tenpai_probs.begin() + 1, tenpai_probs.end());
-            // tenpai_probs.back() = 0;
-            // std::rotate(win_probs.begin(), win_probs.begin() + 1, win_probs.end());
-            // win_probs.back() = 0;
-            // std::rotate(exp_values.begin(), exp_values.begin() + 1, exp_values.end());
-            // exp_values.back() = 0;
+            std::rotate(tenpai_probs.begin(), tenpai_probs.begin() + 1, tenpai_probs.end());
+            tenpai_probs.back() = 0;
+            std::rotate(win_probs.begin(), win_probs.begin() + 1, win_probs.end());
+            win_probs.back() = 0;
+            std::rotate(exp_values.begin(), exp_values.begin() + 1, exp_values.end());
+            exp_values.back() = 0;
+#endif
 
             candidates.emplace_back(discard_tile, required_tiles, tenpai_probs, win_probs,
                                     exp_values, true);
