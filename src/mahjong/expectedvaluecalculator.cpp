@@ -288,7 +288,7 @@ ExpectedValueCalculator::get_draw_tiles(Hand &hand, int syanten, const std::vect
             remove_tile(hand, tile);
             int syanten_diff = syanten_after - syanten; // 向聴数の変化
 
-#ifdef AKATILE
+#ifdef ENABLE_AKATILE_DRAW
             if (tile == Tile::Manzu5 && counts[Tile::AkaManzu5] == 1) {
                 // 赤五萬が残っている場合
                 if (counts[Tile::Manzu5] >= 2) {

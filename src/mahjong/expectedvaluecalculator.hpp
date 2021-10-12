@@ -7,8 +7,8 @@
 
 #define ENABLE_DRAW_CACHE
 #define ENABLE_DISCARD_CACHE
-//#define PRINT_TREE
-#define AKATILE
+// #define ENABLE_AKATILE_DRAW
+// #define PRINT_TREE
 // #define TEGAWARI_PROB
 // #define SYANTEN_DOWN
 
