@@ -11,7 +11,7 @@ file(GLOB ENTRY_FILES ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 foreach(ENTRY_FILE ${ENTRY_FILES})
   get_filename_component(BASE_NAME ${ENTRY_FILE} NAME_WE)
 
-  add_executable(${BASE_NAME} ${SRC_FILES} ${ENTRY_FILE})
+  add_executable(${BASE_NAME} ${SRC_FILES} ${ENTRY_FILE} naiveexpectedvaluecalculator.cpp)
   target_link_libraries(${BASE_NAME} Catch2::Catch2 ${Boost_LIBRARIES} spdlog ${CMAKE_DL_LIBS})
 
   add_custom_command(TARGET ${BASE_NAME} PRE_BUILD

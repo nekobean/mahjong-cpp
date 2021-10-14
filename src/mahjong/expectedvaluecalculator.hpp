@@ -7,7 +7,7 @@
 
 #define ENABLE_DRAW_CACHE
 #define ENABLE_DISCARD_CACHE
-// #define ENABLE_AKATILE_DRAW
+
 // #define PRINT_TREE
 // #define TEGAWARI_PROB
 // #define SYANTEN_DOWN
@@ -157,6 +157,7 @@ inline void remove_tile(Hand &hand, int tile, std::vector<int> &counts)
         counts[Tile::Sozu5] += 1;
     }
 }
+
 struct CacheKey
 {
     CacheKey(const Hand &hand, const std::vector<int> &counts, int n_extra_tumo)
@@ -248,7 +249,8 @@ class ExpectedValueCalculator
         CalcIppatu = 1 << 3,      /* 一発考慮 */
         CalcHaiteitumo = 1 << 4,  /* 海底撈月考慮 */
         CalcUradora = 1 << 5,     /* 裏ドラ考慮 */
-        MaximaizeWinProb = 1 << 6, /* 和了確率を最大化 (指定されていない場合は期待値を最大化) */
+        CalcAkaTileTumo = 1 << 6, /* 赤牌自摸考慮 */
+        MaximaizeWinProb = 1 << 7, /* 和了確率を最大化 (指定されていない場合は期待値を最大化) */
     };
 
     ExpectedValueCalculator();
@@ -310,6 +312,9 @@ class ExpectedValueCalculator
 
     /* 裏ドラ考慮 */
     bool calc_uradora_;
+
+    /* 赤牌自摸考慮 */
+    bool calc_akatile_tumo_;
 
     /* 和了確率を最大化 */
     bool maximize_win_prob_;

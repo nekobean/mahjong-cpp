@@ -1,15 +1,16 @@
-#ifndef MAHJONG_CPP_EXPECTEDVALUECALCULATOR2
-#define MAHJONG_CPP_EXPECTEDVALUECALCULATOR2
+#ifndef NAIVEEXPECTEDVALUECALCULATOR
+#define NAIVEEXPECTEDVALUECALCULATOR
+
+#include <boost/functional/hash.hpp>
 
 #include "mahjong/expectedvaluecalculator.hpp"
 #include "mahjong/score.hpp"
 #include "mahjong/types/types.hpp"
-#include <boost/functional/hash.hpp>
 
 namespace mahjong
 {
 
-class ExpectedValueCalculator2
+class NaiveExpectedValueCalculator
 {
     /**
      * @brief 期待値 (和了確率) が同じ場合はこの値が高い牌を優先して打牌する。
@@ -61,10 +62,11 @@ class ExpectedValueCalculator2
         CalcIppatu = 1 << 3,      /* 一発考慮 */
         CalcHaiteitumo = 1 << 4,  /* 海底撈月考慮 */
         CalcUradora = 1 << 5,     /* 裏ドラ考慮 */
-        MaximaizeWinProb = 1 << 6, /* 和了確率を最大化 (指定されていない場合は期待値を最大化) */
+        CalcAkaTileTumo = 1 << 6, /* 赤牌自摸考慮 */
+        MaximaizeWinProb = 1 << 7, /* 和了確率を最大化 (指定されていない場合は期待値を最大化) */
     };
 
-    ExpectedValueCalculator2();
+    NaiveExpectedValueCalculator();
 
     std::tuple<bool, std::vector<Candidate>> calc(const Hand &hand,
                                                   const ScoreCalculator &score_calculator,
@@ -125,6 +127,9 @@ class ExpectedValueCalculator2
     /* 裏ドラ考慮 */
     bool calc_uradora_;
 
+    /* 赤牌自摸考慮 */
+    bool calc_akatile_tumo_;
+
     /* 和了確率を最大化 */
     bool maximize_win_prob_;
 
@@ -145,4 +150,4 @@ class ExpectedValueCalculator2
 
 } // namespace mahjong
 
-#endif /* MAHJONG_CPP_EXPECTEDVALUECALCULATOR2 */
+#endif // NAIVEEXPECTEDVALUECALCULATOR

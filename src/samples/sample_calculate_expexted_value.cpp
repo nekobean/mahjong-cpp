@@ -40,6 +40,7 @@ int main(int, char **)
                | ExpectedValueCalculator::CalcIppatu      // 一発考慮
                | ExpectedValueCalculator::CalcHaiteitumo  // 海底撈月考慮
                | ExpectedValueCalculator::CalcUradora     // 裏ドラ考慮
+               | ExpectedValueCalculator::CalcAkaTileTumo // 赤牌自摸考慮
         //| ExpectedValueCalculator::MaximaizeWinProb // 和了確率を最大化
         ;
     std::vector<int> dora_indicators = {Tile::Ton}; // ドラ表示牌

@@ -10,9 +10,9 @@
 #include <rapidjson/prettywriter.h>
 #include <rapidjson/stringbuffer.h>
 
-#include "mahjong/expectedvaluecalculator2.hpp"
 #include "mahjong/json_parser.hpp"
 #include "mahjong/mahjong.hpp"
+#include "naiveexpectedvaluecalculator.hpp"
 
 using namespace mahjong;
 
@@ -92,10 +92,10 @@ void test_candidate(const Candidate &expected, const Candidate &actual)
     REQUIRE(expected.syanten_down == actual.syanten_down);
 }
 
-DiscardResponseData create_discard_response2(const RequestData &req)
+DiscardResponseData create_discard_response_navie(const RequestData &req)
 {
     ScoreCalculator score_calc;
-    ExpectedValueCalculator2 exp_value_calc;
+    NaiveExpectedValueCalculator exp_value_calc;
 
     auto begin = std::chrono::steady_clock::now();
 
@@ -124,92 +124,48 @@ DiscardResponseData create_discard_response2(const RequestData &req)
     return res;
 }
 
-// TEST_CASE("期待値計算2")
-// {
-//     RequestData req;
-//     req.bakaze = Tile::Ton;
-//     req.zikaze = Tile::Ton;
-//     req.syanten_type = SyantenType::Normal;
-//     req.dora_indicators = {Tile::Ton};
-//     req.flag |= ExpectedValueCalculator::CalcTegawari;
-//     req.hand = Hand({Tile::Manzu2, Tile::Manzu3, Tile::Manzu4, Tile::Manzu7, Tile::Pinzu6,
-//                      Tile::Pinzu6, Tile::Pinzu6, Tile::Pinzu7, Tile::Sozu7, Tile::Sozu8,
-//                      Tile::Sozu8, Tile::Sozu8, Tile::Sozu9, Tile::Sozu9});
-//     for (int turn = 1; turn < 18; ++turn) {
-//         req.flag = ExpectedValueCalculator::CalcTegawari;
-//         req.turn = turn;
-
-//         DiscardResponseData expected1 = create_discard_response(req);
-//         const DiscardResponseData &expected2 = create_discard_response2(req);
-
-//         REQUIRE(expected1.syanten == expected2.syanten);
-//         spdlog::info("{} {} -> {}", double(expected1.time_us) / double(expected2.time_us),
-//                      expected2.time_us / 1000, expected1.time_us / 1000);
-
-//         for (size_t i = 0; i < expected1.candidates.size(); ++i) {
-//             REQUIRE(expected1.candidates[i].win_probs[turn - 1] ==
-//                     Approx(expected2.candidates[i].win_probs[turn - 1]));
-//         }
-
-//         for (size_t i = 0; i < expected1.candidates.size(); ++i) {
-//             REQUIRE(expected1.candidates[i].exp_values[turn - 1] ==
-//                     Approx(expected2.candidates[i].exp_values[turn - 1]));
-//         }
-
-//         for (size_t i = 4; i < 5; ++i) {
-//             REQUIRE(expected1.candidates[i].tenpai_probs[turn - 1] ==
-//                     Approx(expected2.candidates[i].tenpai_probs[turn - 1]));
-
-//             spdlog::info("turn={} {:.6f}", turn, expected2.candidates[i].tenpai_probs[turn - 1]);
-//             //REQUIRE(expected1.candidates[i].tenpai_probs[turn - 1] <= 1);
-//         }
-//     }
-// }
-
-TEST_CASE("期待値計算")
+TEST_CASE("期待値計算がナイーブな実装と一致するか")
 {
     std::vector<RequestData> req_data_list;
     if (!load_input_data(req_data_list))
         return;
 
-    for (size_t i = 0; i < 5; ++i) {
-        for (int turn = 1; turn < 18; ++turn) {
-            if (turn != 12)
-                continue;
-            spdlog::info("test no: {}, turn: {}", i, turn);
+    RequestData req_data = req_data_list[3];
+    for (int turn = 1; turn < 18; ++turn) {
+        req_data.turn = turn;
+        req_data.flag = ExpectedValueCalculator::CalcSyantenDown   // 向聴戻し考慮
+                        | ExpectedValueCalculator::CalcTegawari    // 手変わり考慮
+                        | ExpectedValueCalculator::CalcDoubleReach // ダブル立直考慮
+                        | ExpectedValueCalculator::CalcIppatu      // 一発考慮
+                        | ExpectedValueCalculator::CalcHaiteitumo  // 海底撈月考慮
+                        | ExpectedValueCalculator::CalcUradora     // 裏ドラ考慮
+                        | ExpectedValueCalculator::CalcAkaTileTumo // 赤牌自摸考慮
+            // | ExpectedValueCalculator::MaximaizeWinProb // 和了確率を最大化
+            ;
 
-            req_data_list[i].flag = 0;
-            req_data_list[i].flag =
-                ExpectedValueCalculator::CalcDoubleReach | ExpectedValueCalculator::CalcIppatu |
-                ExpectedValueCalculator::CalcHaiteitumo | ExpectedValueCalculator::CalcSyantenDown;
-            // req_data_list[i].flag |= ExpectedValueCalculator::MaximaizeWinProb;
-            // req_data_list[i].flag |= ExpectedValueCalculator::CalcTegawari;
-            req_data_list[i].turn = turn;
+        DiscardResponseData result1 = create_discard_response(req_data);
+        DiscardResponseData result2 = create_discard_response_navie(req_data);
 
-            DiscardResponseData expected1 = create_discard_response(req_data_list[i]);
-            DiscardResponseData expected2 = create_discard_response2(req_data_list[i]);
-            spdlog::info("{} {} -> {}", double(expected1.time_us) / double(expected2.time_us),
-                         expected1.time_us / 1000, expected2.time_us / 1000);
+        spdlog::info("{} {} -> {}", double(result1.time_us) / double(result2.time_us),
+                     result1.time_us / 1000, result2.time_us / 1000);
 
-            for (size_t i = 0; i < expected1.candidates.size(); ++i) {
-                REQUIRE(expected1.candidates[i].win_probs[turn - 1] ==
-                        Approx(expected2.candidates[i].win_probs[turn - 1]));
-                REQUIRE(expected1.candidates[i].exp_values[turn - 1] ==
-                        Approx(expected2.candidates[i].exp_values[turn - 1]));
-                REQUIRE(expected1.candidates[i].tenpai_probs[turn - 1] ==
-                        Approx(expected2.candidates[i].tenpai_probs[turn - 1]));
-            }
+        // 聴牌確率、和了確率、期待値が一致しているかどうか
+        for (size_t i = 0; i < result1.candidates.size(); ++i) {
+            REQUIRE(result1.candidates[i].win_probs[turn - 1] ==
+                    Approx(result2.candidates[i].win_probs[turn - 1]));
+            REQUIRE(result1.candidates[i].exp_values[turn - 1] ==
+                    Approx(result2.candidates[i].exp_values[turn - 1]));
+            REQUIRE(result1.candidates[i].tenpai_probs[turn - 1] ==
+                    Approx(result2.candidates[i].tenpai_probs[turn - 1]));
         }
     }
 }
 
-TEST_CASE("期待値計算2")
+TEST_CASE("期待値計算の計算時間")
 {
     std::vector<RequestData> req_data_list;
     if (!load_input_data(req_data_list))
         return;
-    // write_output_data(req_data_list);
-    // return;
 
     std::vector<DiscardResponseData> res_data_list;
     if (!load_output_data(res_data_list))
@@ -222,10 +178,7 @@ TEST_CASE("期待値計算2")
         REQUIRE(actual.syanten == expected.syanten);
         spdlog::info("{} {} -> {}", double(actual.time_us) / double(expected.time_us),
                      expected.time_us / 1000, actual.time_us / 1000);
-        REQUIRE(double(expected.time_us) / double(actual.time_us) < 1.1);
-
-        // for (size_t i = 0; i < actual.candidates.size(); ++i)
-        //     test_candidate(expected.candidates[i], actual.candidates[i]);
+        // REQUIRE(double(expected.time_us) / double(actual.time_us) < 1.1);
     }
 }
 

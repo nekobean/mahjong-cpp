@@ -8,7 +8,11 @@
 #include <boost/dll.hpp>
 
 #include <chrono>
+#include <filesystem>
 #include <fstream>
+#include <iostream>
+
+//#define OUTPUT_DETAIL_LOG
 
 namespace beast = boost::beast;   // from <boost/beast.hpp>
 namespace http = beast::http;     // from <boost/beast/http.hpp>
@@ -51,9 +55,6 @@ std::tuple<bool, RequestData> Server::parse_json(const rapidjson::Document &doc)
 
 std::string Server::process_request(const std::string &json)
 {
-    // std::cout << json << std::endl;
-    // std::cout << "===========================" << std::endl;
-
     rapidjson::Document doc(rapidjson::kObjectType);
 
     // リクエストデータを読み込む。
@@ -113,6 +114,35 @@ std::string Server::process_request(const std::string &json)
     doc.AddMember("success", true, doc.GetAllocator());
     doc.AddMember("request", req_doc.GetObject(), doc.GetAllocator());
     doc.AddMember("response", res_doc, doc.GetAllocator());
+
+#ifdef OUTPUT_DETAIL_LOG
+    {
+        boost::filesystem::path save_dir =
+            boost::dll::program_location().parent_path() / "requests";
+        if (!boost::filesystem::exists(save_dir))
+            boost::filesystem::create_directory(save_dir);
+        std::string req_save_path = save_dir.string() + "\\" + (req.hand.to_string() + ".json");
+        std::filesystem::path pa = std::filesystem::u8path((const char *)req_save_path.c_str());
+        std::ofstream ofs(pa.string());
+        ofs << json;
+        ofs.close();
+    }
+
+    {
+        boost::filesystem::path save_dir =
+            boost::dll::program_location().parent_path() / "response";
+        if (!boost::filesystem::exists(save_dir))
+            boost::filesystem::create_directory(save_dir);
+        std::string req_save_path = save_dir.string() + "\\" + (req.hand.to_string() + ".json");
+        std::filesystem::path pa = std::filesystem::u8path((const char *)req_save_path.c_str());
+        std::ofstream ofs(pa.string());
+
+        std::cout << to_json_str(doc) << std::endl;
+
+        ofs << to_json_str(doc);
+        ofs.close();
+    }
+#endif
 
     return to_json_str(doc);
 }
