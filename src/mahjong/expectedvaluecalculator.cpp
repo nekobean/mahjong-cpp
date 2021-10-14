@@ -513,7 +513,7 @@ ExpectedValueCalculator::draw_with_tegawari(int n_extra_tumo, int syanten, Hand 
     // 自摸候補を取得する。
     std::vector<std::tuple<int, int, int>> flags = get_draw_tiles(hand, syanten, counts);
 
-#ifdef TEGAWARI_PROB
+#ifdef FIX_TEGAWARI_PROB
     // 有効牌の合計枚数を計算する。【暫定対応】
     int sum_left_tiles = std::accumulate(counts.begin(), counts.begin() + 34, 0);
 #endif
@@ -542,7 +542,7 @@ ExpectedValueCalculator::draw_with_tegawari(int n_extra_tumo, int syanten, Hand 
         // 「自摸の確率 = 牌の残り枚数 / 残り枚数の合計」で確率値が1を超えないように暫定対応した。
 
         for (int i = 0; i < 17; ++i) {
-#ifdef TEGAWARI_PROB
+#ifdef FIX_TEGAWARI_PROB
             double tump_prob = double(count) / sum_left_tiles; // 【暫定対応】 (2021/9/24)
 #else
             double tump_prob = tumo_prob_table_[count][i];
@@ -585,7 +585,7 @@ ExpectedValueCalculator::draw_with_tegawari(int n_extra_tumo, int syanten, Hand 
             discard(n_extra_tumo + 1, syanten, hand, counts);
 
         for (int i = 0; i < 16; ++i) {
-#ifdef TEGAWARI_PROB
+#ifdef FIX_TEGAWARI_PROB
             double tump_prob = double(count) / sum_left_tiles; // 【暫定対応】 (2021/9/24)
 #else
             double tump_prob = tumo_prob_table_[count][i];
@@ -772,7 +772,7 @@ std::vector<Candidate> ExpectedValueCalculator::analyze(int n_extra_tumo, int sy
 
             add_tile(hand, discard_tile);
 
-#ifdef SYANTEN_DOWN
+#ifdef FIX_SYANTEN_DOWN
             // 向聴戻しは巡目がずれるので、1つ手前にずらす。(このやり方で正しいのか要検証)
             std::rotate(tenpai_probs.begin(), tenpai_probs.begin() + 1, tenpai_probs.end());
             tenpai_probs.back() = 0;

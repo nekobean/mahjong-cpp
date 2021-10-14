@@ -571,7 +571,7 @@ NaiveExpectedValueCalculator::draw_with_tegawari(int n_extra_tumo, int syanten, 
                 discard(n_extra_tumo, syanten - 1, hand, counts, turn + 1);
         }
 
-#ifdef TEGAWARI_PROB
+#ifdef FIX_TEGAWARI_PROB
         double tumo_prob = double(count) / s3; // 確率が1を超えないようにするため
 #else
         double tumo_prob = tumo_probs[t];
@@ -608,7 +608,7 @@ NaiveExpectedValueCalculator::draw_with_tegawari(int n_extra_tumo, int syanten, 
 
         const std::vector<double> &tumo_probs = tumo_prob_table_[count];
         int t = turn - 1;
-#ifdef TEGAWARI_PROB
+#ifdef FIX_TEGAWARI_PROB
         double tumo_prob = double(count) / s3; // 確率が1を超えないようにするため
 #else
         double tumo_prob = tumo_probs[t];
