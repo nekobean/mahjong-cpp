@@ -12,19 +12,19 @@ int main(int, char **)
     Hand hand1({Tile::Manzu2, Tile::Manzu2, Tile::Manzu2, Tile::Manzu5, Tile::Manzu6, Tile::Manzu7,
                 Tile::Pinzu3, Tile::Pinzu4, Tile::Pinzu5, Tile::Sozu3, Tile::Sozu3, Tile::Sozu6,
                 Tile::Sozu6, Tile::Sozu7});
-    // 1向聴数の手牌
+    // 1向聴の手牌
     Hand hand2({Tile::Manzu2, Tile::Manzu2, Tile::Manzu2, Tile::Manzu5, Tile::Manzu6, Tile::Manzu7,
                 Tile::Pinzu3, Tile::Pinzu4, Tile::Sozu3, Tile::Sozu3, Tile::Sozu6, Tile::Sozu6,
                 Tile::Sozu7, Tile::Pe});
-    // 3向聴数の手牌
+    // 3向聴の手牌
     Hand hand3({Tile::Manzu1, Tile::Manzu1, Tile::Manzu2, Tile::Manzu4, Tile::Manzu5, Tile::Manzu7,
                 Tile::Pinzu9, Tile::Sozu3, Tile::Sozu7, Tile::Sozu9, Tile::Ton, Tile::Pe, Tile::Pe,
                 Tile::Hatu});
-    // 2向聴数の手牌
+    // 2向聴の手牌
     Hand hand4({Tile::Manzu1, Tile::Manzu2, Tile::Manzu3, Tile::Manzu3, Tile::Manzu4, Tile::Manzu9,
                 Tile::Pinzu3, Tile::Pinzu6, Tile::Pinzu8, Tile::Pinzu8, Tile::Sozu1, Tile::Sozu2,
                 Tile::Sozu4, Tile::Sozu5});
-
+    // 1向聴の手牌
     Hand hand5({Tile::Manzu1, Tile::Manzu2, Tile::Manzu4, Tile::Manzu5, Tile::Manzu5, Tile::Pinzu3,
                 Tile::Pinzu4, Tile::Pinzu5, Tile::Pinzu6, Tile::Pinzu7, Tile::Sozu6, Tile::Sozu7,
                 Tile::Sozu7, Tile::Sozu7});
@@ -40,7 +40,7 @@ int main(int, char **)
                | ExpectedValueCalculator::CalcIppatu      // 一発考慮
                | ExpectedValueCalculator::CalcHaiteitumo  // 海底撈月考慮
                | ExpectedValueCalculator::CalcUradora     // 裏ドラ考慮
-        //| ExpectedValueCalculator::MaximaizeWinProb; // 和了確率を最大化
+        //| ExpectedValueCalculator::MaximaizeWinProb // 和了確率を最大化
         ;
     std::vector<int> dora_indicators = {Tile::Ton}; // ドラ表示牌
     Hand hand = hand5;                              // 手牌
@@ -69,8 +69,8 @@ int main(int, char **)
     }
 
     // 期待値が高い順にソートする。
-    std::sort(candidates.begin(), candidates.end(), [](const Candidate &a, const Candidate &b) {
-        return a.win_probs.front() > b.win_probs.front();
+    std::sort(candidates.begin(), candidates.end(), [turn](const Candidate &a, const Candidate &b) {
+        return a.exp_values[turn - 1] > b.exp_values[turn - 1];
     });
 
     // 結果を出力する。
