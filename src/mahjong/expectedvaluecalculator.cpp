@@ -17,49 +17,6 @@
 
 namespace mahjong
 {
-
-std::ofstream ofs(R"(C:\Users\papillon\Desktop\output.txt)");
-
-std::string syanten_to_str(int syanten)
-{
-    return syanten == 0 ? "聴牌" : std::to_string(syanten) + "向聴";
-}
-
-void print_init(int syanten, const Hand &hand, int n_extra_tumo)
-{
-    ofs << fmt::format("- {}, {}向聴, {}", syanten_to_str(syanten), hand.to_string(), n_extra_tumo)
-        << std::endl;
-}
-
-void print_draw(int tile, std::vector<int> counts, int syanten, const Hand &hand, int n_extra_tumo)
-{
-    for (int i = 0; i < 3 - syanten; i++)
-        ofs << "    ";
-    ofs << fmt::format("- 自摸 {}{}枚, {}, {}, {}", Tile::Name.at(tile), counts[tile] + 1,
-                       syanten_to_str(syanten), hand.to_string(), n_extra_tumo)
-        << std::endl;
-}
-
-void print_draw(int tile, std::vector<int> counts, int syanten, const Hand &hand, int n_extra_tumo,
-                Result result)
-{
-    for (int i = 0; i < 3 - syanten; i++)
-        ofs << "    ";
-    std::string ret = fmt::format("{}符{}翻{}点", result.fu, result.han, result.score[0]);
-    ofs << fmt::format("- 自摸 {}{}枚, {}, 和了, {}, {}", Tile::Name.at(tile), counts[tile] + 1,
-                       hand.to_string(), ret, n_extra_tumo)
-        << std::endl;
-}
-
-void print_discard(int tile, int syanten, const Hand &hand, int n_extra_tumo)
-{
-    for (int i = 0; i < 3 - syanten; i++)
-        ofs << "    ";
-    ofs << fmt::format("  - 打牌 {},  {}, {}, {}", Tile::Name.at(tile), syanten_to_str(syanten),
-                       hand.to_string(), n_extra_tumo)
-        << std::endl;
-}
-
 ExpectedValueCalculator::ExpectedValueCalculator()
     : calc_syanten_down_(false)
     , calc_tegawari_(false)
@@ -118,10 +75,6 @@ ExpectedValueCalculator::calc(const Hand &hand, const ScoreCalculator &score_cal
 
     // 自摸確率のテーブルを作成する。
     create_prob_table(sum_left_tiles);
-
-#ifdef PRINT_TREE
-    print_init(syanten, hand, 0);
-#endif
 
     std::vector<Candidate> candidates;
     if (syanten > 3) // 3向聴以下は聴牌確率、和了確率、期待値を計算する。
@@ -434,10 +387,6 @@ std::vector<double> ExpectedValueCalculator::get_score(const Hand &hand, int win
         }
     }
 
-#ifdef PRINT_TREE
-    print_draw(win_tile, counts, -1, hand, 1, result);
-#endif
-
     return scores;
 }
 
@@ -490,9 +439,6 @@ ExpectedValueCalculator::draw_without_tegawari(int n_extra_tumo, int syanten, Ha
             scores = get_score(hand, tile, counts);
         }
         else {
-#ifdef PRINT_TREE
-            print_draw(tile, counts, syanten - 1, hand, n_extra_tumo);
-#endif
             std::tie(next_tenpai_probs, next_win_probs, next_exp_values) =
                 discard(n_extra_tumo, syanten - 1, hand, counts);
         }
@@ -726,9 +672,7 @@ ExpectedValueCalculator::discard(int n_extra_tumo, int syanten, Hand &hand,
         if (flags[tile] == 0) {
             // 向聴数が変化しない打牌
             remove_tile(hand, discard_tile);
-#ifdef PRINT_TREE
-            print_discard(discard_tile, syanten, hand, n_extra_tumo);
-#endif
+
             std::tie(tenpai_probs, win_probs, exp_values) =
                 draw(n_extra_tumo, syanten, hand, counts);
             add_tile(hand, discard_tile);
@@ -736,9 +680,7 @@ ExpectedValueCalculator::discard(int n_extra_tumo, int syanten, Hand &hand,
         else if (calc_syanten_down_ && n_extra_tumo == 0 && flags[tile] == 1) {
             // 向聴戻しになる打牌
             remove_tile(hand, discard_tile);
-#ifdef PRINT_TREE
-            print_discard(discard_tile, syanten, hand, n_extra_tumo + 1);
-#endif
+
             std::tie(tenpai_probs, win_probs, exp_values) =
                 draw(n_extra_tumo + 1, syanten + 1, hand, counts);
             add_tile(hand, discard_tile);
@@ -807,9 +749,6 @@ std::vector<Candidate> ExpectedValueCalculator::analyze(int n_extra_tumo, int sy
 
         if (flags[tile] == 0) {
             remove_tile(hand, discard_tile);
-#ifdef PRINT_TREE
-            print_discard(discard_tile, syanten, hand, n_extra_tumo);
-#endif
 
             auto required_tiles = get_required_tiles(hand, syanten_type_, counts);
 
@@ -825,9 +764,6 @@ std::vector<Candidate> ExpectedValueCalculator::analyze(int n_extra_tumo, int sy
         }
         else if (calc_syanten_down_ && flags[tile] == 1 && syanten < 3) {
             remove_tile(hand, discard_tile);
-#ifdef PRINT_TREE
-            print_discard(discard_tile, syanten + 1, hand, n_extra_tumo);
-#endif
 
             auto required_tiles = get_required_tiles(hand, syanten_type_, counts);
 
