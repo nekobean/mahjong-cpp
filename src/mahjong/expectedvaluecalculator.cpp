@@ -38,16 +38,15 @@ ExpectedValueCalculator::ExpectedValueCalculator()
  * @param hand 手牌
  * @param score_calculator 点数計算機
  * @param dora_indicators ドラ表示牌の一覧
- * @param syanten_type 向聴数の種類
  * @param flag フラグ
  * @return 各打牌の情報
  */
 std::tuple<bool, std::vector<Candidate>>
 ExpectedValueCalculator::calc(const Hand &hand, const ScoreCalculator &score_calculator,
-                              const std::vector<int> &dora_indicators, int syanten_type, int flag)
+                              const std::vector<int> &dora_indicators, int flag)
 {
     score_calculator_ = score_calculator;
-    syanten_type_ = syanten_type;
+    syanten_type_ = SyantenType::Normal;
     dora_indicators_ = dora_indicators;
 
     calc_syanten_down_ = flag & CalcSyantenDown;

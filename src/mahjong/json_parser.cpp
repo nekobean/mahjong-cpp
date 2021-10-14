@@ -216,7 +216,7 @@ DiscardResponseData create_discard_response(const RequestData &req)
 
     // 各打牌を分析する。
     auto [success, candidates] =
-        exp_value_calc.calc(req.hand, score_calc, req.dora_indicators, req.syanten_type, req.flag);
+        exp_value_calc.calc(req.hand, score_calc, req.dora_indicators, req.flag);
 
     auto end = std::chrono::steady_clock::now();
     auto elapsed_us = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();

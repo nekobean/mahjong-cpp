@@ -124,48 +124,49 @@ DiscardResponseData create_discard_response_navie(const RequestData &req)
     return res;
 }
 
-TEST_CASE("期待値計算がナイーブな実装と一致するか")
-{
-    std::vector<RequestData> req_data_list;
-    if (!load_input_data(req_data_list))
-        return;
+// TEST_CASE("期待値計算がナイーブな実装と一致するか")
+// {
+//     std::vector<RequestData> req_data_list;
+//     if (!load_input_data(req_data_list))
+//         return;
 
-    RequestData req_data = req_data_list[3];
-    for (int turn = 1; turn < 18; ++turn) {
-        req_data.turn = turn;
-        req_data.flag = ExpectedValueCalculator::CalcSyantenDown   // 向聴戻し考慮
-                        | ExpectedValueCalculator::CalcTegawari    // 手変わり考慮
-                        | ExpectedValueCalculator::CalcDoubleReach // ダブル立直考慮
-                        | ExpectedValueCalculator::CalcIppatu      // 一発考慮
-                        | ExpectedValueCalculator::CalcHaiteitumo  // 海底撈月考慮
-                        | ExpectedValueCalculator::CalcUradora     // 裏ドラ考慮
-                        | ExpectedValueCalculator::CalcAkaTileTumo // 赤牌自摸考慮
-            // | ExpectedValueCalculator::MaximaizeWinProb // 和了確率を最大化
-            ;
+//     RequestData req_data = req_data_list[3];
+//     for (int turn = 1; turn < 18; ++turn) {
+//         req_data.turn = turn;
+//         req_data.flag = ExpectedValueCalculator::CalcSyantenDown   // 向聴戻し考慮
+//                         | ExpectedValueCalculator::CalcTegawari    // 手変わり考慮
+//                         | ExpectedValueCalculator::CalcDoubleReach // ダブル立直考慮
+//                         | ExpectedValueCalculator::CalcIppatu      // 一発考慮
+//                         | ExpectedValueCalculator::CalcHaiteitumo  // 海底撈月考慮
+//                         | ExpectedValueCalculator::CalcUradora     // 裏ドラ考慮
+//                         | ExpectedValueCalculator::CalcAkaTileTumo // 赤牌自摸考慮
+//             // | ExpectedValueCalculator::MaximaizeWinProb // 和了確率を最大化
+//             ;
 
-        DiscardResponseData result1 = create_discard_response(req_data);
-        DiscardResponseData result2 = create_discard_response_navie(req_data);
+//         DiscardResponseData result1 = create_discard_response(req_data);
+//         DiscardResponseData result2 = create_discard_response_navie(req_data);
 
-        spdlog::info("{} {} -> {}", double(result1.time_us) / double(result2.time_us),
-                     result1.time_us / 1000, result2.time_us / 1000);
+//         spdlog::info("{} {} -> {}", double(result1.time_us) / double(result2.time_us),
+//                      result1.time_us / 1000, result2.time_us / 1000);
 
-        // 聴牌確率、和了確率、期待値が一致しているかどうか
-        for (size_t i = 0; i < result1.candidates.size(); ++i) {
-            REQUIRE(result1.candidates[i].win_probs[turn - 1] ==
-                    Approx(result2.candidates[i].win_probs[turn - 1]));
-            REQUIRE(result1.candidates[i].exp_values[turn - 1] ==
-                    Approx(result2.candidates[i].exp_values[turn - 1]));
-            REQUIRE(result1.candidates[i].tenpai_probs[turn - 1] ==
-                    Approx(result2.candidates[i].tenpai_probs[turn - 1]));
-        }
-    }
-}
+//         // 聴牌確率、和了確率、期待値が一致しているかどうか
+//         for (size_t i = 0; i < result1.candidates.size(); ++i) {
+//             REQUIRE(result1.candidates[i].win_probs[turn - 1] ==
+//                     Approx(result2.candidates[i].win_probs[turn - 1]));
+//             REQUIRE(result1.candidates[i].exp_values[turn - 1] ==
+//                     Approx(result2.candidates[i].exp_values[turn - 1]));
+//             REQUIRE(result1.candidates[i].tenpai_probs[turn - 1] ==
+//                     Approx(result2.candidates[i].tenpai_probs[turn - 1]));
+//         }
+//     }
+// }
 
 TEST_CASE("期待値計算の計算時間")
 {
     std::vector<RequestData> req_data_list;
     if (!load_input_data(req_data_list))
         return;
+    //write_output_data(req_data_list);
 
     std::vector<DiscardResponseData> res_data_list;
     if (!load_output_data(res_data_list))
@@ -179,6 +180,9 @@ TEST_CASE("期待値計算の計算時間")
         spdlog::info("{} {} -> {}", double(actual.time_us) / double(expected.time_us),
                      expected.time_us / 1000, actual.time_us / 1000);
         // REQUIRE(double(expected.time_us) / double(actual.time_us) < 1.1);
+
+        for (size_t i = 0; i < actual.candidates.size(); ++i)
+            test_candidate(expected.candidates[i], actual.candidates[i]);
     }
 }
 
