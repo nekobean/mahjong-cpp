@@ -75,10 +75,10 @@ NaiveExpectedValueCalculator::calc(const Hand &hand, const ScoreCalculator &scor
 
     // 各牌の残り枚数を数える。
     std::vector<int> counts = count_left_tiles(hand, dora_indicators_);
-    int sum_left_tiles = std::accumulate(counts.begin(), counts.begin() + 34, 0);
+    sum_left_tiles_ = std::accumulate(counts.begin(), counts.begin() + 34, 0);
 
     // 自摸確率のテーブルを作成する。
-    create_prob_table(sum_left_tiles);
+    create_prob_table(sum_left_tiles_);
 
     if (syanten > 3) // 3向聴以下は聴牌確率、和了確率、期待値を計算する。
         candidates = analyze(syanten, hand);
@@ -440,15 +440,17 @@ NaiveExpectedValueCalculator::draw_without_tegawari(int n_extra_tumo, int syante
             double not_prob = not_tumo_probs[t] / not_tumo_probs[turn - 1];
             double prob = tumo_probs[t] * not_prob;
 
-            double tumo_prob2 = double(count) / (121 - t);
+            double tumo_prob2 = double(count) / (sum_left_tiles_ - t);
             double not_prob2 = 1;
             for (int j = turn - 1; j < t; j++)
-                not_prob2 *= double(121 - j - sum_required_tiles) / (121 - j);
-            //std::cout << fmt::format("tumo_prob t={}, {} vs {}\n", t, tumo_probs[t], prob2);
+                not_prob2 *=
+                    double(sum_left_tiles_ - j - sum_required_tiles) / (sum_left_tiles_ - j);
+
             assert(std::abs(tumo_probs[t] - tumo_prob2) < 10e-10);
+            assert(std::abs(not_prob - not_prob2) < 10e-10);
+            //std::cout << fmt::format("tumo_prob t={}, {} vs {}\n", t, tumo_probs[t], prob2);
             // std::cout << fmt::format("not_tumo_prob turn={}, t={}, {} vs {}\n", turn, t, not_prob,
             //                          not_prob2);
-            assert(std::abs(not_prob - not_prob2) < 10e-10);
 
             double next_tenpai_prob = 0, next_win_prob = 0, next_exp_value = 0;
             if (t < 16 && syanten > 0) {

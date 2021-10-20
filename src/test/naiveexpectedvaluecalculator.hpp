@@ -146,6 +146,8 @@ class NaiveExpectedValueCalculator
     using CacheValue = std::tuple<int, int, int>;
     std::vector<std::map<CacheKey, CacheValue>> discard_cache_;
     std::vector<std::map<CacheKey, CacheValue>> draw_cache_;
+
+    int sum_left_tiles_;
 };
 
 } // namespace mahjong

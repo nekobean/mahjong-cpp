@@ -266,17 +266,13 @@ TEST_CASE("期待値計算がナイーブな実装と一致するか")
                     Approx(result2.candidates[i].tenpai_probs[t]));
         }
     }
-#endif
-    //
-    // naive のほうでドラ表示牌が1枚以外のときにエラー発生
-    //
+
     spdlog::info("任意の枚数のドラ表示牌で結果が一致するかどうか");
     std::vector<int> dora_indicators = {Tile::Ton, Tile::Nan, Tile::Sya, Tile::Pe, Tile::Tyun};
-    for (int i = 1; i < 2; ++i) {
+    for (size_t i = 0; i < dora_indicators.size(); ++i) {
         req_data.turn = 14;
         req_data.dora_indicators =
             std::vector(dora_indicators.begin(), dora_indicators.begin() + i);
-        std::cout << req_data.dora_indicators.size() << std::endl;
 
         DiscardResponseData result1 = create_discard_response(req_data);
         DiscardResponseData result2 = create_discard_response_navie(req_data);
@@ -325,6 +321,7 @@ TEST_CASE("期待値計算がナイーブな実装と一致するか")
                     Approx(result2.candidates[i].tenpai_probs[t]));
         }
     }
+#endif
 }
 
 TEST_CASE("期待値計算の計算時間")
