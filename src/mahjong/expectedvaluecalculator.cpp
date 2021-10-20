@@ -814,6 +814,9 @@ std::vector<Candidate> ExpectedValueCalculator::analyze(int syanten, const Hand 
     const std::vector<int> flags = get_discard_tiles(hand, syanten);
 
     for (int tile = 0; tile < 34; ++tile) {
+        if (flags[tile] > 1)
+            continue;
+
         int discard_tile = tile;
         // 赤牌以外が残っている場合はそちらを先に捨てる。
         if (tile == Tile::Manzu5 && hand.aka_manzu5 && hand.num_tiles(Tile::Manzu5) == 1)

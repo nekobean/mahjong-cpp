@@ -69,29 +69,36 @@ int main(int, char **)
         return 1;
     }
 
+    bool exp_value_calculated = !candidates[0].tenpai_probs.empty();
+
     // 期待値が高い順にソートする。
-    std::sort(candidates.begin(), candidates.end(), [turn](const Candidate &a, const Candidate &b) {
-        return a.exp_values[turn - 1] > b.exp_values[turn - 1];
-    });
+    if (exp_value_calculated)
+        std::sort(candidates.begin(), candidates.end(),
+                  [turn](const Candidate &a, const Candidate &b) {
+                      return a.exp_values[turn - 1] > b.exp_values[turn - 1];
+                  });
 
     // 結果を出力する。
     ////////////////////////////////////////////////////////////////////////////////////
     std::cout << fmt::format("手牌: {}, 向聴数: {}, 巡目: {}", hand.to_string(), syanten, turn)
               << std::endl;
+    std::cout << fmt::format("計算時間: {}us", elapsed_ms) << std::endl;
 
     for (const auto &candidate : candidates) {
         int sum_required_tiles =
             std::accumulate(candidate.required_tiles.begin(), candidate.required_tiles.end(), 0,
                             [](auto &a, auto &b) { return a + std::get<1>(b); });
 
-        std::cout << fmt::format("[打 {}]", Tile::Name.at(candidate.tile)) << " ";
+        std::cout << fmt::format("[打 {}] 有効牌: {:>2d}種{:>2d}枚", Tile::Name.at(candidate.tile),
+                                 candidate.required_tiles.size(), sum_required_tiles);
 
-        std::cout << fmt::format(
-            "有効牌: {:>2d}種{:>2d}枚, 聴牌確率: {:>5.2f}%, 和了確率: "
-            "{:>5.2f}%, 期待値: {:>7.2f} {}",
-            candidate.required_tiles.size(), sum_required_tiles,
-            candidate.tenpai_probs[turn - 1] * 100, candidate.win_probs[turn - 1] * 100,
-            candidate.exp_values[turn - 1], candidate.syanten_down ? " (向聴戻し)" : "");
+        if (exp_value_calculated)
+            std::cout << fmt::format(", 聴牌確率: {:>5.2f}%, 和了確率: {:>5.2f}%, 期待値: {:>7.2f}",
+                                     candidate.tenpai_probs[turn - 1] * 100,
+                                     candidate.win_probs[turn - 1] * 100,
+                                     candidate.exp_values[turn - 1]);
+        if (candidate.syanten_down)
+            std::cout << " (向聴戻し)";
         std::cout << std::endl;
 
         // std::cout << "有効牌";
@@ -99,16 +106,15 @@ int main(int, char **)
         //     std::cout << fmt::format(" {}", Tile::Name.at(tile));
         // std::cout << std::endl;
 
-        // std::cout << "巡目ごとの聴牌確率、和了確率、期待値" << std::endl;
-        // for (size_t i = 0; i < 17; ++i) {
-        //     std::cout << fmt::format("{:<2}巡目 聴牌確率: {:>5.2f}%, 和了確率: "
-        //                              "{:>5.2f}%, 期待値: {:.2f}",
-        //                              i + 1, candidate.tenpai_probs[i] * 100,
-        //                              candidate.win_probs[i] * 100,
-        //                              candidate.exp_values[i])
-        //               << std::endl;
+        // if (exp_value_calculated) {
+        //     std::cout << "巡目ごとの聴牌確率、和了確率、期待値" << std::endl;
+        //     for (size_t i = 0; i < 17; ++i) {
+        //         std::cout << fmt::format("{:>2}巡目 聴牌確率: {:>5.2f}%, 和了確率: "
+        //                                  "{:>5.2f}%, 期待値: {:.2f}",
+        //                                  i + 1, candidate.tenpai_probs[i] * 100,
+        //                                  candidate.win_probs[i] * 100, candidate.exp_values[i])
+        //                   << std::endl;
+        //     }
         // }
     }
-
-    std::cout << fmt::format("計算時間: {}us", elapsed_ms) << std::endl;
 }
