@@ -824,8 +824,10 @@ std::vector<Candidate> NaiveExpectedValueCalculator::analyze(int syanten, const 
     for (auto tile : tiles) {
         remove_tile(hand, tile);
         auto required_tiles = get_required_tiles(hand, syanten_type_, counts);
+        auto [_, syanten_after] = SyantenCalculator::calc(hand, syanten_type_);
+        bool syanten_down = syanten_after == 1;
         add_tile(hand, tile);
-        candidates.emplace_back(tile, required_tiles);
+        candidates.emplace_back(tile, required_tiles, syanten_down);
     }
 
     return candidates;

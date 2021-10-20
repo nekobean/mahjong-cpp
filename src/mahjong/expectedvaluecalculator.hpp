@@ -15,8 +15,8 @@ namespace mahjong
 class Candidate
 {
   public:
-    Candidate(int tile, const std::vector<std::tuple<int, int>> &required_tiles)
-        : tile(tile), required_tiles(required_tiles), syanten_down(false)
+    Candidate(int tile, const std::vector<std::tuple<int, int>> &required_tiles, bool syanten_down)
+        : tile(tile), required_tiles(required_tiles), syanten_down(syanten_down)
     {
     }
 
@@ -234,6 +234,9 @@ class ExpectedValueCalculator
         5, /*! 白 */
         5, /*! 発 */
         5, /*! 中 */
+        1, /*! 赤五萬 */
+        1, /*! 赤五筒 */
+        1, /*! 赤五索 */
     };
 
   public:
@@ -267,7 +270,7 @@ class ExpectedValueCalculator
     void clear_cache();
     std::vector<std::tuple<int, int, int>> get_draw_tiles(Hand &hand, int syanten,
                                                           const std::vector<int> &counts);
-    std::vector<int> get_discard_tiles(Hand &hand, int syanten);
+    std::vector<std::tuple<int, int>> get_discard_tiles(Hand &hand, int syanten);
     std::vector<double> get_score(const Hand &hand, int win_tile, const std::vector<int> &counts);
 
     std::vector<Candidate> analyze(int n_extra_tumo, int syanten, const Hand &hand);
