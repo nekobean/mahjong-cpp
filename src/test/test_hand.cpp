@@ -25,7 +25,7 @@ bool load_constractor_testcase(
     cases.clear();
 
     boost::filesystem::path path =
-        boost::dll::program_location().parent_path() / "testcase_hand_constractor.txt";
+        boost::filesystem::path(CMAKE_TESTCASE_DIR) / "testcase_hand_constractor.txt";
 
     // ファイルを開く。
     std::ifstream ifs(path.string());
@@ -66,7 +66,7 @@ bool load_num_tiles_testcase(
     cases.clear();
 
     boost::filesystem::path path =
-        boost::dll::program_location().parent_path() / "testcase_hand_num_tiles.txt";
+        boost::filesystem::path(CMAKE_TESTCASE_DIR) / "testcase_hand_num_tiles.txt";
 
     // ファイルを開く。
     std::ifstream ifs(path.string());
@@ -110,7 +110,7 @@ bool load_to_string_testcase(std::vector<std::tuple<std::vector<int>, std::strin
     cases.clear();
 
     boost::filesystem::path path =
-        boost::dll::program_location().parent_path() / "testcase_hand_to_string.txt";
+        boost::filesystem::path(CMAKE_TESTCASE_DIR) / "testcase_hand_to_string.txt";
 
     // ファイルを開く。
     std::ifstream ifs(path.string());

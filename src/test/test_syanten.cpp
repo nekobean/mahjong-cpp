@@ -22,8 +22,7 @@ bool load_testcase(std::vector<std::tuple<Hand, int, int, int>> &cases)
 {
     cases.clear();
 
-    boost::filesystem::path path =
-        boost::dll::program_location().parent_path() / "test_syanten.txt";
+    boost::filesystem::path path = boost::filesystem::path(CMAKE_TESTCASE_DIR) / "test_syanten.txt";
 
     // ファイルを開く。
     std::ifstream ifs(path.string());

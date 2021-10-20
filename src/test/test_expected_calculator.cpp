@@ -3,6 +3,7 @@
 #define CATCH_CONFIG_MAIN
 #define CATCH_CONFIG_ENABLE_BENCHMARKING
 #include <boost/dll.hpp>
+#include <boost/range/iterator_range.hpp>
 #include <catch2/catch.hpp>
 #include <rapidjson/document.h>
 #include <rapidjson/istreamwrapper.h>
@@ -15,66 +16,108 @@
 #include "naiveexpectedvaluecalculator.hpp"
 
 using namespace mahjong;
+namespace fs = boost::filesystem;
 
-bool load_input_data(std::vector<RequestData> &req_list)
+bool load_input_data(const std::string &path, RequestData &req_data)
 {
-    req_list.clear();
+    std::ifstream ifs(path);
+    if (!ifs.good()) {
+        spdlog::error("Failed to open request data. {}", path);
+        return false;
+    }
 
-    boost::filesystem::path path =
-        boost::dll::program_location().parent_path() / "test_expected_calclation_input.json";
-
-    // 入力データを読み込む。
-    std::ifstream ifs(path.string());
     rapidjson::IStreamWrapper isw(ifs);
     rapidjson::Document req_doc;
     req_doc.ParseStream(isw);
     if (req_doc.HasParseError()) {
-        std::cerr << "Failed to parse request data (invalid json format)." << std::endl;
+        spdlog::error("Failed to parse request data (invalid json format). {}", path);
         return false;
     }
 
-    for (auto &x : req_doc.GetArray())
-        req_list.push_back(parse_request(x));
+    req_data = parse_request(req_doc);
 
     return true;
 }
 
-bool load_output_data(std::vector<DiscardResponseData> &res_list)
+bool load_input_data(std::vector<RequestData> &req_list, std::vector<std::string> &paths)
 {
-    res_list.clear();
+    paths.clear();
+    req_list.clear();
 
-    boost::filesystem::path path =
-        boost::dll::program_location().parent_path() / "test_expected_calclation_output.json";
+    fs::path requests_dir = fs::path(CMAKE_TESTCASE_DIR) / "requests";
 
-    // 入力データを読み込む。
-    std::ifstream ifs(path.string());
+    for (const auto &entry : boost::make_iterator_range(fs::directory_iterator(requests_dir))) {
+        paths.push_back(entry.path().string());
+    }
+    std::sort(paths.begin(), paths.end());
+
+    for (const auto &path : paths) {
+        RequestData req_data;
+        load_input_data(path, req_data);
+
+        req_list.push_back(req_data);
+    }
+
+    return true;
+}
+
+bool load_output_data(const std::string &path, DiscardResponseData &res_data)
+{
+    std::ifstream ifs(path);
+    if (!ifs.good()) {
+        spdlog::error("Failed to open response data. {}", path);
+        return false;
+    }
+
     rapidjson::IStreamWrapper isw(ifs);
     rapidjson::Document res_doc;
     res_doc.ParseStream(isw);
     if (res_doc.HasParseError()) {
-        std::cerr << "Failed to parse response data (invalid json format)." << std::endl;
+        spdlog::error("Failed to parse response data (invalid json format). {}", path);
         return false;
     }
 
-    for (auto &x : res_doc.GetArray())
-        res_list.push_back(parse_response(x));
+    res_data = parse_response(res_doc);
 
     return true;
 }
 
-void write_output_data(const std::vector<RequestData> &req_data_list)
+void write_output_data()
 {
-    rapidjson::Document res_doc(rapidjson::kArrayType);
-    for (const auto &req_data : req_data_list) {
-        DiscardResponseData res_data = create_discard_response(req_data);
-        rapidjson::Value res_value = dump_discard_response(res_data, res_doc);
-        res_doc.PushBack(res_value, res_doc.GetAllocator());
+    fs::path requests_dir = fs::path(CMAKE_TESTCASE_DIR) / "requests";
+
+    std::vector<std::string> paths;
+    for (const auto &entry : boost::make_iterator_range(fs::directory_iterator(requests_dir))) {
+        paths.push_back(entry.path().string());
     }
-    std::ofstream ofs(
-        R"(F:\work\cpp-apps\mahjong-cpp\data\testcase\test_expected_calclation_output.json)");
-    rapidjson::OStreamWrapper osw(ofs);
-    rapidjson::PrettyWriter<rapidjson::OStreamWrapper> writer(osw);
-    res_doc.Accept(writer);
+    std::sort(paths.begin(), paths.end());
+
+    for (const auto &req_path : paths) {
+        RequestData req_data;
+        load_input_data(req_path, req_data);
+        spdlog::info(req_data.hand.to_string());
+
+        DiscardResponseData res_data = create_discard_response(req_data);
+
+        fs::path res_path = fs::path(req_path).parent_path().parent_path() / "responses" /
+                            fs::path(req_path).filename();
+
+        rapidjson::Document res_doc(rapidjson::kObjectType);
+        res_doc.AddMember("result_type", 1, res_doc.GetAllocator());
+        res_doc.AddMember("syanten", res_data.syanten, res_doc.GetAllocator());
+        res_doc.AddMember("time", res_data.time_us, res_doc.GetAllocator());
+        res_doc.AddMember("candidates", rapidjson::kArrayType, res_doc.GetAllocator());
+        for (const auto &candidate : res_data.candidates)
+            res_doc["candidates"].PushBack(dump_candidate(candidate, res_doc),
+                                           res_doc.GetAllocator());
+
+        std::ofstream ofs(res_path.string());
+        rapidjson::OStreamWrapper osw(ofs);
+        rapidjson::PrettyWriter<rapidjson::OStreamWrapper> writer(osw);
+        res_doc.Accept(writer);
+    }
+
+    exit(1);
 }
 
 void test_candidate(const Candidate &expected, const Candidate &actual)
@@ -126,22 +169,16 @@ DiscardResponseData create_discard_response_navie(const RequestData &req)
 
 TEST_CASE("期待値計算がナイーブな実装と一致するか")
 {
-    std::vector<RequestData> req_data_list;
-    if (!load_input_data(req_data_list))
+    fs::path path = fs::path(CMAKE_TESTCASE_DIR) / "test_expected_calclation_input.json";
+
+    RequestData req_data;
+    if (!load_input_data(path.string(), req_data))
         return;
 
-    RequestData req_data = req_data_list[3];
-    for (int turn = 1; turn < 18; ++turn) {
+#ifdef TEST_NAIVE
+    spdlog::info("任意の巡目で結果が一致するかどうか");
+    for (int turn : {1, 5, 15, 16, 17}) {
         req_data.turn = turn;
-        req_data.flag = ExpectedValueCalculator::CalcSyantenDown   // 向聴戻し考慮
-                        | ExpectedValueCalculator::CalcTegawari    // 手変わり考慮
-                        | ExpectedValueCalculator::CalcDoubleReach // ダブル立直考慮
-                        | ExpectedValueCalculator::CalcIppatu      // 一発考慮
-                        | ExpectedValueCalculator::CalcHaiteitumo  // 海底撈月考慮
-                        | ExpectedValueCalculator::CalcUradora     // 裏ドラ考慮
-                        | ExpectedValueCalculator::CalcAkaTileTumo // 赤牌自摸考慮
-            // | ExpectedValueCalculator::MaximaizeWinProb // 和了確率を最大化
-            ;
 
         DiscardResponseData result1 = create_discard_response(req_data);
         DiscardResponseData result2 = create_discard_response_navie(req_data);
@@ -151,32 +188,167 @@ TEST_CASE("期待値計算がナイーブな実装と一致するか")
 
         // 聴牌確率、和了確率、期待値が一致しているかどうか
         for (size_t i = 0; i < result1.candidates.size(); ++i) {
-            REQUIRE(result1.candidates[i].win_probs[turn - 1] ==
-                    Approx(result2.candidates[i].win_probs[turn - 1]));
-            REQUIRE(result1.candidates[i].exp_values[turn - 1] ==
-                    Approx(result2.candidates[i].exp_values[turn - 1]));
-            REQUIRE(result1.candidates[i].tenpai_probs[turn - 1] ==
-                    Approx(result2.candidates[i].tenpai_probs[turn - 1]));
+            int t = req_data.turn - 1;
+            REQUIRE(result1.candidates[i].win_probs[t] ==
+                    Approx(result2.candidates[i].win_probs[t]));
+            REQUIRE(result1.candidates[i].exp_values[t] ==
+                    Approx(result2.candidates[i].exp_values[t]));
+            REQUIRE(result1.candidates[i].tenpai_probs[t] ==
+                    Approx(result2.candidates[i].tenpai_probs[t]));
+        }
+    }
+
+    spdlog::info("任意のフラグで結果が一致するかどうか");
+    for (int flag = 0; flag < 255; ++flag) {
+        req_data.turn = 14;
+        req_data.flag = flag;
+
+        DiscardResponseData result1 = create_discard_response(req_data);
+        DiscardResponseData result2 = create_discard_response_navie(req_data);
+
+        spdlog::info("{} {} -> {}", double(result1.time_us) / double(result2.time_us),
+                     result1.time_us / 1000, result2.time_us / 1000);
+
+        // 聴牌確率、和了確率、期待値が一致しているかどうか
+        for (size_t i = 0; i < result1.candidates.size(); ++i) {
+            int t = req_data.turn - 1;
+            REQUIRE(result1.candidates[i].win_probs[t] ==
+                    Approx(result2.candidates[i].win_probs[t]));
+            REQUIRE(result1.candidates[i].exp_values[t] ==
+                    Approx(result2.candidates[i].exp_values[t]));
+            REQUIRE(result1.candidates[i].tenpai_probs[t] ==
+                    Approx(result2.candidates[i].tenpai_probs[t]));
+        }
+    }
+
+    spdlog::info("任意の場風で結果が一致するかどうか");
+    for (int kazehai = Tile::Ton; kazehai <= Tile::Pe; ++kazehai) {
+        req_data.turn = 14;
+        req_data.bakaze = kazehai;
+
+        DiscardResponseData result1 = create_discard_response(req_data);
+        DiscardResponseData result2 = create_discard_response_navie(req_data);
+
+        spdlog::info("{} {} -> {}", double(result1.time_us) / double(result2.time_us),
+                     result1.time_us / 1000, result2.time_us / 1000);
+
+        // 聴牌確率、和了確率、期待値が一致しているかどうか
+        for (size_t i = 0; i < result1.candidates.size(); ++i) {
+            int t = req_data.turn - 1;
+            REQUIRE(result1.candidates[i].win_probs[t] ==
+                    Approx(result2.candidates[i].win_probs[t]));
+            REQUIRE(result1.candidates[i].exp_values[t] ==
+                    Approx(result2.candidates[i].exp_values[t]));
+            REQUIRE(result1.candidates[i].tenpai_probs[t] ==
+                    Approx(result2.candidates[i].tenpai_probs[t]));
+        }
+    }
+
+    spdlog::info("任意の自風で結果が一致するかどうか");
+    for (int kazehai = Tile::Ton; kazehai <= Tile::Pe; ++kazehai) {
+        req_data.turn = 14;
+        req_data.zikaze = kazehai;
+
+        DiscardResponseData result1 = create_discard_response(req_data);
+        DiscardResponseData result2 = create_discard_response_navie(req_data);
+
+        spdlog::info("{} {} -> {}", double(result1.time_us) / double(result2.time_us),
+                     result1.time_us / 1000, result2.time_us / 1000);
+
+        // 聴牌確率、和了確率、期待値が一致しているかどうか
+        for (size_t i = 0; i < result1.candidates.size(); ++i) {
+            int t = req_data.turn - 1;
+            REQUIRE(result1.candidates[i].win_probs[t] ==
+                    Approx(result2.candidates[i].win_probs[t]));
+            REQUIRE(result1.candidates[i].exp_values[t] ==
+                    Approx(result2.candidates[i].exp_values[t]));
+            REQUIRE(result1.candidates[i].tenpai_probs[t] ==
+                    Approx(result2.candidates[i].tenpai_probs[t]));
+        }
+    }
+#endif
+    //
+    // naive のほうでドラ表示牌が1枚以外のときにエラー発生
+    //
+    spdlog::info("任意の枚数のドラ表示牌で結果が一致するかどうか");
+    std::vector<int> dora_indicators = {Tile::Ton, Tile::Nan, Tile::Sya, Tile::Pe, Tile::Tyun};
+    for (int i = 1; i < 2; ++i) {
+        req_data.turn = 14;
+        req_data.dora_indicators =
+            std::vector(dora_indicators.begin(), dora_indicators.begin() + i);
+        std::cout << req_data.dora_indicators.size() << std::endl;
+
+        DiscardResponseData result1 = create_discard_response(req_data);
+        DiscardResponseData result2 = create_discard_response_navie(req_data);
+
+        spdlog::info("{} {} -> {}", double(result1.time_us) / double(result2.time_us),
+                     result1.time_us / 1000, result2.time_us / 1000);
+
+        // 聴牌確率、和了確率、期待値が一致しているかどうか
+        for (size_t i = 0; i < result1.candidates.size(); ++i) {
+            int t = req_data.turn - 1;
+            REQUIRE(result1.candidates[i].win_probs[t] ==
+                    Approx(result2.candidates[i].win_probs[t]));
+            REQUIRE(result1.candidates[i].exp_values[t] ==
+                    Approx(result2.candidates[i].exp_values[t]));
+            REQUIRE(result1.candidates[i].tenpai_probs[t] ==
+                    Approx(result2.candidates[i].tenpai_probs[t]));
+        }
+    }
+
+    spdlog::info("いくつかの手牌で結果が一致するかどうか");
+    std::vector<RequestData> req_data_list;
+    std::vector<std::string> paths;
+    if (!load_input_data(req_data_list, paths))
+        return;
+
+    for (size_t i = 0; i < req_data_list.size(); ++i) {
+        RequestData req_data = req_data_list[i];
+        spdlog::info("{} 手牌: {}", i, req_data.hand.to_string());
+
+        req_data.turn = 14;
+
+        DiscardResponseData result1 = create_discard_response(req_data);
+        DiscardResponseData result2 = create_discard_response_navie(req_data);
+
+        spdlog::info("{} {} -> {}", double(result1.time_us) / double(result2.time_us),
+                     result1.time_us / 1000, result2.time_us / 1000);
+
+        // 聴牌確率、和了確率、期待値が一致しているかどうか
+        for (size_t i = 0; i < result1.candidates.size(); ++i) {
+            int t = req_data.turn - 1;
+            REQUIRE(result1.candidates[i].win_probs[t] ==
+                    Approx(result2.candidates[i].win_probs[t]));
+            REQUIRE(result1.candidates[i].exp_values[t] ==
+                    Approx(result2.candidates[i].exp_values[t]));
+            REQUIRE(result1.candidates[i].tenpai_probs[t] ==
+                    Approx(result2.candidates[i].tenpai_probs[t]));
         }
     }
 }
 
 TEST_CASE("期待値計算の計算時間")
 {
-    std::vector<RequestData> req_data_list;
-    if (!load_input_data(req_data_list))
-        return;
-    // write_output_data(req_data_list);
-    // return;
+    // データを更新する場合
+    //write_output_data();
 
-    std::vector<DiscardResponseData> res_data_list;
-    if (!load_output_data(res_data_list))
+    fs::path response_dir = fs::path(CMAKE_TESTCASE_DIR) / "responses";
+
+    std::vector<RequestData> req_data_list;
+    std::vector<std::string> paths;
+    if (!load_input_data(req_data_list, paths))
         return;
 
     for (size_t i = 0; i < req_data_list.size(); ++i) {
+        const RequestData &req_data = req_data_list[i];
+        const std::string &req_path = paths[i];
+        fs::path res_path = response_dir / fs::path(paths[i]).filename();
+
         spdlog::info(req_data_list[i].hand.to_string());
-        DiscardResponseData actual = create_discard_response(req_data_list[i]);
-        const DiscardResponseData &expected = res_data_list[i];
+        DiscardResponseData actual = create_discard_response(req_data);
+        DiscardResponseData expected;
+        if (!load_output_data(res_path.string(), expected))
+            return;
 
         REQUIRE(actual.syanten == expected.syanten);
         spdlog::info("{} {} -> {}", double(actual.time_us) / double(expected.time_us),

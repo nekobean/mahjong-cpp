@@ -8,6 +8,9 @@ FetchContent_MakeAvailable(Catch2)
 file(GLOB_RECURSE SRC_FILES ../mahjong/*.cpp)
 file(GLOB ENTRY_FILES ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 
+set(CMAKE_TESTCASE_DIR ${CMAKE_SOURCE_DIR}/data/testcase)
+add_definitions("-DCMAKE_TESTCASE_DIR=\"${CMAKE_TESTCASE_DIR}\"")
+
 foreach(ENTRY_FILE ${ENTRY_FILES})
   get_filename_component(BASE_NAME ${ENTRY_FILE} NAME_WE)
 
@@ -17,7 +20,4 @@ foreach(ENTRY_FILE ${ENTRY_FILES})
   add_custom_command(TARGET ${BASE_NAME} PRE_BUILD
                      COMMAND ${CMAKE_COMMAND} -E copy_directory
                      ${CMAKE_SOURCE_DIR}/data/config/ $<TARGET_FILE_DIR:${BASE_NAME}>)
-  add_custom_command(TARGET ${BASE_NAME} PRE_BUILD
-                     COMMAND ${CMAKE_COMMAND} -E copy_directory
-                     ${CMAKE_SOURCE_DIR}/data/testcase/ $<TARGET_FILE_DIR:${BASE_NAME}>)
 endforeach(ENTRY_FILE ${ENTRY_FILES})

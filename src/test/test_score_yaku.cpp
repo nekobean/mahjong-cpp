@@ -57,7 +57,7 @@ bool load_cases(const std::string &filename, std::vector<TestCase> &cases)
 {
     cases.clear();
 
-    boost::filesystem::path path = boost::dll::program_location().parent_path() / filename;
+    boost::filesystem::path path = boost::filesystem::path(CMAKE_TESTCASE_DIR) / filename;
 
     std::FILE *fp = std::fopen(path.string().c_str(), "rb");
     if (!fp) {

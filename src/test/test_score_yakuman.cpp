@@ -24,7 +24,7 @@ bool load_yakuman_cases(const std::string &filename,
 {
     cases.clear();
 
-    boost::filesystem::path path = boost::dll::program_location().parent_path() / filename;
+    boost::filesystem::path path = boost::filesystem::path(CMAKE_TESTCASE_DIR) / filename;
 
     // ファイルを開く。
     std::ifstream ifs(path.string());

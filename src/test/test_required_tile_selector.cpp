@@ -23,7 +23,7 @@ bool load_testcase(std::vector<Hand> &cases)
     cases.clear();
 
     boost::filesystem::path path =
-        boost::dll::program_location().parent_path() / "test_unnecessary_tile_selector.txt";
+        boost::filesystem::path(CMAKE_TESTCASE_DIR) / "test_unnecessary_tile_selector.txt";
 
     // ファイルを開く。
     std::ifstream ifs(path.string());
