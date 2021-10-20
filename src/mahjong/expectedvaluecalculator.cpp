@@ -10,9 +10,7 @@
 #include <boost/algorithm/string/split.hpp>
 #include <boost/dll.hpp>
 
-#include "requiredtileselector.hpp"
 #include "syanten.hpp"
-#include "unnecessarytileselector.hpp"
 #include "utils.hpp"
 
 namespace mahjong
@@ -43,10 +41,14 @@ ExpectedValueCalculator::ExpectedValueCalculator()
  */
 std::tuple<bool, std::vector<Candidate>>
 ExpectedValueCalculator::calc(const Hand &hand, const ScoreCalculator &score_calculator,
-                              const std::vector<int> &dora_indicators, int flag)
+                              const std::vector<int> &dora_indicators, int syanten_type, int flag)
 {
     score_calculator_ = score_calculator;
-    syanten_type_ = SyantenType::Normal;
+    if (syanten_type == SyantenType::Tiitoi)
+        syanten_type_ = SyantenType::Normal | SyantenType::Tiitoi;
+    else
+        syanten_type_ = SyantenType::Normal;
+    syanten_type_ = syanten_type;
     dora_indicators_ = dora_indicators;
 
     calc_syanten_down_ = flag & CalcSyantenDown;
@@ -76,10 +78,10 @@ ExpectedValueCalculator::calc(const Hand &hand, const ScoreCalculator &score_cal
     create_prob_table(sum_left_tiles);
 
     std::vector<Candidate> candidates;
-    if (syanten > 3) // 3向聴以下は聴牌確率、和了確率、期待値を計算する。
-        candidates = analyze(syanten, hand);
-    else // 4向聴以上は受入枚数のみ計算する。
+    if (syanten <= 3) // 3向聴以下は聴牌確率、和了確率、期待値を計算する。
         candidates = analyze(0, syanten, hand);
+    else // 4向聴以上は受入枚数のみ計算する。
+        candidates = analyze(syanten, hand);
 
     // キャッシュをクリアする。
     clear_cache();
@@ -99,13 +101,23 @@ std::vector<std::tuple<int, int>>
 ExpectedValueCalculator::get_required_tiles(const Hand &hand, int syanten_type,
                                             const std::vector<int> &counts)
 {
+    Hand _hand = hand;
+
+    // 現在の向聴数を計算する。
+    auto [_, syanten] = SyantenCalculator::calc(_hand, syanten_type);
+
     std::vector<std::tuple<int, int>> required_tiles;
+    for (int tile = 0; tile < 34; ++tile) {
+        if (counts[tile] == 0)
+            continue;
 
-    // 有効牌の一覧を取得する。
-    std::vector<int> tiles = RequiredTileSelector::select(hand, syanten_type);
+        add_tile(_hand, tile);
+        auto [_, syanten_after] = SyantenCalculator::calc(_hand, syanten_type);
+        remove_tile(_hand, tile);
 
-    for (auto tile : tiles)
-        required_tiles.emplace_back(tile, counts[tile]);
+        if (syanten_after - syanten == -1)
+            required_tiles.emplace_back(tile, counts[tile]);
+    }
 
     return required_tiles;
 }
@@ -238,7 +250,7 @@ ExpectedValueCalculator::get_draw_tiles(Hand &hand, int syanten, const std::vect
 
     for (int tile = 0; tile < 34; ++tile) {
         if (counts[tile] == 0)
-            continue;
+            continue; // 残り牌がない場合
 
         add_tile(hand, tile);
         auto [_, syanten_after] = SyantenCalculator::calc(hand, syanten_type_);
@@ -246,38 +258,35 @@ ExpectedValueCalculator::get_draw_tiles(Hand &hand, int syanten, const std::vect
         int syanten_diff = syanten_after - syanten; // 向聴数の変化
 
         if (calc_akatile_tumo_ && tile == Tile::Manzu5 && counts[Tile::AkaManzu5] == 1) {
-            // 赤五萬が残っている場合
             if (counts[Tile::Manzu5] >= 2) {
-                // 普通の牌と赤牌の両方が残っている
+                // 五萬と赤五萬の両方が残っている
                 flags.emplace_back(tile, counts[tile] - 1, syanten_diff);
                 flags.emplace_back(Tile::AkaManzu5, 1, syanten_diff);
             }
             else if (counts[Tile::Manzu5] == 1) {
-                // 赤牌のみ残っている
+                // 赤五萬のみ残っている
                 flags.emplace_back(Tile::AkaManzu5, 1, syanten_diff);
             }
         }
         else if (calc_akatile_tumo_ && tile == Tile::Pinzu5 && counts[Tile::AkaPinzu5] == 1) {
-            // 赤五筒が残っている場合
             if (counts[Tile::Pinzu5] >= 2) {
-                // 普通の牌と赤牌の両方が残っている
+                // 五筒と赤五筒の両方が残っている
                 flags.emplace_back(tile, counts[tile] - 1, syanten_diff);
                 flags.emplace_back(Tile::AkaPinzu5, 1, syanten_diff);
             }
             else if (counts[Tile::Pinzu5] == 1) {
-                // 赤牌のみ残っている
+                // 赤五筒のみ残っている
                 flags.emplace_back(Tile::AkaPinzu5, 1, syanten_diff);
             }
         }
         else if (calc_akatile_tumo_ && tile == Tile::Sozu5 && counts[Tile::AkaSozu5] == 1) {
-            // 赤五索が残っている場合
             if (counts[Tile::Sozu5] >= 2) {
-                // 普通の牌と赤牌の両方が残っている
+                // 五索と赤五索の両方が残っている
                 flags.emplace_back(tile, counts[tile] - 1, syanten_diff);
                 flags.emplace_back(Tile::AkaSozu5, 1, syanten_diff);
             }
             else if (counts[Tile::Sozu5] == 1) {
-                // 赤牌のみ残っている
+                // 赤五索のみ残っている
                 flags.emplace_back(Tile::AkaSozu5, 1, syanten_diff);
             }
         }
@@ -417,13 +426,13 @@ ExpectedValueCalculator::draw_without_tegawari(int n_extra_tumo, int syanten, Ha
 
     // 有効牌の合計枚数を計算する。
     int sum_required_tiles = 0;
-    for (auto &[tile, count, diff] : flags) {
-        if (diff == -1) // 有効牌の場合
+    for (auto &[tile, count, syanten_diff] : flags) {
+        if (syanten_diff == -1) // 有効牌の場合
             sum_required_tiles += count;
     }
 
-    for (auto &[tile, count, diff] : flags) {
-        if (diff != -1) // 有効牌以外の場合
+    for (auto &[tile, count, syanten_diff] : flags) {
+        if (syanten_diff != -1) // 有効牌以外の場合
             continue;
 
         const std::vector<double> &tumo_probs = tumo_prob_table_[count];
@@ -432,8 +441,7 @@ ExpectedValueCalculator::draw_without_tegawari(int n_extra_tumo, int syanten, Ha
         // 手牌に加える
         add_tile(hand, tile, counts);
 
-        std::vector<double> next_tenpai_probs, next_win_probs, next_exp_values;
-        std::vector<double> scores;
+        std::vector<double> next_tenpai_probs, next_win_probs, next_exp_values, scores;
         if (syanten == 0) {
             scores = get_score(hand, tile, counts);
         }
@@ -492,8 +500,6 @@ ExpectedValueCalculator::draw_without_tegawari(int n_extra_tumo, int syanten, Ha
  * @param[in] hand 手牌
  * @param[in] counts 各牌の残り枚数
  * @return (各巡目の聴牌確率, 各巡目の和了確率, 各巡目の期待値)
- *
- * この関数が呼ばれた時点で向聴戻しは行われていない
  */
 std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
 ExpectedValueCalculator::draw_with_tegawari(int n_extra_tumo, int syanten, Hand &hand,
@@ -772,7 +778,7 @@ std::vector<Candidate> ExpectedValueCalculator::analyze(int n_extra_tumo, int sy
             add_tile(hand, discard_tile);
 
 #ifdef FIX_SYANTEN_DOWN
-            // 向聴戻しは巡目がずれるので、1つ手前にずらす。(このやり方で正しいのか要検証)
+            // 向聴戻しは巡目がずれるので、1つ手前にずらす → 間違っているので消すこと
             std::rotate(tenpai_probs.begin(), tenpai_probs.begin() + 1, tenpai_probs.end());
             tenpai_probs.back() = 0;
             std::rotate(win_probs.begin(), win_probs.begin() + 1, win_probs.end());
@@ -804,13 +810,23 @@ std::vector<Candidate> ExpectedValueCalculator::analyze(int syanten, const Hand 
     // 各牌の残り枚数を数える。
     std::vector<int> counts = count_left_tiles(hand, dora_indicators_);
 
-    std::vector<int> tiles = UnnecessaryTileSelector::select(hand, syanten_type_);
+    // 打牌候補を取得する。
+    const std::vector<int> flags = get_discard_tiles(hand, syanten);
 
-    for (auto tile : tiles) {
-        remove_tile(hand, tile);
+    for (int tile = 0; tile < 34; ++tile) {
+        int discard_tile = tile;
+        // 赤牌以外が残っている場合はそちらを先に捨てる。
+        if (tile == Tile::Manzu5 && hand.aka_manzu5 && hand.num_tiles(Tile::Manzu5) == 1)
+            discard_tile = Tile::AkaManzu5;
+        else if (tile == Tile::Pinzu5 && hand.aka_pinzu5 && hand.num_tiles(Tile::Pinzu5) == 1)
+            discard_tile = Tile::AkaPinzu5;
+        else if (tile == Tile::Sozu5 && hand.aka_sozu5 && hand.num_tiles(Tile::Sozu5) == 1)
+            discard_tile = Tile::AkaSozu5;
+
+        remove_tile(hand, discard_tile);
         auto required_tiles = get_required_tiles(hand, syanten_type_, counts);
-        add_tile(hand, tile);
-        candidates.emplace_back(tile, required_tiles);
+        add_tile(hand, discard_tile);
+        candidates.emplace_back(discard_tile, required_tiles);
     }
 
     return candidates;

@@ -12,6 +12,9 @@
     ],
     "additionalProperties": false,
     "properties": {
+        "version": {
+            "type": "string"
+        },
         "ip": {
             "type": "string"
         },
@@ -57,7 +60,7 @@
         "flag": {
             "type": "integer",
             "minimum": 0,
-            "maximum": 127
+            "maximum": 255
         },
         "hand_tiles": {
             "type": "array",

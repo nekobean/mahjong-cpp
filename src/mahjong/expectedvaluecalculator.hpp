@@ -3,7 +3,6 @@
 
 #include "score.hpp"
 #include "types/types.hpp"
-#include <boost/functional/hash.hpp>
 
 #define ENABLE_DRAW_CACHE
 #define ENABLE_DISCARD_CACHE
@@ -256,7 +255,7 @@ class ExpectedValueCalculator
     std::tuple<bool, std::vector<Candidate>> calc(const Hand &hand,
                                                   const ScoreCalculator &score_calculator,
                                                   const std::vector<int> &dora_indicators,
-                                                  int flag = 0);
+                                                  int syanten_type, int flag = 0);
     static std::vector<std::tuple<int, int>> get_required_tiles(const Hand &hand, int syanten_type,
                                                                 const std::vector<int> &counts);
     static std::vector<int> count_left_tiles(const Hand &hand,

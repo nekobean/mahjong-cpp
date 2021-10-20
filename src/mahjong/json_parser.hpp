@@ -15,6 +15,7 @@ struct RequestData
     mahjong::Hand hand;
     int flag;
     std::string ip;
+    std::string version;
 };
 
 struct DrawResponseData

@@ -1,9 +1,12 @@
 cmake_minimum_required(VERSION 3.1.1)
-project(mahjong-cpp VERSION 0.1.0)
+project(mahjong-cpp VERSION 0.9.0)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+ 
+add_definitions("-DPROJECT_NAME=\"${PROJECT_NAME}\"")
+add_definitions("-DPROJECT_VERSION=\"${${PROJECT_NAME}_VERSION}\"")
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release")

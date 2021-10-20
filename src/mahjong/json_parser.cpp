@@ -1,5 +1,6 @@
 #include "json_parser.hpp"
 
+#include <algorithm>
 #include <sstream>
 
 #include <rapidjson/istreamwrapper.h>
@@ -83,6 +84,9 @@ RequestData parse_request(const rapidjson::Value &doc)
     if (doc.HasMember("ip"))
         req.ip = doc["ip"].GetString();
 
+    if (doc.HasMember("version"))
+        req.version = doc["version"].GetString();
+
     return req;
 }
 
@@ -108,6 +112,10 @@ DiscardResponseData parse_response(const rapidjson::Value &value)
             int count = y["count"].GetInt();
             required_tiles.emplace_back(tile, count);
         }
+
+        // 牌を順番にソートする。
+        std::sort(required_tiles.begin(), required_tiles.end(),
+                  [](const auto &a, const auto &b) { return std::get<0>(a) < std::get<0>(b); });
 
         std::vector<double> exp_values, win_probs, tenpai_probs;
         for (auto &y : x["tenpai_probs"].GetArray())
@@ -169,9 +177,6 @@ rapidjson::Value dump_candidate(const Candidate &candidate, rapidjson::Document 
 
 DrawResponseData create_draw_response(const RequestData &req)
 {
-    ScoreCalculator score_calc;
-    ExpectedValueCalculator exp_value_calc;
-
     // 13枚の場合は有効牌を求める。
     auto begin = std::chrono::steady_clock::now();
 
@@ -216,7 +221,7 @@ DiscardResponseData create_discard_response(const RequestData &req)
 
     // 各打牌を分析する。
     auto [success, candidates] =
-        exp_value_calc.calc(req.hand, score_calc, req.dora_indicators, req.flag);
+        exp_value_calc.calc(req.hand, score_calc, req.dora_indicators, req.syanten_type, req.flag);
 
     auto end = std::chrono::steady_clock::now();
     auto elapsed_us = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();

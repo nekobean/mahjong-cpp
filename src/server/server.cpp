@@ -38,11 +38,11 @@ std::tuple<bool, RequestData> Server::parse_json(const rapidjson::Document &doc)
     std::string dora_indicators = "";
     for (const auto &tile : req.dora_indicators)
         dora_indicators += Tile::Name.at(tile) + (&tile != &req.dora_indicators.back() ? " " : "");
-    spdlog::get("logger")->info("IP: {}, 場風牌: {}, 自風牌: {}, 巡目: {}, 手牌の種類: {}, 手牌: "
-                                "{}, フラグ: {}, ドラ表示牌: {}",
-                                req.ip, Tile::Name.at(req.bakaze), Tile::Name.at(req.zikaze),
-                                req.turn, req.syanten_type, req.hand.to_string(), req.flag,
-                                dora_indicators);
+    spdlog::get("logger")->info(
+        "IP: {}, バージョン: {}, 場風牌: {}, 自風牌: {}, 巡目: {}, 手牌の種類: {}, 手牌: "
+        "{}, フラグ: {}, ドラ表示牌: {}",
+        req.ip, req.version, Tile::Name.at(req.bakaze), Tile::Name.at(req.zikaze), req.turn,
+        req.syanten_type, req.hand.to_string(), req.flag, dora_indicators);
 
     auto counts = ExpectedValueCalculator::count_left_tiles(req.hand, req.dora_indicators);
     for (auto x : counts) {
@@ -75,6 +75,21 @@ std::string Server::process_request(const std::string &json)
     sd.ParseStream(isw);
     rapidjson::SchemaDocument schema(sd);
     rapidjson::SchemaValidator validator(schema);
+
+    std::string req_version;
+    if (req_doc.HasMember("version"))
+        req_version = req_doc["version"].GetString();
+
+    if (req_version != PROJECT_VERSION) {
+        spdlog::get("logger")->error("バージョンが不一致 {} vs {}", req_version, PROJECT_VERSION);
+        doc.AddMember("success", false, doc.GetAllocator());
+        doc.AddMember("request", req_doc.GetObject(), doc.GetAllocator());
+        doc.AddMember("err_msg",
+                      "アプリのバージョンが古いです。キャッシュの影響だと思われるので、ブラウザでペ"
+                      "ージを再読み込みしてください。",
+                      doc.GetAllocator());
+        return to_json_str(doc);
+    }
 
     if (!req_doc.Accept(validator)) {
         // rapidjson::StringBuffer sb;
@@ -286,7 +301,7 @@ void do_session(tcp::socket &socket, std::shared_ptr<std::string const> const &d
 
 int Server::run()
 {
-    spdlog::get("logger")->info("Launch server.");
+    spdlog::get("logger")->info("Launching server...");
 
     try {
         auto const address = net::ip::make_address("0.0.0.0");
@@ -325,6 +340,8 @@ int main()
     auto logger = std::make_shared<spdlog::logger>("logger", sinks.begin(), sinks.end());
     spdlog::register_logger(logger);
     spdlog::flush_every(std::chrono::seconds(3));
+
+    spdlog::get("logger")->info("{} {}", PROJECT_NAME, PROJECT_VERSION);
 
     return server.run();
 }
