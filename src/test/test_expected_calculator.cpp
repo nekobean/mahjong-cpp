@@ -166,7 +166,8 @@ TEST_CASE("期待値計算の計算時間")
     std::vector<RequestData> req_data_list;
     if (!load_input_data(req_data_list))
         return;
-    //write_output_data(req_data_list);
+    // write_output_data(req_data_list);
+    // return;
 
     std::vector<DiscardResponseData> res_data_list;
     if (!load_output_data(res_data_list))
