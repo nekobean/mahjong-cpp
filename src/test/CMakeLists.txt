@@ -6,7 +6,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(Catch2)
 
 file(GLOB_RECURSE SRC_FILES ../mahjong/*.cpp)
-file(GLOB ENTRY_FILES ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
+file(GLOB ENTRY_FILES ${CMAKE_CURRENT_SOURCE_DIR}/test_*.cpp)
 
 set(CMAKE_TESTCASE_DIR ${CMAKE_SOURCE_DIR}/data/testcase)
 add_definitions("-DCMAKE_TESTCASE_DIR=\"${CMAKE_TESTCASE_DIR}\"")
