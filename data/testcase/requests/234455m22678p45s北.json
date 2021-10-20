@@ -1,0 +1,27 @@
+{
+    "zikaze": 27,
+    "bakaze": 27,
+    "turn": 3,
+    "syanten_type": 1,
+    "dora_indicators": [
+        27
+    ],
+    "flag": 127,
+    "hand_tiles": [
+        1,
+        2,
+        3,
+        3,
+        4,
+        4,
+        10,
+        10,
+        14,
+        15,
+        16,
+        21,
+        22,
+        30
+    ],
+    "melded_blocks": []
+}
