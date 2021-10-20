@@ -21,8 +21,8 @@ class Candidate
     }
 
     Candidate(int tile, const std::vector<std::tuple<int, int>> &required_tiles,
-              std::vector<double> tenpai_probs, std::vector<double> win_probs,
-              std::vector<double> exp_values, bool syanten_down)
+              const std::vector<double> &tenpai_probs, const std::vector<double> &win_probs,
+              const std::vector<double> &exp_values, bool syanten_down)
         : tile(tile)
         , required_tiles(required_tiles)
         , tenpai_probs(tenpai_probs)
