@@ -39,14 +39,18 @@ std::vector<int> RequiredTileSelector::select_normal(const Hand &hand)
                 tiles.push_back(i);
             hand_after.manzu -= Bit::tile1[i];
         }
+    }
 
+    for (int i = 0; i < 9; ++i) {
         if ((hand.pinzu & Bit::mask[i]) != Bit::tile4[i]) {
             hand_after.pinzu += Bit::tile1[i];
             if (syanten > SyantenCalculator::calc_normal(hand_after))
                 tiles.push_back(i + Tile::Pinzu1);
             hand_after.pinzu -= Bit::tile1[i];
         }
+    }
 
+    for (int i = 0; i < 9; ++i) {
         if ((hand.sozu & Bit::mask[i]) != Bit::tile4[i]) {
             hand_after.sozu += Bit::tile1[i];
             if (syanten > SyantenCalculator::calc_normal(hand_after))

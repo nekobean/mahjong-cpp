@@ -49,32 +49,6 @@ bool load_testcase(std::vector<Hand> &cases)
     return true;
 }
 
-// TEST_CASE("検証用")
-// {
-//     std::vector<Hand> cases;
-//     if (!load_testcase(cases))
-//         return;
-
-//     std::vector<std::vector<int>> rets1;
-//     for (const auto &hand : cases) {
-//         auto ret = RequiredTileSelector::select_kokusi(hand);
-//         rets1.push_back(ret);
-//     }
-
-//     std::vector<std::vector<int>> rets2;
-//     for (const auto &hand : cases) {
-//         auto ret = RequiredTileSelector::select_kokusi2(hand);
-//         rets2.push_back(ret);
-//     }
-
-//     for (size_t i = 0; i < cases.size(); ++i) {
-//         INFO(fmt::format("手牌: {}", cases[i].to_string()));
-//         REQUIRE(rets1[i].size() == rets2[i].size());
-//         for (size_t j = 0; j < rets1[i].size(); ++j)
-//             REQUIRE(rets1[i][j] == rets2[i][j]);
-//     }
-// }
-
 TEST_CASE("一般手の有効牌を選択する")
 {
     std::vector<Hand> cases;
@@ -83,10 +57,8 @@ TEST_CASE("一般手の有効牌を選択する")
 
     BENCHMARK("一般手の有効牌を選択する")
     {
-        for (const auto &hand : cases) {
-
+        for (const auto &hand : cases)
             RequiredTileSelector::select_normal(hand);
-        }
     };
 }
 
@@ -98,10 +70,8 @@ TEST_CASE("七対子手の有効牌を選択する")
 
     BENCHMARK("七対子手の有効牌を選択する")
     {
-        for (const auto &hand : cases) {
-
+        for (const auto &hand : cases)
             RequiredTileSelector::select_tiitoi(hand);
-        }
     };
 }
 
@@ -113,9 +83,7 @@ TEST_CASE("国士手の有効牌を選択する")
 
     BENCHMARK("国士手の有効牌を選択する")
     {
-        for (const auto &hand : cases) {
-
+        for (const auto &hand : cases)
             RequiredTileSelector::select_kokusi(hand);
-        }
     };
 }

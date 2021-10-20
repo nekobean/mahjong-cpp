@@ -43,7 +43,9 @@ std::vector<int> UnnecessaryTileSelector::select_normal(const Hand &hand)
             if (syanten == syanten_after)
                 tiles.push_back(i);
         }
+    }
 
+    for (int i = 0; i < 9; ++i) {
         if (hand.pinzu & Bit::mask[i]) {
             hand_after.pinzu -= Bit::tile1[i];
             int syanten_after = SyantenCalculator::calc_normal(hand_after);
@@ -52,7 +54,9 @@ std::vector<int> UnnecessaryTileSelector::select_normal(const Hand &hand)
             if (syanten == syanten_after)
                 tiles.push_back(i + Tile::Pinzu1);
         }
+    }
 
+    for (int i = 0; i < 9; ++i) {
         if (hand.sozu & Bit::mask[i]) {
             hand_after.sozu -= Bit::tile1[i];
             int syanten_after = SyantenCalculator::calc_normal(hand_after);
