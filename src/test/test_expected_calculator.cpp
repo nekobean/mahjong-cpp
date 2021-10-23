@@ -103,8 +103,13 @@ void write_output_data()
                             fs::path(req_path).filename();
 
         rapidjson::Document res_doc(rapidjson::kObjectType);
+
+        rapidjson::Value syanten_value(rapidjson::kObjectType);
+        syanten_value.AddMember("normal", res_data.normal_syanten, res_doc.GetAllocator());
+        syanten_value.AddMember("tiitoi", res_data.tiitoi_syanten, res_doc.GetAllocator());
+        syanten_value.AddMember("kokusi", res_data.kokusi_syanten, res_doc.GetAllocator());
         res_doc.AddMember("result_type", 1, res_doc.GetAllocator());
-        res_doc.AddMember("syanten", res_data.syanten, res_doc.GetAllocator());
+        res_doc.AddMember("syanten", syanten_value, res_doc.GetAllocator());
         res_doc.AddMember("time", res_data.time_us, res_doc.GetAllocator());
         res_doc.AddMember("candidates", rapidjson::kArrayType, res_doc.GetAllocator());
         for (const auto &candidate : res_data.candidates)
@@ -142,9 +147,6 @@ DiscardResponseData create_discard_response_navie(const RequestData &req)
 
     auto begin = std::chrono::steady_clock::now();
 
-    // 向聴数を計算する。
-    auto [syanten_type, syanten] = SyantenCalculator::calc(req.hand, req.syanten_type);
-
     // 点数計算の設定
     score_calc.set_bakaze(req.bakaze);
     score_calc.set_zikaze(req.zikaze);
@@ -160,7 +162,9 @@ DiscardResponseData create_discard_response_navie(const RequestData &req)
     auto elapsed_us = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
 
     DiscardResponseData res;
-    res.syanten = syanten;
+    res.normal_syanten = SyantenCalculator::calc_normal(req.hand);
+    res.tiitoi_syanten = SyantenCalculator::calc_tiitoi(req.hand);
+    res.kokusi_syanten = SyantenCalculator::calc_kokusi(req.hand);
     res.time_us = elapsed_us;
     res.candidates = candidates;
 
@@ -327,7 +331,7 @@ TEST_CASE("期待値計算がナイーブな実装と一致するか")
 TEST_CASE("期待値計算の計算時間")
 {
     // データを更新する場合
-    //write_output_data();
+    // write_output_data();
 
     fs::path response_dir = fs::path(CMAKE_TESTCASE_DIR) / "responses";
 
@@ -347,7 +351,9 @@ TEST_CASE("期待値計算の計算時間")
         if (!load_output_data(res_path.string(), expected))
             return;
 
-        REQUIRE(actual.syanten == expected.syanten);
+        REQUIRE(actual.normal_syanten == expected.normal_syanten);
+        REQUIRE(actual.tiitoi_syanten == expected.tiitoi_syanten);
+        REQUIRE(actual.kokusi_syanten == expected.kokusi_syanten);
         spdlog::info("{} {} -> {}", double(actual.time_us) / double(expected.time_us),
                      expected.time_us / 1000, actual.time_us / 1000);
         // REQUIRE(double(expected.time_us) / double(actual.time_us) < 1.1);

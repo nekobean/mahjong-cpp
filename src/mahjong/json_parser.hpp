@@ -1,5 +1,5 @@
-#ifndef MAHJONG_CPP_JSON_PARSER
-#define MAHJONG_CPP_JSON_PARSER
+#ifndef JSON_PARSER
+#define JSON_PARSER
 
 #include <rapidjson/document.h>
 
@@ -27,7 +27,9 @@ struct DrawResponseData
 
 struct DiscardResponseData
 {
-    int syanten;
+    int normal_syanten;
+    int tiitoi_syanten;
+    int kokusi_syanten;
     size_t time_us;
     std::vector<mahjong::Candidate> candidates;
 };
@@ -45,4 +47,4 @@ rapidjson::Value dump_draw_response(const DrawResponseData &res, rapidjson::Docu
 rapidjson::Value dump_discard_response(const DiscardResponseData &res, rapidjson::Document &doc);
 rapidjson::Value create_response(const RequestData &req, rapidjson::Document &doc);
 
-#endif /* MAHJONG_CPP_JSON_PARSER */
+#endif // JSON_PARSER

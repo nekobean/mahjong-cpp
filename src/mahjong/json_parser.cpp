@@ -100,7 +100,9 @@ DiscardResponseData parse_response(const rapidjson::Value &value)
 {
     DiscardResponseData res;
 
-    res.syanten = value["syanten"].GetInt();
+    res.normal_syanten = value["syanten"]["normal"].GetInt();
+    res.tiitoi_syanten = value["syanten"]["tiitoi"].GetInt();
+    res.kokusi_syanten = value["syanten"]["kokusi"].GetInt();
     res.time_us = value["time"].GetInt();
     for (auto &x : value["candidates"].GetArray()) {
         int tile = x["tile"].GetInt();
@@ -209,9 +211,6 @@ DiscardResponseData create_discard_response(const RequestData &req)
 
     auto begin = std::chrono::steady_clock::now();
 
-    // 向聴数を計算する。
-    auto [syanten_type, syanten] = SyantenCalculator::calc(req.hand, req.syanten_type);
-
     // 点数計算の設定
     score_calc.set_bakaze(req.bakaze);
     score_calc.set_zikaze(req.zikaze);
@@ -227,7 +226,9 @@ DiscardResponseData create_discard_response(const RequestData &req)
     auto elapsed_us = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
 
     DiscardResponseData res;
-    res.syanten = syanten;
+    res.normal_syanten = SyantenCalculator::calc_normal(req.hand);
+    res.tiitoi_syanten = SyantenCalculator::calc_tiitoi(req.hand);
+    res.kokusi_syanten = SyantenCalculator::calc_kokusi(req.hand);
     res.time_us = elapsed_us;
     res.candidates = candidates;
 
@@ -248,9 +249,14 @@ rapidjson::Value dump_draw_response(const DrawResponseData &res, rapidjson::Docu
 
 rapidjson::Value dump_discard_response(const DiscardResponseData &res, rapidjson::Document &doc)
 {
+    rapidjson::Value syanten_value(rapidjson::kObjectType);
+    syanten_value.AddMember("normal", res.normal_syanten, doc.GetAllocator());
+    syanten_value.AddMember("tiitoi", res.tiitoi_syanten, doc.GetAllocator());
+    syanten_value.AddMember("kokusi", res.kokusi_syanten, doc.GetAllocator());
+
     rapidjson::Value value(rapidjson::kObjectType);
     value.AddMember("result_type", 1, doc.GetAllocator());
-    value.AddMember("syanten", res.syanten, doc.GetAllocator());
+    value.AddMember("syanten", syanten_value, doc.GetAllocator());
     value.AddMember("time", res.time_us, doc.GetAllocator());
     value.AddMember("candidates", rapidjson::kArrayType, doc.GetAllocator());
     for (const auto &candidate : res.candidates)
