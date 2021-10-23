@@ -1,7 +1,11 @@
 {
     "result_type": 1,
-    "syanten": 1,
-    "time": 80507,
+    "syanten": {
+        "normal": 1,
+        "tiitoi": 3,
+        "kokusi": 13
+    },
+    "time": 82305,
     "candidates": [
         {
             "tile": 2,
