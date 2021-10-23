@@ -1,15 +1,15 @@
+import json
 from pathlib import Path
+
 import numpy as np
 from tqdm import tqdm
-from operator import itemgetter
 from bs4 import BeautifulSoup
-from tqdm.notebook import tqdm
+from tqdm import tqdm
 
 from utils import *
 
 # 牌
 tiles134 = np.arange(34).repeat(4)
-
 tiles134[np.where(tiles134 == Tile.Manzu5)[0][0]] = Tile.AkaManzu5  # 赤萬子5
 tiles134[np.where(tiles134 == Tile.Pinzu5)[0][0]] = Tile.AkaPinzu5  # 赤筒子5
 tiles134[np.where(tiles134 == Tile.Sozu5)[0][0]] = Tile.AkaSozu5  # 赤索子5
@@ -474,7 +474,6 @@ def parse_init(tag):
 
 
 def parse_mjlog(path):
-    print(path)
     soup = BeautifulSoup(open(path), "lxml-xml")
     root = soup.find("mjloggm")
 
@@ -499,17 +498,19 @@ def parse_mjlog(path):
 
 
 data_dir = Path(r"E:\mahjong")
-mj_paths = sorted(data_dir.glob("**/*.mjlog"))
-print(f"{len(mj_paths)} mjlog files found.")
+mjlog_paths = sorted(data_dir.glob("**/*.mjlog"))
+print(f"{len(mjlog_paths)} mjlog files found.")
 
-data = []
-for x in tqdm(mj_paths[:10000]):
-    d = parse_mjlog(x)
-    if d:
-        data += d
+# 解析する。
+testcases = []
+for path in tqdm(mjlog_paths):
+    try:
+        if testcase := parse_mjlog(path):
+            testcases += testcase
+    except Exception as e:
+        print(f"error: {e}, path: {path}")
+        continue
 
-import json
 
 with open(TESTCASE_DIR / "test_score_normal_yaku.json", "w") as f:
-    json.dump(data, f, indent=4)
-
+    json.dump(testcases, f, indent=4)
