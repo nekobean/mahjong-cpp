@@ -44,10 +44,6 @@ ExpectedValueCalculator::calc(const Hand &hand, const ScoreCalculator &score_cal
                               const std::vector<int> &dora_indicators, int syanten_type, int flag)
 {
     score_calculator_ = score_calculator;
-    if (syanten_type == SyantenType::Tiitoi)
-        syanten_type_ = SyantenType::Normal | SyantenType::Tiitoi;
-    else
-        syanten_type_ = SyantenType::Normal;
     syanten_type_ = syanten_type;
     dora_indicators_ = dora_indicators;
 
