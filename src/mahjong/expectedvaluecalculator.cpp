@@ -553,9 +553,12 @@ ExpectedValueCalculator::draw_with_tegawari(int n_extra_tumo, int syanten, Hand 
         }
 
         // 【暫定対応】 (2021/9/24)
+        // FIX_TEGAWARI_PROB について
         // draw_without_tegawari() で有効牌が引けない場合、有効牌以外のどの牌を引いたのかということは考慮していないため、
-        // counts で管理している各牌の残りの合計枚数 > 現在の巡目の残り枚数という状況が発生し、結果的に確率値が1を超えてしまう。実際に正しい確率値を求めるには、draw_without_tegawari() でどの牌を引いたのかをすべてシミュレーションする必要があるが、計算量的に難しいので、巡目に関係なく、
-        // 「自摸の確率 = 牌の残り枚数 / 残り枚数の合計」で確率値が1を超えないように暫定対応した。
+        // counts で管理している各牌の残りの合計枚数 > 現在の巡目の残り枚数という状況が発生し、結果的に確率値が1を超えてしまう。
+        // 実際に正しい確率値を求めるには、draw_without_tegawari() でどの牌を引いたのかをすべてシミュレーションする必要があるが、
+        // 計算量的に難しいので、巡目に関係なく、
+        //「自摸の確率 = 牌の残り枚数 / 残り枚数の合計」で確率値が1を超えないように暫定対応した。
 
         for (int i = 0; i < 17; ++i) {
 #ifdef FIX_TEGAWARI_PROB
@@ -772,7 +775,8 @@ std::vector<Candidate> ExpectedValueCalculator::analyze(int n_extra_tumo, int sy
             add_tile(hand, discard_tile);
 
 #ifdef FIX_SYANTEN_DOWN
-            // 向聴戻しは巡目がずれるので、1つ手前にずらす → 間違っているので消すこと
+            // ToDo: 向聴戻しをしない場合のパターンの確率が過小に算出されているような気がするため、
+            // 帳尻をあわせるために1巡ずらしている → 本来必要ない処理なので、あとで消す
             std::rotate(tenpai_probs.begin(), tenpai_probs.begin() + 1, tenpai_probs.end());
             tenpai_probs.back() = 0;
             std::rotate(win_probs.begin(), win_probs.begin() + 1, win_probs.end());

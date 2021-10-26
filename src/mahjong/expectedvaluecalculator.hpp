@@ -6,8 +6,8 @@
 
 #define ENABLE_DRAW_CACHE
 #define ENABLE_DISCARD_CACHE
-// #define FIX_TEGAWARI_PROB
-// #define FIX_SYANTEN_DOWN
+#define FIX_TEGAWARI_PROB
+#define FIX_SYANTEN_DOWN
 
 namespace mahjong
 {
