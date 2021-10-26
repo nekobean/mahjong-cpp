@@ -8,11 +8,13 @@
 #include <boost/dll.hpp>
 
 #include <chrono>
-#include <filesystem>
 #include <fstream>
 #include <iostream>
 
 //#define OUTPUT_DETAIL_LOG
+#ifdef OUTPUT_DETAIL_LOG
+#include <filesystem>
+#endif
 
 namespace beast = boost::beast;   // from <boost/beast.hpp>
 namespace http = beast::http;     // from <boost/beast/http.hpp>
