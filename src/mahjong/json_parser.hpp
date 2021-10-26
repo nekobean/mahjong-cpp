@@ -21,12 +21,16 @@ struct RequestData
 struct DrawResponseData
 {
     int syanten;
+    int normal_syanten;
+    int tiitoi_syanten;
+    int kokusi_syanten;
     size_t time_us;
     std::vector<std::tuple<int, int>> required_tiles;
 };
 
 struct DiscardResponseData
 {
+    int syanten;
     int normal_syanten;
     int tiitoi_syanten;
     int kokusi_syanten;

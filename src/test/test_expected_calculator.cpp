@@ -105,6 +105,7 @@ void write_output_data()
         rapidjson::Document res_doc(rapidjson::kObjectType);
 
         rapidjson::Value syanten_value(rapidjson::kObjectType);
+        syanten_value.AddMember("syanten", res_data.syanten, res_doc.GetAllocator());
         syanten_value.AddMember("normal", res_data.normal_syanten, res_doc.GetAllocator());
         syanten_value.AddMember("tiitoi", res_data.tiitoi_syanten, res_doc.GetAllocator());
         syanten_value.AddMember("kokusi", res_data.kokusi_syanten, res_doc.GetAllocator());
@@ -162,6 +163,8 @@ DiscardResponseData create_discard_response_navie(const RequestData &req)
     auto elapsed_us = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
 
     DiscardResponseData res;
+    auto [_, syanten] = SyantenCalculator::calc(req.hand, req.syanten_type);
+    res.syanten = syanten;
     res.normal_syanten = SyantenCalculator::calc_normal(req.hand);
     res.tiitoi_syanten = SyantenCalculator::calc_tiitoi(req.hand);
     res.kokusi_syanten = SyantenCalculator::calc_kokusi(req.hand);
@@ -351,6 +354,7 @@ TEST_CASE("期待値計算の計算時間")
         if (!load_output_data(res_path.string(), expected))
             return;
 
+        REQUIRE(actual.syanten == expected.syanten);
         REQUIRE(actual.normal_syanten == expected.normal_syanten);
         REQUIRE(actual.tiitoi_syanten == expected.tiitoi_syanten);
         REQUIRE(actual.kokusi_syanten == expected.kokusi_syanten);

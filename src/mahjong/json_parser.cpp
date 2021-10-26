@@ -57,23 +57,21 @@ RequestData parse_request(const rapidjson::Value &doc)
     req.turn = doc["turn"].GetInt();
     req.syanten_type = doc["syanten_type"].GetInt();
 
-    for (auto &x : doc["dora_indicators"].GetArray())
+    for (const auto &x : doc["dora_indicators"].GetArray())
         req.dora_indicators.push_back(x.GetInt());
 
     req.flag = doc["flag"].GetInt();
 
     std::vector<int> hand_tiles;
-    for (auto &x : doc["hand_tiles"].GetArray())
+    for (const auto &x : doc["hand_tiles"].GetArray())
         hand_tiles.push_back(x.GetInt());
 
     std::vector<MeldedBlock> melds;
-    for (auto &meld : doc["melded_blocks"].GetArray()) {
+    for (const auto &meld : doc["melded_blocks"].GetArray()) {
         int meld_type = meld["type"].GetInt();
-
         std::vector<int> tiles;
-        for (auto &x : meld["tiles"].GetArray())
+        for (const auto &x : meld["tiles"].GetArray())
             tiles.push_back(x.GetInt());
-
         int discarded_tile = meld["discarded_tile"].GetInt();
         int from = meld["from"].GetInt();
 
@@ -100,31 +98,28 @@ DiscardResponseData parse_response(const rapidjson::Value &value)
 {
     DiscardResponseData res;
 
+    res.syanten = value["syanten"]["syanten"].GetInt();
     res.normal_syanten = value["syanten"]["normal"].GetInt();
     res.tiitoi_syanten = value["syanten"]["tiitoi"].GetInt();
     res.kokusi_syanten = value["syanten"]["kokusi"].GetInt();
     res.time_us = value["time"].GetInt();
-    for (auto &x : value["candidates"].GetArray()) {
+    for (const auto &x : value["candidates"].GetArray()) {
         int tile = x["tile"].GetInt();
         bool syanten_down = x["syanten_down"].GetBool();
 
         std::vector<std::tuple<int, int>> required_tiles;
-        for (auto &y : x["required_tiles"].GetArray()) {
+        for (const auto &y : x["required_tiles"].GetArray()) {
             int tile = y["tile"].GetInt();
             int count = y["count"].GetInt();
             required_tiles.emplace_back(tile, count);
         }
 
-        // 牌を順番にソートする。
-        std::sort(required_tiles.begin(), required_tiles.end(),
-                  [](const auto &a, const auto &b) { return std::get<0>(a) < std::get<0>(b); });
-
         std::vector<double> exp_values, win_probs, tenpai_probs;
-        for (auto &y : x["tenpai_probs"].GetArray())
+        for (const auto &y : x["tenpai_probs"].GetArray())
             tenpai_probs.push_back(y.GetDouble());
-        for (auto &y : x["win_probs"].GetArray())
+        for (const auto &y : x["win_probs"].GetArray())
             win_probs.push_back(y.GetDouble());
-        for (auto &y : x["exp_values"].GetArray())
+        for (const auto &y : x["exp_values"].GetArray())
             exp_values.push_back(y.GetDouble());
 
         res.candidates.emplace_back(tile, required_tiles, tenpai_probs, win_probs, exp_values,
@@ -134,6 +129,13 @@ DiscardResponseData parse_response(const rapidjson::Value &value)
     return res;
 }
 
+/**
+ * @brief 有効牌の一覧から json オブジェクトを作成する。
+ * 
+ * @param[in] tiles 有効牌の一覧
+ * @param[in] doc ドキュメント
+ * @return rapidjson::Value 値
+ */
 rapidjson::Value dump_required_tiles(const std::vector<std::tuple<int, int>> &tiles,
                                      rapidjson::Document &doc)
 {
@@ -148,6 +150,13 @@ rapidjson::Value dump_required_tiles(const std::vector<std::tuple<int, int>> &ti
     return value;
 }
 
+/**
+ * @brief 打牌候補の一覧から json オブジェクトを作成する。
+ * 
+ * @param[in] candidate 打牌候補の一覧
+ * @param[in] doc ドキュメント
+ * @return rapidjson::Value 値
+ */
 rapidjson::Value dump_candidate(const Candidate &candidate, rapidjson::Document &doc)
 {
     rapidjson::Value value(rapidjson::kObjectType);
@@ -177,13 +186,15 @@ rapidjson::Value dump_candidate(const Candidate &candidate, rapidjson::Document 
     return value;
 }
 
+/**
+ * @brief リクエストデータからレスポンスデータを作成する。
+ * 
+ * @param[in] req リクエストデータ
+ * @return DrawResponseData レスポンスデータ
+ */
 DrawResponseData create_draw_response(const RequestData &req)
 {
-    // 13枚の場合は有効牌を求める。
     auto begin = std::chrono::steady_clock::now();
-
-    // 向聴数を計算する。
-    auto [syanten_type, syanten] = SyantenCalculator::calc(req.hand, req.syanten_type);
 
     // 各牌の残り枚数を数える。
     std::vector<int> counts =
@@ -197,13 +208,23 @@ DrawResponseData create_draw_response(const RequestData &req)
     auto elapsed_us = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
 
     DrawResponseData res;
+    auto [_, syanten] = SyantenCalculator::calc(req.hand, req.syanten_type);
     res.syanten = syanten;
+    res.normal_syanten = SyantenCalculator::calc_normal(req.hand);
+    res.tiitoi_syanten = SyantenCalculator::calc_tiitoi(req.hand);
+    res.kokusi_syanten = SyantenCalculator::calc_kokusi(req.hand);
     res.time_us = elapsed_us;
     res.required_tiles = required_tiles;
 
     return res;
 }
 
+/**
+ * @brief リクエストデータからレスポンスデータを作成する。
+ * 
+ * @param[in] req リクエストデータ
+ * @return DiscardResponseData レスポンスデータ
+ */
 DiscardResponseData create_discard_response(const RequestData &req)
 {
     ScoreCalculator score_calc;
@@ -226,6 +247,8 @@ DiscardResponseData create_discard_response(const RequestData &req)
     auto elapsed_us = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
 
     DiscardResponseData res;
+    auto [_, syanten] = SyantenCalculator::calc(req.hand, req.syanten_type);
+    res.syanten = syanten;
     res.normal_syanten = SyantenCalculator::calc_normal(req.hand);
     res.tiitoi_syanten = SyantenCalculator::calc_tiitoi(req.hand);
     res.kokusi_syanten = SyantenCalculator::calc_kokusi(req.hand);
@@ -235,11 +258,24 @@ DiscardResponseData create_discard_response(const RequestData &req)
     return res;
 }
 
+/**
+ * @brief レスポンスデータから値を作成する。
+ * 
+ * @param[in] res レスポンスデータ
+ * @param[in] doc ドキュメント
+ * @return rapidjson::Value 値
+ */
 rapidjson::Value dump_draw_response(const DrawResponseData &res, rapidjson::Document &doc)
 {
+    rapidjson::Value syanten_value(rapidjson::kObjectType);
+    syanten_value.AddMember("syanten", res.syanten, doc.GetAllocator());
+    syanten_value.AddMember("normal", res.normal_syanten, doc.GetAllocator());
+    syanten_value.AddMember("tiitoi", res.tiitoi_syanten, doc.GetAllocator());
+    syanten_value.AddMember("kokusi", res.kokusi_syanten, doc.GetAllocator());
+
     rapidjson::Value value(rapidjson::kObjectType);
     value.AddMember("result_type", 0, doc.GetAllocator());
-    value.AddMember("syanten", res.syanten, doc.GetAllocator());
+    value.AddMember("syanten", syanten_value, doc.GetAllocator());
     value.AddMember("time", res.time_us, doc.GetAllocator());
     value.AddMember("required_tiles", dump_required_tiles(res.required_tiles, doc),
                     doc.GetAllocator());
@@ -247,9 +283,17 @@ rapidjson::Value dump_draw_response(const DrawResponseData &res, rapidjson::Docu
     return value;
 }
 
+/**
+ * @brief レスポンスデータから値を作成する。
+ * 
+ * @param[in] res レスポンスデータ
+ * @param[in] doc ドキュメント
+ * @return rapidjson::Value 値
+ */
 rapidjson::Value dump_discard_response(const DiscardResponseData &res, rapidjson::Document &doc)
 {
     rapidjson::Value syanten_value(rapidjson::kObjectType);
+    syanten_value.AddMember("syanten", res.syanten, doc.GetAllocator());
     syanten_value.AddMember("normal", res.normal_syanten, doc.GetAllocator());
     syanten_value.AddMember("tiitoi", res.tiitoi_syanten, doc.GetAllocator());
     syanten_value.AddMember("kokusi", res.kokusi_syanten, doc.GetAllocator());
@@ -265,6 +309,13 @@ rapidjson::Value dump_discard_response(const DiscardResponseData &res, rapidjson
     return value;
 }
 
+/**
+ * @brief レスポンスデータを作成する。
+ * 
+ * @param[in] res レスポンスデータ
+ * @param[in] doc ドキュメント
+ * @return rapidjson::Value 値
+ */
 rapidjson::Value create_response(const RequestData &req, rapidjson::Document &doc)
 {
     // 手牌の枚数を求める。
