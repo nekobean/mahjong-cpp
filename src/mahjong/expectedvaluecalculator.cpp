@@ -723,7 +723,7 @@ ExpectedValueCalculator::discard(int n_extra_tumo, int syanten, Hand &hand,
                 draw(n_extra_tumo, syanten, hand, counts);
             add_tile(hand, discard_tile);
         }
-        else if (calc_syanten_down_ && n_extra_tumo == 0 && syanten_diff == 1) {
+        else if (calc_syanten_down_ && n_extra_tumo == 0 && syanten_diff == 1 && syanten < 3) {
             // 向聴戻しになる打牌
             remove_tile(hand, discard_tile);
 
