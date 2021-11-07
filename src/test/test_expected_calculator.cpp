@@ -563,6 +563,7 @@ TEST_CASE("create_prob_table")
     SECTION("tumo_prob_table")
     {
         ExpectedValueCalculator caclulator;
+        caclulator.max_tumo_ = 17;
 
         int N = 121; // 残り牌の合計枚数
         caclulator.create_prob_table(N);
@@ -577,6 +578,7 @@ TEST_CASE("create_prob_table")
     SECTION("not_tumo_prob_table")
     {
         ExpectedValueCalculator caclulator;
+        caclulator.max_tumo_ = 17;
 
         for (int N = 100; N < 121; ++N) { // N は残り牌の合計枚数
             caclulator.create_prob_table(N);

@@ -329,6 +329,9 @@ class ExpectedValueCalculator
     /* 和了確率を最大化 */
     bool maximize_win_prob_;
 
+    /* 自摸回数の最大値 */
+    int max_tumo_;
+
     /* この巡目で有効牌を引ける確率のテーブル */
     std::vector<std::vector<double>> tumo_prob_table_;
 
