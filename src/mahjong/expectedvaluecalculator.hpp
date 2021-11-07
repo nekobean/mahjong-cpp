@@ -279,9 +279,12 @@ class ExpectedValueCalculator
     std::vector<std::tuple<int, int>> get_discard_tiles(Hand &hand, int syanten);
     std::vector<double> get_score(const Hand &hand, int win_tile, const std::vector<int> &counts);
 
-    std::vector<Candidate> analyze(int n_extra_tumo, int syanten, Hand hand,
-                                   std::vector<int> counts);
-    std::vector<Candidate> analyze(int syanten, Hand hand, std::vector<int> counts);
+    std::vector<Candidate> analyze_discard(int n_extra_tumo, int syanten, Hand hand,
+                                           std::vector<int> counts);
+    std::vector<Candidate> analyze_discard(int syanten, Hand hand, std::vector<int> counts);
+    std::vector<Candidate> analyze_draw(int n_extra_tumo, int syanten, Hand hand,
+                                        std::vector<int> counts);
+    std::vector<Candidate> analyze_draw(int syanten, Hand hand, std::vector<int> counts);
 
     std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
     discard(int n_extra_tumo, int syanten, Hand &hand, std::vector<int> &counts);

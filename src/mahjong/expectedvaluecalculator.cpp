@@ -78,7 +78,7 @@ ExpectedValueCalculator::calc(const Hand &hand, const ScoreCalculator &score_cal
 
     // 手牌の枚数を数える。
     int n_tiles = hand.num_tiles() + int(hand.melds.size()) * 3;
-    if (n_tiles != 14)
+    if (n_tiles != 13 && n_tiles != 14)
         return {false, {}}; // 手牌が14枚ではない場合
 
     // 現在の向聴数を計算する。
@@ -93,10 +93,20 @@ ExpectedValueCalculator::calc(const Hand &hand, const ScoreCalculator &score_cal
     create_prob_table(sum_left_tiles);
 
     std::vector<Candidate> candidates;
-    if (syanten <= 3) // 3向聴以下は聴牌確率、和了確率、期待値を計算する。
-        candidates = analyze(0, syanten, hand, counts);
-    else // 4向聴以上は受入枚数のみ計算する。
-        candidates = analyze(syanten, hand, counts);
+    if (n_tiles == 14) {
+        // 14枚の手牌
+        if (syanten <= 3) // 3向聴以下は聴牌確率、和了確率、期待値を計算する。
+            candidates = analyze_discard(0, syanten, hand, counts);
+        else // 4向聴以上は受入枚数のみ計算する。
+            candidates = analyze_discard(syanten, hand, counts);
+    }
+    else {
+        // 13枚の手牌
+        if (syanten <= 3) // 3向聴以下は聴牌確率、和了確率、期待値を計算する。
+            candidates = analyze_draw(0, syanten, hand, counts);
+        else // 4向聴以上は受入枚数のみ計算する。
+            candidates = analyze_draw(syanten, hand, counts);
+    }
 
     // キャッシュをクリアする。
     clear_cache();
@@ -755,8 +765,8 @@ ExpectedValueCalculator::discard(int n_extra_tumo, int syanten, Hand &hand,
  * @param [in]_hand 手牌
  * @return std::vector<Candidate> 打牌候補の一覧
  */
-std::vector<Candidate> ExpectedValueCalculator::analyze(int n_extra_tumo, int syanten, Hand hand,
-                                                        std::vector<int> counts)
+std::vector<Candidate> ExpectedValueCalculator::analyze_discard(int n_extra_tumo, int syanten,
+                                                                Hand hand, std::vector<int> counts)
 {
     std::vector<Candidate> candidates;
 
@@ -815,8 +825,8 @@ std::vector<Candidate> ExpectedValueCalculator::analyze(int n_extra_tumo, int sy
  * @param [in]_hand 手牌
  * @return std::vector<Candidate> 打牌候補の一覧
  */
-std::vector<Candidate> ExpectedValueCalculator::analyze(int syanten, Hand hand,
-                                                        std::vector<int> counts)
+std::vector<Candidate> ExpectedValueCalculator::analyze_discard(int syanten, Hand hand,
+                                                                std::vector<int> counts)
 {
     std::vector<Candidate> candidates;
 
@@ -829,6 +839,47 @@ std::vector<Candidate> ExpectedValueCalculator::analyze(int syanten, Hand hand,
         add_tile(hand, discard_tile);
         candidates.emplace_back(discard_tile, required_tiles, syanten_diff == 1);
     }
+
+    return candidates;
+}
+
+/**
+ * @brief 手牌の推移パターンを和了まですべて解析する。
+ *
+ * @param [in]syanten 向聴数
+ * @param [in]_hand 手牌
+ * @return std::vector<Candidate> 打牌候補の一覧
+ */
+std::vector<Candidate> ExpectedValueCalculator::analyze_draw(int n_extra_tumo, int syanten,
+                                                             Hand hand, std::vector<int> counts)
+{
+    std::vector<Candidate> candidates;
+
+    auto required_tiles = get_required_tiles(hand, syanten_type_, counts);
+    auto [tenpai_probs, win_probs, exp_values] = draw(n_extra_tumo, syanten, hand, counts);
+
+    if (syanten == 0) // すでに聴牌している場合の例外処理
+        std::fill(tenpai_probs.begin(), tenpai_probs.end(), 1);
+
+    candidates.emplace_back(Tile::Null, required_tiles, tenpai_probs, win_probs, exp_values, false);
+
+    return candidates;
+}
+
+/**
+ * @brief 手牌の推移パターンを1手先まで解析する。
+ *
+ * @param [in]syanten 向聴数
+ * @param [in]_hand 手牌
+ * @return std::vector<Candidate> 打牌候補の一覧
+ */
+std::vector<Candidate> ExpectedValueCalculator::analyze_draw(int syanten, Hand hand,
+                                                             std::vector<int> counts)
+{
+    std::vector<Candidate> candidates;
+
+    auto required_tiles = get_required_tiles(hand, syanten_type_, counts);
+    candidates.emplace_back(Tile::Null, required_tiles, false);
 
     return candidates;
 }

@@ -27,6 +27,9 @@ struct DrawResponseData
     int kokusi_syanten;
     size_t time_us;
     std::vector<std::tuple<int, int>> required_tiles;
+    std::vector<double> tenpai_probs;
+    std::vector<double> win_probs;
+    std::vector<double> exp_values;
 };
 
 struct DiscardResponseData

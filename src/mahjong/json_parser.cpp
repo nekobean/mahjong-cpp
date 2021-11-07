@@ -199,27 +199,43 @@ rapidjson::Value dump_candidate(const Candidate &candidate, rapidjson::Document 
  */
 DrawResponseData create_draw_response(const RequestData &req)
 {
+    ScoreCalculator score_calc;
+    ExpectedValueCalculator exp_value_calc;
+
     auto begin = std::chrono::steady_clock::now();
 
-    // 各牌の残り枚数を数える。
-    std::vector<int> counts =
-        ExpectedValueCalculator::count_left_tiles(req.hand, req.dora_indicators);
+    // 点数計算の設定
+    score_calc.set_bakaze(req.bakaze);
+    score_calc.set_zikaze(req.zikaze);
+    score_calc.set_num_tumibo(0);
+    score_calc.set_num_kyotakubo(0);
+    score_calc.set_dora_indicators(req.dora_indicators);
 
-    // 有効牌を求める。
-    auto required_tiles =
-        ExpectedValueCalculator::get_required_tiles(req.hand, req.syanten_type, counts);
+    // 各打牌を分析する。
+    bool success;
+    std::vector<Candidate> candidates;
+
+    if (req.counts.empty())
+        std::tie(success, candidates) = exp_value_calc.calc(
+            req.hand, score_calc, req.dora_indicators, req.syanten_type, req.flag);
+    else
+        std::tie(success, candidates) = exp_value_calc.calc(
+            req.hand, score_calc, req.dora_indicators, req.syanten_type, req.counts, req.flag);
 
     auto end = std::chrono::steady_clock::now();
     auto elapsed_us = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
 
     DrawResponseData res;
+    res.required_tiles = candidates.front().required_tiles;
+    res.tenpai_probs = candidates.front().tenpai_probs;
+    res.win_probs = candidates.front().win_probs;
+    res.exp_values = candidates.front().exp_values;
     auto [_, syanten] = SyantenCalculator::calc(req.hand, req.syanten_type);
     res.syanten = syanten;
     res.normal_syanten = SyantenCalculator::calc_normal(req.hand);
     res.tiitoi_syanten = SyantenCalculator::calc_tiitoi(req.hand);
     res.kokusi_syanten = SyantenCalculator::calc_kokusi(req.hand);
     res.time_us = elapsed_us;
-    res.required_tiles = required_tiles;
 
     return res;
 }
@@ -291,6 +307,24 @@ rapidjson::Value dump_draw_response(const DrawResponseData &res, rapidjson::Docu
     value.AddMember("time", res.time_us, doc.GetAllocator());
     value.AddMember("required_tiles", dump_required_tiles(res.required_tiles, doc),
                     doc.GetAllocator());
+
+    if (!res.exp_values.empty()) {
+        value.AddMember("exp_values", rapidjson::kArrayType, doc.GetAllocator());
+        for (auto x : res.exp_values)
+            value["exp_values"].PushBack(x, doc.GetAllocator());
+    }
+
+    if (!res.win_probs.empty()) {
+        value.AddMember("win_probs", rapidjson::kArrayType, doc.GetAllocator());
+        for (auto x : res.win_probs)
+            value["win_probs"].PushBack(x, doc.GetAllocator());
+    }
+
+    if (!res.tenpai_probs.empty()) {
+        value.AddMember("tenpai_probs", rapidjson::kArrayType, doc.GetAllocator());
+        for (auto x : res.tenpai_probs)
+            value["tenpai_probs"].PushBack(x, doc.GetAllocator());
+    }
 
     return value;
 }
