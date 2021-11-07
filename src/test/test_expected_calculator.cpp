@@ -18,6 +18,8 @@
 using namespace mahjong;
 namespace fs = boost::filesystem;
 
+//#define TEST_NAIVE
+
 bool load_input_data(const std::string &path, RequestData &req_data)
 {
     std::ifstream ifs(path);

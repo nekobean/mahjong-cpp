@@ -6,8 +6,8 @@
 
 #define ENABLE_DRAW_CACHE
 #define ENABLE_DISCARD_CACHE
-#define FIX_TEGAWARI_PROB
-#define FIX_SYANTEN_DOWN
+// #define FIX_TEGAWARI_PROB
+// #define FIX_SYANTEN_DOWN
 
 namespace mahjong
 {
@@ -259,6 +259,12 @@ class ExpectedValueCalculator
                                                   const ScoreCalculator &score_calculator,
                                                   const std::vector<int> &dora_indicators,
                                                   int syanten_type, int flag = 0);
+    std::tuple<bool, std::vector<Candidate>> calc(const Hand &hand,
+                                                  const ScoreCalculator &score_calculator,
+                                                  const std::vector<int> &dora_indicators,
+                                                  int syanten_type, const std::vector<int> &counts,
+                                                  int flag = 0);
+
     static std::vector<std::tuple<int, int>> get_required_tiles(const Hand &hand, int syanten_type,
                                                                 const std::vector<int> &counts);
     static std::vector<int> count_left_tiles(const Hand &hand,
@@ -273,8 +279,9 @@ class ExpectedValueCalculator
     std::vector<std::tuple<int, int>> get_discard_tiles(Hand &hand, int syanten);
     std::vector<double> get_score(const Hand &hand, int win_tile, const std::vector<int> &counts);
 
-    std::vector<Candidate> analyze(int n_extra_tumo, int syanten, const Hand &hand);
-    std::vector<Candidate> analyze(int syanten, const Hand &hand);
+    std::vector<Candidate> analyze(int n_extra_tumo, int syanten, Hand hand,
+                                   std::vector<int> counts);
+    std::vector<Candidate> analyze(int syanten, Hand hand, std::vector<int> counts);
 
     std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
     discard(int n_extra_tumo, int syanten, Hand &hand, std::vector<int> &counts);

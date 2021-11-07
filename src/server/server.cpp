@@ -27,32 +27,42 @@ Server server;
 
 Server::Server() : pool_(3) {}
 
-/**
- * @brief JSON データを解析する。
- *
- * @param[in] doc ドキュメント
- * @return (成功したかどうか, リクエストデータ)
- */
-std::tuple<bool, RequestData> Server::parse_json(const rapidjson::Document &doc)
+bool Server::validate_request(const RequestData &req)
 {
-    RequestData req = parse_request(doc);
+    std::vector<int> max_counts =
+        ExpectedValueCalculator::count_left_tiles(req.hand, req.dora_indicators);
 
+    if (max_counts.size() != 37 || req.counts.size() != 37)
+        return false;
+
+    for (size_t i = 0; i < max_counts.size(); ++i) {
+        if (max_counts[i] < 0)
+            return false;
+    }
+
+    for (size_t i = 0; i < max_counts.size(); ++i) {
+        if (req.counts[i] < 0 || req.counts[i] > max_counts[i])
+            return false;
+    }
+
+    return true;
+}
+
+void Server::log_request(const RequestData &req)
+{
     std::string dora_indicators = "";
     for (const auto &tile : req.dora_indicators)
         dora_indicators += Tile::Name.at(tile) + (&tile != &req.dora_indicators.back() ? " " : "");
+
+    std::string counts = "";
+    for (const auto &count : req.counts)
+        counts += std::to_string(count);
+
     spdlog::get("logger")->info(
         "IP: {}, バージョン: {}, 場風牌: {}, 自風牌: {}, 巡目: {}, 手牌の種類: {}, 手牌: "
-        "{}, フラグ: {}, ドラ表示牌: {}",
+        "{}, フラグ: {}, ドラ表示牌: {}, 残り枚数: {}",
         req.ip, req.version, Tile::Name.at(req.bakaze), Tile::Name.at(req.zikaze), req.turn,
-        req.syanten_type, req.hand.to_string(), req.flag, dora_indicators);
-
-    auto counts = ExpectedValueCalculator::count_left_tiles(req.hand, req.dora_indicators);
-    for (auto x : counts) {
-        if (x < 0)
-            return {false, req};
-    }
-
-    return {true, req};
+        req.syanten_type, req.hand.to_string(), req.flag, dora_indicators, counts);
 }
 
 std::string Server::process_request(const std::string &json)
@@ -78,42 +88,59 @@ std::string Server::process_request(const std::string &json)
     rapidjson::SchemaDocument schema(sd);
     rapidjson::SchemaValidator validator(schema);
 
+    std::string req_ip;
+    if (req_doc.HasMember("ip"))
+        req_ip = req_doc["ip"].GetString();
+
     std::string req_version;
     if (req_doc.HasMember("version"))
         req_version = req_doc["version"].GetString();
 
     if (req_version != PROJECT_VERSION) {
-        spdlog::get("logger")->error("バージョンが不一致 {} vs {}", req_version, PROJECT_VERSION);
+        spdlog::get("logger")->error("ip: {}, reason: バージョンが不一致 {} vs {}", req_ip,
+                                     req_version, PROJECT_VERSION);
         doc.AddMember("success", false, doc.GetAllocator());
         doc.AddMember("request", req_doc.GetObject(), doc.GetAllocator());
-        doc.AddMember("err_msg",
-                      "アプリのバージョンが古いです。キャッシュの影響だと思われるので、ブラウザでペ"
-                      "ージを再読み込みしてください。",
-                      doc.GetAllocator());
+        doc.AddMember(
+            "err_msg",
+            "アプリのバージョンが古いです。"
+            "キャッシュの影響だと思われるので、ブラウザでページを再読み込みしてください。",
+            doc.GetAllocator());
         return to_json_str(doc);
     }
 
+    // JSON データをチェックする。
     if (!req_doc.Accept(validator)) {
         // rapidjson::StringBuffer sb;
         // validator.GetInvalidSchemaPointer().StringifyUriFragment(sb);
         // printf("Invalid schema: %s\n", sb.GetString());
         // printf("Invalid keyword: %s\n", validator.GetInvalidSchemaKeyword());
+        spdlog::get("logger")->error("ip: {}, reason: JSON スキーマのバリデーション失敗", req_ip);
         doc.AddMember("success", false, doc.GetAllocator());
         doc.AddMember("request", req_doc.GetObject(), doc.GetAllocator());
-        doc.AddMember("err_msg", "Failed to parse request data (invalid value found).",
+        doc.AddMember("err_msg",
+                      "リクエストデータの形式が不正です。"
+                      "アプリケーション側の不具合の可能性があります。",
                       doc.GetAllocator());
         return to_json_str(doc);
     }
 
     // JSON を解析する。
-    auto [success, req] = parse_json(req_doc);
-    if (!success) {
+    RequestData req = parse_request(req_doc);
+
+    // リクエストデータをチェックする。
+    if (!validate_request(req)) {
+        spdlog::get("logger")->error("ip: {}, reason: 牌の枚数不一致", req_ip);
         doc.AddMember("success", false, doc.GetAllocator());
         doc.AddMember("request", req_doc.GetObject(), doc.GetAllocator());
-        doc.AddMember("err_msg", "Failed to parse request data (invalid hand found).",
+        doc.AddMember("err_msg",
+                      "リクエストデータの形式が不正です。(牌の枚数不一致)"
+                      "アプリケーション側の不具合の可能性があります。",
                       doc.GetAllocator());
         return to_json_str(doc);
     }
+
+    log_request(req);
 
     // 向聴数を計算する。
     auto [syanten_type, syanten] = SyantenCalculator::calc(req.hand, req.syanten_type);

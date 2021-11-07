@@ -16,6 +16,7 @@ struct RequestData
     int flag;
     std::string ip;
     std::string version;
+    std::vector<int> counts;
 };
 
 struct DrawResponseData

@@ -8,7 +8,9 @@
         "dora_indicators",
         "flag",
         "hand_tiles",
-        "melded_blocks"
+        "melded_blocks",
+        "version",
+        "counts"
     ],
     "additionalProperties": false,
     "properties": {
@@ -55,7 +57,9 @@
                 "type": "integer",
                 "minimum": 0,
                 "maximum": 36
-            }
+            },
+            "minItems": 0,
+            "maxItems": 5
         },
         "flag": {
             "type": "integer",
@@ -68,7 +72,9 @@
                 "type": "integer",
                 "minimum": 0,
                 "maximum": 36
-            }
+            },
+            "minItems": 1,
+            "maxItems": 14
         },
         "melded_blocks": {
             "type": "array",
@@ -99,7 +105,19 @@
                         "maximum": 3
                     }
                 }
-            }
+            },
+            "minItems": 0,
+            "maxItems": 4
+        },
+        "counts": {
+            "type": "array",
+            "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 4
+            },
+            "minItems": 37,
+            "maxItems": 37
         }
     }
 }

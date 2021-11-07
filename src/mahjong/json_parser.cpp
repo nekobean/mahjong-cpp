@@ -85,6 +85,11 @@ RequestData parse_request(const rapidjson::Value &doc)
     if (doc.HasMember("version"))
         req.version = doc["version"].GetString();
 
+    if (doc.HasMember("counts")) {
+        for (const auto &x : doc["counts"].GetArray())
+            req.counts.push_back(x.GetInt());
+    }
+
     return req;
 }
 
@@ -240,8 +245,15 @@ DiscardResponseData create_discard_response(const RequestData &req)
     score_calc.set_dora_indicators(req.dora_indicators);
 
     // 各打牌を分析する。
-    auto [success, candidates] =
-        exp_value_calc.calc(req.hand, score_calc, req.dora_indicators, req.syanten_type, req.flag);
+    bool success;
+    std::vector<Candidate> candidates;
+
+    if (req.counts.empty())
+        std::tie(success, candidates) = exp_value_calc.calc(
+            req.hand, score_calc, req.dora_indicators, req.syanten_type, req.flag);
+    else
+        std::tie(success, candidates) = exp_value_calc.calc(
+            req.hand, score_calc, req.dora_indicators, req.syanten_type, req.counts, req.flag);
 
     auto end = std::chrono::steady_clock::now();
     auto elapsed_us = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();

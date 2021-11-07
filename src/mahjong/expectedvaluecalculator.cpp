@@ -43,6 +43,26 @@ std::tuple<bool, std::vector<Candidate>>
 ExpectedValueCalculator::calc(const Hand &hand, const ScoreCalculator &score_calculator,
                               const std::vector<int> &dora_indicators, int syanten_type, int flag)
 {
+    std::vector<int> counts = count_left_tiles(hand, dora_indicators);
+    return calc(hand, score_calculator, dora_indicators, syanten_type, counts, flag);
+}
+
+/**
+ * @brief 期待値を計算する。
+ *
+ * @param hand 手牌
+ * @param score_calculator 点数計算機
+ * @param dora_indicators ドラ表示牌の一覧
+ * @param flag フラグ
+ * @return 各打牌の情報
+ */
+std::tuple<bool, std::vector<Candidate>>
+ExpectedValueCalculator::calc(const Hand &hand, const ScoreCalculator &score_calculator,
+                              const std::vector<int> &dora_indicators, int syanten_type,
+                              const std::vector<int> &counts, int flag)
+{
+    assert(counts.size() == 37);
+
     score_calculator_ = score_calculator;
     syanten_type_ = syanten_type;
     dora_indicators_ = dora_indicators;
@@ -67,7 +87,6 @@ ExpectedValueCalculator::calc(const Hand &hand, const ScoreCalculator &score_cal
         return {false, {}}; // 手牌が和了形の場合
 
     // 各牌の残り枚数を数える。
-    std::vector<int> counts = count_left_tiles(hand, dora_indicators_);
     int sum_left_tiles = std::accumulate(counts.begin(), counts.begin() + 34, 0);
 
     // 自摸確率のテーブルを作成する。
@@ -75,9 +94,9 @@ ExpectedValueCalculator::calc(const Hand &hand, const ScoreCalculator &score_cal
 
     std::vector<Candidate> candidates;
     if (syanten <= 3) // 3向聴以下は聴牌確率、和了確率、期待値を計算する。
-        candidates = analyze(0, syanten, hand);
+        candidates = analyze(0, syanten, hand, counts);
     else // 4向聴以上は受入枚数のみ計算する。
-        candidates = analyze(syanten, hand);
+        candidates = analyze(syanten, hand, counts);
 
     // キャッシュをクリアする。
     clear_cache();
@@ -736,14 +755,10 @@ ExpectedValueCalculator::discard(int n_extra_tumo, int syanten, Hand &hand,
  * @param [in]_hand 手牌
  * @return std::vector<Candidate> 打牌候補の一覧
  */
-std::vector<Candidate> ExpectedValueCalculator::analyze(int n_extra_tumo, int syanten,
-                                                        const Hand &_hand)
+std::vector<Candidate> ExpectedValueCalculator::analyze(int n_extra_tumo, int syanten, Hand hand,
+                                                        std::vector<int> counts)
 {
     std::vector<Candidate> candidates;
-    Hand hand = _hand;
-
-    // 各牌の残り枚数を数える。
-    std::vector<int> counts = count_left_tiles(hand, dora_indicators_);
 
     // 打牌候補を取得する。
     std::vector<std::tuple<int, int>> flags = get_discard_tiles(hand, syanten);
@@ -800,13 +815,10 @@ std::vector<Candidate> ExpectedValueCalculator::analyze(int n_extra_tumo, int sy
  * @param [in]_hand 手牌
  * @return std::vector<Candidate> 打牌候補の一覧
  */
-std::vector<Candidate> ExpectedValueCalculator::analyze(int syanten, const Hand &_hand)
+std::vector<Candidate> ExpectedValueCalculator::analyze(int syanten, Hand hand,
+                                                        std::vector<int> counts)
 {
     std::vector<Candidate> candidates;
-    Hand hand = _hand;
-
-    // 各牌の残り枚数を数える。
-    std::vector<int> counts = count_left_tiles(hand, dora_indicators_);
 
     // 打牌候補を取得する。
     std::vector<std::tuple<int, int>> flags = get_discard_tiles(hand, syanten);
