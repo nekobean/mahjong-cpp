@@ -21,15 +21,15 @@ Miscellaneous programs about Japanese Mahjong
 
 🚧This program is under development. Currently the following features have been implemented.🚧
 
-* [x] 向聴数計算 (Syanten Number Calculation)
-* [x] 点数計算 (Score Calculation)
-* [x] 有効牌列挙 (Required Tile Selection)
-* [x] 不要牌列挙 (Unnecessary Tile Selection)
-* [x] 期待値計算 (Expected Score Calculation)
+* [x] Syanten Number Calculation (向聴数計算)
+* [x] Score Calculation (点数計算)
+* [x] Required Tile Selection (有効牌列挙)
+* [x] Unnecessary Tile Selection (不要牌列挙)
+* [x] Expected Score Calculation (期待値計算)
   * [x] 向聴戻し考慮
   * [x] 手変わり考慮
   * [x] ダブル立直、一発、海底撈月考慮
-  * [x] 裏ドラ考慮 (平和形と仮定した場合の近似)
+  * [x] 裏ドラ考慮
   * [x] 副露している手牌に対応
   * [x] 赤ドラ対応
 
@@ -64,7 +64,7 @@ cd build/src/samples
 ./sample_unnecessary_tile_selector
 ```
 
-### Build on Docker container
+### Build on Docker container (Docker コンテナ上のビルド)
 
 Build and run container.
 
@@ -91,7 +91,7 @@ Build program on the created container.
 * [不要牌選択 (Unnecessary Tile Selection)](src/samples/sample_unnecessary_tile_selector.cpp)
 * [期待値計算 (Expected Value Calculation)](src/samples/sample_calculate_expexted_value.cpp)
 
-### 点数計算の例
+### Score Calculation (点数計算の例)
 
 ```cpp
 #include "mahjong/mahjong.hpp"
@@ -142,7 +142,7 @@ int main(int, char **)
 40符3翻
 ```
 
-### 期待値計算の例
+### Expected Score Calculation (期待値計算の例)
 
 ```
 手牌: 123349m3688p1245s, 向聴数: 2, 巡目: 1
@@ -165,7 +165,7 @@ int main(int, char **)
 
 * Core™ i9-9900K 3.6 GHz
 
-### 向聴数計算
+### Syanten Number Calculation (向聴数計算)
 
 |          | N=40000 | 1手あたりの平均計算時間 |
 | -------- | ------- | ----------------------- |
@@ -175,7 +175,7 @@ int main(int, char **)
 
 * 検証: 40000パターンのテストケースがパスすることを確認
 
-### 点数計算
+### Score Calculation (点数計算)
 
 |        | N=410831 | 1手あたりの平均計算時間 |
 | ------ | -------- | ----------------------- |
@@ -183,7 +183,7 @@ int main(int, char **)
 
 * 検証: 実践の牌譜から取得した1486960パターンのテストケースがパスすることを確認
 
-### 不要牌選択
+### Unnecessary Tile Selection (不要牌選択)
 
 |          | N=100000 | 1手あたりの平均計算時間 |
 | -------- | -------- | ----------------------- |
@@ -191,7 +191,7 @@ int main(int, char **)
 | 七対子手 | 21 ms    | 210ns                   |
 | 国士手   | 12 ms    | 120ns                   |
 
-### 有効牌選択
+### Necessary Tile Selection (有効牌選択)
 
 |          | N=100000 | 1手あたりの平均計算時間 |
 | -------- | -------- | ----------------------- |
