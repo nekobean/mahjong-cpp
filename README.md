@@ -35,16 +35,33 @@ Miscellaneous programs about Japanese Mahjong
 
 ## Requirements (依存ライブラリ)
 
+* C++17 (See [C++ compiler support - cppreference.com](https://en.cppreference.com/w/cpp/compiler_support))
+  * e.x. Microsoft Visual Studio Community 2019 Version 16.7.2
+  * e.x. gcc 9.3.0
 * [Boost C++ Libraries](https://www.boost.org/) >= 1.66
 * [CMake](https://cmake.org/) >= 3.1.1
 
 ## How to build (ビルド方法)
+
+Clone repogitory and build program.
 
 ```bash
 git clone https://github.com/nekobean/mahjong-cpp.git
 cd mahjong-cpp
 mkdir build && cd build
 cmake ..
+make -j$(nproc)
+```
+
+Run sample program.
+
+```
+cd build/src/samples
+./sample_calculate_expexted_value
+./sample_calculate_score
+./sample_calculate_syanten
+./sample_required_tile_selector
+./sample_unnecessary_tile_selector
 ```
 
 ## Usage (使い方)
