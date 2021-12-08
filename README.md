@@ -64,6 +64,18 @@ cd build/src/samples
 ./sample_unnecessary_tile_selector
 ```
 
+### Build on Docker container
+
+```bash
+docker build . --tag mahjong_cpp_build
+docker run -it mahjong_cpp_build
+git clone https://github.com/nekobean/mahjong-cpp.git
+cd mahjong-cpp
+mkdir build && cd build
+cmake ..
+make -j$(nproc)
+```
+
 ## Usage (使い方)
 
 * [向聴数計算 (Syanten Number Calculation)](src/samples/sample_calculate_syanten.cpp)
