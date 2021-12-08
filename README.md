@@ -66,14 +66,21 @@ cd build/src/samples
 
 ### Build on Docker container
 
+Build and run container.
+
 ```bash
-docker build . --tag mahjong_cpp_build
-docker run -it mahjong_cpp_build
-git clone https://github.com/nekobean/mahjong-cpp.git
-cd mahjong-cpp
-mkdir build && cd build
-cmake ..
-make -j$(nproc)
+$ docker build . --tag mahjong_cpp_build
+$ docker run -it mahjong_cpp_build
+```
+
+Build program on the created container.
+
+```bash
+# git clone https://github.com/nekobean/mahjong-cpp.git
+# cd mahjong-cpp
+# mkdir build && cd build
+# cmake ..
+# make -j$(nproc)
 ```
 
 ## Usage (使い方)
