@@ -19,7 +19,7 @@ namespace mahjong
 /**
  * @brief 手牌
  */
-class Hand
+class Hand : private boost::equality_comparable<Hand, Hand>
 {
   public:
     using key_type = unsigned int;
@@ -40,6 +40,7 @@ class Hand
     bool check_arguments(const std::vector<int> &tiles, const std::vector<MeldedBlock> &melds);
 
     friend std::ostream &operator<<(std::ostream &os, const Hand &hand);
+    friend bool operator==(const Hand &a, const Hand &b);
 
   public:
     /*! ビット列にした手牌
@@ -80,6 +81,25 @@ class Hand
     /* 副露ブロック */
     std::vector<MeldedBlock> melds;
 };
+
+inline std::ostream &operator<<(std::ostream &os, const Hand &hand)
+{
+    return os << hand.to_string();
+}
+
+inline bool operator==(const Hand &a, const Hand &b)
+{
+    if (a.melds.size() != b.melds.size())
+        return false;
+
+    for (size_t i = 0; i < a.melds.size(); ++i)
+        if (a.melds[i] != b.melds[i])
+            return false;
+
+    return a.manzu == b.manzu && a.pinzu == b.pinzu && a.sozu == b.sozu && a.zihai == b.zihai &&
+           a.aka_manzu5 == b.aka_manzu5 && a.aka_pinzu5 == b.aka_pinzu5 &&
+           a.aka_sozu5 == b.aka_sozu5;
+}
 
 /**
  * @brief 手牌を作成する。

@@ -1,6 +1,5 @@
+import itertools
 from pathlib import Path
-
-import numpy as np
 
 
 class Yaku:
@@ -319,11 +318,10 @@ DoraHyozi2Dora = {
 }
 
 
-def create_yama(seed):
-    np.random.seed(seed)
-    yama = np.arange(34).repeat(4)
-    yama[np.where(yama == Tile.Manzu5)[0][0]] = Tile.AkaManzu5  # 赤萬子5
-    yama[np.where(yama == Tile.Pinzu5)[0][0]] = Tile.AkaPinzu5  # 赤筒子5
-    yama[np.where(yama == Tile.Sozu5)[0][0]] = Tile.AkaSozu5  # 赤索子5
+def create_yama():
+    yama = sorted(itertools.chain.from_iterable(itertools.repeat(range(34), 4)))
+    yama[Tile.Manzu5 * 4] = Tile.AkaManzu5  # 赤萬子5
+    yama[Tile.Pinzu5 * 4] = Tile.AkaPinzu5  # 赤筒子5
+    yama[Tile.Sozu5 * 4] = Tile.AkaSozu5  # 赤索子5
 
     return yama

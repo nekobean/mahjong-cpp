@@ -5,6 +5,8 @@
 #include <string>
 #include <vector>
 
+#include <boost/operators.hpp>
+
 #include "tile.hpp"
 
 namespace mahjong
@@ -81,7 +83,7 @@ static inline const std::map<int, std::string> Name = {
 /**
  * @brief 副露ブロック
  */
-struct MeldedBlock
+struct MeldedBlock : private boost::equality_comparable<MeldedBlock, MeldedBlock>
 {
     MeldedBlock() : type(MeldType::Null), discarded_tile(Tile::Null), from(PlayerType::Null) {}
 
@@ -111,7 +113,16 @@ struct MeldedBlock
 
     /*! 鳴かれたプレイヤー */
     int from;
+
+    friend bool operator==(const MeldedBlock &a, const MeldedBlock &b);
 };
+
+inline bool operator==(const MeldedBlock &a, const MeldedBlock &b)
+{
+    return a.tiles.size() == b.tiles.size() &&
+           std::equal(a.tiles.begin(), a.tiles.end(), b.tiles.begin()) && a.type == b.type &&
+           a.discarded_tile == b.discarded_tile && a.from == b.from;
+}
 
 /**
  * @brief 文字列に変換する。
