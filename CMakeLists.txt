@@ -27,27 +27,47 @@ set(Boost_USE_STATIC_RUNTIME OFF)
 find_package(Boost REQUIRED COMPONENTS system filesystem)
 include_directories(${Boost_INCLUDE_DIRS})
 
-# Fetch rapidjson
-include(FetchContent)
-FetchContent_Declare(
-  rapidjson
-  GIT_REPOSITORY https://github.com/Tencent/rapidjson.git
-  GIT_TAG v1.1.0)
-FetchContent_GetProperties(rapidjson)
-if(NOT rapidjson_POPULATED)
-  FetchContent_Populate(rapidjson)
+option(USE_SYSTEM_LIBS "use all available system-provided libraries." OFF)
+option(USE_SYSTEM_RAPIDJSON "use system-provided RapidJSON." OFF)
+option(USE_SYSTEM_SPDLOG "use system-provided spdlog." OFF)
+option(USE_SYSTEM_CATCH2 "use system-provided Catch2." OFF)
+if (USE_SYSTEM_LIBS)
+  set(USE_SYSTEM_RAPIDJSON ON)
+  set(USE_SYSTEM_SPDLOG ON)
+  set(USE_SYSTEM_CATCH2 ON)
+else()
+  include(FetchContent)
 endif()
-include_directories(${rapidjson_SOURCE_DIR}/include)
 
-# spdlog
-FetchContent_Declare(
-  spdlog
-  GIT_REPOSITORY https://github.com/gabime/spdlog.git
-  GIT_TAG v1.x)
-FetchContent_GetProperties(spdlog)
-if(NOT spdlog_POPULATED)
-  FetchContent_Populate(spdlog)
-  add_subdirectory(${spdlog_SOURCE_DIR} ${spdlog_BINARY_DIR})
+if (NOT USE_SYSTEM_RAPIDJSON)
+  # Fetch rapidjson
+  FetchContent_Declare(
+    rapidjson
+    GIT_REPOSITORY https://github.com/Tencent/rapidjson.git
+    GIT_TAG v1.1.0)
+  FetchContent_GetProperties(rapidjson)
+  if(NOT rapidjson_POPULATED)
+    FetchContent_Populate(rapidjson)
+  endif()
+  include_directories(${rapidjson_SOURCE_DIR}/include)
+else()
+  find_package(RapidJSON REQUIRED)
+endif()
+
+if (NOT USE_SYSTEM_SPDLOG)
+  # Fetch spdlog
+  FetchContent_Declare(
+    spdlog
+    GIT_REPOSITORY https://github.com/gabime/spdlog.git
+    GIT_TAG v1.x)
+  FetchContent_GetProperties(spdlog)
+  if(NOT spdlog_POPULATED)
+    FetchContent_Populate(spdlog)
+    add_subdirectory(${spdlog_SOURCE_DIR} ${spdlog_BINARY_DIR})
+  endif()
+else()
+  find_package(spdlog REQUIRED)
+  link_libraries(spdlog::spdlog)
 endif()
 
 # mahjong

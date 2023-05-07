@@ -1,9 +1,13 @@
-Include(FetchContent)
-FetchContent_Declare(
-  Catch2
-  GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-  GIT_TAG        v2.13.1)
-FetchContent_MakeAvailable(Catch2)
+if (NOT USE_SYSTEM_CATCH2)
+  Include(FetchContent)
+  FetchContent_Declare(
+    Catch2
+    GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+    GIT_TAG        v2.13.1)
+  FetchContent_MakeAvailable(Catch2)
+else()
+  find_package(Catch2 2.13 REQUIRED)
+endif()
 
 file(GLOB_RECURSE SRC_FILES ../mahjong/*.cpp)
 file(GLOB ENTRY_FILES ${CMAKE_CURRENT_SOURCE_DIR}/test_*.cpp)
