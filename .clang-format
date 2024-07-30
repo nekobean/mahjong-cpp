@@ -6,7 +6,7 @@ IndentWidth: 4
 Language: Cpp
 Standard: c++17
 # 1行あたりの
-ColumnLimit: 100
+ColumnLimit: 88
 # 改行コード
 UseCRLF: false
 # 追加オプション
