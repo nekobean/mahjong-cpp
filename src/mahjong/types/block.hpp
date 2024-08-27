@@ -30,8 +30,9 @@ enum
 };
 
 static inline const std::map<int, std::string> Name = {
-    {Kotu, "暗刻子"},  {Kotu | Open, "明刻子"},  {Syuntu, "暗順子"}, {Syuntu | Open, "明順子"},
-    {Kantu, "暗槓子"}, {Kantu | Open, "明槓子"}, {Toitu, "暗対子"},  {Toitu | Open, "明対子"},
+    {Kotu, "暗刻子"},          {Kotu | Open, "明刻子"},  {Syuntu, "暗順子"},
+    {Syuntu | Open, "明順子"}, {Kantu, "暗槓子"},        {Kantu | Open, "明槓子"},
+    {Toitu, "暗対子"},         {Toitu | Open, "明対子"},
 };
 
 } // namespace BlockType

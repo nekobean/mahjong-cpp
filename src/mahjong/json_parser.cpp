@@ -12,7 +12,7 @@ using namespace mahjong;
 
 /**
  * @brief JSON ドキュメントを文字列にする。
- * 
+ *
  * @param[in] doc ドキュメント
  * @return std::string JSON ドキュメント
  */
@@ -28,7 +28,7 @@ std::string to_json_str(rapidjson::Value &value)
 
 /**
  * @brief JSON ドキュメントを文字列にする。
- * 
+ *
  * @param[in] doc ドキュメント
  * @return std::string JSON ドキュメント
  */
@@ -127,8 +127,8 @@ DiscardResponseData parse_response(const rapidjson::Value &value)
         for (const auto &y : x["exp_values"].GetArray())
             exp_values.push_back(y.GetDouble());
 
-        res.candidates.emplace_back(tile, required_tiles, tenpai_probs, win_probs, exp_values,
-                                    syanten_down);
+        res.candidates.emplace_back(tile, required_tiles, tenpai_probs, win_probs,
+                                    exp_values, syanten_down);
     }
 
     return res;
@@ -136,7 +136,7 @@ DiscardResponseData parse_response(const rapidjson::Value &value)
 
 /**
  * @brief 有効牌の一覧から json オブジェクトを作成する。
- * 
+ *
  * @param[in] tiles 有効牌の一覧
  * @param[in] doc ドキュメント
  * @return rapidjson::Value 値
@@ -157,7 +157,7 @@ rapidjson::Value dump_required_tiles(const std::vector<std::tuple<int, int>> &ti
 
 /**
  * @brief 打牌候補の一覧から json オブジェクトを作成する。
- * 
+ *
  * @param[in] candidate 打牌候補の一覧
  * @param[in] doc ドキュメント
  * @return rapidjson::Value 値
@@ -167,7 +167,8 @@ rapidjson::Value dump_candidate(const Candidate &candidate, rapidjson::Document 
     rapidjson::Value value(rapidjson::kObjectType);
     value.AddMember("tile", candidate.tile, doc.GetAllocator());
     value.AddMember("syanten_down", candidate.syanten_down, doc.GetAllocator());
-    value.AddMember("required_tiles", dump_required_tiles(candidate.required_tiles, doc),
+    value.AddMember("required_tiles",
+                    dump_required_tiles(candidate.required_tiles, doc),
                     doc.GetAllocator());
 
     if (!candidate.exp_values.empty()) {
@@ -193,7 +194,7 @@ rapidjson::Value dump_candidate(const Candidate &candidate, rapidjson::Document 
 
 /**
  * @brief リクエストデータからレスポンスデータを作成する。
- * 
+ *
  * @param[in] req リクエストデータ
  * @return DrawResponseData レスポンスデータ
  */
@@ -219,11 +220,13 @@ DrawResponseData create_draw_response(const RequestData &req)
         std::tie(success, candidates) = exp_value_calc.calc(
             req.hand, score_calc, req.dora_indicators, req.syanten_type, req.flag);
     else
-        std::tie(success, candidates) = exp_value_calc.calc(
-            req.hand, score_calc, req.dora_indicators, req.syanten_type, req.counts, req.flag);
+        std::tie(success, candidates) =
+            exp_value_calc.calc(req.hand, score_calc, req.dora_indicators,
+                                req.syanten_type, req.counts, req.flag);
 
     auto end = std::chrono::steady_clock::now();
-    auto elapsed_us = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
+    auto elapsed_us =
+        std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
 
     DrawResponseData res;
     res.required_tiles = candidates.front().required_tiles;
@@ -242,7 +245,7 @@ DrawResponseData create_draw_response(const RequestData &req)
 
 /**
  * @brief リクエストデータからレスポンスデータを作成する。
- * 
+ *
  * @param[in] req リクエストデータ
  * @return DiscardResponseData レスポンスデータ
  */
@@ -268,11 +271,13 @@ DiscardResponseData create_discard_response(const RequestData &req)
         std::tie(success, candidates) = exp_value_calc.calc(
             req.hand, score_calc, req.dora_indicators, req.syanten_type, req.flag);
     else
-        std::tie(success, candidates) = exp_value_calc.calc(
-            req.hand, score_calc, req.dora_indicators, req.syanten_type, req.counts, req.flag);
+        std::tie(success, candidates) =
+            exp_value_calc.calc(req.hand, score_calc, req.dora_indicators,
+                                req.syanten_type, req.counts, req.flag);
 
     auto end = std::chrono::steady_clock::now();
-    auto elapsed_us = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
+    auto elapsed_us =
+        std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
 
     DiscardResponseData res;
     auto [_, syanten] = SyantenCalculator::calc(req.hand, req.syanten_type);
@@ -288,12 +293,13 @@ DiscardResponseData create_discard_response(const RequestData &req)
 
 /**
  * @brief レスポンスデータから値を作成する。
- * 
+ *
  * @param[in] res レスポンスデータ
  * @param[in] doc ドキュメント
  * @return rapidjson::Value 値
  */
-rapidjson::Value dump_draw_response(const DrawResponseData &res, rapidjson::Document &doc)
+rapidjson::Value dump_draw_response(const DrawResponseData &res,
+                                    rapidjson::Document &doc)
 {
     rapidjson::Value syanten_value(rapidjson::kObjectType);
     syanten_value.AddMember("syanten", res.syanten, doc.GetAllocator());
@@ -331,12 +337,13 @@ rapidjson::Value dump_draw_response(const DrawResponseData &res, rapidjson::Docu
 
 /**
  * @brief レスポンスデータから値を作成する。
- * 
+ *
  * @param[in] res レスポンスデータ
  * @param[in] doc ドキュメント
  * @return rapidjson::Value 値
  */
-rapidjson::Value dump_discard_response(const DiscardResponseData &res, rapidjson::Document &doc)
+rapidjson::Value dump_discard_response(const DiscardResponseData &res,
+                                       rapidjson::Document &doc)
 {
     rapidjson::Value syanten_value(rapidjson::kObjectType);
     syanten_value.AddMember("syanten", res.syanten, doc.GetAllocator());
@@ -350,14 +357,15 @@ rapidjson::Value dump_discard_response(const DiscardResponseData &res, rapidjson
     value.AddMember("time", res.time_us, doc.GetAllocator());
     value.AddMember("candidates", rapidjson::kArrayType, doc.GetAllocator());
     for (const auto &candidate : res.candidates)
-        value["candidates"].PushBack(dump_candidate(candidate, doc), doc.GetAllocator());
+        value["candidates"].PushBack(dump_candidate(candidate, doc),
+                                     doc.GetAllocator());
 
     return value;
 }
 
 /**
  * @brief レスポンスデータを作成する。
- * 
+ *
  * @param[in] res レスポンスデータ
  * @param[in] doc ドキュメント
  * @return rapidjson::Value 値

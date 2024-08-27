@@ -41,7 +41,8 @@ ExpectedValueCalculator::ExpectedValueCalculator()
  */
 std::tuple<bool, std::vector<Candidate>>
 ExpectedValueCalculator::calc(const Hand &hand, const ScoreCalculator &score_calculator,
-                              const std::vector<int> &dora_indicators, int syanten_type, int flag)
+                              const std::vector<int> &dora_indicators, int syanten_type,
+                              int flag)
 {
     std::vector<int> counts = count_left_tiles(hand, dora_indicators);
     return calc(hand, score_calculator, dora_indicators, syanten_type, counts, flag);
@@ -156,8 +157,9 @@ ExpectedValueCalculator::get_required_tiles(const Hand &hand, int syanten_type,
  * @param[in] dora_indicators ドラ表示牌の一覧
  * @return 各牌の残り枚数
  */
-std::vector<int> ExpectedValueCalculator::count_left_tiles(const Hand &hand,
-                                                           const std::vector<int> &dora_indicators)
+std::vector<int>
+ExpectedValueCalculator::count_left_tiles(const Hand &hand,
+                                          const std::vector<int> &dora_indicators)
 {
     std::vector<int> counts(37, 4);
     counts[Tile::AkaManzu5] = counts[Tile::AkaPinzu5] = counts[Tile::AkaSozu5] = 1;
@@ -202,7 +204,8 @@ bool ExpectedValueCalculator::make_uradora_table()
 
     uradora_prob_table_.resize(6);
 
-    boost::filesystem::path path = boost::dll::program_location().parent_path() / "uradora.txt";
+    boost::filesystem::path path =
+        boost::dll::program_location().parent_path() / "uradora.txt";
     std::ifstream ifs(path.string());
 
     std::string line;
@@ -257,7 +260,8 @@ void ExpectedValueCalculator::clear_cache()
     // for (size_t i = 0; i < 5; ++i)
     //     spdlog::info("向聴数{} 打牌: {}, 自摸: {}", i, discard_cache_[i].size(),
     //                  draw_cache_[i].size());
-    std::for_each(discard_cache_.begin(), discard_cache_.end(), [](auto &x) { x.clear(); });
+    std::for_each(discard_cache_.begin(), discard_cache_.end(),
+                  [](auto &x) { x.clear(); });
     std::for_each(draw_cache_.begin(), draw_cache_.end(), [](auto &x) { x.clear(); });
 }
 
@@ -270,7 +274,8 @@ void ExpectedValueCalculator::clear_cache()
  * @return 自摸牌候補の一覧。各要素は (牌, 残り枚数, 向聴数の変化) を表す。
  */
 std::vector<std::tuple<int, int, int>>
-ExpectedValueCalculator::get_draw_tiles(Hand &hand, int syanten, const std::vector<int> &counts)
+ExpectedValueCalculator::get_draw_tiles(Hand &hand, int syanten,
+                                        const std::vector<int> &counts)
 {
     std::vector<std::tuple<int, int, int>> flags;
     flags.reserve(34);
@@ -284,7 +289,8 @@ ExpectedValueCalculator::get_draw_tiles(Hand &hand, int syanten, const std::vect
         remove_tile(hand, tile);
         int syanten_diff = syanten_after - syanten;
 
-        if (calc_akatile_tumo_ && tile == Tile::Manzu5 && counts[Tile::AkaManzu5] == 1) {
+        if (calc_akatile_tumo_ && tile == Tile::Manzu5 &&
+            counts[Tile::AkaManzu5] == 1) {
             if (counts[Tile::Manzu5] >= 2) {
                 // 五萬と赤五萬の両方が残っている
                 flags.emplace_back(tile, counts[tile] - 1, syanten_diff);
@@ -295,7 +301,8 @@ ExpectedValueCalculator::get_draw_tiles(Hand &hand, int syanten, const std::vect
                 flags.emplace_back(Tile::AkaManzu5, 1, syanten_diff);
             }
         }
-        else if (calc_akatile_tumo_ && tile == Tile::Pinzu5 && counts[Tile::AkaPinzu5] == 1) {
+        else if (calc_akatile_tumo_ && tile == Tile::Pinzu5 &&
+                 counts[Tile::AkaPinzu5] == 1) {
             if (counts[Tile::Pinzu5] >= 2) {
                 // 五筒と赤五筒の両方が残っている
                 flags.emplace_back(tile, counts[tile] - 1, syanten_diff);
@@ -306,7 +313,8 @@ ExpectedValueCalculator::get_draw_tiles(Hand &hand, int syanten, const std::vect
                 flags.emplace_back(Tile::AkaPinzu5, 1, syanten_diff);
             }
         }
-        else if (calc_akatile_tumo_ && tile == Tile::Sozu5 && counts[Tile::AkaSozu5] == 1) {
+        else if (calc_akatile_tumo_ && tile == Tile::Sozu5 &&
+                 counts[Tile::AkaSozu5] == 1) {
             if (counts[Tile::Sozu5] >= 2) {
                 // 五索と赤五索の両方が残っている
                 flags.emplace_back(tile, counts[tile] - 1, syanten_diff);
@@ -332,8 +340,8 @@ ExpectedValueCalculator::get_draw_tiles(Hand &hand, int syanten, const std::vect
  * @param[in] syanten 手牌の向聴数
  * @return 打牌一覧 (向聴戻し: 1、向聴数変化なし: 0、手牌に存在しない: inf)
  */
-std::vector<std::tuple<int, int>> ExpectedValueCalculator::get_discard_tiles(Hand &hand,
-                                                                             int syanten)
+std::vector<std::tuple<int, int>>
+ExpectedValueCalculator::get_discard_tiles(Hand &hand, int syanten)
 {
     std::vector<std::tuple<int, int>> flags;
     flags.reserve(34);
@@ -349,12 +357,14 @@ std::vector<std::tuple<int, int>> ExpectedValueCalculator::get_discard_tiles(Han
 
         // 赤牌以外が残っている場合はそちらを先に捨てる。
         int discard_tile = tile;
-        if (discard_tile == Tile::Manzu5 && hand.aka_manzu5 && hand.num_tiles(Tile::Manzu5) == 1)
+        if (discard_tile == Tile::Manzu5 && hand.aka_manzu5 &&
+            hand.num_tiles(Tile::Manzu5) == 1)
             discard_tile = Tile::AkaManzu5;
         else if (discard_tile == Tile::Pinzu5 && hand.aka_pinzu5 &&
                  hand.num_tiles(Tile::Pinzu5) == 1)
             discard_tile = Tile::AkaPinzu5;
-        else if (discard_tile == Tile::Sozu5 && hand.aka_sozu5 && hand.num_tiles(Tile::Sozu5) == 1)
+        else if (discard_tile == Tile::Sozu5 && hand.aka_sozu5 &&
+                 hand.num_tiles(Tile::Sozu5) == 1)
             discard_tile = Tile::AkaSozu5;
 
         flags.emplace_back(discard_tile, syanten_diff);
@@ -375,7 +385,8 @@ std::vector<double> ExpectedValueCalculator::get_score(const Hand &hand, int win
                                                        const std::vector<int> &counts)
 {
     // 非門前の場合は自摸のみ
-    int hand_flag = hand.is_menzen() ? (HandFlag::Tumo | HandFlag::Reach) : HandFlag::Tumo;
+    int hand_flag =
+        hand.is_menzen() ? (HandFlag::Tumo | HandFlag::Reach) : HandFlag::Tumo;
 
     // 点数計算を行う。
     Result result = score_calculator_.calc(hand, win_tile, hand_flag);
@@ -413,7 +424,8 @@ std::vector<double> ExpectedValueCalculator::get_score(const Hand &hand, int win
                 uradora_probs[i] = double(n_indicators[i]) / n_left_tiles;
 
             for (int base = 0; base < 4; ++base) {
-                for (int i = 0; i < 5; ++i) { // 裏ドラ1枚の場合、最大4翻まで乗る可能性がある
+                for (int i = 0; i < 5;
+                     ++i) { // 裏ドラ1枚の場合、最大4翻まで乗る可能性がある
                     int han_idx = std::min(base + i, int(up_scores.size() - 1));
                     scores[base] += up_scores[han_idx] * uradora_probs[i];
                 }
@@ -450,8 +462,8 @@ std::vector<double> ExpectedValueCalculator::get_score(const Hand &hand, int win
  * @return (各巡目の聴牌確率, 各巡目の和了確率, 各巡目の期待値)
  */
 std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
-ExpectedValueCalculator::draw_without_tegawari(int n_extra_tumo, int syanten, Hand &hand,
-                                               std::vector<int> &counts)
+ExpectedValueCalculator::draw_without_tegawari(int n_extra_tumo, int syanten,
+                                               Hand &hand, std::vector<int> &counts)
 {
 #ifdef ENABLE_DRAW_CACHE
     auto &table = draw_cache_[syanten];
@@ -465,7 +477,8 @@ ExpectedValueCalculator::draw_without_tegawari(int n_extra_tumo, int syanten, Ha
         exp_values(max_tumo_, 0);
 
     // 自摸候補を取得する。
-    std::vector<std::tuple<int, int, int>> flags = get_draw_tiles(hand, syanten, counts);
+    std::vector<std::tuple<int, int, int>> flags =
+        get_draw_tiles(hand, syanten, counts);
 
     // 有効牌の合計枚数を計算する。
     int sum_required_tiles = 0;
@@ -479,7 +492,8 @@ ExpectedValueCalculator::draw_without_tegawari(int n_extra_tumo, int syanten, Ha
             continue;
 
         const std::vector<double> &tumo_probs = tumo_prob_table_[count];
-        const std::vector<double> &not_tumo_probs = not_tumo_prob_table_[sum_required_tiles];
+        const std::vector<double> &not_tumo_probs =
+            not_tumo_prob_table_[sum_required_tiles];
 
         // 手牌に加える
         add_tile(hand, tile, counts);
@@ -514,7 +528,8 @@ ExpectedValueCalculator::draw_without_tegawari(int n_extra_tumo, int syanten, Ha
                     bool win_haitei = j == max_tumo_ - 1 && calc_haitei_;
 
                     win_probs[i] += prob;
-                    exp_values[i] += prob * scores[win_double_reach + win_ippatu + win_haitei];
+                    exp_values[i] +=
+                        prob * scores[win_double_reach + win_ippatu + win_haitei];
                 }
                 else if (j < max_tumo_ - 1 && syanten > 0) {
                     // 聴牌以上で max_tumo_ - 1 巡目以下の場合
@@ -562,7 +577,8 @@ ExpectedValueCalculator::draw_with_tegawari(int n_extra_tumo, int syanten, Hand 
         exp_values(max_tumo_, 0);
 
     // 自摸候補を取得する。
-    std::vector<std::tuple<int, int, int>> flags = get_draw_tiles(hand, syanten, counts);
+    std::vector<std::tuple<int, int, int>> flags =
+        get_draw_tiles(hand, syanten, counts);
 
 #ifdef FIX_TEGAWARI_PROB
     // 有効牌の合計枚数を計算する。【暫定対応】
@@ -597,7 +613,8 @@ ExpectedValueCalculator::draw_with_tegawari(int n_extra_tumo, int syanten, Hand 
 
         for (int i = 0; i < max_tumo_; ++i) {
 #ifdef FIX_TEGAWARI_PROB
-            double tump_prob = double(count) / sum_left_tiles; // 【暫定対応】 (2021/9/24)
+            double tump_prob =
+                double(count) / sum_left_tiles; // 【暫定対応】 (2021/9/24)
 #else
             double tump_prob = tumo_prob_table_[count][i];
 #endif
@@ -616,7 +633,8 @@ ExpectedValueCalculator::draw_with_tegawari(int n_extra_tumo, int syanten, Hand 
                 bool win_haitei = i == max_tumo_ - 1 && calc_haitei_;
 
                 win_probs[i] += tump_prob;
-                exp_values[i] += tump_prob * scores[win_double_reach + win_ippatu + win_haitei];
+                exp_values[i] +=
+                    tump_prob * scores[win_double_reach + win_ippatu + win_haitei];
             }
             else if (i < max_tumo_ - 1 && syanten > 0) {
                 win_probs[i] += tump_prob * next_win_probs[i + 1];
@@ -640,7 +658,8 @@ ExpectedValueCalculator::draw_with_tegawari(int n_extra_tumo, int syanten, Hand 
 
         for (int i = 0; i < max_tumo_ - 1; ++i) {
 #ifdef FIX_TEGAWARI_PROB
-            double tump_prob = double(count) / sum_left_tiles; // 【暫定対応】 (2021/9/24)
+            double tump_prob =
+                double(count) / sum_left_tiles; // 【暫定対応】 (2021/9/24)
 #else
             double tump_prob = tumo_prob_table_[count][i];
 #endif
@@ -673,7 +692,8 @@ ExpectedValueCalculator::draw_with_tegawari(int n_extra_tumo, int syanten, Hand 
  * @return (各巡目の聴牌確率, 各巡目の和了確率, 各巡目の期待値)
  */
 std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
-ExpectedValueCalculator::draw(int n_extra_tumo, int syanten, Hand &hand, std::vector<int> &counts)
+ExpectedValueCalculator::draw(int n_extra_tumo, int syanten, Hand &hand,
+                              std::vector<int> &counts)
 {
     if (calc_tegawari_ && n_extra_tumo == 0)
         return draw_with_tegawari(n_extra_tumo, syanten, hand, counts);
@@ -723,7 +743,8 @@ ExpectedValueCalculator::discard(int n_extra_tumo, int syanten, Hand &hand,
                 draw(n_extra_tumo, syanten, hand, counts);
             add_tile(hand, discard_tile);
         }
-        else if (calc_syanten_down_ && n_extra_tumo == 0 && syanten_diff == 1 && syanten < 3) {
+        else if (calc_syanten_down_ && n_extra_tumo == 0 && syanten_diff == 1 &&
+                 syanten < 3) {
             // 向聴戻しになる打牌
             remove_tile(hand, discard_tile);
 
@@ -738,7 +759,8 @@ ExpectedValueCalculator::discard(int n_extra_tumo, int syanten, Hand &hand,
 
         for (size_t i = 0; i < max_tumo_; ++i) {
             // 和了確率は下2桁まで一致していれば同じ、期待値は下0桁まで一致していれば同じとみなす。
-            double value = maximize_win_prob_ ? int(win_probs[i] * 10000) : int(exp_values[i]);
+            double value =
+                maximize_win_prob_ ? int(win_probs[i] * 10000) : int(exp_values[i]);
             double max_value = max_values[i];
             int max_tile = max_tiles[i];
 
@@ -756,7 +778,8 @@ ExpectedValueCalculator::discard(int n_extra_tumo, int syanten, Hand &hand,
     }
 
 #ifdef ENABLE_DISCARD_CACHE
-    auto [itr, _] = table.try_emplace(key, max_tenpai_probs, max_win_probs, max_exp_values);
+    auto [itr, _] =
+        table.try_emplace(key, max_tenpai_probs, max_win_probs, max_exp_values);
 
     return itr->second;
 #else
@@ -772,8 +795,9 @@ ExpectedValueCalculator::discard(int n_extra_tumo, int syanten, Hand &hand,
  * @param [in]_hand 手牌
  * @return std::vector<Candidate> 打牌候補の一覧
  */
-std::vector<Candidate> ExpectedValueCalculator::analyze_discard(int n_extra_tumo, int syanten,
-                                                                Hand hand, std::vector<int> counts)
+std::vector<Candidate> ExpectedValueCalculator::analyze_discard(int n_extra_tumo,
+                                                                int syanten, Hand hand,
+                                                                std::vector<int> counts)
 {
     std::vector<Candidate> candidates;
 
@@ -786,15 +810,16 @@ std::vector<Candidate> ExpectedValueCalculator::analyze_discard(int n_extra_tumo
 
             auto required_tiles = get_required_tiles(hand, syanten_type_, counts);
 
-            auto [tenpai_probs, win_probs, exp_values] = draw(n_extra_tumo, syanten, hand, counts);
+            auto [tenpai_probs, win_probs, exp_values] =
+                draw(n_extra_tumo, syanten, hand, counts);
 
             add_tile(hand, discard_tile);
 
             if (syanten == 0) // すでに聴牌している場合の例外処理
                 std::fill(tenpai_probs.begin(), tenpai_probs.end(), 1);
 
-            candidates.emplace_back(discard_tile, required_tiles, tenpai_probs, win_probs,
-                                    exp_values, false);
+            candidates.emplace_back(discard_tile, required_tiles, tenpai_probs,
+                                    win_probs, exp_values, false);
         }
         else if (calc_syanten_down_ && syanten_diff == 1 && syanten < 3) {
             remove_tile(hand, discard_tile);
@@ -809,7 +834,8 @@ std::vector<Candidate> ExpectedValueCalculator::analyze_discard(int n_extra_tumo
 #ifdef FIX_SYANTEN_DOWN
             // ToDo: 向聴戻しをしない場合のパターンの確率が過小に算出されているような気がするため、
             // 帳尻をあわせるために1巡ずらしている → 本来必要ない処理なので、あとで消す
-            std::rotate(tenpai_probs.begin(), tenpai_probs.begin() + 1, tenpai_probs.end());
+            std::rotate(tenpai_probs.begin(), tenpai_probs.begin() + 1,
+                        tenpai_probs.end());
             tenpai_probs.back() = 0;
             std::rotate(win_probs.begin(), win_probs.begin() + 1, win_probs.end());
             win_probs.back() = 0;
@@ -817,8 +843,8 @@ std::vector<Candidate> ExpectedValueCalculator::analyze_discard(int n_extra_tumo
             exp_values.back() = 0;
 #endif
 
-            candidates.emplace_back(discard_tile, required_tiles, tenpai_probs, win_probs,
-                                    exp_values, true);
+            candidates.emplace_back(discard_tile, required_tiles, tenpai_probs,
+                                    win_probs, exp_values, true);
         }
     }
 
@@ -857,18 +883,21 @@ std::vector<Candidate> ExpectedValueCalculator::analyze_discard(int syanten, Han
  * @param [in]_hand 手牌
  * @return std::vector<Candidate> 打牌候補の一覧
  */
-std::vector<Candidate> ExpectedValueCalculator::analyze_draw(int n_extra_tumo, int syanten,
-                                                             Hand hand, std::vector<int> counts)
+std::vector<Candidate> ExpectedValueCalculator::analyze_draw(int n_extra_tumo,
+                                                             int syanten, Hand hand,
+                                                             std::vector<int> counts)
 {
     std::vector<Candidate> candidates;
 
     auto required_tiles = get_required_tiles(hand, syanten_type_, counts);
-    auto [tenpai_probs, win_probs, exp_values] = draw(n_extra_tumo, syanten, hand, counts);
+    auto [tenpai_probs, win_probs, exp_values] =
+        draw(n_extra_tumo, syanten, hand, counts);
 
     if (syanten == 0) // すでに聴牌している場合の例外処理
         std::fill(tenpai_probs.begin(), tenpai_probs.end(), 1);
 
-    candidates.emplace_back(Tile::Null, required_tiles, tenpai_probs, win_probs, exp_values, false);
+    candidates.emplace_back(Tile::Null, required_tiles, tenpai_probs, win_probs,
+                            exp_values, false);
 
     return candidates;
 }
