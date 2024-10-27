@@ -1,6 +1,6 @@
 #include "unnecessarytileselector.hpp"
 
-#include "syanten.hpp"
+#include "mahjong/shanten/shanten_calculator.hpp"
 
 namespace mahjong
 {

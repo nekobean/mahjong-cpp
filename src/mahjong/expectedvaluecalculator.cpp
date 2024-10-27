@@ -10,7 +10,7 @@
 #include <boost/algorithm/string/split.hpp>
 #include <boost/dll.hpp>
 
-#include "syanten.hpp"
+#include "mahjong/shanten/shanten_calculator.hpp"
 #include "utils.hpp"
 
 namespace mahjong
