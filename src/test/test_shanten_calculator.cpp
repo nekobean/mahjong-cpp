@@ -8,7 +8,7 @@
 #define CATCH_CONFIG_ENABLE_BENCHMARKING
 #include <catch2/catch.hpp>
 
-#include "mahjong/core/shanten_calculator2.hpp"
+#include "mahjong/core/shanten_calculator.hpp"
 #include "mahjong/mahjong.hpp"
 
 using namespace mahjong;
@@ -19,7 +19,7 @@ using namespace mahjong;
  * @param[out] cases Test cases
  * @return Returns true if the read was successful, false otherwise.
  */
-bool load_testcase(std::vector<std::tuple<Hand2, int, int, int>> &cases)
+bool load_testcase(std::vector<std::tuple<Hand, int, int, int>> &cases)
 {
     cases.clear();
 
@@ -43,7 +43,7 @@ bool load_testcase(std::vector<std::tuple<Hand2, int, int, int>> &cases)
             int tile = std::stoi(tokens[i]);
             tiles[tile]++;
         }
-        Hand2 hand = Hand2::from_array34(tiles);
+        Hand hand = Hand::from_array34(tiles);
         int regular_shanten = std::stoi(tokens[14]);
         int kokushi_shanten = std::stoi(tokens[15]);
         int chiitoi_shanten = std::stoi(tokens[16]);
@@ -57,7 +57,7 @@ bool load_testcase(std::vector<std::tuple<Hand2, int, int, int>> &cases)
 
 TEST_CASE("Shanten number of regular hand")
 {
-    std::vector<std::tuple<Hand2, int, int, int>> cases;
+    std::vector<std::tuple<Hand, int, int, int>> cases;
     if (!load_testcase(cases)) {
         return;
     }
@@ -65,21 +65,21 @@ TEST_CASE("Shanten number of regular hand")
     SECTION("Shanten number of regular hand")
     {
         for (auto &[hand, regular, kokushi, chiitoi] : cases) {
-            REQUIRE(SyantenCalculator2::calc_regular(hand) == regular);
+            REQUIRE(ShantenCalculator::calc_regular(hand) == regular);
         }
     };
 
     BENCHMARK("Shanten number of regular hand")
     {
         for (auto &[hand, regular, kokushi, chiitoi] : cases) {
-            SyantenCalculator2::calc_regular(hand);
+            ShantenCalculator::calc_regular(hand);
         }
     };
 }
 
 TEST_CASE("Shanten number of Chiitoitsu")
 {
-    std::vector<std::tuple<Hand2, int, int, int>> cases;
+    std::vector<std::tuple<Hand, int, int, int>> cases;
     if (!load_testcase(cases)) {
         return;
     }
@@ -87,21 +87,21 @@ TEST_CASE("Shanten number of Chiitoitsu")
     SECTION("Shanten number of Chiitoitsu")
     {
         for (auto &[hand, regular, kokushi, chiitoi] : cases) {
-            REQUIRE(SyantenCalculator2::calc_chiitoitsu(hand) == chiitoi);
+            REQUIRE(ShantenCalculator::calc_chiitoitsu(hand) == chiitoi);
         }
     };
 
     BENCHMARK("Shanten number of Chiitoitsu")
     {
         for (auto &[hand, regular, kokushi, chiitoi] : cases) {
-            SyantenCalculator2::calc_chiitoitsu(hand);
+            ShantenCalculator::calc_chiitoitsu(hand);
         }
     };
 }
 
 TEST_CASE("Shanten number of Kokushimusou")
 {
-    std::vector<std::tuple<Hand2, int, int, int>> cases;
+    std::vector<std::tuple<Hand, int, int, int>> cases;
     if (!load_testcase(cases)) {
         return;
     }
@@ -109,21 +109,21 @@ TEST_CASE("Shanten number of Kokushimusou")
     SECTION("Shanten number of Kokushimusou")
     {
         for (auto &[hand, regular, kokushi, chiitoi] : cases) {
-            REQUIRE(SyantenCalculator2::calc_kokushimusou(hand) == kokushi);
+            REQUIRE(ShantenCalculator::calc_kokushimusou(hand) == kokushi);
         }
     };
 
     BENCHMARK("Shanten number of Kokushimusou")
     {
         for (auto &[hand, regular, kokushi, chiitoi] : cases) {
-            SyantenCalculator2::calc_kokushimusou(hand);
+            ShantenCalculator::calc_kokushimusou(hand);
         }
     };
 }
 
 TEST_CASE("Shanten number")
 {
-    std::vector<std::tuple<Hand2, int, int, int>> cases;
+    std::vector<std::tuple<Hand, int, int, int>> cases;
     if (!load_testcase(cases)) {
         return;
     }
@@ -135,7 +135,7 @@ TEST_CASE("Shanten number")
             int true_type = (true_shanten == regular ? ShantenType::Regular : 0) |
                             (true_shanten == kokushi ? ShantenType::Kokushimusou : 0) |
                             (true_shanten == chiitoi ? ShantenType::Chiitoitsu : 0);
-            auto [type, syanten] = SyantenCalculator2::calc(hand);
+            auto [type, syanten] = ShantenCalculator::calc(hand);
 
             REQUIRE(syanten == true_shanten);
             REQUIRE(type == true_type);
@@ -145,7 +145,7 @@ TEST_CASE("Shanten number")
     BENCHMARK("Shanten number")
     {
         for (auto &[hand, regular, kokushi, chiitoi] : cases) {
-            SyantenCalculator2::calc(hand);
+            ShantenCalculator::calc(hand);
         }
     };
 }

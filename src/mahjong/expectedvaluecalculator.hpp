@@ -53,7 +53,7 @@ class Candidate
     bool syanten_down;
 };
 
-inline void add_tile(Hand2 &hand, int tile)
+inline void add_tile(Hand &hand, int tile)
 {
     if (tile == Tile::AkaManzu5) {
         hand.counts[Tile::Manzu5]++;
@@ -72,7 +72,7 @@ inline void add_tile(Hand2 &hand, int tile)
     }
 }
 
-inline void remove_tile(Hand2 &hand, int tile)
+inline void remove_tile(Hand &hand, int tile)
 {
     if (tile == Tile::AkaManzu5) {
         hand.counts[Tile::Manzu5]--;
@@ -91,7 +91,7 @@ inline void remove_tile(Hand2 &hand, int tile)
     }
 }
 
-inline void add_tile(Hand2 &hand, int tile, std::vector<int> &counts)
+inline void add_tile(Hand &hand, int tile, std::vector<int> &counts)
 {
     if (tile == Tile::AkaManzu5) {
         hand.counts[Tile::Manzu5]++;
@@ -114,7 +114,7 @@ inline void add_tile(Hand2 &hand, int tile, std::vector<int> &counts)
     counts[tile]--;
 }
 
-inline void remove_tile(Hand2 &hand, int tile, std::vector<int> &counts)
+inline void remove_tile(Hand &hand, int tile, std::vector<int> &counts)
 {
     if (tile == Tile::AkaManzu5) {
         hand.counts[Tile::Manzu5]--;
@@ -139,7 +139,7 @@ inline void remove_tile(Hand2 &hand, int tile, std::vector<int> &counts)
 
 struct CacheKey
 {
-    CacheKey(const Hand2 &hand, const std::vector<int> &counts, int n_extra_tumo)
+    CacheKey(const Hand &hand, const std::vector<int> &counts, int n_extra_tumo)
         : hmanzu(0)
         , hpinzu(0)
         , hsouzu(0)
@@ -257,17 +257,17 @@ class ExpectedValueCalculator
     ExpectedValueCalculator();
 
     std::tuple<bool, std::vector<Candidate>>
-    calc(const Hand2 &hand, const ScoreCalculator2 &score_calculator,
+    calc(const Hand &hand, const ScoreCalculator2 &score_calculator,
          const std::vector<int> &dora_indicators, int syanten_type, int flag = 0);
     std::tuple<bool, std::vector<Candidate>>
-    calc(const Hand2 &hand, const ScoreCalculator2 &score_calculator,
+    calc(const Hand &hand, const ScoreCalculator2 &score_calculator,
          const std::vector<int> &dora_indicators, int syanten_type,
          const std::vector<int> &counts, int flag = 0);
 
     static std::vector<std::tuple<int, int>>
-    get_required_tiles(const Hand2 &hand, int syanten_type,
+    get_required_tiles(const Hand &hand, int syanten_type,
                        const std::vector<int> &counts);
-    static std::vector<int> count_left_tiles(const Hand2 &hand,
+    static std::vector<int> count_left_tiles(const Hand &hand,
                                              const std::vector<int> &dora_indicators);
 
     // private:
@@ -275,29 +275,29 @@ class ExpectedValueCalculator
     void create_prob_table(int n_left_tiles);
     void clear_cache();
     std::vector<std::tuple<int, int, int>>
-    get_draw_tiles(Hand2 &hand, int syanten, const std::vector<int> &counts);
-    std::vector<std::tuple<int, int>> get_discard_tiles(Hand2 &hand, int syanten);
-    std::vector<double> get_score(const Hand2 &hand, int win_tile,
+    get_draw_tiles(Hand &hand, int syanten, const std::vector<int> &counts);
+    std::vector<std::tuple<int, int>> get_discard_tiles(Hand &hand, int syanten);
+    std::vector<double> get_score(const Hand &hand, int win_tile,
                                   const std::vector<int> &counts);
 
-    std::vector<Candidate> analyze_discard(int n_extra_tumo, int syanten, Hand2 hand,
+    std::vector<Candidate> analyze_discard(int n_extra_tumo, int syanten, Hand hand,
                                            std::vector<int> counts);
-    std::vector<Candidate> analyze_discard(int syanten, Hand2 hand,
+    std::vector<Candidate> analyze_discard(int syanten, Hand hand,
                                            std::vector<int> counts);
-    std::vector<Candidate> analyze_draw(int n_extra_tumo, int syanten, Hand2 hand,
+    std::vector<Candidate> analyze_draw(int n_extra_tumo, int syanten, Hand hand,
                                         std::vector<int> counts);
-    std::vector<Candidate> analyze_draw(int syanten, Hand2 hand,
+    std::vector<Candidate> analyze_draw(int syanten, Hand hand,
                                         std::vector<int> counts);
 
     std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
-    discard(int n_extra_tumo, int syanten, Hand2 &hand, std::vector<int> &counts);
+    discard(int n_extra_tumo, int syanten, Hand &hand, std::vector<int> &counts);
     std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
-    draw(int n_extra_tumo, int syanten, Hand2 &hand, std::vector<int> &counts);
+    draw(int n_extra_tumo, int syanten, Hand &hand, std::vector<int> &counts);
     std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
-    draw_without_tegawari(int n_extra_tumo, int syanten, Hand2 &hand,
+    draw_without_tegawari(int n_extra_tumo, int syanten, Hand &hand,
                           std::vector<int> &counts);
     std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
-    draw_with_tegawari(int n_extra_tumo, int syanten, Hand2 &hand,
+    draw_with_tegawari(int n_extra_tumo, int syanten, Hand &hand,
                        std::vector<int> &counts);
 
     // private:

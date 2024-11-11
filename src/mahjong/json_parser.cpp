@@ -9,7 +9,7 @@
 #include <rapidjson/stringbuffer.h>
 
 #include "mahjong/core/score_calculator.hpp"
-#include "mahjong/core/shanten_calculator2.hpp"
+#include "mahjong/core/shanten_calculator.hpp"
 
 using namespace mahjong;
 
@@ -80,7 +80,7 @@ RequestData parse_request(const rapidjson::Value &doc)
 
         melds.emplace_back(meld_type, tiles, discarded_tile, from);
     }
-    req.hand = Hand2(hand_tiles, melds);
+    req.hand = Hand(hand_tiles, melds);
 
     if (doc.HasMember("ip"))
         req.ip = doc["ip"].GetString();
@@ -236,11 +236,11 @@ DrawResponseData create_draw_response(const RequestData &req)
     res.tenpai_probs = candidates.front().tenpai_probs;
     res.win_probs = candidates.front().win_probs;
     res.exp_values = candidates.front().exp_values;
-    auto [_, syanten] = SyantenCalculator2::calc(req.hand, req.syanten_type);
+    auto [_, syanten] = ShantenCalculator::calc(req.hand, req.syanten_type);
     res.syanten = syanten;
-    res.normal_syanten = SyantenCalculator2::calc_regular(req.hand);
-    res.tiitoi_syanten = SyantenCalculator2::calc_chiitoitsu(req.hand);
-    res.kokusi_syanten = SyantenCalculator2::calc_kokushimusou(req.hand);
+    res.normal_syanten = ShantenCalculator::calc_regular(req.hand);
+    res.tiitoi_syanten = ShantenCalculator::calc_chiitoitsu(req.hand);
+    res.kokusi_syanten = ShantenCalculator::calc_kokushimusou(req.hand);
     res.time_us = elapsed_us;
 
     return res;
@@ -283,11 +283,11 @@ DiscardResponseData create_discard_response(const RequestData &req)
         std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
 
     DiscardResponseData res;
-    auto [_, syanten] = SyantenCalculator2::calc(req.hand, req.syanten_type);
+    auto [_, syanten] = ShantenCalculator::calc(req.hand, req.syanten_type);
     res.syanten = syanten;
-    res.normal_syanten = SyantenCalculator2::calc_regular(req.hand);
-    res.tiitoi_syanten = SyantenCalculator2::calc_chiitoitsu(req.hand);
-    res.kokusi_syanten = SyantenCalculator2::calc_kokushimusou(req.hand);
+    res.normal_syanten = ShantenCalculator::calc_regular(req.hand);
+    res.tiitoi_syanten = ShantenCalculator::calc_chiitoitsu(req.hand);
+    res.kokusi_syanten = ShantenCalculator::calc_kokushimusou(req.hand);
     res.time_us = elapsed_us;
     res.candidates = candidates;
 

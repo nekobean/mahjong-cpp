@@ -18,24 +18,24 @@ namespace mahjong
 /**
  * @brief 手牌
  */
-class Hand2 : private boost::equality_comparable<Hand2, Hand2>
+class Hand : private boost::equality_comparable<Hand, Hand>
 {
   public:
-    Hand2();
-    Hand2(const std::vector<int> &tiles);
-    Hand2(const std::vector<int> &tiles, const std::vector<MeldedBlock> &melds);
+    Hand();
+    Hand(const std::vector<int> &tiles);
+    Hand(const std::vector<int> &tiles, const std::vector<MeldedBlock> &melds);
 
     bool is_closed() const;
     int num_tiles() const;
-    static Hand2 from_array34(const std::vector<int> &array34);
-    static Hand2 from_mpsz(const std::string &mpsz_str);
+    static Hand from_array34(const std::vector<int> &array34);
+    static Hand from_mpsz(const std::string &mpsz_str);
     std::string to_string() const;
 
   private:
     bool check_arguments(const std::vector<int> &tiles,
                          const std::vector<MeldedBlock> &melds);
-    friend std::ostream &operator<<(std::ostream &os, const Hand2 &hand);
-    friend bool operator==(const Hand2 &a, const Hand2 &b);
+    friend std::ostream &operator<<(std::ostream &os, const Hand &hand);
+    friend bool operator==(const Hand &a, const Hand &b);
 
   public:
     /* 牌数 */
@@ -64,7 +64,7 @@ class Hand2 : private boost::equality_comparable<Hand2, Hand2>
 /**
  * @brief 手牌を作成する。
  */
-inline Hand2::Hand2()
+inline Hand::Hand()
     : counts(TILE_TYPES, 0), aka_manzu5(false), aka_pinzu5(false), aka_souzu5(false)
 {
 }
@@ -74,7 +74,7 @@ inline Hand2::Hand2()
  *
  * @param[in] tiles 牌の一覧
  */
-inline Hand2::Hand2(const std::vector<int> &tiles)
+inline Hand::Hand(const std::vector<int> &tiles)
     : counts(TILE_TYPES, 0), aka_manzu5(false), aka_pinzu5(false), aka_souzu5(false)
 {
 #ifdef CHECK_ARGUMENT
@@ -107,8 +107,7 @@ inline Hand2::Hand2(const std::vector<int> &tiles)
  * @param[in] tiles 牌の一覧
  * @param[in] melds 副露ブロックの一覧
  */
-inline Hand2::Hand2(const std::vector<int> &tiles,
-                    const std::vector<MeldedBlock> &melds)
+inline Hand::Hand(const std::vector<int> &tiles, const std::vector<MeldedBlock> &melds)
     : counts(TILE_TYPES, 0)
     , melds(melds)
     , aka_manzu5(false)
@@ -146,8 +145,8 @@ inline Hand2::Hand2(const std::vector<int> &tiles,
  * @param melds 副露ブロックの一覧
  * @return 引数が問題ない場合は true、そうでない場合は false を返す。
  */
-inline bool Hand2::check_arguments(const std::vector<int> &tiles,
-                                   const std::vector<MeldedBlock> &melds)
+inline bool Hand::check_arguments(const std::vector<int> &tiles,
+                                  const std::vector<MeldedBlock> &melds)
 {
     // 牌ごとの枚数及び合計枚数を数える。
     int num_tiles = int(melds.size()) * 3;
@@ -203,7 +202,7 @@ inline bool Hand2::check_arguments(const std::vector<int> &tiles,
  *
  * @return 門前の場合は true、そうでない場合は false を返す。
  */
-inline bool Hand2::is_closed() const
+inline bool Hand::is_closed() const
 {
     for (const auto &meld : melds) {
         if (meld.type != MeldType::Ankan) {
@@ -219,7 +218,7 @@ inline bool Hand2::is_closed() const
  *
  * @return int 牌の合計枚数
  */
-inline int Hand2::num_tiles() const
+inline int Hand::num_tiles() const
 {
     return std::accumulate(counts.begin(), counts.end(), 0);
 }
@@ -229,17 +228,17 @@ inline int Hand2::num_tiles() const
  *
  * @param[in] tiles 牌の一覧
  */
-inline Hand2 Hand2::from_array34(const std::vector<int> &array34)
+inline Hand Hand::from_array34(const std::vector<int> &array34)
 {
-    Hand2 hand;
+    Hand hand;
     hand.counts = array34;
 
     return hand;
 }
 
-inline Hand2 Hand2::from_mpsz(const std::string &tiles)
+inline Hand Hand::from_mpsz(const std::string &tiles)
 {
-    Hand2 hand;
+    Hand hand;
 
     std::string type;
     for (auto it = tiles.rbegin(); it != tiles.rend(); ++it) {
@@ -276,7 +275,7 @@ inline Hand2 Hand2::from_mpsz(const std::string &tiles)
  *
  * @return std::string 文字列
  */
-inline std::string Hand2::to_string() const
+inline std::string Hand::to_string() const
 {
     std::string s;
     const std::string suffix = "mpsz";
@@ -314,12 +313,12 @@ inline std::string Hand2::to_string() const
     return s;
 }
 
-inline std::ostream &operator<<(std::ostream &os, const Hand2 &hand)
+inline std::ostream &operator<<(std::ostream &os, const Hand &hand)
 {
     return os << hand.to_string();
 }
 
-inline bool operator==(const Hand2 &a, const Hand2 &b)
+inline bool operator==(const Hand &a, const Hand &b)
 {
     return a.melds == b.melds && a.counts == b.counts && a.aka_manzu5 == b.aka_manzu5 &&
            a.aka_pinzu5 == b.aka_pinzu5 && a.aka_souzu5 == b.aka_souzu5;

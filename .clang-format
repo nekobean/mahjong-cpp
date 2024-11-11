@@ -30,3 +30,4 @@ BraceWrapping:
   BeforeElse: true
 SortIncludes: true
 ReflowComments: false
+AllowShortFunctionsOnASingleLine: false

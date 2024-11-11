@@ -14,12 +14,12 @@
 #include <cppitertools/combinations_with_replacement.hpp>
 #include <cppitertools/product.hpp>
 
-#include "mahjong/core/shanten_calculator2.hpp"
+#include "mahjong/core/shanten_calculator.hpp"
 
 using namespace mahjong;
 using KeyType = uint32_t;
 using ValueType = std::array<KeyType, 10>;
-using HashType = SyantenCalculator2::HashType;
+using HashType = ShantenCalculator::HashType;
 
 std::vector<int> range(int n)
 {
@@ -203,8 +203,8 @@ create_table(const std::vector<std::vector<int>> &patterns,
     for (const auto &pattern : patterns) {
         HashType hash =
             pattern.size() == 9
-                ? SyantenCalculator2::calc_suits_hash(pattern.begin(), pattern.end())
-                : SyantenCalculator2::calc_honors_hash(pattern.begin(), pattern.end());
+                ? ShantenCalculator::calc_suits_hash(pattern.begin(), pattern.end())
+                : ShantenCalculator::calc_honors_hash(pattern.begin(), pattern.end());
         table[hash].fill(std::numeric_limits<int>::max());
     }
 
@@ -212,11 +212,11 @@ create_table(const std::vector<std::vector<int>> &patterns,
     std::for_each(
         std::execution::par, patterns.begin(), patterns.end(),
         [&](const auto &pattern) {
-            HashType hash = pattern.size() == 9
-                                ? SyantenCalculator2::calc_suits_hash(pattern.begin(),
-                                                                      pattern.end())
-                                : SyantenCalculator2::calc_honors_hash(pattern.begin(),
-                                                                       pattern.end());
+            HashType hash =
+                pattern.size() == 9
+                    ? ShantenCalculator::calc_suits_hash(pattern.begin(), pattern.end())
+                    : ShantenCalculator::calc_honors_hash(pattern.begin(),
+                                                          pattern.end());
             auto &distances = table[hash];
 
             for (const auto &win_pattern : win_patterns) {

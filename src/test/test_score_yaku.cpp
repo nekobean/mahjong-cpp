@@ -26,7 +26,7 @@ struct TestCase
     std::vector<int> uradora_tiles;
 
     // 入力
-    Hand2 hand;
+    Hand hand;
     int win_tile;
     int flag;
 
@@ -105,7 +105,7 @@ bool load_cases(const std::string &filename, std::vector<TestCase> &cases)
             melded_blocks.push_back(melded_block);
         }
 
-        testcase.hand = Hand2(tiles, melded_blocks);
+        testcase.hand = Hand(tiles, melded_blocks);
         testcase.win_tile = v["win_tile"].GetInt();
         testcase.flag = v["flag"].GetInt();
 
@@ -163,7 +163,7 @@ TEST_CASE("一般役の点数計算")
             score.set_rule(RuleFlag::OpenTanyao, testcase.enable_kuitan);
 
             // 計算
-            Result2 ret = score.calc(testcase.hand, testcase.win_tile, testcase.flag);
+            Result ret = score.calc(testcase.hand, testcase.win_tile, testcase.flag);
 
             // 照合
             INFO(fmt::format("URL: {}", testcase.url));
@@ -205,7 +205,7 @@ TEST_CASE("一般役の点数計算")
             score.set_rule(RuleFlag::OpenTanyao, testcase.enable_kuitan);
 
             // 計算
-            Result2 ret = score.calc(testcase.hand, testcase.win_tile, testcase.flag);
+            Result ret = score.calc(testcase.hand, testcase.win_tile, testcase.flag);
         }
     };
 }

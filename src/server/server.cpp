@@ -25,7 +25,9 @@ using namespace mahjong;
 
 Server server;
 
-Server::Server() : pool_(3) {}
+Server::Server() : pool_(3)
+{
+}
 
 bool Server::validate_request(const RequestData &req)
 {
@@ -52,17 +54,20 @@ void Server::log_request(const RequestData &req)
 {
     std::string dora_indicators = "";
     for (const auto &tile : req.dora_indicators)
-        dora_indicators += Tile::Name.at(tile) + (&tile != &req.dora_indicators.back() ? " " : "");
+        dora_indicators +=
+            Tile::Name.at(tile) + (&tile != &req.dora_indicators.back() ? " " : "");
 
     std::string counts = "";
     for (const auto &count : req.counts)
         counts += std::to_string(count);
 
-    spdlog::get("logger")->info(
-        "IP: {}, バージョン: {}, 場風牌: {}, 自風牌: {}, 巡目: {}, 手牌の種類: {}, 手牌: "
-        "{}, フラグ: {}, ドラ表示牌: {}, 残り枚数: {}",
-        req.ip, req.version, Tile::Name.at(req.bakaze), Tile::Name.at(req.zikaze), req.turn,
-        req.syanten_type, req.hand.to_string(), req.flag, dora_indicators, counts);
+    spdlog::get("logger")->info("IP: {}, バージョン: {}, 場風牌: {}, 自風牌: {}, 巡目: "
+                                "{}, 手牌の種類: {}, 手牌: "
+                                "{}, フラグ: {}, ドラ表示牌: {}, 残り枚数: {}",
+                                req.ip, req.version, Tile::Name.at(req.bakaze),
+                                Tile::Name.at(req.zikaze), req.turn, req.syanten_type,
+                                req.hand.to_string(), req.flag, dora_indicators,
+                                counts);
 }
 
 std::string Server::process_request(const std::string &json)
@@ -97,15 +102,15 @@ std::string Server::process_request(const std::string &json)
         req_version = req_doc["version"].GetString();
 
     if (req_version != PROJECT_VERSION) {
-        spdlog::get("logger")->error("ip: {}, reason: バージョンが不一致 {} vs {}", req_ip,
-                                     req_version, PROJECT_VERSION);
+        spdlog::get("logger")->error("ip: {}, reason: バージョンが不一致 {} vs {}",
+                                     req_ip, req_version, PROJECT_VERSION);
         doc.AddMember("success", false, doc.GetAllocator());
         doc.AddMember("request", req_doc.GetObject(), doc.GetAllocator());
-        doc.AddMember(
-            "err_msg",
-            "アプリのバージョンが古いです。"
-            "キャッシュの影響だと思われるので、ブラウザでページを再読み込みしてください。",
-            doc.GetAllocator());
+        doc.AddMember("err_msg",
+                      "アプリのバージョンが古いです。"
+                      "キャッシュの影響だと思われるので、ブラウザでページを再読み込みし"
+                      "てください。",
+                      doc.GetAllocator());
         return to_json_str(doc);
     }
 
@@ -115,7 +120,8 @@ std::string Server::process_request(const std::string &json)
         // validator.GetInvalidSchemaPointer().StringifyUriFragment(sb);
         // printf("Invalid schema: %s\n", sb.GetString());
         // printf("Invalid keyword: %s\n", validator.GetInvalidSchemaKeyword());
-        spdlog::get("logger")->error("ip: {}, reason: JSON スキーマのバリデーション失敗", req_ip);
+        spdlog::get("logger")->error(
+            "ip: {}, reason: JSON スキーマのバリデーション失敗", req_ip);
         doc.AddMember("success", false, doc.GetAllocator());
         doc.AddMember("request", req_doc.GetObject(), doc.GetAllocator());
         doc.AddMember("err_msg",
@@ -143,7 +149,7 @@ std::string Server::process_request(const std::string &json)
     log_request(req);
 
     // 向聴数を計算する。
-    auto [syanten_type, syanten] = SyantenCalculator::calc(req.hand, req.syanten_type);
+    auto [syanten_type, syanten] = ShantenCalculator::calc(req.hand, req.syanten_type);
     if (syanten == -1) {
         doc.AddMember("success", false, doc.GetAllocator());
         doc.AddMember("request", req_doc.GetObject(), doc.GetAllocator());
@@ -165,8 +171,10 @@ std::string Server::process_request(const std::string &json)
             boost::dll::program_location().parent_path() / "requests";
         if (!boost::filesystem::exists(save_dir))
             boost::filesystem::create_directory(save_dir);
-        std::string req_save_path = save_dir.string() + "\\" + (req.hand.to_string() + ".json");
-        std::filesystem::path pa = std::filesystem::u8path((const char *)req_save_path.c_str());
+        std::string req_save_path =
+            save_dir.string() + "\\" + (req.hand.to_string() + ".json");
+        std::filesystem::path pa =
+            std::filesystem::u8path((const char *)req_save_path.c_str());
         std::ofstream ofs(pa.string());
         ofs << json;
         ofs.close();
@@ -177,8 +185,10 @@ std::string Server::process_request(const std::string &json)
             boost::dll::program_location().parent_path() / "response";
         if (!boost::filesystem::exists(save_dir))
             boost::filesystem::create_directory(save_dir);
-        std::string req_save_path = save_dir.string() + "\\" + (req.hand.to_string() + ".json");
-        std::filesystem::path pa = std::filesystem::u8path((const char *)req_save_path.c_str());
+        std::string req_save_path =
+            save_dir.string() + "\\" + (req.hand.to_string() + ".json");
+        std::filesystem::path pa =
+            std::filesystem::u8path((const char *)req_save_path.c_str());
         std::ofstream ofs(pa.string());
 
         std::cout << to_json_str(doc) << std::endl;
@@ -197,7 +207,8 @@ std::string Server::process_request(const std::string &json)
 // caller to pass a generic lambda for receiving the response.
 template <class Body, class Allocator, class Send>
 void handle_request(beast::string_view doc_root,
-                    http::request<Body, http::basic_fields<Allocator>> &&req, Send &&send)
+                    http::request<Body, http::basic_fields<Allocator>> &&req,
+                    Send &&send)
 {
     // Returns a bad request response
     auto const bad_request = [&req](beast::string_view why) {
@@ -223,7 +234,8 @@ void handle_request(beast::string_view doc_root,
 
     // Returns a server error response
     auto const server_error = [&req](beast::string_view what) {
-        http::response<http::string_body> res{http::status::internal_server_error, req.version()};
+        http::response<http::string_body> res{http::status::internal_server_error,
+                                              req.version()};
         res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
         res.set(http::field::content_type, "text/html");
         res.keep_alive(req.keep_alive());
@@ -241,14 +253,15 @@ void handle_request(beast::string_view doc_root,
         req.target().find("..") != beast::string_view::npos)
         return send(bad_request("Illegal request-target"));
 
-    auto future = server.pool_.enqueue([&] { return server.process_request(req.body()); });
+    auto future =
+        server.pool_.enqueue([&] { return server.process_request(req.body()); });
     http::string_body::value_type body;
     body = future.get();
 
     // Respond to GET request
-    http::response<http::string_body> res{std::piecewise_construct,
-                                          std::make_tuple(std::move(body)),
-                                          std::make_tuple(http::status::ok, req.version())};
+    http::response<http::string_body> res{
+        std::piecewise_construct, std::make_tuple(std::move(body)),
+        std::make_tuple(http::status::ok, req.version())};
     res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
     res.set(http::field::content_type, "application/json");
     res.set(http::field::access_control_allow_origin, "*");
@@ -364,9 +377,11 @@ int Server::run()
 int main()
 {
     auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-    auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>("log.txt", false);
+    auto file_sink =
+        std::make_shared<spdlog::sinks::basic_file_sink_mt>("log.txt", false);
     std::vector<spdlog::sink_ptr> sinks = {console_sink, file_sink};
-    auto logger = std::make_shared<spdlog::logger>("logger", sinks.begin(), sinks.end());
+    auto logger =
+        std::make_shared<spdlog::logger>("logger", sinks.begin(), sinks.end());
     spdlog::register_logger(logger);
     spdlog::flush_every(std::chrono::seconds(3));
 

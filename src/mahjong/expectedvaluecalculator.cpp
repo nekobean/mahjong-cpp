@@ -10,7 +10,7 @@
 #include <boost/algorithm/string/split.hpp>
 #include <boost/dll.hpp>
 
-#include "mahjong/core/shanten_calculator2.hpp"
+#include "mahjong/core/shanten_calculator.hpp"
 #include "utils.hpp"
 
 namespace mahjong
@@ -40,7 +40,7 @@ ExpectedValueCalculator::ExpectedValueCalculator()
  * @return 各打牌の情報
  */
 std::tuple<bool, std::vector<Candidate>> ExpectedValueCalculator::calc(
-    const Hand2 &hand, const ScoreCalculator2 &score_calculator,
+    const Hand &hand, const ScoreCalculator2 &score_calculator,
     const std::vector<int> &dora_indicators, int syanten_type, int flag)
 {
     std::vector<int> counts = count_left_tiles(hand, dora_indicators);
@@ -57,7 +57,7 @@ std::tuple<bool, std::vector<Candidate>> ExpectedValueCalculator::calc(
  * @return 各打牌の情報
  */
 std::tuple<bool, std::vector<Candidate>>
-ExpectedValueCalculator::calc(const Hand2 &hand,
+ExpectedValueCalculator::calc(const Hand &hand,
                               const ScoreCalculator2 &score_calculator,
                               const std::vector<int> &dora_indicators, int syanten_type,
                               const std::vector<int> &counts, int flag)
@@ -85,7 +85,7 @@ ExpectedValueCalculator::calc(const Hand2 &hand,
     max_tumo_ = n_tiles == 13 ? 18 : 17;
 
     // 現在の向聴数を計算する。
-    auto [_, syanten] = SyantenCalculator2::calc(hand, syanten_type_);
+    auto [_, syanten] = ShantenCalculator::calc(hand, syanten_type_);
     if (syanten == -1)
         return {false, {}}; // 手牌が和了形の場合
 
@@ -127,13 +127,13 @@ ExpectedValueCalculator::calc(const Hand2 &hand,
  * @return 有効牌の一覧
  */
 std::vector<std::tuple<int, int>>
-ExpectedValueCalculator::get_required_tiles(const Hand2 &hand, int syanten_type,
+ExpectedValueCalculator::get_required_tiles(const Hand &hand, int syanten_type,
                                             const std::vector<int> &counts)
 {
-    Hand2 _hand = hand;
+    Hand _hand = hand;
 
     // 現在の向聴数を計算する。
-    auto [_, syanten] = SyantenCalculator2::calc(_hand, syanten_type);
+    auto [_, syanten] = ShantenCalculator::calc(_hand, syanten_type);
 
     std::vector<std::tuple<int, int>> required_tiles;
     for (int tile = 0; tile < 34; ++tile) {
@@ -141,7 +141,7 @@ ExpectedValueCalculator::get_required_tiles(const Hand2 &hand, int syanten_type,
             continue;
 
         add_tile(_hand, tile);
-        auto [_, syanten_after] = SyantenCalculator2::calc(_hand, syanten_type);
+        auto [_, syanten_after] = ShantenCalculator::calc(_hand, syanten_type);
         remove_tile(_hand, tile);
 
         if (syanten_after - syanten == -1)
@@ -159,7 +159,7 @@ ExpectedValueCalculator::get_required_tiles(const Hand2 &hand, int syanten_type,
  * @return 各牌の残り枚数
  */
 std::vector<int>
-ExpectedValueCalculator::count_left_tiles(const Hand2 &hand,
+ExpectedValueCalculator::count_left_tiles(const Hand &hand,
                                           const std::vector<int> &dora_indicators)
 {
     std::vector<int> counts(37, 4);
@@ -278,7 +278,7 @@ void ExpectedValueCalculator::clear_cache()
  * @return 自摸牌候補の一覧。各要素は (牌, 残り枚数, 向聴数の変化) を表す。
  */
 std::vector<std::tuple<int, int, int>>
-ExpectedValueCalculator::get_draw_tiles(Hand2 &hand, int syanten,
+ExpectedValueCalculator::get_draw_tiles(Hand &hand, int syanten,
                                         const std::vector<int> &counts)
 {
     std::vector<std::tuple<int, int, int>> flags;
@@ -289,7 +289,7 @@ ExpectedValueCalculator::get_draw_tiles(Hand2 &hand, int syanten,
             continue; // 残り牌がない場合
 
         add_tile(hand, tile);
-        auto [_, syanten_after] = SyantenCalculator2::calc(hand, syanten_type_);
+        auto [_, syanten_after] = ShantenCalculator::calc(hand, syanten_type_);
         remove_tile(hand, tile);
         int syanten_diff = syanten_after - syanten;
 
@@ -345,7 +345,7 @@ ExpectedValueCalculator::get_draw_tiles(Hand2 &hand, int syanten,
  * @return 打牌一覧 (向聴戻し: 1、向聴数変化なし: 0、手牌に存在しない: inf)
  */
 std::vector<std::tuple<int, int>>
-ExpectedValueCalculator::get_discard_tiles(Hand2 &hand, int syanten)
+ExpectedValueCalculator::get_discard_tiles(Hand &hand, int syanten)
 {
     std::vector<std::tuple<int, int>> flags;
     flags.reserve(34);
@@ -355,7 +355,7 @@ ExpectedValueCalculator::get_discard_tiles(Hand2 &hand, int syanten)
             continue; // 手牌にない牌
 
         remove_tile(hand, tile);
-        auto [_, syanten_after] = SyantenCalculator2::calc(hand, syanten_type_);
+        auto [_, syanten_after] = ShantenCalculator::calc(hand, syanten_type_);
         add_tile(hand, tile);
         int syanten_diff = syanten_after - syanten;
 
@@ -385,7 +385,7 @@ ExpectedValueCalculator::get_discard_tiles(Hand2 &hand, int syanten)
  * @param[in] counts 各牌の残り枚数
  * @return 点数
  */
-std::vector<double> ExpectedValueCalculator::get_score(const Hand2 &hand, int win_tile,
+std::vector<double> ExpectedValueCalculator::get_score(const Hand &hand, int win_tile,
                                                        const std::vector<int> &counts)
 {
     // 非門前の場合は自摸のみ
@@ -393,7 +393,7 @@ std::vector<double> ExpectedValueCalculator::get_score(const Hand2 &hand, int wi
         hand.is_closed() ? (HandFlag::Tumo | HandFlag::Reach) : HandFlag::Tumo;
 
     // 点数計算を行う。
-    Result2 result = score_calculator_.calc(hand, win_tile, hand_flag);
+    Result result = score_calculator_.calc(hand, win_tile, hand_flag);
 
     // 表ドラの数
     int n_dora = int(dora_indicators_.size());
@@ -467,7 +467,7 @@ std::vector<double> ExpectedValueCalculator::get_score(const Hand2 &hand, int wi
  */
 std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
 ExpectedValueCalculator::draw_without_tegawari(int n_extra_tumo, int syanten,
-                                               Hand2 &hand, std::vector<int> &counts)
+                                               Hand &hand, std::vector<int> &counts)
 {
 #ifdef ENABLE_DRAW_CACHE
     auto &table = draw_cache_[syanten];
@@ -576,7 +576,7 @@ ExpectedValueCalculator::draw_without_tegawari(int n_extra_tumo, int syanten,
  * @return (各巡目の聴牌確率, 各巡目の和了確率, 各巡目の期待値)
  */
 std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
-ExpectedValueCalculator::draw_with_tegawari(int n_extra_tumo, int syanten, Hand2 &hand,
+ExpectedValueCalculator::draw_with_tegawari(int n_extra_tumo, int syanten, Hand &hand,
                                             std::vector<int> &counts)
 {
 #ifdef ENABLE_DRAW_CACHE
@@ -706,7 +706,7 @@ ExpectedValueCalculator::draw_with_tegawari(int n_extra_tumo, int syanten, Hand2
  * @return (各巡目の聴牌確率, 各巡目の和了確率, 各巡目の期待値)
  */
 std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
-ExpectedValueCalculator::draw(int n_extra_tumo, int syanten, Hand2 &hand,
+ExpectedValueCalculator::draw(int n_extra_tumo, int syanten, Hand &hand,
                               std::vector<int> &counts)
 {
     if (calc_tegawari_ && n_extra_tumo == 0)
@@ -725,7 +725,7 @@ ExpectedValueCalculator::draw(int n_extra_tumo, int syanten, Hand2 &hand,
  * @return (各巡目の聴牌確率, 各巡目の和了確率, 各巡目の期待値)
  */
 std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
-ExpectedValueCalculator::discard(int n_extra_tumo, int syanten, Hand2 &hand,
+ExpectedValueCalculator::discard(int n_extra_tumo, int syanten, Hand &hand,
                                  std::vector<int> &counts)
 {
     assert(syanten > -1); // 和了形からの向聴戻しは行わない
@@ -810,7 +810,7 @@ ExpectedValueCalculator::discard(int n_extra_tumo, int syanten, Hand2 &hand,
  * @return std::vector<Candidate> 打牌候補の一覧
  */
 std::vector<Candidate> ExpectedValueCalculator::analyze_discard(int n_extra_tumo,
-                                                                int syanten, Hand2 hand,
+                                                                int syanten, Hand hand,
                                                                 std::vector<int> counts)
 {
     std::vector<Candidate> candidates;
@@ -872,7 +872,7 @@ std::vector<Candidate> ExpectedValueCalculator::analyze_discard(int n_extra_tumo
  * @param [in]_hand 手牌
  * @return std::vector<Candidate> 打牌候補の一覧
  */
-std::vector<Candidate> ExpectedValueCalculator::analyze_discard(int syanten, Hand2 hand,
+std::vector<Candidate> ExpectedValueCalculator::analyze_discard(int syanten, Hand hand,
                                                                 std::vector<int> counts)
 {
     std::vector<Candidate> candidates;
@@ -898,7 +898,7 @@ std::vector<Candidate> ExpectedValueCalculator::analyze_discard(int syanten, Han
  * @return std::vector<Candidate> 打牌候補の一覧
  */
 std::vector<Candidate> ExpectedValueCalculator::analyze_draw(int n_extra_tumo,
-                                                             int syanten, Hand2 hand,
+                                                             int syanten, Hand hand,
                                                              std::vector<int> counts)
 {
     std::vector<Candidate> candidates;
@@ -923,7 +923,7 @@ std::vector<Candidate> ExpectedValueCalculator::analyze_draw(int n_extra_tumo,
  * @param [in]_hand 手牌
  * @return std::vector<Candidate> 打牌候補の一覧
  */
-std::vector<Candidate> ExpectedValueCalculator::analyze_draw(int syanten, Hand2 hand,
+std::vector<Candidate> ExpectedValueCalculator::analyze_draw(int syanten, Hand hand,
                                                              std::vector<int> counts)
 {
     std::vector<Candidate> candidates;

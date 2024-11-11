@@ -12,7 +12,7 @@
 namespace mahjong
 {
 
-HandSeparator2::HandSeparator2()
+HandSeparator::HandSeparator()
 {
     initialize();
 }
@@ -22,7 +22,7 @@ HandSeparator2::HandSeparator2()
  *
  * @return 初期化に成功した場合は true、そうでない場合は false を返す。
  */
-bool HandSeparator2::initialize()
+bool HandSeparator::initialize()
 {
     if (!s_tbl_.empty())
         return true; // 初期化済み
@@ -45,7 +45,7 @@ bool HandSeparator2::initialize()
  * @return std::vector<std::vector<Block>> 面子構成の一覧
  */
 std::vector<std::tuple<std::vector<Block>, int>>
-HandSeparator2::separate(const Hand2 &hand, int win_tile, bool tumo)
+HandSeparator::separate(const Hand &hand, int win_tile, bool tumo)
 {
     std::vector<std::tuple<std::vector<Block>, int>> pattern;
     std::vector<Block> blocks(5);
@@ -79,8 +79,8 @@ HandSeparator2::separate(const Hand2 &hand, int win_tile, bool tumo)
  * @param[out] table テーブル
  * @return 初期化に成功した場合は true、そうでない場合は false を返す。
  */
-bool HandSeparator2::make_table(const std::string &path,
-                                std::map<int, std::vector<std::vector<Block>>> &table)
+bool HandSeparator::make_table(const std::string &path,
+                               std::map<int, std::vector<std::vector<Block>>> &table)
 {
     table.clear();
 
@@ -115,7 +115,7 @@ bool HandSeparator2::make_table(const std::string &path,
     return true;
 }
 
-std::vector<Block> HandSeparator2::get_blocks(const std::string &s)
+std::vector<Block> HandSeparator::get_blocks(const std::string &s)
 {
     std::vector<Block> blocks;
 
@@ -145,8 +145,8 @@ std::vector<Block> HandSeparator2::get_blocks(const std::string &s)
  * @param[in] syanten_type 和了形の種類
  * @return YakuList 成立した役一覧
  */
-void HandSeparator2::create_block_patterns(
-    const Hand2 &hand, int win_tile, bool tumo,
+void HandSeparator::create_block_patterns(
+    const Hand &hand, int win_tile, bool tumo,
     std::vector<std::tuple<std::vector<Block>, int>> &pattern,
     std::vector<Block> &blocks, size_t i, int d)
 {
@@ -286,8 +286,8 @@ void HandSeparator2::create_block_patterns(
     }
 }
 
-std::map<int, std::vector<std::vector<Block>>> HandSeparator2::s_tbl_;
-std::map<int, std::vector<std::vector<Block>>> HandSeparator2::z_tbl_;
-static HandSeparator2 inst;
+std::map<int, std::vector<std::vector<Block>>> HandSeparator::s_tbl_;
+std::map<int, std::vector<std::vector<Block>>> HandSeparator::z_tbl_;
+static HandSeparator inst;
 
 } // namespace mahjong

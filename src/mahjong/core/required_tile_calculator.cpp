@@ -1,6 +1,6 @@
 #include "required_tile_calculator.hpp"
 
-#include "mahjong/core/shanten_calculator2.hpp"
+#include "mahjong/core/shanten_calculator.hpp"
 
 namespace mahjong
 {
@@ -12,7 +12,7 @@ namespace mahjong
  * @param[in] type 計算対象の向聴数の種類
  * @return std::vector<int> 牌一覧
  */
-std::tuple<int, int, std::vector<int>> RequiredTileCalculator::select(const Hand2 &hand,
+std::tuple<int, int, std::vector<int>> RequiredTileCalculator::select(const Hand &hand,
                                                                       const int type)
 {
     std::tuple<int, int, int64_t> ret = {ShantenType::Null,
@@ -63,7 +63,7 @@ std::tuple<int, int, std::vector<int>> RequiredTileCalculator::select(const Hand
 }
 
 std::tuple<int, std::vector<int>>
-RequiredTileCalculator::select_regular(const Hand2 &hand)
+RequiredTileCalculator::select_regular(const Hand &hand)
 {
     auto [shanten, wait] = calc_regular(hand);
 
@@ -79,7 +79,7 @@ RequiredTileCalculator::select_regular(const Hand2 &hand)
 }
 
 std::tuple<int, std::vector<int>>
-RequiredTileCalculator::select_chiitoitsu(const Hand2 &hand)
+RequiredTileCalculator::select_chiitoitsu(const Hand &hand)
 {
     auto [shanten, wait] = calc_chiitoitsu(hand);
 
@@ -95,7 +95,7 @@ RequiredTileCalculator::select_chiitoitsu(const Hand2 &hand)
 }
 
 std::tuple<int, std::vector<int>>
-RequiredTileCalculator::select_kokushimusou(const Hand2 &hand)
+RequiredTileCalculator::select_kokushimusou(const Hand &hand)
 {
     auto [shanten, wait] = calc_kokushimusou(hand);
 
@@ -110,20 +110,20 @@ RequiredTileCalculator::select_kokushimusou(const Hand2 &hand)
     return {shanten, tiles};
 }
 
-std::tuple<int, int64_t> RequiredTileCalculator::calc_regular(const Hand2 &hand)
+std::tuple<int, int64_t> RequiredTileCalculator::calc_regular(const Hand &hand)
 {
-    SyantenCalculator2::HashType manzu_hash = SyantenCalculator2::calc_suits_hash(
+    ShantenCalculator::HashType manzu_hash = ShantenCalculator::calc_suits_hash(
         hand.counts.begin(), hand.counts.begin() + 9);
-    SyantenCalculator2::HashType pinzu_hash = SyantenCalculator2::calc_suits_hash(
+    ShantenCalculator::HashType pinzu_hash = ShantenCalculator::calc_suits_hash(
         hand.counts.begin() + 9, hand.counts.begin() + 18);
-    SyantenCalculator2::HashType souzu_hash = SyantenCalculator2::calc_suits_hash(
+    ShantenCalculator::HashType souzu_hash = ShantenCalculator::calc_suits_hash(
         hand.counts.begin() + 18, hand.counts.begin() + 27);
-    SyantenCalculator2::HashType honors_hash = SyantenCalculator2::calc_honors_hash(
+    ShantenCalculator::HashType honors_hash = ShantenCalculator::calc_honors_hash(
         hand.counts.begin() + 27, hand.counts.end());
-    auto &manzu = SyantenCalculator2::suits_table_[manzu_hash];
-    auto &pinzu = SyantenCalculator2::suits_table_[pinzu_hash];
-    auto &souzu = SyantenCalculator2::suits_table_[souzu_hash];
-    auto &honors = SyantenCalculator2::honors_table_[honors_hash];
+    auto &manzu = ShantenCalculator::suits_table_[manzu_hash];
+    auto &pinzu = ShantenCalculator::suits_table_[pinzu_hash];
+    auto &souzu = ShantenCalculator::suits_table_[souzu_hash];
+    auto &honors = ShantenCalculator::honors_table_[honors_hash];
 
     int m = 4 - static_cast<int>(hand.melds.size());
 
@@ -139,7 +139,7 @@ std::tuple<int, int64_t> RequiredTileCalculator::calc_regular(const Hand2 &hand)
     return {shanten, wait};
 }
 
-std::tuple<int, int64_t> RequiredTileCalculator::calc_chiitoitsu(const Hand2 &hand)
+std::tuple<int, int64_t> RequiredTileCalculator::calc_chiitoitsu(const Hand &hand)
 {
     int num_pairs = 0;
     int num_types = 0;
@@ -175,7 +175,7 @@ std::tuple<int, int64_t> RequiredTileCalculator::calc_chiitoitsu(const Hand2 &ha
     return {shanten, wait};
 }
 
-std::tuple<int, int64_t> RequiredTileCalculator::calc_kokushimusou(const Hand2 &hand)
+std::tuple<int, int64_t> RequiredTileCalculator::calc_kokushimusou(const Hand &hand)
 {
     static const auto yaochuu_tiles = {
         Tile::Manzu1, Tile::Manzu9, Tile::Pinzu1, Tile::Pinzu9, Tile::Sozu1,
@@ -209,7 +209,7 @@ std::tuple<int, int64_t> RequiredTileCalculator::calc_kokushimusou(const Hand2 &
 }
 
 void RequiredTileCalculator::add1(ResultType &lhs,
-                                  const SyantenCalculator2::TableType &rhs, const int m)
+                                  const ShantenCalculator::TableType &rhs, const int m)
 {
     for (int i = m + 5; i >= 5; --i) {
         ResultType::value_type dist = lhs[i] + rhs[0];
@@ -242,7 +242,7 @@ void RequiredTileCalculator::add1(ResultType &lhs,
 }
 
 void RequiredTileCalculator::add2(ResultType &lhs,
-                                  const SyantenCalculator2::TableType &rhs, const int m)
+                                  const ShantenCalculator::TableType &rhs, const int m)
 {
     int i = m + 5;
     ResultType::value_type dist = lhs[i] + rhs[0];

@@ -1,4 +1,4 @@
-#include "shanten_calculator2.hpp"
+#include "shanten_calculator.hpp"
 
 #include <algorithm> // min, max, copy
 #include <limits>    // numeric_limits
@@ -13,7 +13,7 @@
 namespace mahjong
 {
 
-SyantenCalculator2::SyantenCalculator2()
+ShantenCalculator::ShantenCalculator()
 {
     initialize();
 }
@@ -25,7 +25,7 @@ SyantenCalculator2::SyantenCalculator2()
  * @param[in] type The type of shanten number to calculate
  * @return std::tuple<int, int> (Type of shanten number, shanten number)
  */
-std::tuple<int, int> SyantenCalculator2::calc(const Hand2 &hand, int type)
+std::tuple<int, int> ShantenCalculator::calc(const Hand &hand, int type)
 {
 #ifdef CHECK_ARGUMENT
     if (type < 0 || type > 7) {
@@ -74,14 +74,14 @@ std::tuple<int, int> SyantenCalculator2::calc(const Hand2 &hand, int type)
  *
  * @return Returns true if initialization is successful, otherwise false.
  */
-bool SyantenCalculator2::initialize()
+bool ShantenCalculator::initialize()
 {
     boost::filesystem::path exe_path = boost::dll::program_location().parent_path();
 #ifdef NYANTEN
-    boost::filesystem::path suits_table_path = exe_path / "suits_table5_nyanten.bin";
+    boost::filesystem::path suits_table_path = exe_path / "suits_table_nyanten.bin";
     boost::filesystem::path honors_table_path = exe_path / "honors_table_nyanten.bin";
 #else
-    boost::filesystem::path suits_table_path = exe_path / "suits_table5.bin";
+    boost::filesystem::path suits_table_path = exe_path / "suits_table.bin";
     boost::filesystem::path honors_table_path = exe_path / "honors_table.bin";
 #endif
 
@@ -89,7 +89,7 @@ bool SyantenCalculator2::initialize()
            load_table(honors_table_path.string(), honors_table_);
 }
 
-void SyantenCalculator2::add1(ResultType &lhs, const TableType &rhs, const int m)
+void ShantenCalculator::add1(ResultType &lhs, const TableType &rhs, const int m)
 {
     for (int i = m + 5; i >= 5; --i) {
         int32_t dist = std::min(lhs[i] + rhs[0], lhs[0] + rhs[i]);
@@ -109,7 +109,7 @@ void SyantenCalculator2::add1(ResultType &lhs, const TableType &rhs, const int m
     }
 }
 
-void SyantenCalculator2::add2(ResultType &lhs, const TableType &rhs, const int m)
+void ShantenCalculator::add2(ResultType &lhs, const TableType &rhs, const int m)
 {
     int i = m + 5;
     int32_t dist = std::min(lhs[i] + rhs[0], lhs[0] + rhs[i]);
@@ -120,7 +120,7 @@ void SyantenCalculator2::add2(ResultType &lhs, const TableType &rhs, const int m
     lhs[i] = dist;
 }
 
-int SyantenCalculator2::calc_regular(const Hand2 &hand)
+int ShantenCalculator::calc_regular(const Hand &hand)
 {
     HashType manzu_hash = calc_suits_hash(hand.counts.begin(), hand.counts.begin() + 9);
     HashType pinzu_hash =
@@ -150,7 +150,7 @@ int SyantenCalculator2::calc_regular(const Hand2 &hand)
  * @param[in] hand The hand
  * @return int The shanten number
  */
-int SyantenCalculator2::calc_chiitoitsu(const Hand2 &hand)
+int ShantenCalculator::calc_chiitoitsu(const Hand &hand)
 {
     int num_types = 0;
     int num_pairs = 0;
@@ -169,7 +169,7 @@ int SyantenCalculator2::calc_chiitoitsu(const Hand2 &hand)
  * @param[in] hand The hand
  * @return int The shanten number
  */
-int SyantenCalculator2::calc_kokushimusou(const Hand2 &hand)
+int ShantenCalculator::calc_kokushimusou(const Hand &hand)
 {
     int num_types = 0;
     bool has_toitsu = false;
@@ -183,11 +183,11 @@ int SyantenCalculator2::calc_kokushimusou(const Hand2 &hand)
     return 13 - num_types - has_toitsu;
 }
 
-std::array<SyantenCalculator2::TableType, SyantenCalculator2::SuitsTableSize>
-    SyantenCalculator2::suits_table_;
-std::array<SyantenCalculator2::TableType, SyantenCalculator2::HonorsTableSize>
-    SyantenCalculator2::honors_table_;
+std::array<ShantenCalculator::TableType, ShantenCalculator::SuitsTableSize>
+    ShantenCalculator::suits_table_;
+std::array<ShantenCalculator::TableType, ShantenCalculator::HonorsTableSize>
+    ShantenCalculator::honors_table_;
 
-static SyantenCalculator2 inst;
+static ShantenCalculator inst;
 
 } // namespace mahjong

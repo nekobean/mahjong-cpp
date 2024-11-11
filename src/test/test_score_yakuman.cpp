@@ -20,7 +20,7 @@ using namespace mahjong;
  * @return Returns true if loading is successful, otherwise false.
  */
 bool load_yakuman_cases(const std::string &filename,
-                        std::vector<std::tuple<Hand2, int, bool>> &cases)
+                        std::vector<std::tuple<Hand, int, bool>> &cases)
 {
     cases.clear();
 
@@ -50,7 +50,7 @@ bool load_yakuman_cases(const std::string &filename,
         int win_tile = std::stoi(tokens[14]);
         bool is_valid = tokens[15] == "1";
 
-        Hand2 hand(tiles);
+        Hand hand(tiles);
         hand.manzu = std::accumulate(hand.counts.begin(), hand.counts.begin() + 9, 0,
                                      [](int x, int y) { return x * 8 + y; });
         hand.pinzu = std::accumulate(hand.counts.begin() + 9, hand.counts.begin() + 18,
@@ -70,7 +70,7 @@ TEST_CASE("Ryuuiisou (All Green)")
 {
     ScoreCalculator2 score;
 
-    std::vector<std::tuple<Hand2, int, bool>> cases;
+    std::vector<std::tuple<Hand, int, bool>> cases;
     load_yakuman_cases("test_score_ryuuiisou.txt", cases);
 
     SECTION("Ryuuiisou (All Green)")
@@ -94,7 +94,7 @@ TEST_CASE("Daisangen (Big Three Dragons)")
 {
     ScoreCalculator2 score;
 
-    std::vector<std::tuple<Hand2, int, bool>> cases;
+    std::vector<std::tuple<Hand, int, bool>> cases;
     load_yakuman_cases("test_score_daisangen.txt", cases);
 
     SECTION("Daisangen (Big Three Dragons)")
@@ -118,7 +118,7 @@ TEST_CASE("Shousuushii (Little Four Winds)")
 {
     ScoreCalculator2 score;
 
-    std::vector<std::tuple<Hand2, int, bool>> cases;
+    std::vector<std::tuple<Hand, int, bool>> cases;
     load_yakuman_cases("test_score_syosusi.txt", cases);
 
     SECTION("Shousuushii (Little Four Winds)")
@@ -142,7 +142,7 @@ TEST_CASE("Tsuuiisou (All Honors)")
 {
     ScoreCalculator2 score;
 
-    std::vector<std::tuple<Hand2, int, bool>> cases;
+    std::vector<std::tuple<Hand, int, bool>> cases;
     load_yakuman_cases("test_score_tuiso.txt", cases);
 
     SECTION("Tsuuiisou (All Honors)")
@@ -166,7 +166,7 @@ TEST_CASE("Chuuren Poutou (Nine Gates)")
 {
     ScoreCalculator2 score;
 
-    std::vector<std::tuple<Hand2, int, bool>> cases;
+    std::vector<std::tuple<Hand, int, bool>> cases;
     load_yakuman_cases("test_score_tyurenpoto.txt", cases);
 
     SECTION("Chuuren Poutou (Nine Gates)")
@@ -190,7 +190,7 @@ TEST_CASE("Junsei Chuuren Poutou (Pure Nine Gates)")
 {
     ScoreCalculator2 score;
 
-    std::vector<std::tuple<Hand2, int, bool>> cases;
+    std::vector<std::tuple<Hand, int, bool>> cases;
     load_yakuman_cases("test_score_tyurenpoto9.txt", cases);
 
     SECTION("Junsei Chuuren Poutou (Pure Nine Gates)")
@@ -214,7 +214,7 @@ TEST_CASE("Suuankou (Four Closed Triplets)")
 {
     ScoreCalculator2 score;
 
-    std::vector<std::tuple<Hand2, int, bool>> cases;
+    std::vector<std::tuple<Hand, int, bool>> cases;
     load_yakuman_cases("test_score_suanko.txt", cases);
 
     SECTION("Suuankou (Four Closed Triplets)")
@@ -239,7 +239,7 @@ TEST_CASE("Suuankou Tanki (Four Closed Triplets Single Wait)")
 {
     ScoreCalculator2 score;
 
-    std::vector<std::tuple<Hand2, int, bool>> cases;
+    std::vector<std::tuple<Hand, int, bool>> cases;
     load_yakuman_cases("test_score_suanko_tanki.txt", cases);
 
     SECTION("Suuankou Tanki (Four Closed Triplets)")
@@ -263,7 +263,7 @@ TEST_CASE("Chinroutou (All Terminals)")
 {
     ScoreCalculator2 score;
 
-    std::vector<std::tuple<Hand2, int, bool>> cases;
+    std::vector<std::tuple<Hand, int, bool>> cases;
     load_yakuman_cases("test_score_tinroto.txt", cases);
 
     SECTION("Chinroutou (All Terminals)")
@@ -305,7 +305,7 @@ TEST_CASE("Suukantsu (Four Kongs)")
                             {Tile::Ton, Tile::Ton, Tile::Ton, Tile::Ton},
                             Tile::Ton,
                             PlayerType::Player1});
-        Hand2 hand({Tile::Haku, Tile::Haku}, {block1, block2, block3, block4});
+        Hand hand({Tile::Haku, Tile::Haku}, {block1, block2, block3, block4});
 
         int win_tile = Tile::Haku;
         bool expected = true;
@@ -333,7 +333,7 @@ TEST_CASE("Suukantsu (Four Kongs)")
                             {Tile::Ton, Tile::Ton, Tile::Ton, Tile::Ton},
                             Tile::Ton,
                             PlayerType::Player1});
-        Hand2 hand({Tile::Haku, Tile::Haku}, {block1, block2, block3, block4});
+        Hand hand({Tile::Haku, Tile::Haku}, {block1, block2, block3, block4});
 
         int win_tile = Tile::Haku;
         bool expected = false;
@@ -357,8 +357,8 @@ TEST_CASE("Suukantsu (Four Kongs)")
                             {Tile::Ton, Tile::Ton, Tile::Ton, Tile::Ton},
                             Tile::Ton,
                             PlayerType::Player1});
-        Hand2 hand({Tile::Haku, Tile::Haku, Tile::Tyun, Tile::Tyun, Tile::Tyun},
-                   {block1, block2, block3});
+        Hand hand({Tile::Haku, Tile::Haku, Tile::Tyun, Tile::Tyun, Tile::Tyun},
+                  {block1, block2, block3});
 
         int win_tile = Tile::Haku;
         bool expected = false;
@@ -373,7 +373,7 @@ TEST_CASE("Daisuushii (Big Four Winds)")
 {
     ScoreCalculator2 score;
 
-    std::vector<std::tuple<Hand2, int, bool>> cases;
+    std::vector<std::tuple<Hand, int, bool>> cases;
     load_yakuman_cases("test_score_daisusi.txt", cases);
 
     SECTION("Daisuushii (Big Four Winds)")
@@ -397,7 +397,7 @@ TEST_CASE("Kokushimusou13 (Thirteen Orphans 13-sided wait)")
 {
     ScoreCalculator2 score;
 
-    std::vector<std::tuple<Hand2, int, bool>> cases;
+    std::vector<std::tuple<Hand, int, bool>> cases;
     load_yakuman_cases("test_score_kokusi13.txt", cases);
 
     SECTION("Kokushimusou13 (Thirteen Orphans 13-sided wait)")

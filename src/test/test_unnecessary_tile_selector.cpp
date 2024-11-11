@@ -8,7 +8,7 @@
 #define CATCH_CONFIG_ENABLE_BENCHMARKING
 #include <catch2/catch.hpp>
 
-#include "mahjong/core/shanten_calculator2.hpp"
+#include "mahjong/core/shanten_calculator.hpp"
 #include "mahjong/core/unnecessary_tile_calculator.hpp"
 #include "mahjong/mahjong.hpp"
 
@@ -20,7 +20,7 @@ using namespace mahjong;
  * @param[out] cases Test cases
  * @return Returns true if loading is successful, otherwise false.
  */
-bool load_testcase(std::vector<Hand2> &cases)
+bool load_testcase(std::vector<Hand> &cases)
 {
     cases.clear();
 
@@ -58,7 +58,7 @@ bool load_testcase(std::vector<Hand2> &cases)
 
 TEST_CASE("Unnecessary tile selection of regular hand")
 {
-    std::vector<Hand2> cases;
+    std::vector<Hand> cases;
     if (!load_testcase(cases)) {
         return;
     }
@@ -66,13 +66,13 @@ TEST_CASE("Unnecessary tile selection of regular hand")
     SECTION("Unnecessary tile selection of regular hand")
     {
         for (auto &hand : cases) {
-            int shanten = SyantenCalculator2::calc_regular(hand);
+            int shanten = ShantenCalculator::calc_regular(hand);
 
             std::vector<int> tiles;
             for (int tile = 0; tile < 34; ++tile) {
                 if (hand.counts[tile] > 0) {
                     hand.counts[tile]--;
-                    if (shanten == SyantenCalculator2::calc_regular(hand)) {
+                    if (shanten == ShantenCalculator::calc_regular(hand)) {
                         tiles.push_back(tile);
                     }
                     hand.counts[tile]++;
@@ -97,7 +97,7 @@ TEST_CASE("Unnecessary tile selection of regular hand")
 
 TEST_CASE("Unnecessary tile selection of Chiitoitsu")
 {
-    std::vector<Hand2> cases;
+    std::vector<Hand> cases;
     if (!load_testcase(cases)) {
         return;
     }
@@ -105,13 +105,13 @@ TEST_CASE("Unnecessary tile selection of Chiitoitsu")
     SECTION("Unnecessary tile selection of Chiitoitsu")
     {
         for (auto &hand : cases) {
-            int shanten = SyantenCalculator2::calc_chiitoitsu(hand);
+            int shanten = ShantenCalculator::calc_chiitoitsu(hand);
 
             std::vector<int> tiles;
             for (int tile = 0; tile < 34; ++tile) {
                 if (hand.counts[tile] > 0) {
                     hand.counts[tile]--;
-                    if (shanten == SyantenCalculator2::calc_chiitoitsu(hand)) {
+                    if (shanten == ShantenCalculator::calc_chiitoitsu(hand)) {
                         tiles.push_back(tile);
                     }
                     hand.counts[tile]++;
@@ -137,7 +137,7 @@ TEST_CASE("Unnecessary tile selection of Chiitoitsu")
 
 TEST_CASE("Unnecessary tile selection of Kokushimusou")
 {
-    std::vector<Hand2> cases;
+    std::vector<Hand> cases;
     if (!load_testcase(cases)) {
         return;
     }
@@ -145,13 +145,13 @@ TEST_CASE("Unnecessary tile selection of Kokushimusou")
     SECTION("Unnecessary tile selection of Kokushimusou")
     {
         for (auto &hand : cases) {
-            int shanten = SyantenCalculator2::calc_kokushimusou(hand);
+            int shanten = ShantenCalculator::calc_kokushimusou(hand);
 
             std::vector<int> tiles;
             for (int tile = 0; tile < 34; ++tile) {
                 if (hand.counts[tile] > 0) {
                     hand.counts[tile]--;
-                    if (shanten == SyantenCalculator2::calc_kokushimusou(hand)) {
+                    if (shanten == ShantenCalculator::calc_kokushimusou(hand)) {
                         tiles.push_back(tile);
                     }
                     hand.counts[tile]++;
@@ -177,7 +177,7 @@ TEST_CASE("Unnecessary tile selection of Kokushimusou")
 
 TEST_CASE("Unnecessary tile selection")
 {
-    std::vector<Hand2> cases;
+    std::vector<Hand> cases;
     if (!load_testcase(cases)) {
         return;
     }
@@ -185,13 +185,13 @@ TEST_CASE("Unnecessary tile selection")
     SECTION("Unnecessary tile selection")
     {
         for (auto &hand : cases) {
-            auto [type, shanten] = SyantenCalculator2::calc(hand);
+            auto [type, shanten] = ShantenCalculator::calc(hand);
 
             std::vector<int> tiles;
             for (int tile = 0; tile < 34; ++tile) {
                 if (hand.counts[tile] > 0) {
                     hand.counts[tile]--;
-                    auto [type_after, shanten_after] = SyantenCalculator2::calc(hand);
+                    auto [type_after, shanten_after] = ShantenCalculator::calc(hand);
                     if (shanten == shanten_after) {
                         tiles.push_back(tile);
                     }

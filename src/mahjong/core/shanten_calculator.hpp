@@ -35,7 +35,7 @@ static inline std::map<int, std::string> Name = {
 /**
  * @brief Class for calculating Shanten number
  */
-class SyantenCalculator2
+class ShantenCalculator
 {
     // The table size is the maximum hash value + 1
     static const size_t SuitsTableSize = 1943751;
@@ -46,14 +46,14 @@ class SyantenCalculator2
     using TableType = std::array<int32_t, 30>;
     using HashType = uint32_t;
 
-    SyantenCalculator2();
+    ShantenCalculator();
     static std::tuple<int, int>
-    calc(const Hand2 &hand, int type = ShantenType::Regular | ShantenType::Chiitoitsu |
-                                       ShantenType::Kokushimusou);
+    calc(const Hand &hand, int type = ShantenType::Regular | ShantenType::Chiitoitsu |
+                                      ShantenType::Kokushimusou);
     static bool initialize();
-    static int calc_regular(const Hand2 &hand);
-    static int calc_chiitoitsu(const Hand2 &hand);
-    static int calc_kokushimusou(const Hand2 &hand);
+    static int calc_regular(const Hand &hand);
+    static int calc_chiitoitsu(const Hand &hand);
+    static int calc_kokushimusou(const Hand &hand);
     template <typename ForwardIterator>
     static HashType calc_suits_hash(ForwardIterator first, ForwardIterator last);
     template <typename ForwardIterator>
@@ -80,8 +80,8 @@ class SyantenCalculator2
  * @return true if loading is successful, otherwise false
  */
 template <size_t TableSize>
-bool SyantenCalculator2::load_table(const std::string &filepath,
-                                    std::array<TableType, TableSize> &table)
+bool ShantenCalculator::load_table(const std::string &filepath,
+                                   std::array<TableType, TableSize> &table)
 {
     std::ifstream file(filepath, std::ios::binary);
     if (!file) {
@@ -115,8 +115,8 @@ bool SyantenCalculator2::load_table(const std::string &filepath,
  * @return The hash value for suits
  */
 template <typename ForwardIterator>
-inline SyantenCalculator2::HashType
-SyantenCalculator2::calc_suits_hash(ForwardIterator first, ForwardIterator last)
+inline ShantenCalculator::HashType
+ShantenCalculator::calc_suits_hash(ForwardIterator first, ForwardIterator last)
 {
 #ifdef NYANTEN
     HashType h = 0u;
@@ -145,8 +145,8 @@ SyantenCalculator2::calc_suits_hash(ForwardIterator first, ForwardIterator last)
  * @return The hash value for suits
  */
 template <typename ForwardIterator>
-inline SyantenCalculator2::HashType
-SyantenCalculator2::calc_honors_hash(ForwardIterator first, ForwardIterator last)
+inline ShantenCalculator::HashType
+ShantenCalculator::calc_honors_hash(ForwardIterator first, ForwardIterator last)
 {
 #ifdef NYANTEN
     HashType h = 0u;

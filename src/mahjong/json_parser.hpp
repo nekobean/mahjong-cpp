@@ -12,7 +12,7 @@ struct RequestData
     int turn;
     int syanten_type;
     std::vector<int> dora_indicators;
-    mahjong::Hand2 hand;
+    mahjong::Hand hand;
     int flag;
     std::string ip;
     std::string version;
