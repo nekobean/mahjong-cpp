@@ -281,7 +281,7 @@ bool write_file(const std::string &filename, const std::map<HashType, ValueType>
 void create_shanten_table()
 {
     std::cout << "Creating suits table..." << std::endl;
-#ifdef NYANTEN
+#ifdef USE_NYANTEN_TABLE
     boost::filesystem::path suits_table_path =
         boost::filesystem::path(CMAKE_CONFIG_DIR) / "suits_table5_nyanten.bin";
 #else
@@ -296,7 +296,7 @@ void create_shanten_table()
     std::cout << "suits win patterns: " << suits_win_patterns.size() << std::endl;
 
     std::cout << "Creating honors table..." << std::endl;
-#ifdef NYANTEN
+#ifdef USE_NYANTEN_TABLE
     boost::filesystem::path honors_table_path =
         boost::filesystem::path(CMAKE_CONFIG_DIR) / "honors_table_nyanten.bin";
 #else

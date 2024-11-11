@@ -1,5 +1,5 @@
-#ifndef MAHJONG_CPP_HAND2
-#define MAHJONG_CPP_HAND2
+#ifndef MAHJONG_CPP_HAND
+#define MAHJONG_CPP_HAND
 
 #include <algorithm>
 #include <iostream>

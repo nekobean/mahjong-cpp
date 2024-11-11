@@ -77,7 +77,7 @@ std::tuple<int, int> ShantenCalculator::calc(const Hand &hand, int type)
 bool ShantenCalculator::initialize()
 {
     boost::filesystem::path exe_path = boost::dll::program_location().parent_path();
-#ifdef NYANTEN
+#ifdef USE_NYANTEN_TABLE
     boost::filesystem::path suits_table_path = exe_path / "suits_table_nyanten.bin";
     boost::filesystem::path honors_table_path = exe_path / "honors_table_nyanten.bin";
 #else

@@ -1,5 +1,5 @@
-#ifndef MAHJONG_CPP_SHANTEN_CALCULATOR2
-#define MAHJONG_CPP_SHANTEN_CALCULATOR2
+#ifndef MAHJONG_CPP_SHANTEN_CALCULATOR
+#define MAHJONG_CPP_SHANTEN_CALCULATOR
 
 #include <array>
 #include <cstdint>
@@ -10,34 +10,34 @@
 
 namespace mahjong
 {
-//#define NYANTEN
+//#define USE_NYANTEN_TABLE
 
 /**
- * @brief Types of Shanten numbers
+ * @brief Types of shanten numbers
  */
 namespace ShantenType
 {
 enum
 {
     Null = 0,
-    Regular = 1,     /* Shanten number for regular form (一般形の向聴数) */
-    Chiitoitsu = 2,  /* Shanten number for Chiitoitsu (七対子の向聴数) */
-    Kokushimusou = 4 /* Shanten number for Kokushimusou (国士無双の向聴数) */
+    Regular = 1,     /* Shanten number of regular form (一般形の向聴数) */
+    Chiitoitsu = 2,  /* Shanten number of Chiitoitsu (七対子の向聴数) */
+    Kokushimusou = 4 /* Shanten number of Kokushimusou (国士無双の向聴数) */
 };
 
 static inline std::map<int, std::string> Name = {
-    {ShantenType::Regular, "通常"},
-    {ShantenType::Chiitoitsu, "七対子"},
-    {ShantenType::Kokushimusou, "国士無双"},
+    {Regular, "Regular"},
+    {Chiitoitsu, "Chiitoitsu"},
+    {Kokushimusou, "Kokushimusou"},
 };
 }; // namespace ShantenType
 
 /**
- * @brief Class for calculating Shanten number
+ * @brief Class for calculating shanten number
  */
 class ShantenCalculator
 {
-    // The table size is the maximum hash value + 1
+    // table size is the maximum hash value + 1
     static const size_t SuitsTableSize = 1943751;
     static const size_t HonorsTableSize = 77751;
     using ResultType = std::array<int32_t, 30>;
@@ -118,7 +118,7 @@ template <typename ForwardIterator>
 inline ShantenCalculator::HashType
 ShantenCalculator::calc_suits_hash(ForwardIterator first, ForwardIterator last)
 {
-#ifdef NYANTEN
+#ifdef USE_NYANTEN_TABLE
     HashType h = 0u;
     {
         std::uint_fast8_t i = 0u;
@@ -148,7 +148,7 @@ template <typename ForwardIterator>
 inline ShantenCalculator::HashType
 ShantenCalculator::calc_honors_hash(ForwardIterator first, ForwardIterator last)
 {
-#ifdef NYANTEN
+#ifdef USE_NYANTEN_TABLE
     HashType h = 0u;
     {
         std::uint_fast8_t i = 0u;

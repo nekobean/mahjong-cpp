@@ -1,7 +1,8 @@
 #ifndef MAHJONG_CPP_SCORE_CALCULATOR
 #define MAHJONG_CPP_SCORE_CALCULATOR
 
-#include <utility>
+#include <map>
+#include <vector>
 
 #include "mahjong/types/types.hpp"
 
@@ -11,7 +12,7 @@ namespace mahjong
 /**
  * @brief ルールに関するフラグ
  */
-namespace RuleFlag2
+namespace RuleFlag
 {
 enum
 {
@@ -22,7 +23,7 @@ enum
 
 static inline const std::map<int, std::string> Name = {
     {Null, "Null"}, {AkaDora, "赤ドラ有り"}, {OpenTanyao, "喰い断有り"}};
-} // namespace RuleFlag2
+} // namespace RuleFlag
 
 /**
  * @brief 点数計算機
@@ -39,7 +40,7 @@ class ScoreCalculator2
     std::vector<int> get_scores_for_exp(const Result &result);
 
     /* パラメータを設定・取得する関数 */
-    void set_rules(int rule = RuleFlag2::Null);
+    void set_rules(int rule = RuleFlag::Null);
     void set_rule(int rule, bool enabled);
     int rules() const;
 

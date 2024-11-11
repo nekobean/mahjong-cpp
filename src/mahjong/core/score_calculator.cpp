@@ -16,7 +16,7 @@ namespace mahjong
  * @brief 点数計算機を作成する。
  */
 ScoreCalculator2::ScoreCalculator2()
-    : rules_(RuleFlag2::AkaDora | RuleFlag2::OpenTanyao)
+    : rules_(RuleFlag::AkaDora | RuleFlag::OpenTanyao)
     , bakaze_(Tile::Ton)
     , zikaze_(Tile::Ton)
     , n_tumibo_(0)
@@ -326,7 +326,7 @@ Result ScoreCalculator2::aggregate(const Hand &hand, int win_tile, int flag,
         han += n_uradora;
     }
 
-    if (rules_ & RuleFlag2::AkaDora) {
+    if (rules_ & RuleFlag::AkaDora) {
         int num_reddora = count_reddora(hand);
         if (num_reddora) {
             yaku_han_list.emplace_back(Yaku::AkaDora, num_reddora);
@@ -1110,7 +1110,7 @@ bool ScoreCalculator2::check_kokushimusou13(const Hand &hand, int win_tile) cons
  */
 bool ScoreCalculator2::check_tanyao(const Hand &hand) const
 {
-    if (!(rules_ & RuleFlag2::OpenTanyao) && !hand.is_closed()) {
+    if (!(rules_ & RuleFlag::OpenTanyao) && !hand.is_closed()) {
         return false; // If Open Tanyao is not allowed, closed hand only
     }
 
