@@ -8,82 +8,230 @@
 #define CATCH_CONFIG_ENABLE_BENCHMARKING
 #include <catch2/catch.hpp>
 
+#include "mahjong/core/required_tile_calculator.hpp"
+#include "mahjong/core/shanten_calculator2.hpp"
 #include "mahjong/mahjong.hpp"
 
 using namespace mahjong;
 
 /**
- * @brief テストケースを読み込む。
+ * @brief Load test cases.
  *
- * @param[out] cases テストケース
- * @return 読み込みに成功した場合は true、そうでない場合は false を返す。
+ * @param[out] cases Test cases
+ * @return Returns true if loading is successful, otherwise false.
  */
-bool load_testcase(std::vector<Hand> &cases)
+bool load_testcase(std::vector<Hand2> &cases)
 {
     cases.clear();
 
-    boost::filesystem::path path =
-        boost::filesystem::path(CMAKE_TESTCASE_DIR) / "test_unnecessary_tile_selector.txt";
+    boost::filesystem::path path = boost::filesystem::path(CMAKE_TESTCASE_DIR) /
+                                   "test_unnecessary_tile_selector.txt";
 
-    // ファイルを開く。
     std::ifstream ifs(path.string());
     if (!ifs) {
         std::cerr << "Failed to open " << path.string() << "." << std::endl;
         return false;
     }
 
-    // ファイルを読み込む。
-    // 形式は `<牌1> <牌2> ... <牌14>`
+    // The format is `<tile1> <tile2> ... <tile14>`
     std::string line;
     while (std::getline(ifs, line)) {
+        if (line.empty()) {
+            continue;
+        }
+
         std::vector<std::string> tokens;
         boost::split(tokens, line, boost::is_any_of(" "));
 
         std::vector<int> tiles(14);
-        for (int i = 0; i < 14; ++i)
+        for (int i = 0; i < 14; ++i) {
             tiles[i] = std::stoi(tokens[i]);
+        }
 
         cases.emplace_back(tiles);
     }
 
+    spdlog::info("{} testcases loaded.", cases.size());
+
     return true;
 }
 
-TEST_CASE("一般手の有効牌を選択する")
+TEST_CASE("Required tile selection of regular hand")
 {
-    std::vector<Hand> cases;
-    if (!load_testcase(cases))
+    std::vector<Hand2> cases;
+    if (!load_testcase(cases)) {
         return;
+    }
 
-    BENCHMARK("一般手の有効牌を選択する")
+    SECTION("Required tile selection of regular hand")
     {
-        for (const auto &hand : cases)
-            RequiredTileSelector::select_normal(hand);
+        double avg_tiles = 0;
+        for (auto &hand : cases) {
+            int shanten = SyantenCalculator2::calc_regular(hand);
+
+            std::vector<int> tiles;
+            for (int tile = 0; tile < 34; ++tile) {
+                if (hand.counts[tile] == 4) {
+                    continue;
+                }
+
+                hand.counts[tile]++;
+                if (shanten > SyantenCalculator2::calc_regular(hand)) {
+                    tiles.push_back(tile);
+                }
+                hand.counts[tile]--;
+            }
+
+            auto [shanten2, tiles2] = RequiredTileCalculator::select_regular(hand);
+            avg_tiles += tiles.size();
+
+            INFO(fmt::format("手牌: {}", hand.to_string()));
+            REQUIRE(shanten == shanten2);
+            REQUIRE(tiles == tiles2);
+        }
+
+        spdlog::info("Average number of tiles: {}", avg_tiles / cases.size());
+    };
+
+    BENCHMARK("Required tile selection of regular hand")
+    {
+        for (const auto &hand : cases) {
+            RequiredTileCalculator::select_regular(hand);
+        }
     };
 }
 
-TEST_CASE("七対子手の有効牌を選択する")
+TEST_CASE("Required tile selection of Chiitoitsu")
 {
-    std::vector<Hand> cases;
-    if (!load_testcase(cases))
+    std::vector<Hand2> cases;
+    if (!load_testcase(cases)) {
         return;
+    }
 
-    BENCHMARK("七対子手の有効牌を選択する")
+    SECTION("Required tile selection of Chiitoitsu")
     {
-        for (const auto &hand : cases)
-            RequiredTileSelector::select_tiitoi(hand);
+        double avg_tiles = 0;
+        for (auto &hand : cases) {
+            int shanten = SyantenCalculator2::calc_chiitoitsu(hand);
+
+            std::vector<int> tiles;
+            for (int tile = 0; tile < 34; ++tile) {
+                if (hand.counts[tile] == 4) {
+                    continue;
+                }
+
+                hand.counts[tile]++;
+                if (shanten > SyantenCalculator2::calc_chiitoitsu(hand)) {
+                    tiles.push_back(tile);
+                }
+                hand.counts[tile]--;
+            }
+
+            auto [shanten2, tiles2] = RequiredTileCalculator::select_chiitoitsu(hand);
+            avg_tiles += tiles.size();
+
+            INFO(fmt::format("手牌: {}", hand.to_string()));
+            REQUIRE(shanten == shanten2);
+            REQUIRE(tiles == tiles2);
+        }
+
+        spdlog::info("Average number of tiles: {}", avg_tiles / cases.size());
+    };
+
+    BENCHMARK("Required tile selection of Chiitoitsu")
+    {
+        for (const auto &hand : cases) {
+            RequiredTileCalculator::select_chiitoitsu(hand);
+        }
     };
 }
 
-TEST_CASE("国士手の有効牌を選択する")
+TEST_CASE("Required tile selection of Kokushimusou")
 {
-    std::vector<Hand> cases;
-    if (!load_testcase(cases))
+    std::vector<Hand2> cases;
+    if (!load_testcase(cases)) {
         return;
+    }
 
-    BENCHMARK("国士手の有効牌を選択する")
+    SECTION("Required tile selection of Kokushimusou")
     {
-        for (const auto &hand : cases)
-            RequiredTileSelector::select_kokusi(hand);
+        double avg_tiles = 0;
+        for (auto &hand : cases) {
+            int shanten = SyantenCalculator2::calc_kokushimusou(hand);
+
+            std::vector<int> tiles;
+            for (int tile : {Tile::Manzu1, Tile::Manzu9, Tile::Pinzu1, Tile::Pinzu9,
+                             Tile::Sozu1, Tile::Sozu9, Tile::Ton, Tile::Nan, Tile::Sya,
+                             Tile::Pe, Tile::Haku, Tile::Hatu, Tile::Tyun}) {
+                if (hand.counts[tile] == 4) {
+                    continue;
+                }
+
+                hand.counts[tile]++;
+                if (shanten > SyantenCalculator2::calc_kokushimusou(hand)) {
+                    tiles.push_back(tile);
+                }
+                hand.counts[tile]--;
+            }
+
+            auto [shanten2, tiles2] = RequiredTileCalculator::select_kokushimusou(hand);
+            avg_tiles += tiles.size();
+
+            INFO(fmt::format("手牌: {}", hand.to_string()));
+            REQUIRE(shanten == shanten2);
+            REQUIRE(tiles == tiles2);
+        }
+
+        spdlog::info("Average number of tiles: {}", avg_tiles / cases.size());
+    };
+
+    BENCHMARK("Required tile selection of Kokushimusou")
+    {
+        for (const auto &hand : cases) {
+            RequiredTileCalculator::select_kokushimusou(hand);
+        }
+    };
+}
+
+TEST_CASE("Required tile selection")
+{
+    std::vector<Hand2> cases;
+    if (!load_testcase(cases)) {
+        return;
+    }
+
+    SECTION("Required tile selection")
+    {
+        for (auto &hand : cases) {
+            auto [type, shanten] = SyantenCalculator2::calc(hand);
+
+            std::vector<int> tiles;
+            for (int tile = 0; tile < 34; ++tile) {
+                if (hand.counts[tile] == 4) {
+                    continue;
+                }
+
+                hand.counts[tile]++;
+                auto [type_after, shanten_after] = SyantenCalculator2::calc(hand);
+                if (shanten_after < shanten) {
+                    tiles.push_back(tile);
+                }
+                hand.counts[tile]--;
+            }
+
+            auto [type2, shanten2, tiles2] = RequiredTileCalculator::select(hand);
+
+            INFO(fmt::format("手牌: {}", hand.to_string()));
+            REQUIRE(type == type2);
+            REQUIRE(shanten == shanten2);
+            REQUIRE(tiles == tiles2);
+        }
+    };
+
+    BENCHMARK("Required tile selection")
+    {
+        for (const auto &hand : cases) {
+            RequiredTileCalculator::select(hand);
+        }
     };
 }

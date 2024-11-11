@@ -12,7 +12,7 @@ struct RequestData
     int turn;
     int syanten_type;
     std::vector<int> dora_indicators;
-    mahjong::Hand hand;
+    mahjong::Hand2 hand;
     int flag;
     std::string ip;
     std::string version;
@@ -48,11 +48,14 @@ std::string to_json_str(rapidjson::Value &value);
 std::string to_json_str(rapidjson::Document &doc);
 rapidjson::Value dump_required_tiles(const std::vector<std::tuple<int, int>> &tiles,
                                      rapidjson::Document &doc);
-rapidjson::Value dump_candidate(const mahjong::Candidate &candidate, rapidjson::Document &doc);
+rapidjson::Value dump_candidate(const mahjong::Candidate &candidate,
+                                rapidjson::Document &doc);
 DrawResponseData create_draw_response(const RequestData &req);
 DiscardResponseData create_discard_response(const RequestData &req);
-rapidjson::Value dump_draw_response(const DrawResponseData &res, rapidjson::Document &doc);
-rapidjson::Value dump_discard_response(const DiscardResponseData &res, rapidjson::Document &doc);
+rapidjson::Value dump_draw_response(const DrawResponseData &res,
+                                    rapidjson::Document &doc);
+rapidjson::Value dump_discard_response(const DiscardResponseData &res,
+                                       rapidjson::Document &doc);
 rapidjson::Value create_response(const RequestData &req, rapidjson::Document &doc);
 
 #endif // JSON_PARSER

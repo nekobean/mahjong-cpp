@@ -8,82 +8,210 @@
 #define CATCH_CONFIG_ENABLE_BENCHMARKING
 #include <catch2/catch.hpp>
 
+#include "mahjong/core/shanten_calculator2.hpp"
+#include "mahjong/core/unnecessary_tile_calculator.hpp"
 #include "mahjong/mahjong.hpp"
 
 using namespace mahjong;
 
 /**
- * @brief テストケースを読み込む。
+ * @brief Load test cases.
  *
- * @param[out] cases テストケース
- * @return 読み込みに成功した場合は true、そうでない場合は false を返す。
+ * @param[out] cases Test cases
+ * @return Returns true if loading is successful, otherwise false.
  */
-bool load_testcase(std::vector<Hand> &cases)
+bool load_testcase(std::vector<Hand2> &cases)
 {
     cases.clear();
 
-    boost::filesystem::path path =
-        boost::filesystem::path(CMAKE_TESTCASE_DIR) / "test_unnecessary_tile_selector.txt";
+    boost::filesystem::path path = boost::filesystem::path(CMAKE_TESTCASE_DIR) /
+                                   "test_unnecessary_tile_selector.txt";
 
-    // ファイルを開く。
     std::ifstream ifs(path.string());
     if (!ifs) {
         std::cerr << "Failed to open " << path.string() << "." << std::endl;
         return false;
     }
 
-    // ファイルを読み込む。
-    // 形式は `<牌1> <牌2> ... <牌14>`
+    // The format is `<tile1> <tile2> ... <tile14>`
     std::string line;
     while (std::getline(ifs, line)) {
+        if (line.empty()) {
+            continue;
+        }
+
         std::vector<std::string> tokens;
         boost::split(tokens, line, boost::is_any_of(" "));
 
         std::vector<int> tiles(14);
-        for (int i = 0; i < 14; ++i)
+        for (int i = 0; i < 14; ++i) {
             tiles[i] = std::stoi(tokens[i]);
+        }
 
         cases.emplace_back(tiles);
     }
 
+    spdlog::info("{} testcases loaded.", cases.size());
+
     return true;
 }
 
-TEST_CASE("一般手の不要牌を選択する")
+TEST_CASE("Unnecessary tile selection of regular hand")
 {
-    std::vector<Hand> cases;
-    if (!load_testcase(cases))
+    std::vector<Hand2> cases;
+    if (!load_testcase(cases)) {
         return;
+    }
 
-    BENCHMARK("一般手の不要牌を選択する")
+    SECTION("Unnecessary tile selection of regular hand")
     {
-        for (const auto &hand : cases)
-            UnnecessaryTileSelector::select_normal(hand);
+        for (auto &hand : cases) {
+            int shanten = SyantenCalculator2::calc_regular(hand);
+
+            std::vector<int> tiles;
+            for (int tile = 0; tile < 34; ++tile) {
+                if (hand.counts[tile] > 0) {
+                    hand.counts[tile]--;
+                    if (shanten == SyantenCalculator2::calc_regular(hand)) {
+                        tiles.push_back(tile);
+                    }
+                    hand.counts[tile]++;
+                }
+            }
+
+            auto [shanten2, tiles2] = UnnecessaryTileCalculator::select_regular(hand);
+
+            INFO(fmt::format("手牌: {}", hand.to_string()));
+            REQUIRE(shanten == shanten2);
+            REQUIRE(tiles == tiles2);
+        }
+    };
+
+    BENCHMARK("Unnecessary tile selection of regular hand")
+    {
+        for (const auto &hand : cases) {
+            UnnecessaryTileCalculator::select_regular(hand);
+        }
     };
 }
 
-TEST_CASE("七対子手の不要牌を選択する")
+TEST_CASE("Unnecessary tile selection of Chiitoitsu")
 {
-    std::vector<Hand> cases;
-    if (!load_testcase(cases))
+    std::vector<Hand2> cases;
+    if (!load_testcase(cases)) {
         return;
+    }
 
-    BENCHMARK("七対子手の不要牌を選択する")
+    SECTION("Unnecessary tile selection of Chiitoitsu")
     {
-        for (const auto &hand : cases)
-            UnnecessaryTileSelector::select_tiitoi(hand);
+        for (auto &hand : cases) {
+            int shanten = SyantenCalculator2::calc_chiitoitsu(hand);
+
+            std::vector<int> tiles;
+            for (int tile = 0; tile < 34; ++tile) {
+                if (hand.counts[tile] > 0) {
+                    hand.counts[tile]--;
+                    if (shanten == SyantenCalculator2::calc_chiitoitsu(hand)) {
+                        tiles.push_back(tile);
+                    }
+                    hand.counts[tile]++;
+                }
+            }
+
+            auto [shanten2, tiles2] =
+                UnnecessaryTileCalculator::select_chiitoitsu(hand);
+
+            INFO(fmt::format("手牌: {}", hand.to_string()));
+            REQUIRE(shanten == shanten2);
+            REQUIRE(tiles == tiles2);
+        }
+    };
+
+    BENCHMARK("Unnecessary tile selection of Chiitoitsu")
+    {
+        for (const auto &hand : cases) {
+            UnnecessaryTileCalculator::select_chiitoitsu(hand);
+        }
     };
 }
 
-TEST_CASE("国士手の不要牌を選択する")
+TEST_CASE("Unnecessary tile selection of Kokushimusou")
 {
-    std::vector<Hand> cases;
-    if (!load_testcase(cases))
+    std::vector<Hand2> cases;
+    if (!load_testcase(cases)) {
         return;
+    }
 
-    BENCHMARK("国士手の不要牌を選択する")
+    SECTION("Unnecessary tile selection of Kokushimusou")
     {
-        for (const auto &hand : cases)
-            UnnecessaryTileSelector::select_kokusi(hand);
+        for (auto &hand : cases) {
+            int shanten = SyantenCalculator2::calc_kokushimusou(hand);
+
+            std::vector<int> tiles;
+            for (int tile = 0; tile < 34; ++tile) {
+                if (hand.counts[tile] > 0) {
+                    hand.counts[tile]--;
+                    if (shanten == SyantenCalculator2::calc_kokushimusou(hand)) {
+                        tiles.push_back(tile);
+                    }
+                    hand.counts[tile]++;
+                }
+            }
+
+            auto [shanten2, tiles2] =
+                UnnecessaryTileCalculator::select_kokushimusou(hand);
+
+            INFO(fmt::format("手牌: {}", hand.to_string()));
+            REQUIRE(shanten == shanten2);
+            REQUIRE(tiles == tiles2);
+        }
+    };
+
+    BENCHMARK("Unnecessary tile selection of Kokushimusou")
+    {
+        for (const auto &hand : cases) {
+            UnnecessaryTileCalculator::select_kokushimusou(hand);
+        }
+    };
+}
+
+TEST_CASE("Unnecessary tile selection")
+{
+    std::vector<Hand2> cases;
+    if (!load_testcase(cases)) {
+        return;
+    }
+
+    SECTION("Unnecessary tile selection")
+    {
+        for (auto &hand : cases) {
+            auto [type, shanten] = SyantenCalculator2::calc(hand);
+
+            std::vector<int> tiles;
+            for (int tile = 0; tile < 34; ++tile) {
+                if (hand.counts[tile] > 0) {
+                    hand.counts[tile]--;
+                    auto [type_after, shanten_after] = SyantenCalculator2::calc(hand);
+                    if (shanten == shanten_after) {
+                        tiles.push_back(tile);
+                    }
+                    hand.counts[tile]++;
+                }
+            }
+
+            auto [type2, shanten2, tiles2] = UnnecessaryTileCalculator::select(hand);
+
+            INFO(fmt::format("手牌: {}", hand.to_string()));
+            REQUIRE(type == type2);
+            REQUIRE(shanten == shanten2);
+            REQUIRE(tiles == tiles2);
+        }
+    };
+
+    BENCHMARK("Unnecessary tile selection")
+    {
+        for (const auto &hand : cases) {
+            UnnecessaryTileCalculator::select(hand);
+        }
     };
 }

@@ -8,6 +8,9 @@
 #include <rapidjson/prettywriter.h>
 #include <rapidjson/stringbuffer.h>
 
+#include "mahjong/core/score_calculator.hpp"
+#include "mahjong/core/shanten_calculator2.hpp"
+
 using namespace mahjong;
 
 /**
@@ -77,7 +80,7 @@ RequestData parse_request(const rapidjson::Value &doc)
 
         melds.emplace_back(meld_type, tiles, discarded_tile, from);
     }
-    req.hand = Hand(hand_tiles, melds);
+    req.hand = Hand2(hand_tiles, melds);
 
     if (doc.HasMember("ip"))
         req.ip = doc["ip"].GetString();
@@ -200,7 +203,7 @@ rapidjson::Value dump_candidate(const Candidate &candidate, rapidjson::Document 
  */
 DrawResponseData create_draw_response(const RequestData &req)
 {
-    ScoreCalculator score_calc;
+    ScoreCalculator2 score_calc;
     ExpectedValueCalculator exp_value_calc;
 
     auto begin = std::chrono::steady_clock::now();
@@ -233,11 +236,11 @@ DrawResponseData create_draw_response(const RequestData &req)
     res.tenpai_probs = candidates.front().tenpai_probs;
     res.win_probs = candidates.front().win_probs;
     res.exp_values = candidates.front().exp_values;
-    auto [_, syanten] = SyantenCalculator::calc(req.hand, req.syanten_type);
+    auto [_, syanten] = SyantenCalculator2::calc(req.hand, req.syanten_type);
     res.syanten = syanten;
-    res.normal_syanten = SyantenCalculator::calc_normal(req.hand);
-    res.tiitoi_syanten = SyantenCalculator::calc_tiitoi(req.hand);
-    res.kokusi_syanten = SyantenCalculator::calc_kokusi(req.hand);
+    res.normal_syanten = SyantenCalculator2::calc_regular(req.hand);
+    res.tiitoi_syanten = SyantenCalculator2::calc_chiitoitsu(req.hand);
+    res.kokusi_syanten = SyantenCalculator2::calc_kokushimusou(req.hand);
     res.time_us = elapsed_us;
 
     return res;
@@ -251,7 +254,7 @@ DrawResponseData create_draw_response(const RequestData &req)
  */
 DiscardResponseData create_discard_response(const RequestData &req)
 {
-    ScoreCalculator score_calc;
+    ScoreCalculator2 score_calc;
     ExpectedValueCalculator exp_value_calc;
 
     auto begin = std::chrono::steady_clock::now();
@@ -280,11 +283,11 @@ DiscardResponseData create_discard_response(const RequestData &req)
         std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
 
     DiscardResponseData res;
-    auto [_, syanten] = SyantenCalculator::calc(req.hand, req.syanten_type);
+    auto [_, syanten] = SyantenCalculator2::calc(req.hand, req.syanten_type);
     res.syanten = syanten;
-    res.normal_syanten = SyantenCalculator::calc_normal(req.hand);
-    res.tiitoi_syanten = SyantenCalculator::calc_tiitoi(req.hand);
-    res.kokusi_syanten = SyantenCalculator::calc_kokusi(req.hand);
+    res.normal_syanten = SyantenCalculator2::calc_regular(req.hand);
+    res.tiitoi_syanten = SyantenCalculator2::calc_chiitoitsu(req.hand);
+    res.kokusi_syanten = SyantenCalculator2::calc_kokushimusou(req.hand);
     res.time_us = elapsed_us;
     res.candidates = candidates;
 

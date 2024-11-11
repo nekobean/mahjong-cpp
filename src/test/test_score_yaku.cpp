@@ -10,6 +10,7 @@
 #define CATCH_CONFIG_ENABLE_BENCHMARKING
 #include <catch2/catch.hpp>
 
+#include "mahjong/core/score_calculator.hpp"
 #include "mahjong/mahjong.hpp"
 
 using namespace mahjong;
@@ -25,7 +26,7 @@ struct TestCase
     std::vector<int> uradora_tiles;
 
     // 入力
-    Hand hand;
+    Hand2 hand;
     int win_tile;
     int flag;
 
@@ -104,7 +105,7 @@ bool load_cases(const std::string &filename, std::vector<TestCase> &cases)
             melded_blocks.push_back(melded_block);
         }
 
-        testcase.hand = Hand(tiles, melded_blocks);
+        testcase.hand = Hand2(tiles, melded_blocks);
         testcase.win_tile = v["win_tile"].GetInt();
         testcase.flag = v["flag"].GetInt();
 
@@ -135,6 +136,8 @@ bool load_cases(const std::string &filename, std::vector<TestCase> &cases)
     fclose(fp);
     delete buffer;
 
+    spdlog::info("Loaded {} test cases.", cases.size());
+
     return true;
 }
 
@@ -144,25 +147,7 @@ TEST_CASE("一般役の点数計算")
     if (!load_cases("test_score_normal_yaku.json", cases))
         return;
 
-    ScoreCalculator score;
-
-    BENCHMARK("一般役の点数計算")
-    {
-        for (const auto &testcase : cases) {
-            // 設定
-            score.set_bakaze(testcase.bakaze);
-            score.set_zikaze(testcase.zikaze);
-            score.set_num_tumibo(testcase.num_tumibo);
-            score.set_num_kyotakubo(testcase.num_kyotakubo);
-            score.set_dora_tiles(testcase.dora_tiles);
-            score.set_uradora_tiles(testcase.uradora_tiles);
-            score.set_rule(RuleFlag::AkaDora, testcase.enable_akadora);
-            score.set_rule(RuleFlag::OpenTanyao, testcase.enable_kuitan);
-
-            // 計算
-            Result ret = score.calc(testcase.hand, testcase.win_tile, testcase.flag);
-        }
-    };
+    ScoreCalculator2 score;
 
     SECTION("一般役の点数計算")
     {
@@ -178,28 +163,49 @@ TEST_CASE("一般役の点数計算")
             score.set_rule(RuleFlag::OpenTanyao, testcase.enable_kuitan);
 
             // 計算
-            Result ret = score.calc(testcase.hand, testcase.win_tile, testcase.flag);
+            Result2 ret = score.calc(testcase.hand, testcase.win_tile, testcase.flag);
 
             // 照合
             INFO(fmt::format("URL: {}", testcase.url));
             INFO(ret.to_string());
-
+            std::string s;
+            for (auto &[yaku, n] : testcase.yaku_list)
+                s += fmt::format(" {} {}翻\n", Yaku::Info[yaku].name, n);
+            INFO(s);
             REQUIRE(ret.han == testcase.han);                 // 飜
             REQUIRE(ret.fu == testcase.hu);                   // 符
             REQUIRE(ret.score_title == testcase.score_title); // タイトル
             // 成立役
             REQUIRE(ret.yaku_list.size() == testcase.yaku_list.size());
-            // for (size_t i = 0; i < ret.yaku_list.size(); ++i) {
-            //     REQUIRE(std::get<0>(ret.yaku_list[i]) ==
-            //             std::get<0>(testcase.yaku_list[i]));
-            //     REQUIRE(std::get<1>(ret.yaku_list[i]) ==
-            //             std::get<1>(testcase.yaku_list[i]));
-            // }
+            for (size_t i = 0; i < ret.yaku_list.size(); ++i) {
+                REQUIRE(std::get<0>(ret.yaku_list[i]) ==
+                        std::get<0>(testcase.yaku_list[i]));
+                REQUIRE(std::get<1>(ret.yaku_list[i]) ==
+                        std::get<1>(testcase.yaku_list[i]));
+            }
 
             // 点数の収支
             REQUIRE(ret.score.size() == testcase.score.size());
             for (size_t i = 0; i < ret.score.size(); ++i)
                 REQUIRE(ret.score[i] == testcase.score[i]);
+        }
+    };
+
+    BENCHMARK("一般役の点数計算")
+    {
+        for (const auto &testcase : cases) {
+            // 設定
+            score.set_bakaze(testcase.bakaze);
+            score.set_zikaze(testcase.zikaze);
+            score.set_num_tumibo(testcase.num_tumibo);
+            score.set_num_kyotakubo(testcase.num_kyotakubo);
+            score.set_dora_tiles(testcase.dora_tiles);
+            score.set_uradora_tiles(testcase.uradora_tiles);
+            score.set_rule(RuleFlag::AkaDora, testcase.enable_akadora);
+            score.set_rule(RuleFlag::OpenTanyao, testcase.enable_kuitan);
+
+            // 計算
+            Result2 ret = score.calc(testcase.hand, testcase.win_tile, testcase.flag);
         }
     };
 }

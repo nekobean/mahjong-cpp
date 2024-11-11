@@ -1,13 +1,13 @@
 #ifndef EXPECTEDVALUECALCULATOR
 #define EXPECTEDVALUECALCULATOR
 
-#include "score.hpp"
-#include "types/types.hpp"
+#include "mahjong/core/score_calculator.hpp"
+#include "mahjong/types/types.hpp"
 
 #define ENABLE_DRAW_CACHE
 #define ENABLE_DISCARD_CACHE
-#define FIX_TEGAWARI_PROB
-#define FIX_SYANTEN_DOWN
+// #define FIX_TEGAWARI_PROB
+// #define FIX_SYANTEN_DOWN
 
 namespace mahjong
 {
@@ -15,13 +15,15 @@ namespace mahjong
 class Candidate
 {
   public:
-    Candidate(int tile, const std::vector<std::tuple<int, int>> &required_tiles, bool syanten_down)
+    Candidate(int tile, const std::vector<std::tuple<int, int>> &required_tiles,
+              bool syanten_down)
         : tile(tile), required_tiles(required_tiles), syanten_down(syanten_down)
     {
     }
 
     Candidate(int tile, const std::vector<std::tuple<int, int>> &required_tiles,
-              const std::vector<double> &tenpai_probs, const std::vector<double> &win_probs,
+              const std::vector<double> &tenpai_probs,
+              const std::vector<double> &win_probs,
               const std::vector<double> &exp_values, bool syanten_down)
         : tile(tile)
         , required_tiles(required_tiles)
@@ -51,115 +53,110 @@ class Candidate
     bool syanten_down;
 };
 
-inline void add_tile(Hand &hand, int tile)
+inline void add_tile(Hand2 &hand, int tile)
 {
-    if (tile <= Tile::Manzu9)
-        hand.manzu += Bit::tile1[tile];
-    else if (tile <= Tile::Pinzu9)
-        hand.pinzu += Bit::tile1[tile];
-    else if (tile <= Tile::Sozu9)
-        hand.sozu += Bit::tile1[tile];
-    else if (tile <= Tile::Tyun)
-        hand.zihai += Bit::tile1[tile];
-    else if (tile == Tile::AkaManzu5) {
-        hand.manzu += Bit::tile1[Tile::Manzu5];
+    if (tile == Tile::AkaManzu5) {
+        hand.counts[Tile::Manzu5]++;
         hand.aka_manzu5 = true;
     }
     else if (tile == Tile::AkaPinzu5) {
-        hand.pinzu += Bit::tile1[Tile::Pinzu5];
+        hand.counts[Tile::Pinzu5]++;
         hand.aka_pinzu5 = true;
     }
     else if (tile == Tile::AkaSozu5) {
-        hand.sozu += Bit::tile1[Tile::Sozu5];
-        hand.aka_sozu5 = true;
+        hand.counts[Tile::Sozu5]++;
+        hand.aka_souzu5 = true;
+    }
+    else {
+        hand.counts[tile]++;
     }
 }
 
-inline void remove_tile(Hand &hand, int tile)
+inline void remove_tile(Hand2 &hand, int tile)
 {
-    if (tile <= Tile::Manzu9)
-        hand.manzu -= Bit::tile1[tile];
-    else if (tile <= Tile::Pinzu9)
-        hand.pinzu -= Bit::tile1[tile];
-    else if (tile <= Tile::Sozu9)
-        hand.sozu -= Bit::tile1[tile];
-    else if (tile <= Tile::Tyun)
-        hand.zihai -= Bit::tile1[tile];
-    else if (tile == Tile::AkaManzu5) {
-        hand.manzu -= Bit::tile1[Tile::Manzu5];
+    if (tile == Tile::AkaManzu5) {
+        hand.counts[Tile::Manzu5]--;
         hand.aka_manzu5 = false;
     }
     else if (tile == Tile::AkaPinzu5) {
-        hand.pinzu -= Bit::tile1[Tile::Pinzu5];
+        hand.counts[Tile::Pinzu5]--;
         hand.aka_pinzu5 = false;
     }
     else if (tile == Tile::AkaSozu5) {
-        hand.sozu -= Bit::tile1[Tile::Sozu5];
-        hand.aka_sozu5 = false;
+        hand.counts[Tile::Sozu5]--;
+        hand.aka_souzu5 = false;
+    }
+    else {
+        hand.counts[tile]--;
     }
 }
 
-inline void add_tile(Hand &hand, int tile, std::vector<int> &counts)
+inline void add_tile(Hand2 &hand, int tile, std::vector<int> &counts)
 {
+    if (tile == Tile::AkaManzu5) {
+        hand.counts[Tile::Manzu5]++;
+        hand.aka_manzu5 = true;
+        counts[Tile::Manzu5]--;
+    }
+    else if (tile == Tile::AkaPinzu5) {
+        hand.counts[Tile::Pinzu5]++;
+        hand.aka_pinzu5 = true;
+        counts[Tile::Pinzu5]--;
+    }
+    else if (tile == Tile::AkaSozu5) {
+        hand.counts[Tile::Sozu5]++;
+        hand.aka_souzu5 = true;
+        counts[Tile::Sozu5]--;
+    }
+    else {
+        hand.counts[tile]++;
+    }
     counts[tile]--;
-    if (tile <= Tile::Manzu9)
-        hand.manzu += Bit::tile1[tile];
-    else if (tile <= Tile::Pinzu9)
-        hand.pinzu += Bit::tile1[tile];
-    else if (tile <= Tile::Sozu9)
-        hand.sozu += Bit::tile1[tile];
-    else if (tile <= Tile::Tyun)
-        hand.zihai += Bit::tile1[tile];
-    else if (tile == Tile::AkaManzu5) {
-        hand.manzu += Bit::tile1[Tile::Manzu5];
-        hand.aka_manzu5 = true;
-        counts[Tile::Manzu5] -= 1;
-    }
-    else if (tile == Tile::AkaPinzu5) {
-        hand.pinzu += Bit::tile1[Tile::Pinzu5];
-        hand.aka_pinzu5 = true;
-        counts[Tile::Pinzu5] -= 1;
-    }
-    else if (tile == Tile::AkaSozu5) {
-        hand.sozu += Bit::tile1[Tile::Sozu5];
-        hand.aka_sozu5 = true;
-        counts[Tile::Sozu5] -= 1;
-    }
 }
 
-inline void remove_tile(Hand &hand, int tile, std::vector<int> &counts)
+inline void remove_tile(Hand2 &hand, int tile, std::vector<int> &counts)
 {
-    counts[tile]++;
-    if (tile <= Tile::Manzu9)
-        hand.manzu -= Bit::tile1[tile];
-    else if (tile <= Tile::Pinzu9)
-        hand.pinzu -= Bit::tile1[tile];
-    else if (tile <= Tile::Sozu9)
-        hand.sozu -= Bit::tile1[tile];
-    else if (tile <= Tile::Tyun)
-        hand.zihai -= Bit::tile1[tile];
-    else if (tile == Tile::AkaManzu5) {
-        hand.manzu -= Bit::tile1[Tile::Manzu5];
+    if (tile == Tile::AkaManzu5) {
+        hand.counts[Tile::Manzu5]--;
         hand.aka_manzu5 = false;
-        counts[Tile::Manzu5] += 1;
+        counts[Tile::Manzu5]++;
     }
     else if (tile == Tile::AkaPinzu5) {
-        hand.pinzu -= Bit::tile1[Tile::Pinzu5];
+        hand.counts[Tile::Pinzu5]--;
         hand.aka_pinzu5 = false;
-        counts[Tile::Pinzu5] += 1;
+        counts[Tile::Pinzu5]++;
     }
     else if (tile == Tile::AkaSozu5) {
-        hand.sozu -= Bit::tile1[Tile::Sozu5];
-        hand.aka_sozu5 = false;
-        counts[Tile::Sozu5] += 1;
+        hand.counts[Tile::Sozu5]--;
+        hand.aka_souzu5 = false;
+        counts[Tile::Sozu5]++;
     }
+    else {
+        hand.counts[tile]--;
+    }
+    counts[tile]++;
 }
 
 struct CacheKey
 {
-    CacheKey(const Hand &hand, const std::vector<int> &counts, int n_extra_tumo)
-        : hand(hand), manzu(0), pinzu(0), sozu(0), zihai(0)
+    CacheKey(const Hand2 &hand, const std::vector<int> &counts, int n_extra_tumo)
+        : hmanzu(0)
+        , hpinzu(0)
+        , hsouzu(0)
+        , hhonors(0)
+        , manzu(0)
+        , pinzu(0)
+        , sozu(0)
+        , zihai(0)
     {
+        hmanzu = std::accumulate(hand.counts.begin(), hand.counts.begin() + 9, 0,
+                                 [](int x, int y) { return x * 8 + y; });
+        hpinzu = std::accumulate(hand.counts.begin() + 9, hand.counts.begin() + 18, 0,
+                                 [](int x, int y) { return x * 8 + y; });
+        hsouzu = std::accumulate(hand.counts.begin() + 18, hand.counts.begin() + 27, 0,
+                                 [](int x, int y) { return x * 8 + y; });
+        hhonors = std::accumulate(hand.counts.begin() + 27, hand.counts.end(), 0,
+                                  [](int x, int y) { return x * 8 + y; });
         for (size_t i = 0; i < 9; ++i)
             manzu = manzu * 8 + counts[i];
         for (size_t i = 9; i < 18; ++i)
@@ -176,10 +173,13 @@ struct CacheKey
         zihai |= counts[Tile::AkaSozu5] << 24;
         zihai |= hand.aka_manzu5 << 25;
         zihai |= hand.aka_pinzu5 << 26;
-        zihai |= hand.aka_sozu5 << 27;
+        zihai |= hand.aka_souzu5 << 27;
     }
 
-    Hand hand;
+    int hmanzu;
+    int hpinzu;
+    int hsouzu;
+    int hhonors;
     int manzu;
     int pinzu;
     int sozu;
@@ -188,9 +188,9 @@ struct CacheKey
 
 inline bool operator<(const CacheKey &lhs, const CacheKey &rhs)
 {
-    return std::make_tuple(lhs.hand.manzu, lhs.hand.pinzu, lhs.hand.sozu, lhs.hand.zihai, lhs.manzu,
+    return std::make_tuple(lhs.hmanzu, lhs.hpinzu, lhs.hsouzu, lhs.hhonors, lhs.manzu,
                            lhs.pinzu, lhs.sozu, lhs.zihai) <
-           std::make_tuple(rhs.hand.manzu, rhs.hand.pinzu, rhs.hand.sozu, rhs.hand.zihai, rhs.manzu,
+           std::make_tuple(rhs.hmanzu, rhs.hpinzu, rhs.hsouzu, rhs.hhonors, rhs.manzu,
                            rhs.pinzu, rhs.sozu, rhs.zihai);
 }
 
@@ -250,54 +250,59 @@ class ExpectedValueCalculator
         CalcHaiteitumo = 1 << 4,  /* 海底撈月考慮 */
         CalcUradora = 1 << 5,     /* 裏ドラ考慮 */
         CalcAkaTileTumo = 1 << 6, /* 赤牌自摸考慮 */
-        MaximaizeWinProb = 1 << 7, /* 和了確率を最大化 (指定されていない場合は期待値を最大化) */
+        MaximaizeWinProb =
+            1 << 7, /* 和了確率を最大化 (指定されていない場合は期待値を最大化) */
     };
 
     ExpectedValueCalculator();
 
-    std::tuple<bool, std::vector<Candidate>> calc(const Hand &hand,
-                                                  const ScoreCalculator &score_calculator,
-                                                  const std::vector<int> &dora_indicators,
-                                                  int syanten_type, int flag = 0);
-    std::tuple<bool, std::vector<Candidate>> calc(const Hand &hand,
-                                                  const ScoreCalculator &score_calculator,
-                                                  const std::vector<int> &dora_indicators,
-                                                  int syanten_type, const std::vector<int> &counts,
-                                                  int flag = 0);
+    std::tuple<bool, std::vector<Candidate>>
+    calc(const Hand2 &hand, const ScoreCalculator2 &score_calculator,
+         const std::vector<int> &dora_indicators, int syanten_type, int flag = 0);
+    std::tuple<bool, std::vector<Candidate>>
+    calc(const Hand2 &hand, const ScoreCalculator2 &score_calculator,
+         const std::vector<int> &dora_indicators, int syanten_type,
+         const std::vector<int> &counts, int flag = 0);
 
-    static std::vector<std::tuple<int, int>> get_required_tiles(const Hand &hand, int syanten_type,
-                                                                const std::vector<int> &counts);
-    static std::vector<int> count_left_tiles(const Hand &hand,
+    static std::vector<std::tuple<int, int>>
+    get_required_tiles(const Hand2 &hand, int syanten_type,
+                       const std::vector<int> &counts);
+    static std::vector<int> count_left_tiles(const Hand2 &hand,
                                              const std::vector<int> &dora_indicators);
 
     // private:
     static bool make_uradora_table();
     void create_prob_table(int n_left_tiles);
     void clear_cache();
-    std::vector<std::tuple<int, int, int>> get_draw_tiles(Hand &hand, int syanten,
-                                                          const std::vector<int> &counts);
-    std::vector<std::tuple<int, int>> get_discard_tiles(Hand &hand, int syanten);
-    std::vector<double> get_score(const Hand &hand, int win_tile, const std::vector<int> &counts);
+    std::vector<std::tuple<int, int, int>>
+    get_draw_tiles(Hand2 &hand, int syanten, const std::vector<int> &counts);
+    std::vector<std::tuple<int, int>> get_discard_tiles(Hand2 &hand, int syanten);
+    std::vector<double> get_score(const Hand2 &hand, int win_tile,
+                                  const std::vector<int> &counts);
 
-    std::vector<Candidate> analyze_discard(int n_extra_tumo, int syanten, Hand hand,
+    std::vector<Candidate> analyze_discard(int n_extra_tumo, int syanten, Hand2 hand,
                                            std::vector<int> counts);
-    std::vector<Candidate> analyze_discard(int syanten, Hand hand, std::vector<int> counts);
-    std::vector<Candidate> analyze_draw(int n_extra_tumo, int syanten, Hand hand,
+    std::vector<Candidate> analyze_discard(int syanten, Hand2 hand,
+                                           std::vector<int> counts);
+    std::vector<Candidate> analyze_draw(int n_extra_tumo, int syanten, Hand2 hand,
                                         std::vector<int> counts);
-    std::vector<Candidate> analyze_draw(int syanten, Hand hand, std::vector<int> counts);
+    std::vector<Candidate> analyze_draw(int syanten, Hand2 hand,
+                                        std::vector<int> counts);
 
     std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
-    discard(int n_extra_tumo, int syanten, Hand &hand, std::vector<int> &counts);
+    discard(int n_extra_tumo, int syanten, Hand2 &hand, std::vector<int> &counts);
     std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
-    draw(int n_extra_tumo, int syanten, Hand &hand, std::vector<int> &counts);
+    draw(int n_extra_tumo, int syanten, Hand2 &hand, std::vector<int> &counts);
     std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
-    draw_without_tegawari(int n_extra_tumo, int syanten, Hand &hand, std::vector<int> &counts);
+    draw_without_tegawari(int n_extra_tumo, int syanten, Hand2 &hand,
+                          std::vector<int> &counts);
     std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
-    draw_with_tegawari(int n_extra_tumo, int syanten, Hand &hand, std::vector<int> &counts);
+    draw_with_tegawari(int n_extra_tumo, int syanten, Hand2 &hand,
+                       std::vector<int> &counts);
 
     // private:
     /* 点数計算機 */
-    ScoreCalculator score_calculator_;
+    ScoreCalculator2 score_calculator_;
 
     /* 向聴数の種類 */
     int syanten_type_;
@@ -341,8 +346,11 @@ class ExpectedValueCalculator
     /* 裏ドラの乗る確率のテーブル */
     static std::vector<std::vector<double>> uradora_prob_table_;
 
+    int N_;
+
     /* キャッシュ */
-    using CacheValue = std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>;
+    using CacheValue =
+        std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>;
     std::vector<std::map<CacheKey, CacheValue>> discard_cache_;
     std::vector<std::map<CacheKey, CacheValue>> draw_cache_;
 };

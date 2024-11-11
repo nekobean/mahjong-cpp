@@ -5,7 +5,7 @@
 
 #include <spdlog/spdlog.h>
 
-#include "score.hpp"
+#include "mahjong/core/score_calculator.hpp"
 
 namespace mahjong
 {
@@ -63,13 +63,13 @@ static inline const std::map<int, int> Indicator2Dora = {
  *
  * @return std::string 文字列
  */
-inline std::string print_round_info(const ScoreCalculator &score)
+inline std::string print_round_info(const ScoreCalculator2 &score)
 {
     std::string s;
 
     s += "[ルール]\n";
-    for (auto rule : {RuleFlag::AkaDora, RuleFlag::OpenTanyao}) {
-        s += fmt::format("  {}: {}\n", RuleFlag::Name.at(rule),
+    for (auto rule : {RuleFlag2::AkaDora, RuleFlag2::OpenTanyao}) {
+        s += fmt::format("  {}: {}\n", RuleFlag2::Name.at(rule),
                          (score.rules() & rule) ? "有り" : "無し");
     }
 

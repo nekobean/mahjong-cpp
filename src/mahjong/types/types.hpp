@@ -2,7 +2,7 @@
 #define MAHJONG_CPP_TYPES
 
 #include "block.hpp"
-#include "hand.hpp"
+#include "hand2.hpp"
 #include "meld.hpp"
 #include "result.hpp"
 #include "scoretitle.hpp"

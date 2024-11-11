@@ -7,7 +7,7 @@
 
 #include <spdlog/spdlog.h>
 
-#include "hand.hpp"
+#include "hand2.hpp"
 #include "scoretitle.hpp"
 #include "tile.hpp"
 #include "yaku.hpp"
@@ -60,7 +60,7 @@ static inline const std::map<int, std::string> Name = {{Null, "Null"},
 /**
  * @brief 結果
  */
-struct Result
+struct Result2
 {
     /**
      * @brief 通常役の結果
@@ -76,10 +76,10 @@ struct Result
      * @param[in] blocks 面子構成
      * @param[in] wait_type 待ちの種類
      */
-    Result(const Hand &hand, int win_tile, int flag,
-           const std::vector<std::tuple<YakuList, int>> &yaku_list, int han, int hu,
-           int score_title, const std::vector<int> &score,
-           const std::vector<Block> &blocks, int wait_type)
+    Result2(const Hand2 &hand, int win_tile, int flag,
+            const std::vector<std::tuple<YakuList, int>> &yaku_list, int han, int hu,
+            int score_title, const std::vector<int> &score,
+            const std::vector<Block> &blocks, int wait_type)
         : success(true)
         , hand(hand)
         , win_tile(win_tile)
@@ -104,9 +104,9 @@ struct Result
      * @param[in] score_title 点数のタイトル
      * @param[in] score 点数
      */
-    Result(const Hand &hand, int win_tile, int flag,
-           const std::vector<std::tuple<YakuList, int>> &yaku_list, int score_title,
-           const std::vector<int> &score)
+    Result2(const Hand2 &hand, int win_tile, int flag,
+            const std::vector<std::tuple<YakuList, int>> &yaku_list, int score_title,
+            const std::vector<int> &score)
         : success(true)
         , hand(hand)
         , win_tile(win_tile)
@@ -128,7 +128,7 @@ struct Result
      * @param[in] flag フラグ
      * @param[in] err_msg エラーメッセージ
      */
-    Result(const Hand &hand, int win_tile, int flag, const std::string &err_msg)
+    Result2(const Hand2 &hand, int win_tile, int flag, const std::string &err_msg)
         : success(false)
         , err_msg(err_msg)
         , hand(hand)
@@ -153,7 +153,7 @@ struct Result
      */
 
     /* 手牌 */
-    Hand hand;
+    Hand2 hand;
 
     /* 和了牌 */
     int win_tile;
@@ -189,7 +189,7 @@ struct Result
     std::string to_string();
 };
 
-inline std::string Result::to_string()
+inline std::string Result2::to_string()
 {
     std::string s;
 
