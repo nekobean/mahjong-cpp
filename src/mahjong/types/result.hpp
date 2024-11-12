@@ -9,7 +9,6 @@
 
 #include "const.hpp"
 #include "hand.hpp"
-#include "scoretitle.hpp"
 #include "tile.hpp"
 
 namespace mahjong

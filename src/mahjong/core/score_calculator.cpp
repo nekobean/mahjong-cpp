@@ -252,7 +252,7 @@ const std::vector<int> &ScoreCalculator::uradora_tiles() const
  * @return Result 結果
  */
 Result ScoreCalculator::aggregate(const Hand &hand, int win_tile, int flag,
-                                   YakuList yaku_list) const
+                                  YakuList yaku_list) const
 {
     int score_title;
     std::vector<std::tuple<YakuList, int>> yaku_han_list;
@@ -277,7 +277,7 @@ Result ScoreCalculator::aggregate(const Hand &hand, int win_tile, int flag,
         }
 
         // 点数のタイトルを計算する。
-        score_title = ScoreTitle::get_score_title(n);
+        score_title = get_score_title(n);
 
         // 点数を計算する。
         score = calc_score(flag & WinFlag::Tsumo, score_title);
@@ -297,9 +297,8 @@ Result ScoreCalculator::aggregate(const Hand &hand, int win_tile, int flag,
  * @return Result 結果
  */
 Result ScoreCalculator::aggregate(const Hand &hand, int win_tile, int flag,
-                                   YakuList yaku_list, int fu,
-                                   const std::vector<Block> &blocks,
-                                   int wait_type) const
+                                  YakuList yaku_list, int fu,
+                                  const std::vector<Block> &blocks, int wait_type) const
 {
     // 飜を計算する。
     int han = 0;
@@ -334,7 +333,7 @@ Result ScoreCalculator::aggregate(const Hand &hand, int win_tile, int flag,
     }
 
     // 点数のタイトルを計算する。
-    int score_title = ScoreTitle::get_score_title(fu, han);
+    int score_title = get_score_title(fu, han);
 
     // 点数を計算する。
     auto score = calc_score(flag & WinFlag::Tsumo, score_title, han, fu);
@@ -427,7 +426,7 @@ ScoreCalculator::check_arguments(const Hand &hand, int win_tile, int flag) const
  * @return YakuList list of established yaku
  */
 YakuList ScoreCalculator::check_yakuman(const Hand &hand, const int win_tile,
-                                         const int flag, const int shanten_type) const
+                                        const int flag, const int shanten_type) const
 {
     YakuList yaku_list = Yaku::Null;
 
@@ -512,7 +511,7 @@ YakuList ScoreCalculator::check_yakuman(const Hand &hand, const int win_tile,
  * @return YakuList 成立した役一覧
  */
 YakuList ScoreCalculator::check_not_pattern_yaku(const Hand &hand, int win_tile,
-                                                  int flag, int shanten_type) const
+                                                 int flag, int shanten_type) const
 {
     YakuList yaku_list = Yaku::Null;
 
@@ -628,7 +627,7 @@ YakuList ScoreCalculator::check_not_pattern_yaku(const Hand &hand, int win_tile,
  */
 std::tuple<YakuList, int, std::vector<Block>, int>
 ScoreCalculator::check_pattern_yaku(const Hand &_hand, int win_tile, int flag,
-                                     int shanten_type) const
+                                    int shanten_type) const
 {
     Hand hand = _hand;
     hand.manzu = std::accumulate(hand.counts.begin(), hand.counts.begin() + 9, 0,
@@ -750,7 +749,7 @@ ScoreCalculator::check_pattern_yaku(const Hand &_hand, int win_tile, int flag,
  * @return int 符
  */
 int ScoreCalculator::calc_fu(const std::vector<Block> &blocks, int wait_type,
-                              bool is_closed, bool is_tsumo, bool is_pinfu) const
+                             bool is_closed, bool is_tsumo, bool is_pinfu) const
 {
     // Exceptions
     //////////////////////////
@@ -813,7 +812,7 @@ int ScoreCalculator::calc_fu(const std::vector<Block> &blocks, int wait_type,
         }
     }
 
-    return Hu::round_up_fu(fu);
+    return round_up_fu(fu);
 }
 
 /**
@@ -821,7 +820,7 @@ int ScoreCalculator::calc_fu(const std::vector<Block> &blocks, int wait_type,
  */
 std::vector<std::tuple<std::string, int>>
 ScoreCalculator::calc_fu_detail(const std::vector<Block> &blocks, int wait_type,
-                                 bool is_menzen, bool is_tumo) const
+                                bool is_menzen, bool is_tumo) const
 {
     bool is_pinfu = check_pinfu(blocks, wait_type);
 
@@ -999,7 +998,7 @@ Hand ScoreCalculator::merge_hand(const Hand &hand) const
  *         ロン和了の場合     (和了者の収入, 放銃者の支出)
  */
 std::vector<int> ScoreCalculator::calc_score(bool is_tumo, int score_title, int han,
-                                              int fu) const
+                                             int fu) const
 {
     bool is_parent = self_wind_ == Tile::East;
 
@@ -1054,7 +1053,7 @@ std::vector<int> ScoreCalculator::calc_score(bool is_tumo, int score_title, int 
 
 std::vector<int> ScoreCalculator::get_scores_for_exp(const Result &result)
 {
-    if (result.score_title >= ScoreTitle::KazoeYakuman)
+    if (result.score_title >= ScoreTitle::CountedYakuman)
         return {result.score.front()};
 
     int fu = Hu::Keys.at(result.fu);
@@ -1062,7 +1061,7 @@ std::vector<int> ScoreCalculator::get_scores_for_exp(const Result &result)
     std::vector<int> scores;
     for (int han = result.han; han <= 13; ++han) {
         // 点数のタイトルを計算する。
-        int score_title = ScoreTitle::get_score_title(fu, han);
+        int score_title = get_score_title(fu, han);
 
         // 点数を計算する。
         auto score = calc_score(true, score_title, han, fu);
@@ -1071,6 +1070,104 @@ std::vector<int> ScoreCalculator::get_scores_for_exp(const Result &result)
     }
 
     return scores;
+}
+
+/**
+ * @brief Get score title of non-yakuman.
+ *
+ * @param[in] hu Hu
+ * @param[in] han Han
+ * @return score title
+ */
+int ScoreCalculator::get_score_title(int fu, int han)
+{
+    if (han < 5) {
+        return ScoringTable::IsMangan[fu][han - 1] ? ScoreTitle::Mangan
+                                                   : ScoreTitle::Null;
+    }
+
+    if (han == 5) {
+        return ScoreTitle::Mangan;
+    }
+    else if (han <= 7) {
+        return ScoreTitle::Haneman;
+    }
+    else if (han <= 10) {
+        return ScoreTitle::Baiman;
+    }
+    else if (han <= 12) {
+        return ScoreTitle::Sanbaiman;
+    }
+
+    return ScoreTitle::CountedYakuman;
+};
+
+/**
+ * @brief Get score title of yakuman.
+ *
+ * @param[in] n yakuman multiplier
+ * @return score title
+ */
+int ScoreCalculator::get_score_title(int n)
+{
+    if (n == 1) {
+        return ScoreTitle::Yakuman;
+    }
+    else if (n == 2) {
+        return ScoreTitle::DoubleYakuman;
+    }
+    else if (n == 3) {
+        return ScoreTitle::TripleYakuman;
+    }
+    else if (n == 4) {
+        return ScoreTitle::QuadrupleYakuman;
+    }
+    else if (n == 5) {
+        return ScoreTitle::QuintupleYakuman;
+    }
+    else if (n == 6) {
+        return ScoreTitle::SextupleYakuman;
+    }
+
+    return ScoreTitle::Null;
+};
+
+/**
+ * @brief 符を切り上げる。
+ *
+ * @param[in] hu 符
+ * @return int 切り上げた符
+ */
+int ScoreCalculator::round_up_fu(int hu)
+{
+    hu = int(std::ceil(hu / 10.)) * 10;
+
+    switch (hu) {
+    case 20:
+        return Hu::Hu20;
+    case 25:
+        return Hu::Hu25;
+    case 30:
+        return Hu::Hu30;
+    case 40:
+        return Hu::Hu40;
+    case 50:
+        return Hu::Hu50;
+    case 60:
+        return Hu::Hu60;
+    case 70:
+        return Hu::Hu70;
+    case 80:
+        return Hu::Hu80;
+    case 90:
+        return Hu::Hu90;
+    case 100:
+        return Hu::Hu100;
+    case 110:
+        return Hu::Hu110;
+    }
+
+    return Hu::Null;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -1096,7 +1193,7 @@ bool ScoreCalculator::check_tanyao(const Hand &hand) const
  * @brief Check if Pinfu (平和) is established.
  */
 bool ScoreCalculator::check_pinfu(const std::vector<Block> &blocks,
-                                   const int wait_type) const
+                                  const int wait_type) const
 {
     // Check if the hand is closed before calling this function.
 
@@ -1430,9 +1527,8 @@ bool ScoreCalculator::check_nine_gates(const Hand &hand, const int win_tile) con
 /**
  * @brief Check if Four Concealed Triplets (四暗刻) is established.
  */
-int ScoreCalculator::check_four_concealed_triplets(const Hand &hand,
-                                                    const int win_flag,
-                                                    const int win_tile) const
+int ScoreCalculator::check_four_concealed_triplets(const Hand &hand, const int win_flag,
+                                                   const int win_tile) const
 {
     if (!(win_flag & WinFlag::Tsumo)) {
         return 0; // Tsumo win only
@@ -1538,7 +1634,7 @@ bool ScoreCalculator::check_true_nine_gates(const Hand &hand, const int win_tile
  * @brief Check if Thirteen-wait Thirteen Orphans (国士無双13面待ち) is established.
  */
 bool ScoreCalculator::check_thirteen_wait_thirteen_orphans(const Hand &hand,
-                                                            const int win_tile) const
+                                                           const int win_tile) const
 {
     static const std::array<int32_t, 34> tile1 = {
         1 << 24, 1 << 21, 1 << 18, 1 << 15, 1 << 12, 1 << 9, 1 << 6, 1 << 3, 1,
@@ -1573,5 +1669,4 @@ bool ScoreCalculator::check_thirteen_wait_thirteen_orphans(const Hand &hand,
     return (manzu == terminals_mask) && (pinzu == terminals_mask) &&
            (sozu == terminals_mask) && (zihai == honors_mask);
 }
-
 } // namespace mahjong

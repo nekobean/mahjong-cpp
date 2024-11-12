@@ -61,8 +61,12 @@ class ScoreCalculator
                      YakuList yaku_list) const;
     Result aggregate(const Hand &hand, int win_tile, int flag, YakuList yaku_list,
                      int fu, const std::vector<Block> &blocks, int wait_type) const;
+
     int count_dora(const Hand &hand, std::vector<int> dora_list) const;
     int count_reddora(const Hand &hand) const;
+    static int get_score_title(int fu, int han);
+    static int get_score_title(int n);
+    static int round_up_fu(int hu);
 
     // Functions to check yaku
     bool check_tanyao(const Hand &hand) const;

@@ -6,7 +6,6 @@
 #include "hand.hpp"
 #include "meld.hpp"
 #include "result.hpp"
-#include "scoretitle.hpp"
 #include "scoringtable.hpp"
 #include "tile.hpp"
 
