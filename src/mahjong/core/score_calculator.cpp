@@ -937,7 +937,7 @@ int ScoreCalculator::count_reddora(const Hand &hand) const
     for (const auto &block : hand.melds) {
         for (auto tile : block.tiles) {
             if (is_reddora(tile)) {
-                num_reddora++;
+                ++num_reddora;
                 break;
             }
         }
@@ -1239,7 +1239,7 @@ int ScoreCalculator::check_pure_double_sequence(const std::vector<Block> &blocks
             num_iipeikou += 2;
         }
         else if (x >= 2) {
-            num_iipeikou++;
+            ++num_iipeikou;
         }
     }
 
@@ -1269,7 +1269,7 @@ bool ScoreCalculator::check_three_concealed_triplets(
     int num_triplets = 0;
     for (const auto &block : blocks) {
         if (block.type == BlockType::Triplet || block.type == BlockType::Kong) {
-            num_triplets++; // closed triplet or closed kong
+            ++num_triplets; // closed triplet or closed kong
         }
     }
 

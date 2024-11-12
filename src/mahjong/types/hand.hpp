@@ -168,7 +168,7 @@ inline bool Hand::check_arguments(const std::vector<int> &tiles,
         else {
             tile_counts[tile]++;
         }
-        num_tiles++;
+        ++num_tiles;
     }
 
     for (const auto &block : melds) {

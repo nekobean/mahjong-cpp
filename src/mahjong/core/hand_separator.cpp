@@ -63,7 +63,7 @@ HandSeparator::separate(const Hand &hand, int win_tile, bool tumo)
             blocks[i].type = BlockType::Kong | BlockType::Open;
         blocks[i].min_tile = red2normal(melded_block.tiles.front());
 
-        i++;
+        ++i;
     }
 
     // 手牌の切り分けパターンを列挙する。
