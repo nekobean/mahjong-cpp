@@ -28,7 +28,7 @@ std::tuple<int, int, std::vector<int>> RequiredTileCalculator::select(const Hand
     }
 
     if (type & ShantenFlag::SevenPairs) {
-        auto [shanten, wait] = calc_chiitoitsu(hand);
+        auto [shanten, wait] = calc_seven_pairs(hand);
         if (shanten < std::get<1>(ret)) {
             ret = {ShantenFlag::SevenPairs, shanten, wait};
         }
@@ -39,7 +39,7 @@ std::tuple<int, int, std::vector<int>> RequiredTileCalculator::select(const Hand
     }
 
     if (type & ShantenFlag::ThirteenOrphans) {
-        auto [shanten, wait] = calc_kokushimusou(hand);
+        auto [shanten, wait] = calc_thirteen_orphans(hand);
         if (shanten < std::get<1>(ret)) {
             ret = {ShantenFlag::ThirteenOrphans, shanten, wait};
         }
@@ -77,9 +77,9 @@ RequiredTileCalculator::select_regular(const Hand &hand)
 }
 
 std::tuple<int, std::vector<int>>
-RequiredTileCalculator::select_chiitoitsu(const Hand &hand)
+RequiredTileCalculator::select_seven_pairs(const Hand &hand)
 {
-    auto [shanten, wait] = calc_chiitoitsu(hand);
+    auto [shanten, wait] = calc_seven_pairs(hand);
 
     std::vector<int> tiles;
     tiles.reserve(34);
@@ -93,9 +93,9 @@ RequiredTileCalculator::select_chiitoitsu(const Hand &hand)
 }
 
 std::tuple<int, std::vector<int>>
-RequiredTileCalculator::select_kokushimusou(const Hand &hand)
+RequiredTileCalculator::select_thirteen_orphans(const Hand &hand)
 {
-    auto [shanten, wait] = calc_kokushimusou(hand);
+    auto [shanten, wait] = calc_thirteen_orphans(hand);
 
     std::vector<int> tiles;
     tiles.reserve(13);
@@ -137,7 +137,7 @@ std::tuple<int, int64_t> RequiredTileCalculator::calc_regular(const Hand &hand)
     return {shanten, wait};
 }
 
-std::tuple<int, int64_t> RequiredTileCalculator::calc_chiitoitsu(const Hand &hand)
+std::tuple<int, int64_t> RequiredTileCalculator::calc_seven_pairs(const Hand &hand)
 {
     int num_pairs = 0;
     int num_types = 0;
@@ -173,7 +173,7 @@ std::tuple<int, int64_t> RequiredTileCalculator::calc_chiitoitsu(const Hand &han
     return {shanten, wait};
 }
 
-std::tuple<int, int64_t> RequiredTileCalculator::calc_kokushimusou(const Hand &hand)
+std::tuple<int, int64_t> RequiredTileCalculator::calc_thirteen_orphans(const Hand &hand)
 {
     static const auto yaochuu_tiles = {
         Tile::Manzu1, Tile::Manzu9, Tile::Pinzu1, Tile::Pinzu9, Tile::Souzu1,

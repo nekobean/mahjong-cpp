@@ -87,14 +87,14 @@ TEST_CASE("Shanten number of Chiitoitsu")
     SECTION("Shanten number of Chiitoitsu")
     {
         for (auto &[hand, regular, kokushi, chiitoi] : cases) {
-            REQUIRE(ShantenCalculator::calc_chiitoitsu(hand) == chiitoi);
+            REQUIRE(ShantenCalculator::calc_seven_pairs(hand) == chiitoi);
         }
     };
 
     BENCHMARK("Shanten number of Chiitoitsu")
     {
         for (auto &[hand, regular, kokushi, chiitoi] : cases) {
-            ShantenCalculator::calc_chiitoitsu(hand);
+            ShantenCalculator::calc_seven_pairs(hand);
         }
     };
 }
@@ -109,14 +109,14 @@ TEST_CASE("Shanten number of Kokushimusou")
     SECTION("Shanten number of Kokushimusou")
     {
         for (auto &[hand, regular, kokushi, chiitoi] : cases) {
-            REQUIRE(ShantenCalculator::calc_kokushimusou(hand) == kokushi);
+            REQUIRE(ShantenCalculator::calc_thirteen_orphans(hand) == kokushi);
         }
     };
 
     BENCHMARK("Shanten number of Kokushimusou")
     {
         for (auto &[hand, regular, kokushi, chiitoi] : cases) {
-            ShantenCalculator::calc_kokushimusou(hand);
+            ShantenCalculator::calc_thirteen_orphans(hand);
         }
     };
 }

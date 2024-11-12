@@ -112,7 +112,7 @@ TEST_CASE("Required tile selection of Chiitoitsu")
     {
         double avg_tiles = 0;
         for (auto &hand : cases) {
-            int shanten = ShantenCalculator::calc_chiitoitsu(hand);
+            int shanten = ShantenCalculator::calc_seven_pairs(hand);
 
             std::vector<int> tiles;
             for (int tile = 0; tile < 34; ++tile) {
@@ -121,13 +121,13 @@ TEST_CASE("Required tile selection of Chiitoitsu")
                 }
 
                 hand.counts[tile]++;
-                if (shanten > ShantenCalculator::calc_chiitoitsu(hand)) {
+                if (shanten > ShantenCalculator::calc_seven_pairs(hand)) {
                     tiles.push_back(tile);
                 }
                 hand.counts[tile]--;
             }
 
-            auto [shanten2, tiles2] = RequiredTileCalculator::select_chiitoitsu(hand);
+            auto [shanten2, tiles2] = RequiredTileCalculator::select_seven_pairs(hand);
             avg_tiles += tiles.size();
 
             INFO(fmt::format("手牌: {}", hand.to_string()));
@@ -141,7 +141,7 @@ TEST_CASE("Required tile selection of Chiitoitsu")
     BENCHMARK("Required tile selection of Chiitoitsu")
     {
         for (const auto &hand : cases) {
-            RequiredTileCalculator::select_chiitoitsu(hand);
+            RequiredTileCalculator::select_seven_pairs(hand);
         }
     };
 }
@@ -157,7 +157,7 @@ TEST_CASE("Required tile selection of Kokushimusou")
     {
         double avg_tiles = 0;
         for (auto &hand : cases) {
-            int shanten = ShantenCalculator::calc_kokushimusou(hand);
+            int shanten = ShantenCalculator::calc_thirteen_orphans(hand);
 
             std::vector<int> tiles;
             for (int tile :
@@ -169,13 +169,14 @@ TEST_CASE("Required tile selection of Kokushimusou")
                 }
 
                 hand.counts[tile]++;
-                if (shanten > ShantenCalculator::calc_kokushimusou(hand)) {
+                if (shanten > ShantenCalculator::calc_thirteen_orphans(hand)) {
                     tiles.push_back(tile);
                 }
                 hand.counts[tile]--;
             }
 
-            auto [shanten2, tiles2] = RequiredTileCalculator::select_kokushimusou(hand);
+            auto [shanten2, tiles2] =
+                RequiredTileCalculator::select_thirteen_orphans(hand);
             avg_tiles += tiles.size();
 
             INFO(fmt::format("手牌: {}", hand.to_string()));
@@ -189,7 +190,7 @@ TEST_CASE("Required tile selection of Kokushimusou")
     BENCHMARK("Required tile selection of Kokushimusou")
     {
         for (const auto &hand : cases) {
-            RequiredTileCalculator::select_kokushimusou(hand);
+            RequiredTileCalculator::select_thirteen_orphans(hand);
         }
     };
 }

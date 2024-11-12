@@ -239,8 +239,8 @@ DrawResponseData create_draw_response(const RequestData &req)
     auto [_, syanten] = ShantenCalculator::calc(req.hand, req.syanten_type);
     res.syanten = syanten;
     res.normal_syanten = ShantenCalculator::calc_regular(req.hand);
-    res.tiitoi_syanten = ShantenCalculator::calc_chiitoitsu(req.hand);
-    res.kokusi_syanten = ShantenCalculator::calc_kokushimusou(req.hand);
+    res.tiitoi_syanten = ShantenCalculator::calc_seven_pairs(req.hand);
+    res.kokusi_syanten = ShantenCalculator::calc_thirteen_orphans(req.hand);
     res.time_us = elapsed_us;
 
     return res;
@@ -286,8 +286,8 @@ DiscardResponseData create_discard_response(const RequestData &req)
     auto [_, syanten] = ShantenCalculator::calc(req.hand, req.syanten_type);
     res.syanten = syanten;
     res.normal_syanten = ShantenCalculator::calc_regular(req.hand);
-    res.tiitoi_syanten = ShantenCalculator::calc_chiitoitsu(req.hand);
-    res.kokusi_syanten = ShantenCalculator::calc_kokushimusou(req.hand);
+    res.tiitoi_syanten = ShantenCalculator::calc_seven_pairs(req.hand);
+    res.kokusi_syanten = ShantenCalculator::calc_thirteen_orphans(req.hand);
     res.time_us = elapsed_us;
     res.candidates = candidates;
 

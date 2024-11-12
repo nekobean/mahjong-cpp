@@ -32,8 +32,8 @@ class ShantenCalculator
                                       ShantenFlag::ThirteenOrphans);
     static bool initialize();
     static int calc_regular(const Hand &hand);
-    static int calc_chiitoitsu(const Hand &hand);
-    static int calc_kokushimusou(const Hand &hand);
+    static int calc_seven_pairs(const Hand &hand);
+    static int calc_thirteen_orphans(const Hand &hand);
     template <typename ForwardIterator>
     static HashType calc_suits_hash(ForwardIterator first, ForwardIterator last);
     template <typename ForwardIterator>

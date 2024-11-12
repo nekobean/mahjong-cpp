@@ -47,7 +47,7 @@ std::tuple<int, int> ShantenCalculator::calc(const Hand &hand, int type)
     }
 
     if (type & ShantenFlag::SevenPairs) {
-        int shanten = calc_chiitoitsu(hand);
+        int shanten = calc_seven_pairs(hand);
         if (shanten < std::get<1>(ret)) {
             ret = {ShantenFlag::SevenPairs, shanten};
         }
@@ -57,7 +57,7 @@ std::tuple<int, int> ShantenCalculator::calc(const Hand &hand, int type)
     }
 
     if (type & ShantenFlag::ThirteenOrphans) {
-        int shanten = calc_kokushimusou(hand);
+        int shanten = calc_thirteen_orphans(hand);
         if (shanten < std::get<1>(ret)) {
             ret = {ShantenFlag::ThirteenOrphans, shanten};
         }
@@ -150,7 +150,7 @@ int ShantenCalculator::calc_regular(const Hand &hand)
  * @param[in] hand The hand
  * @return int The shanten number
  */
-int ShantenCalculator::calc_chiitoitsu(const Hand &hand)
+int ShantenCalculator::calc_seven_pairs(const Hand &hand)
 {
     int num_types = 0;
     int num_pairs = 0;
@@ -169,7 +169,7 @@ int ShantenCalculator::calc_chiitoitsu(const Hand &hand)
  * @param[in] hand The hand
  * @return int The shanten number
  */
-int ShantenCalculator::calc_kokushimusou(const Hand &hand)
+int ShantenCalculator::calc_thirteen_orphans(const Hand &hand)
 {
     int num_types = 0;
     bool has_toitsu = false;

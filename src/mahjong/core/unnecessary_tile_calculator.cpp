@@ -13,8 +13,8 @@ namespace mahjong
  * @param[in] type 計算対象の向聴数の種類
  * @return std::vector<int> 牌一覧
  */
-std::tuple<int, int, std::vector<int>>
-UnnecessaryTileCalculator::select(const Hand &hand, const int type)
+std::tuple<int, int, std::vector<int>> UnnecessaryTileCalculator::calc(const Hand &hand,
+                                                                       const int type)
 {
     std::tuple<int, int, int64_t> ret = {ShantenFlag::Null,
                                          std::numeric_limits<int>::max(), 0};
@@ -31,7 +31,7 @@ UnnecessaryTileCalculator::select(const Hand &hand, const int type)
     }
 
     if (type & ShantenFlag::SevenPairs) {
-        auto [shanten, disc] = calc_chiitoitsu(hand);
+        auto [shanten, disc] = calc_seven_pairs(hand);
         if (shanten < std::get<1>(ret)) {
             ret = {ShantenFlag::SevenPairs, shanten, disc};
         }
@@ -42,7 +42,7 @@ UnnecessaryTileCalculator::select(const Hand &hand, const int type)
     }
 
     if (type & ShantenFlag::ThirteenOrphans) {
-        auto [shanten, disc] = calc_kokushimusou(hand);
+        auto [shanten, disc] = calc_thirteen_orphans(hand);
         if (shanten < std::get<1>(ret)) {
             ret = {ShantenFlag::ThirteenOrphans, shanten, disc};
         }
@@ -80,9 +80,9 @@ UnnecessaryTileCalculator::select_regular(const Hand &hand)
 }
 
 std::tuple<int, std::vector<int>>
-UnnecessaryTileCalculator::select_chiitoitsu(const Hand &hand)
+UnnecessaryTileCalculator::select_seven_pairs(const Hand &hand)
 {
-    auto [shanten, disc] = calc_chiitoitsu(hand);
+    auto [shanten, disc] = calc_seven_pairs(hand);
 
     std::vector<int> tiles;
     tiles.reserve(34);
@@ -96,9 +96,9 @@ UnnecessaryTileCalculator::select_chiitoitsu(const Hand &hand)
 }
 
 std::tuple<int, std::vector<int>>
-UnnecessaryTileCalculator::select_kokushimusou(const Hand &hand)
+UnnecessaryTileCalculator::select_thirteen_orphans(const Hand &hand)
 {
-    auto [shanten, disc] = calc_kokushimusou(hand);
+    auto [shanten, disc] = calc_thirteen_orphans(hand);
 
     std::vector<int> tiles;
     tiles.reserve(13);
@@ -140,7 +140,7 @@ std::tuple<int, int64_t> UnnecessaryTileCalculator::calc_regular(const Hand &han
     return {shanten, disc};
 }
 
-std::tuple<int, int64_t> UnnecessaryTileCalculator::calc_chiitoitsu(const Hand &hand)
+std::tuple<int, int64_t> UnnecessaryTileCalculator::calc_seven_pairs(const Hand &hand)
 {
     int num_pairs = 0;
     int num_types = 0;
@@ -169,7 +169,8 @@ std::tuple<int, int64_t> UnnecessaryTileCalculator::calc_chiitoitsu(const Hand &
     return {shanten, disc};
 }
 
-std::tuple<int, int64_t> UnnecessaryTileCalculator::calc_kokushimusou(const Hand &hand)
+std::tuple<int, int64_t>
+UnnecessaryTileCalculator::calc_thirteen_orphans(const Hand &hand)
 {
     static const auto tanyao_tiles = {
         Tile::Manzu2, Tile::Manzu3, Tile::Manzu4, Tile::Manzu5, Tile::Manzu6,

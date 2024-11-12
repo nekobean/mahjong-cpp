@@ -1,6 +1,9 @@
 #ifndef MAHJONG_CPP_NYANTEN_TABLE
 #define MAHJONG_CPP_NYANTEN_TABLE
 
+// reference:
+// https://www.slideshare.net/slideshow/a-fast-and-space-efficient-algorithm-for-calculating-deficient-numbers-a-k-a-shanten-numbers-pdf/269706674
+
 #include <array>
 #include <cstdint>
 
