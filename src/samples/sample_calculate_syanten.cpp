@@ -8,7 +8,7 @@ int main(int, char **)
     // 向聴数が最小となる手の種類及び向聴数をタプルで返します。
     {
         Hand hand({Tile::Manzu1, Tile::Manzu1, Tile::Manzu1, Tile::Manzu2,
-                   Tile::AkaManzu5, Tile::Manzu6, Tile::Manzu7, Tile::Manzu8,
+                   Tile::RedManzu5, Tile::Manzu6, Tile::Manzu7, Tile::Manzu8,
                    Tile::Manzu9, Tile::Pinzu1, Tile::Pinzu1, Tile::Pinzu2,
                    Tile::Pinzu2});
 
@@ -28,7 +28,7 @@ int main(int, char **)
     // 一般手の向聴数を計算する
     {
         Hand hand({Tile::Manzu1, Tile::Manzu1, Tile::Manzu1, Tile::Manzu2,
-                   Tile::AkaManzu5, Tile::Manzu6, Tile::Manzu7, Tile::Manzu8,
+                   Tile::RedManzu5, Tile::Manzu6, Tile::Manzu7, Tile::Manzu8,
                    Tile::Manzu9, Tile::Pinzu1, Tile::Pinzu1, Tile::Pinzu2,
                    Tile::Pinzu2});
 
@@ -44,7 +44,7 @@ int main(int, char **)
     // 七対子手の向聴数を計算する
     {
         Hand hand({Tile::Manzu1, Tile::Manzu1, Tile::Manzu2, Tile::Manzu2,
-                   Tile::AkaManzu5, Tile::Manzu6, Tile::Manzu7, Tile::Manzu8,
+                   Tile::RedManzu5, Tile::Manzu6, Tile::Manzu7, Tile::Manzu8,
                    Tile::Manzu9, Tile::Pinzu1, Tile::Pinzu1, Tile::Pinzu2,
                    Tile::Pinzu2});
 
@@ -60,8 +60,8 @@ int main(int, char **)
     // 国士無双手の向聴数を計算する
     {
         Hand hand({Tile::Manzu1, Tile::Manzu1, Tile::Manzu2, Tile::Manzu2,
-                   Tile::AkaManzu5, Tile::Manzu6, Tile::Manzu7, Tile::Manzu8,
-                   Tile::Manzu9, Tile::Pinzu1, Tile::Ton, Tile::Nan, Tile::Sya});
+                   Tile::RedManzu5, Tile::Manzu6, Tile::Manzu7, Tile::Manzu8,
+                   Tile::Manzu9, Tile::Pinzu1, Tile::East, Tile::South, Tile::West});
 
         auto [syanten_type, syanten] =
             ShantenCalculator::calc(hand, SyantenType::Kokusi);

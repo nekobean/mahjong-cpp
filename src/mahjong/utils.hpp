@@ -23,16 +23,16 @@ static inline const std::map<int, int> Dora2Indicator = {
     {Tile::Pinzu4, Tile::Pinzu3},    {Tile::Pinzu5, Tile::Pinzu4},
     {Tile::Pinzu6, Tile::Pinzu5},    {Tile::Pinzu7, Tile::Pinzu6},
     {Tile::Pinzu8, Tile::Pinzu7},    {Tile::Pinzu9, Tile::Pinzu8},
-    {Tile::Sozu1, Tile::Sozu9},      {Tile::Sozu2, Tile::Sozu1},
-    {Tile::Sozu3, Tile::Sozu2},      {Tile::Sozu4, Tile::Sozu3},
-    {Tile::Sozu5, Tile::Sozu4},      {Tile::Sozu6, Tile::Sozu5},
-    {Tile::Sozu7, Tile::Sozu6},      {Tile::Sozu8, Tile::Sozu7},
-    {Tile::Sozu9, Tile::Sozu8},      {Tile::Ton, Tile::Pe},
-    {Tile::Nan, Tile::Ton},          {Tile::Sya, Tile::Nan},
-    {Tile::Pe, Tile::Sya},           {Tile::Haku, Tile::Tyun},
-    {Tile::Hatu, Tile::Haku},        {Tile::Tyun, Tile::Hatu},
-    {Tile::AkaManzu5, Tile::Manzu4}, {Tile::AkaPinzu5, Tile::Pinzu4},
-    {Tile::AkaSozu5, Tile::Sozu4}};
+    {Tile::Souzu1, Tile::Souzu9},    {Tile::Souzu2, Tile::Souzu1},
+    {Tile::Souzu3, Tile::Souzu2},    {Tile::Souzu4, Tile::Souzu3},
+    {Tile::Souzu5, Tile::Souzu4},    {Tile::Souzu6, Tile::Souzu5},
+    {Tile::Souzu7, Tile::Souzu6},    {Tile::Souzu8, Tile::Souzu7},
+    {Tile::Souzu9, Tile::Souzu8},    {Tile::East, Tile::North},
+    {Tile::South, Tile::East},       {Tile::West, Tile::South},
+    {Tile::North, Tile::West},       {Tile::White, Tile::Red},
+    {Tile::Green, Tile::White},      {Tile::Red, Tile::Green},
+    {Tile::RedManzu5, Tile::Manzu4}, {Tile::RedPinzu5, Tile::Pinzu4},
+    {Tile::RedSouzu5, Tile::Souzu4}};
 
 /**
  * @brief ドラ表示牌とドラの対応表
@@ -47,16 +47,16 @@ static inline const std::map<int, int> Indicator2Dora = {
     {Tile::Pinzu4, Tile::Pinzu5},    {Tile::Pinzu5, Tile::Pinzu6},
     {Tile::Pinzu6, Tile::Pinzu7},    {Tile::Pinzu7, Tile::Pinzu8},
     {Tile::Pinzu8, Tile::Pinzu9},    {Tile::Pinzu9, Tile::Pinzu1},
-    {Tile::Sozu1, Tile::Sozu2},      {Tile::Sozu2, Tile::Sozu3},
-    {Tile::Sozu3, Tile::Sozu4},      {Tile::Sozu4, Tile::Sozu5},
-    {Tile::Sozu5, Tile::Sozu6},      {Tile::Sozu6, Tile::Sozu7},
-    {Tile::Sozu7, Tile::Sozu8},      {Tile::Sozu8, Tile::Sozu9},
-    {Tile::Sozu9, Tile::Sozu1},      {Tile::Ton, Tile::Nan},
-    {Tile::Nan, Tile::Sya},          {Tile::Sya, Tile::Pe},
-    {Tile::Pe, Tile::Ton},           {Tile::Haku, Tile::Hatu},
-    {Tile::Hatu, Tile::Tyun},        {Tile::Tyun, Tile::Haku},
-    {Tile::AkaManzu5, Tile::Manzu6}, {Tile::AkaPinzu5, Tile::Pinzu6},
-    {Tile::AkaSozu5, Tile::Sozu6}};
+    {Tile::Souzu1, Tile::Souzu2},    {Tile::Souzu2, Tile::Souzu3},
+    {Tile::Souzu3, Tile::Souzu4},    {Tile::Souzu4, Tile::Souzu5},
+    {Tile::Souzu5, Tile::Souzu6},    {Tile::Souzu6, Tile::Souzu7},
+    {Tile::Souzu7, Tile::Souzu8},    {Tile::Souzu8, Tile::Souzu9},
+    {Tile::Souzu9, Tile::Souzu1},    {Tile::East, Tile::South},
+    {Tile::South, Tile::West},       {Tile::West, Tile::North},
+    {Tile::North, Tile::East},       {Tile::White, Tile::Green},
+    {Tile::Green, Tile::Red},        {Tile::Red, Tile::White},
+    {Tile::RedManzu5, Tile::Manzu6}, {Tile::RedPinzu5, Tile::Pinzu6},
+    {Tile::RedSouzu5, Tile::Souzu6}};
 
 /**
  * @brief 設定を文字列にして返す。
@@ -68,8 +68,8 @@ inline std::string print_round_info(const ScoreCalculator2 &score)
     std::string s;
 
     s += "[ルール]\n";
-    for (auto rule : {RuleFlag::AkaDora, RuleFlag::OpenTanyao}) {
-        s += fmt::format("  {}: {}\n", RuleFlag::Name.at(rule),
+    for (auto rule : {RuleType::RedDora, RuleType::OpenTanyao}) {
+        s += fmt::format("  {}: {}\n", RuleType::Name.at(rule),
                          (score.rules() & rule) ? "有り" : "無し");
     }
 

@@ -13,26 +13,6 @@ namespace mahjong
 //#define USE_NYANTEN_TABLE
 
 /**
- * @brief Types of shanten numbers
- */
-namespace ShantenType
-{
-enum
-{
-    Null = 0,
-    Regular = 1,     /* Shanten number of regular form (一般形の向聴数) */
-    Chiitoitsu = 2,  /* Shanten number of Chiitoitsu (七対子の向聴数) */
-    Kokushimusou = 4 /* Shanten number of Kokushimusou (国士無双の向聴数) */
-};
-
-static inline std::map<int, std::string> Name = {
-    {Regular, "Regular"},
-    {Chiitoitsu, "Chiitoitsu"},
-    {Kokushimusou, "Kokushimusou"},
-};
-}; // namespace ShantenType
-
-/**
  * @brief Class for calculating shanten number
  */
 class ShantenCalculator

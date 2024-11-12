@@ -173,9 +173,9 @@ int ShantenCalculator::calc_kokushimusou(const Hand &hand)
 {
     int num_types = 0;
     bool has_toitsu = false;
-    for (int i : {Tile::Manzu1, Tile::Manzu9, Tile::Pinzu1, Tile::Pinzu9, Tile::Sozu1,
-                  Tile::Sozu9, Tile::Ton, Tile::Nan, Tile::Sya, Tile::Pe, Tile::Haku,
-                  Tile::Hatu, Tile::Tyun}) {
+    for (int i : {Tile::Manzu1, Tile::Manzu9, Tile::Pinzu1, Tile::Pinzu9, Tile::Souzu1,
+                  Tile::Souzu9, Tile::East, Tile::South, Tile::West, Tile::North,
+                  Tile::White, Tile::Green, Tile::Red}) {
         num_types += hand.counts[i] > 0;
         has_toitsu |= hand.counts[i] >= 2;
     }

@@ -159,8 +159,8 @@ TEST_CASE("一般役の点数計算")
             score.set_num_kyotakubo(testcase.num_kyotakubo);
             score.set_dora_tiles(testcase.dora_tiles);
             score.set_uradora_tiles(testcase.uradora_tiles);
-            score.set_rule(RuleFlag::AkaDora, testcase.enable_akadora);
-            score.set_rule(RuleFlag::OpenTanyao, testcase.enable_kuitan);
+            score.set_rule(RuleType::RedDora, testcase.enable_akadora);
+            score.set_rule(RuleType::OpenTanyao, testcase.enable_kuitan);
 
             // 計算
             Result ret = score.calc(testcase.hand, testcase.win_tile, testcase.flag);
@@ -201,8 +201,8 @@ TEST_CASE("一般役の点数計算")
             score.set_num_kyotakubo(testcase.num_kyotakubo);
             score.set_dora_tiles(testcase.dora_tiles);
             score.set_uradora_tiles(testcase.uradora_tiles);
-            score.set_rule(RuleFlag::AkaDora, testcase.enable_akadora);
-            score.set_rule(RuleFlag::OpenTanyao, testcase.enable_kuitan);
+            score.set_rule(RuleType::RedDora, testcase.enable_akadora);
+            score.set_rule(RuleType::OpenTanyao, testcase.enable_kuitan);
 
             // 計算
             Result ret = score.calc(testcase.hand, testcase.win_tile, testcase.flag);

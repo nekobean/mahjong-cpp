@@ -289,25 +289,25 @@ TEST_CASE("Suukantsu (Four Kongs)")
 
     SECTION("Suukantsu (Four Kongs) established")
     {
-        MeldedBlock block1({MeldType::Ankan,
+        MeldedBlock block1({MeldType::ClosedKong,
                             {Tile::Manzu1, Tile::Manzu1, Tile::Manzu1, Tile::Manzu1},
                             Tile::Manzu1,
                             PlayerType::Null});
-        MeldedBlock block2({MeldType::Minkan,
+        MeldedBlock block2({MeldType::OpenKong,
                             {Tile::Pinzu1, Tile::Pinzu1, Tile::Pinzu1, Tile::Pinzu1},
                             Tile::Pinzu1,
                             PlayerType::Player1});
-        MeldedBlock block3({MeldType::Ankan,
-                            {Tile::Sozu1, Tile::Sozu1, Tile::Sozu1, Tile::Sozu1},
-                            Tile::Sozu1,
+        MeldedBlock block3({MeldType::ClosedKong,
+                            {Tile::Souzu1, Tile::Souzu1, Tile::Souzu1, Tile::Souzu1},
+                            Tile::Souzu1,
                             PlayerType::Null});
-        MeldedBlock block4({MeldType::Kakan,
-                            {Tile::Ton, Tile::Ton, Tile::Ton, Tile::Ton},
-                            Tile::Ton,
+        MeldedBlock block4({MeldType::AddedKong,
+                            {Tile::East, Tile::East, Tile::East, Tile::East},
+                            Tile::East,
                             PlayerType::Player1});
-        Hand hand({Tile::Haku, Tile::Haku}, {block1, block2, block3, block4});
+        Hand hand({Tile::White, Tile::White}, {block1, block2, block3, block4});
 
-        int win_tile = Tile::Haku;
+        int win_tile = Tile::White;
         bool expected = true;
         bool actual = score.check_suukantsu(hand);
         INFO(fmt::format("hand: {}, win tile: {}", hand.to_string(),
@@ -317,25 +317,25 @@ TEST_CASE("Suukantsu (Four Kongs)")
 
     SECTION("Suukantsu (Four Kongs) not established")
     {
-        MeldedBlock block1({MeldType::Pon,
+        MeldedBlock block1({MeldType::Pong,
                             {Tile::Manzu1, Tile::Manzu1, Tile::Manzu1},
                             Tile::Manzu1,
                             PlayerType::Player1});
-        MeldedBlock block2({MeldType::Minkan,
+        MeldedBlock block2({MeldType::OpenKong,
                             {Tile::Pinzu1, Tile::Pinzu1, Tile::Pinzu1, Tile::Pinzu1},
                             Tile::Pinzu1,
                             PlayerType::Player1});
-        MeldedBlock block3({MeldType::Ankan,
-                            {Tile::Sozu1, Tile::Sozu1, Tile::Sozu1, Tile::Sozu1},
-                            Tile::Sozu1,
+        MeldedBlock block3({MeldType::ClosedKong,
+                            {Tile::Souzu1, Tile::Souzu1, Tile::Souzu1, Tile::Souzu1},
+                            Tile::Souzu1,
                             PlayerType::Null});
-        MeldedBlock block4({MeldType::Kakan,
-                            {Tile::Ton, Tile::Ton, Tile::Ton, Tile::Ton},
-                            Tile::Ton,
+        MeldedBlock block4({MeldType::AddedKong,
+                            {Tile::East, Tile::East, Tile::East, Tile::East},
+                            Tile::East,
                             PlayerType::Player1});
-        Hand hand({Tile::Haku, Tile::Haku}, {block1, block2, block3, block4});
+        Hand hand({Tile::White, Tile::White}, {block1, block2, block3, block4});
 
-        int win_tile = Tile::Haku;
+        int win_tile = Tile::White;
         bool expected = false;
         bool actual = score.check_suukantsu(hand);
         INFO(fmt::format("hand: {}, win tile: {}", hand.to_string(),
@@ -345,22 +345,22 @@ TEST_CASE("Suukantsu (Four Kongs)")
 
     SECTION("Suukantsu (Four Kongs) not established")
     {
-        MeldedBlock block1({MeldType::Minkan,
+        MeldedBlock block1({MeldType::OpenKong,
                             {Tile::Pinzu1, Tile::Pinzu1, Tile::Pinzu1, Tile::Pinzu1},
                             Tile::Pinzu1,
                             PlayerType::Player1});
-        MeldedBlock block2({MeldType::Ankan,
-                            {Tile::Sozu1, Tile::Sozu1, Tile::Sozu1, Tile::Sozu1},
-                            Tile::Sozu1,
+        MeldedBlock block2({MeldType::ClosedKong,
+                            {Tile::Souzu1, Tile::Souzu1, Tile::Souzu1, Tile::Souzu1},
+                            Tile::Souzu1,
                             PlayerType::Null});
-        MeldedBlock block3({MeldType::Kakan,
-                            {Tile::Ton, Tile::Ton, Tile::Ton, Tile::Ton},
-                            Tile::Ton,
+        MeldedBlock block3({MeldType::AddedKong,
+                            {Tile::East, Tile::East, Tile::East, Tile::East},
+                            Tile::East,
                             PlayerType::Player1});
-        Hand hand({Tile::Haku, Tile::Haku, Tile::Tyun, Tile::Tyun, Tile::Tyun},
+        Hand hand({Tile::White, Tile::White, Tile::Red, Tile::Red, Tile::Red},
                   {block1, block2, block3});
 
-        int win_tile = Tile::Haku;
+        int win_tile = Tile::White;
         bool expected = false;
         bool actual = score.check_suukantsu(hand);
         INFO(fmt::format("hand: {}, win tile: {}", hand.to_string(),

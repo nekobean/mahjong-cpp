@@ -10,22 +10,6 @@ namespace mahjong
 {
 
 /**
- * @brief ルールに関するフラグ
- */
-namespace RuleFlag
-{
-enum
-{
-    Null = 0,
-    AkaDora = 1 << 1,    /* 赤ドラ有り */
-    OpenTanyao = 1 << 2, /* 喰い断有り */
-};
-
-static inline const std::map<int, std::string> Name = {
-    {Null, "Null"}, {AkaDora, "赤ドラ有り"}, {OpenTanyao, "喰い断有り"}};
-} // namespace RuleFlag
-
-/**
  * @brief 点数計算機
  */
 class ScoreCalculator2
@@ -40,26 +24,20 @@ class ScoreCalculator2
     std::vector<int> get_scores_for_exp(const Result &result);
 
     /* パラメータを設定・取得する関数 */
-    void set_rules(int rule = RuleFlag::Null);
+    void set_rules(int rule = RuleType::Null);
     void set_rule(int rule, bool enabled);
     int rules() const;
-
     void set_dora_tiles(const std::vector<int> &tiles);
     void set_dora_indicators(const std::vector<int> &tiles);
     const std::vector<int> &dora_tiles() const;
-
     void set_uradora_tiles(const std::vector<int> &tiles);
     const std::vector<int> &uradora_tiles() const;
-
     void set_bakaze(int tile);
     int bakaze() const;
-
     void set_zikaze(int tile);
     int zikaze() const;
-
     void set_num_tumibo(int n);
     int num_tumibo() const;
-
     void set_num_kyotakubo(int n);
     int num_kyotakubo() const;
 
@@ -84,7 +62,7 @@ class ScoreCalculator2
     Result aggregate(const Hand &hand, int win_tile, int flag, YakuList yaku_list,
                      int fu, const std::vector<Block> &blocks, int wait_type) const;
 
-    // 役満をチェックする関数
+    // Functions to determine Yaku
     bool check_ryuuiisou(const Hand &hand) const;
     bool check_daisangen(const Hand &hand) const;
     bool check_shousuushii(const Hand &hand) const;
@@ -96,8 +74,6 @@ class ScoreCalculator2
     bool check_suukantsu(const Hand &hand) const;
     bool check_daisuushii(const Hand &hand) const;
     bool check_kokushimusou13(const Hand &hand, int win_tile) const;
-
-    // 一般役をチェックする関数
     bool check_tanyao(const Hand &hand) const;
     bool check_honroutou(const Hand &hand) const;
     bool check_honitsu(const Hand &hand) const;

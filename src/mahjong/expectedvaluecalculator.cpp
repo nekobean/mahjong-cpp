@@ -163,31 +163,31 @@ ExpectedValueCalculator::count_left_tiles(const Hand &hand,
                                           const std::vector<int> &dora_indicators)
 {
     std::vector<int> counts(37, 4);
-    counts[Tile::AkaManzu5] = counts[Tile::AkaPinzu5] = counts[Tile::AkaSozu5] = 1;
+    counts[Tile::RedManzu5] = counts[Tile::RedPinzu5] = counts[Tile::RedSouzu5] = 1;
 
     // 手牌を除く。
     for (int i = 0; i < 34; ++i)
         counts[i] -= hand.counts[i];
-    counts[Tile::AkaManzu5] -= hand.aka_manzu5;
-    counts[Tile::AkaPinzu5] -= hand.aka_pinzu5;
-    counts[Tile::AkaSozu5] -= hand.aka_souzu5;
+    counts[Tile::RedManzu5] -= hand.aka_manzu5;
+    counts[Tile::RedPinzu5] -= hand.aka_pinzu5;
+    counts[Tile::RedSouzu5] -= hand.aka_souzu5;
 
     // 副露ブロックを除く。
     for (const auto &block : hand.melds) {
         for (auto tile : block.tiles) {
             counts[aka2normal(tile)]--;
-            counts[Tile::AkaManzu5] -= tile == Tile::AkaManzu5;
-            counts[Tile::AkaPinzu5] -= tile == Tile::AkaPinzu5;
-            counts[Tile::AkaSozu5] -= tile == Tile::AkaSozu5;
+            counts[Tile::RedManzu5] -= tile == Tile::RedManzu5;
+            counts[Tile::RedPinzu5] -= tile == Tile::RedPinzu5;
+            counts[Tile::RedSouzu5] -= tile == Tile::RedSouzu5;
         }
     }
 
     // ドラ表示牌を除く。
     for (auto tile : dora_indicators) {
         counts[aka2normal(tile)]--;
-        counts[Tile::AkaManzu5] -= tile == Tile::AkaManzu5;
-        counts[Tile::AkaPinzu5] -= tile == Tile::AkaPinzu5;
-        counts[Tile::AkaSozu5] -= tile == Tile::AkaSozu5;
+        counts[Tile::RedManzu5] -= tile == Tile::RedManzu5;
+        counts[Tile::RedPinzu5] -= tile == Tile::RedPinzu5;
+        counts[Tile::RedSouzu5] -= tile == Tile::RedSouzu5;
     }
 
     return counts;
@@ -294,39 +294,39 @@ ExpectedValueCalculator::get_draw_tiles(Hand &hand, int syanten,
         int syanten_diff = syanten_after - syanten;
 
         if (calc_akatile_tumo_ && tile == Tile::Manzu5 &&
-            counts[Tile::AkaManzu5] == 1) {
+            counts[Tile::RedManzu5] == 1) {
             if (counts[Tile::Manzu5] >= 2) {
                 // 五萬と赤五萬の両方が残っている
                 flags.emplace_back(tile, counts[tile] - 1, syanten_diff);
-                flags.emplace_back(Tile::AkaManzu5, 1, syanten_diff);
+                flags.emplace_back(Tile::RedManzu5, 1, syanten_diff);
             }
             else if (counts[Tile::Manzu5] == 1) {
                 // 赤五萬のみ残っている
-                flags.emplace_back(Tile::AkaManzu5, 1, syanten_diff);
+                flags.emplace_back(Tile::RedManzu5, 1, syanten_diff);
             }
         }
         else if (calc_akatile_tumo_ && tile == Tile::Pinzu5 &&
-                 counts[Tile::AkaPinzu5] == 1) {
+                 counts[Tile::RedPinzu5] == 1) {
             if (counts[Tile::Pinzu5] >= 2) {
                 // 五筒と赤五筒の両方が残っている
                 flags.emplace_back(tile, counts[tile] - 1, syanten_diff);
-                flags.emplace_back(Tile::AkaPinzu5, 1, syanten_diff);
+                flags.emplace_back(Tile::RedPinzu5, 1, syanten_diff);
             }
             else if (counts[Tile::Pinzu5] == 1) {
                 // 赤五筒のみ残っている
-                flags.emplace_back(Tile::AkaPinzu5, 1, syanten_diff);
+                flags.emplace_back(Tile::RedPinzu5, 1, syanten_diff);
             }
         }
-        else if (calc_akatile_tumo_ && tile == Tile::Sozu5 &&
-                 counts[Tile::AkaSozu5] == 1) {
-            if (counts[Tile::Sozu5] >= 2) {
+        else if (calc_akatile_tumo_ && tile == Tile::Souzu5 &&
+                 counts[Tile::RedSouzu5] == 1) {
+            if (counts[Tile::Souzu5] >= 2) {
                 // 五索と赤五索の両方が残っている
                 flags.emplace_back(tile, counts[tile] - 1, syanten_diff);
-                flags.emplace_back(Tile::AkaSozu5, 1, syanten_diff);
+                flags.emplace_back(Tile::RedSouzu5, 1, syanten_diff);
             }
-            else if (counts[Tile::Sozu5] == 1) {
+            else if (counts[Tile::Souzu5] == 1) {
                 // 赤五索のみ残っている
-                flags.emplace_back(Tile::AkaSozu5, 1, syanten_diff);
+                flags.emplace_back(Tile::RedSouzu5, 1, syanten_diff);
             }
         }
         else {
@@ -363,13 +363,13 @@ ExpectedValueCalculator::get_discard_tiles(Hand &hand, int syanten)
         int discard_tile = tile;
         if (discard_tile == Tile::Manzu5 && hand.aka_manzu5 &&
             hand.counts[Tile::Manzu5] == 1)
-            discard_tile = Tile::AkaManzu5;
+            discard_tile = Tile::RedManzu5;
         else if (discard_tile == Tile::Pinzu5 && hand.aka_pinzu5 &&
                  hand.counts[Tile::Pinzu5] == 1)
-            discard_tile = Tile::AkaPinzu5;
-        else if (discard_tile == Tile::Sozu5 && hand.aka_souzu5 &&
-                 hand.counts[Tile::Sozu5] == 1)
-            discard_tile = Tile::AkaSozu5;
+            discard_tile = Tile::RedPinzu5;
+        else if (discard_tile == Tile::Souzu5 && hand.aka_souzu5 &&
+                 hand.counts[Tile::Souzu5] == 1)
+            discard_tile = Tile::RedSouzu5;
 
         flags.emplace_back(discard_tile, syanten_diff);
     }

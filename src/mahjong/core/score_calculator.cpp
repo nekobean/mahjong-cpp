@@ -16,9 +16,9 @@ namespace mahjong
  * @brief 点数計算機を作成する。
  */
 ScoreCalculator2::ScoreCalculator2()
-    : rules_(RuleFlag::AkaDora | RuleFlag::OpenTanyao)
-    , bakaze_(Tile::Ton)
-    , zikaze_(Tile::Ton)
+    : rules_(RuleType::RedDora | RuleType::OpenTanyao)
+    , bakaze_(Tile::East)
+    , zikaze_(Tile::East)
     , n_tumibo_(0)
     , n_kyotakubo_(0)
 {
@@ -326,7 +326,7 @@ Result ScoreCalculator2::aggregate(const Hand &hand, int win_tile, int flag,
         han += n_uradora;
     }
 
-    if (rules_ & RuleFlag::AkaDora) {
+    if (rules_ & RuleType::RedDora) {
         int num_reddora = count_reddora(hand);
         if (num_reddora) {
             yaku_han_list.emplace_back(Yaku::AkaDora, num_reddora);
@@ -563,44 +563,44 @@ YakuList ScoreCalculator2::check_not_pattern_yaku(const Hand &hand, int win_tile
         if (check_sankantsu(hand))
             yaku_list |= Yaku::Sankantu; // 三槓子
 
-        if (hand.counts[Tile::Haku] == 3) {
+        if (hand.counts[Tile::White] == 3) {
             yaku_list |= Yaku::SangenhaiHaku; // 三元牌 (白)
         }
 
-        if (hand.counts[Tile::Hatu] == 3) {
+        if (hand.counts[Tile::Green] == 3) {
             yaku_list |= Yaku::SangenhaiHatu; // 三元牌 (發)
         }
 
-        if (hand.counts[Tile::Tyun] == 3) {
+        if (hand.counts[Tile::Red] == 3) {
             yaku_list |= Yaku::SangenhaiTyun; // 三元牌 (中)
         }
 
         if (hand.counts[zikaze_] == 3) {
-            if (zikaze_ == Tile::Ton) {
+            if (zikaze_ == Tile::East) {
                 yaku_list |= Yaku::ZikazeTon; // 自風牌 (東)
             }
-            else if (zikaze_ == Tile::Nan) {
+            else if (zikaze_ == Tile::South) {
                 yaku_list |= Yaku::ZikazeNan; // 自風牌 (南)
             }
-            else if (zikaze_ == Tile::Sya) {
+            else if (zikaze_ == Tile::West) {
                 yaku_list |= Yaku::ZikazeSya; // 自風牌 (西)
             }
-            else if (zikaze_ == Tile::Pe) {
+            else if (zikaze_ == Tile::North) {
                 yaku_list |= Yaku::ZikazePe; // 自風牌 (北)
             }
         }
 
         if (hand.counts[bakaze_] == 3) {
-            if (bakaze_ == Tile::Ton) {
+            if (bakaze_ == Tile::East) {
                 yaku_list |= Yaku::BakazeTon; // 場風牌 (東)
             }
-            else if (bakaze_ == Tile::Nan) {
+            else if (bakaze_ == Tile::South) {
                 yaku_list |= Yaku::BakazeNan; // 場風牌 (南)
             }
-            else if (bakaze_ == Tile::Sya) {
+            else if (bakaze_ == Tile::West) {
                 yaku_list |= Yaku::BakazeSya; // 場風牌 (西)
             }
-            else if (bakaze_ == Tile::Pe) {
+            else if (bakaze_ == Tile::North) {
                 yaku_list |= Yaku::BakazePe; // 場風牌 (北)
             }
         }
@@ -636,7 +636,7 @@ ScoreCalculator2::check_pattern_yaku(const Hand &_hand, int win_tile, int flag,
                                   [](int x, int y) { return x * 8 + y; });
 
     if (shanten_type == ShantenType::Chiitoitsu) {
-        return {Yaku::Null, Hu::Hu25, {}, WaitType::Tanki};
+        return {Yaku::Null, Hu::Hu25, {}, WaitType::PairWait};
     }
 
     static const std::vector<YakuList> pattern_yaku = {
@@ -763,40 +763,40 @@ int ScoreCalculator2::calc_fu(const std::vector<Block> &blocks, int wait_type,
     }
 
     // 待ちによる符
-    if (wait_type == WaitType::Kantyan || wait_type == WaitType::Pentyan ||
-        wait_type == WaitType::Tanki) {
+    if (wait_type == WaitType::ClosedWait || wait_type == WaitType::EdgeWait ||
+        wait_type == WaitType::PairWait) {
         fu += 2; // 嵌張待ち、辺張待ち、単騎待ち
     }
 
     // 面子構成による符
     for (const auto &block : blocks) {
-        if (block.type & (BlockType::Kotu | BlockType::Kantu)) { // 刻子、槓子の場合
+        if (block.type & (BlockType::Triplet | BlockType::Kong)) { // 刻子、槓子の場合
             int block_fu = 0;
-            if (block.type == (BlockType::Kotu | BlockType::Open)) {
+            if (block.type == (BlockType::Triplet | BlockType::Open)) {
                 block_fu = 2; // 明刻子
             }
-            else if (block.type == BlockType::Kotu) {
+            else if (block.type == BlockType::Triplet) {
                 block_fu = 4; // 暗刻子
             }
-            else if (block.type == (BlockType::Kantu | BlockType::Open)) {
+            else if (block.type == (BlockType::Kong | BlockType::Open)) {
                 block_fu = 8; // 明槓子
             }
-            else if (block.type == BlockType::Kantu) {
+            else if (block.type == BlockType::Kong) {
                 block_fu = 16; // 暗槓子
             }
 
             bool yaotyu =
                 block.min_tile == Tile::Manzu1 || block.min_tile == Tile::Manzu9 ||
                 block.min_tile == Tile::Pinzu1 || block.min_tile == Tile::Pinzu9 ||
-                block.min_tile == Tile::Sozu1 || block.min_tile == Tile::Sozu9 ||
-                block.min_tile >= Tile::Ton;
+                block.min_tile == Tile::Souzu1 || block.min_tile == Tile::Souzu9 ||
+                block.min_tile >= Tile::East;
             fu += yaotyu ? block_fu * 2 : block_fu;
         }
-        else if (block.type & BlockType::Toitu) { // 対子の場合
+        else if (block.type & BlockType::Pair) { // 対子の場合
             if (block.min_tile == zikaze_ && block.min_tile == bakaze_)
                 fu += 4; // 連風牌
             else if (block.min_tile == zikaze_ || block.min_tile == bakaze_ ||
-                     block.min_tile >= Tile::Haku)
+                     block.min_tile >= Tile::White)
                 fu += 2; // 役牌
         }
     }
@@ -833,40 +833,40 @@ ScoreCalculator2::calc_fu_detail(const std::vector<Block> &blocks, int wait_type
     else if (is_tumo)
         fu_detail.emplace_back("自摸加符", 2);
 
-    if (wait_type == WaitType::Kantyan || wait_type == WaitType::Pentyan ||
-        wait_type == WaitType::Tanki)
+    if (wait_type == WaitType::ClosedWait || wait_type == WaitType::EdgeWait ||
+        wait_type == WaitType::PairWait)
         fu_detail.emplace_back(fmt::format("待ち: {}", WaitType::Name.at(wait_type)),
                                2);
 
     for (const auto &block : blocks) {
-        if (block.type & (BlockType::Kotu | BlockType::Kantu)) {
+        if (block.type & (BlockType::Triplet | BlockType::Kong)) {
             int block_fu = 0;
-            if (block.type == (BlockType::Kotu | BlockType::Open))
+            if (block.type == (BlockType::Triplet | BlockType::Open))
                 block_fu = 2; // 明刻子
-            else if (block.type == BlockType::Kotu)
+            else if (block.type == BlockType::Triplet)
                 block_fu = 4; // 暗刻子
-            else if (block.type == (BlockType::Kantu | BlockType::Open))
+            else if (block.type == (BlockType::Kong | BlockType::Open))
                 block_fu = 8; // 明槓子
-            else if (block.type == BlockType::Kantu)
+            else if (block.type == BlockType::Kong)
                 block_fu = 16; // 暗槓子
 
             bool yaotyu =
                 block.min_tile == Tile::Manzu1 || block.min_tile == Tile::Manzu9 ||
                 block.min_tile == Tile::Pinzu1 || block.min_tile == Tile::Pinzu9 ||
-                block.min_tile == Tile::Sozu1 || block.min_tile == Tile::Sozu9 ||
-                block.min_tile >= Tile::Ton;
+                block.min_tile == Tile::Souzu1 || block.min_tile == Tile::Souzu9 ||
+                block.min_tile >= Tile::East;
 
             fu_detail.emplace_back(fmt::format("面子構成: {} {}", block.to_string(),
                                                yaotyu ? "幺九牌" : "断幺牌"),
                                    yaotyu ? block_fu * 2 : block_fu);
         }
-        else if (block.type & BlockType::Toitu) {
+        else if (block.type & BlockType::Pair) {
             // 対子
             if (block.min_tile == zikaze_ && block.min_tile == bakaze_)
                 fu_detail.emplace_back(
                     fmt::format("雀頭: {} 連風牌", block.to_string()), 4);
             else if (block.min_tile == zikaze_ || block.min_tile == bakaze_ ||
-                     block.min_tile >= Tile::Haku)
+                     block.min_tile >= Tile::White)
                 fu_detail.emplace_back(fmt::format("雀頭: {} 役牌", block.to_string()),
                                        2);
         }
@@ -915,7 +915,7 @@ bool ScoreCalculator2::check_shousuushii(const Hand &hand) const
 {
     // Check if the total number of wind tiles is 11.
     int sum = 0;
-    for (int i = Tile::Ton; i <= Tile::Pe; ++i) {
+    for (int i = Tile::East; i <= Tile::North; ++i) {
         sum += hand.counts[i];
     }
 
@@ -952,10 +952,10 @@ bool ScoreCalculator2::check_chuuren_poutou(const Hand &hand, int win_tile) cons
                c[Tile::Pinzu4] && c[Tile::Pinzu5] && c[Tile::Pinzu6] &&
                c[Tile::Pinzu7] && c[Tile::Pinzu8] && c[Tile::Pinzu9] >= 3;
     }
-    else if (win_tile <= Tile::Sozu9) {
-        return c[Tile::Sozu1] >= 3 && c[Tile::Sozu2] && c[Tile::Sozu3] &&
-               c[Tile::Sozu4] && c[Tile::Sozu5] && c[Tile::Sozu6] && c[Tile::Sozu7] &&
-               c[Tile::Sozu8] && c[Tile::Sozu9] >= 3;
+    else if (win_tile <= Tile::Souzu9) {
+        return c[Tile::Souzu1] >= 3 && c[Tile::Souzu2] && c[Tile::Souzu3] &&
+               c[Tile::Souzu4] && c[Tile::Souzu5] && c[Tile::Souzu6] &&
+               c[Tile::Souzu7] && c[Tile::Souzu8] && c[Tile::Souzu9] >= 3;
     }
 
     return false;
@@ -985,7 +985,7 @@ bool ScoreCalculator2::check_chuuren_poutou9(const Hand &hand, int win_tile) con
         return hand.manzu - tile1[win_tile] == mask;
     else if (win_tile <= Tile::Pinzu9)
         return hand.pinzu - tile1[win_tile] == mask;
-    else if (win_tile <= Tile::Sozu9)
+    else if (win_tile <= Tile::Souzu9)
         return hand.souzu - tile1[win_tile] == mask;
 
     return false;
@@ -1046,7 +1046,7 @@ bool ScoreCalculator2::check_suukantsu(const Hand &hand) const
     int num_kongs = 0;
     for (const auto &block : hand.melds) {
         // enum values of 2 or more are kongs
-        num_kongs += MeldType::Ankan <= block.type;
+        num_kongs += MeldType::ClosedKong <= block.type;
     }
 
     return num_kongs == 4;
@@ -1059,7 +1059,7 @@ bool ScoreCalculator2::check_daisuushii(const Hand &hand) const
 {
     // Check if the total number of wind tiles is 12.
     int sum = 0;
-    for (int i = Tile::Ton; i <= Tile::Pe; ++i) {
+    for (int i = Tile::East; i <= Tile::North; ++i) {
         sum += hand.counts[i];
     }
 
@@ -1094,7 +1094,7 @@ bool ScoreCalculator2::check_kokushimusou13(const Hand &hand, int win_tile) cons
     else if (win_tile <= Tile::Pinzu9) {
         pinzu -= tile1[win_tile];
     }
-    else if (win_tile <= Tile::Sozu9) {
+    else if (win_tile <= Tile::Souzu9) {
         sozu -= tile1[win_tile];
     }
     else {
@@ -1110,7 +1110,7 @@ bool ScoreCalculator2::check_kokushimusou13(const Hand &hand, int win_tile) cons
  */
 bool ScoreCalculator2::check_tanyao(const Hand &hand) const
 {
-    if (!(rules_ & RuleFlag::OpenTanyao) && !hand.is_closed()) {
+    if (!(rules_ & RuleType::OpenTanyao) && !hand.is_closed()) {
         return false; // If Open Tanyao is not allowed, closed hand only
     }
 
@@ -1160,8 +1160,8 @@ bool ScoreCalculator2::check_chinitsu(const Hand &hand) const
 bool ScoreCalculator2::check_shousangen(const Hand &hand) const
 {
     // Check if the total number of dragon tiles is 8.
-    return hand.counts[Tile::Haku] + hand.counts[Tile::Hatu] +
-               hand.counts[Tile::Tyun] ==
+    return hand.counts[Tile::White] + hand.counts[Tile::Green] +
+               hand.counts[Tile::Red] ==
            8;
 }
 
@@ -1174,7 +1174,7 @@ bool ScoreCalculator2::check_sankantsu(const Hand &hand) const
     int num_kongs = 0;
     for (const auto &block : hand.melds) {
         // enum values of 2 or more are kongs
-        num_kongs += MeldType::Ankan <= block.type;
+        num_kongs += MeldType::ClosedKong <= block.type;
     }
 
     return num_kongs == 3;
@@ -1188,19 +1188,19 @@ bool ScoreCalculator2::check_pinfu(const std::vector<Block> blocks,
 {
     // Check if the hand is closed before calling this function.
 
-    if (wait_type != WaitType::Ryanmen) {
+    if (wait_type != WaitType::DoubleEdgeWait) {
         return false; // not double closed wait
     }
 
     // Check if all blocks are sequences or pairs that are not yakuhai.
     for (const auto &block : blocks) {
-        if (block.type & (BlockType::Kotu | BlockType::Kantu)) {
+        if (block.type & (BlockType::Triplet | BlockType::Kong)) {
             return false; // triplet, kong
         }
 
-        if ((block.type & BlockType::Toitu) &&
+        if ((block.type & BlockType::Pair) &&
             (block.min_tile == zikaze_ || block.min_tile == bakaze_ ||
-             block.min_tile >= Tile::Haku)) {
+             block.min_tile >= Tile::White)) {
             return false; // yakuhai pair
         }
     }
@@ -1218,7 +1218,7 @@ int ScoreCalculator2::check_iipeikou(const std::vector<Block> blocks) const
 
     std::vector<int> count(34, 0);
     for (const auto &block : blocks) {
-        if (block.type & BlockType::Syuntu) {
+        if (block.type & BlockType::Sequence) {
             count[block.min_tile]++; // sequence
         }
     }
@@ -1244,7 +1244,7 @@ bool ScoreCalculator2::check_ikkitsuukan(const std::vector<Block> blocks) const
 {
     std::vector<int> count(34, 0);
     for (const auto &block : blocks) {
-        if (block.type & BlockType::Syuntu) {
+        if (block.type & BlockType::Sequence) {
             count[block.min_tile]++; // sequence
         }
     }
@@ -1252,7 +1252,7 @@ bool ScoreCalculator2::check_ikkitsuukan(const std::vector<Block> blocks) const
     // Check if there is 123, 456, 789 in any type of number tiles.
     return (count[Tile::Manzu1] && count[Tile::Manzu4] && count[Tile::Manzu7]) ||
            (count[Tile::Pinzu1] && count[Tile::Pinzu4] && count[Tile::Pinzu7]) ||
-           (count[Tile::Sozu1] && count[Tile::Sozu4] && count[Tile::Sozu7]);
+           (count[Tile::Souzu1] && count[Tile::Souzu4] && count[Tile::Souzu7]);
 }
 
 /**
@@ -1262,7 +1262,7 @@ bool ScoreCalculator2::check_sanshoku_doukou(const std::vector<Block> blocks) co
 {
     std::vector<int> count(34, 0);
     for (const auto &block : blocks) {
-        if (block.type & (BlockType::Kotu | BlockType::Kantu)) {
+        if (block.type & (BlockType::Triplet | BlockType::Kong)) {
             count[block.min_tile]++; // triplet, kong
         }
     }
@@ -1283,7 +1283,7 @@ bool ScoreCalculator2::check_sanshoku_doujun(const std::vector<Block> blocks) co
 {
     std::vector<int> count(34, 0);
     for (const auto &block : blocks) {
-        if (block.type & BlockType::Syuntu) {
+        if (block.type & BlockType::Sequence) {
             count[block.min_tile]++; // sequence
         }
     }
@@ -1303,7 +1303,7 @@ bool ScoreCalculator2::check_sanshoku_doujun(const std::vector<Block> blocks) co
 bool ScoreCalculator2::check_toitoihou(const std::vector<Block> blocks) const
 {
     for (const auto &block : blocks) {
-        if (block.type & BlockType::Syuntu) {
+        if (block.type & BlockType::Sequence) {
             return false; // sequence
         }
     }
@@ -1325,10 +1325,10 @@ int ScoreCalculator2::check_chanta(const std::vector<Block> blocks) const
     bool honor_block = false; // いずれかのブロックに字牌が含まれるかどうか
     bool sequence_block = false; // いずれかのブロックに順子が含まれるかどうか
     for (const auto &block : blocks) {
-        if (block.type & BlockType::Syuntu) {
+        if (block.type & BlockType::Sequence) {
             if (!(block.min_tile == Tile::Manzu1 || block.min_tile == Tile::Manzu7 ||
                   block.min_tile == Tile::Pinzu1 || block.min_tile == Tile::Pinzu7 ||
-                  block.min_tile == Tile::Sozu1 || block.min_tile == Tile::Sozu7)) {
+                  block.min_tile == Tile::Souzu1 || block.min_tile == Tile::Souzu7)) {
                 return 0; // sequence that does not contain terminal or honor tiles
             }
 
@@ -1337,12 +1337,12 @@ int ScoreCalculator2::check_chanta(const std::vector<Block> blocks) const
         else {
             if (!(block.min_tile == Tile::Manzu1 || block.min_tile == Tile::Manzu9 ||
                   block.min_tile == Tile::Pinzu1 || block.min_tile == Tile::Pinzu9 ||
-                  block.min_tile == Tile::Sozu1 || block.min_tile == Tile::Sozu9 ||
-                  block.min_tile >= Tile::Ton)) {
+                  block.min_tile == Tile::Souzu1 || block.min_tile == Tile::Souzu9 ||
+                  block.min_tile >= Tile::East)) {
                 return 0; // triplet, kong, pair that does not contain terminal or honor tiles
             }
 
-            honor_block |= block.min_tile >= Tile::Ton;
+            honor_block |= block.min_tile >= Tile::East;
         }
     }
 
@@ -1363,7 +1363,7 @@ bool ScoreCalculator2::check_sanankou(const std::vector<Block> blocks) const
 {
     int num_triplets = 0;
     for (const auto &block : blocks) {
-        if (block.type == BlockType::Kotu || block.type == BlockType::Kantu) {
+        if (block.type == BlockType::Triplet || block.type == BlockType::Kong) {
             num_triplets++; // closed triplet or closed kong
         }
     }
@@ -1414,7 +1414,7 @@ int ScoreCalculator2::count_reddora(const Hand &hand) const
     if (hand.counts[Tile::Pinzu5] && hand.aka_pinzu5) {
         num_reddora += 1;
     }
-    if (hand.counts[Tile::Sozu5] && hand.aka_souzu5) {
+    if (hand.counts[Tile::Souzu5] && hand.aka_souzu5) {
         num_reddora += 1;
     }
 
@@ -1444,7 +1444,7 @@ Hand ScoreCalculator2::merge_hand(const Hand &hand) const
     for (const auto &block : norm_hand.melds) {
         int min_tile = aka2normal(block.tiles.front()); // 赤ドラは通常の牌として扱う
 
-        if (block.type == MeldType::Ti) {
+        if (block.type == MeldType::Chow) {
             ++norm_hand.counts[min_tile];
             ++norm_hand.counts[min_tile + 1];
             ++norm_hand.counts[min_tile + 2];
@@ -1485,7 +1485,7 @@ Hand ScoreCalculator2::merge_hand(const Hand &hand) const
 std::vector<int> ScoreCalculator2::calc_score(bool is_tumo, int score_title, int han,
                                               int fu) const
 {
-    bool is_parent = zikaze_ == Tile::Ton;
+    bool is_parent = zikaze_ == Tile::East;
 
     if (is_tumo && is_parent) {
         // 親の自摸和了

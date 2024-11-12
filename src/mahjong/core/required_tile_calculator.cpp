@@ -178,9 +178,9 @@ std::tuple<int, int64_t> RequiredTileCalculator::calc_chiitoitsu(const Hand &han
 std::tuple<int, int64_t> RequiredTileCalculator::calc_kokushimusou(const Hand &hand)
 {
     static const auto yaochuu_tiles = {
-        Tile::Manzu1, Tile::Manzu9, Tile::Pinzu1, Tile::Pinzu9, Tile::Sozu1,
-        Tile::Sozu9,  Tile::Ton,    Tile::Nan,    Tile::Sya,    Tile::Pe,
-        Tile::Haku,   Tile::Hatu,   Tile::Tyun};
+        Tile::Manzu1, Tile::Manzu9, Tile::Pinzu1, Tile::Pinzu9, Tile::Souzu1,
+        Tile::Souzu9, Tile::East,   Tile::South,  Tile::West,   Tile::North,
+        Tile::White,  Tile::Green,  Tile::Red};
 
     int num_pairs = 0;
     int num_types = 0;

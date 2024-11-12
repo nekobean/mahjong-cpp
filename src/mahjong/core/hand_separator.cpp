@@ -53,14 +53,14 @@ HandSeparator::separate(const Hand &hand, int win_tile, bool tumo)
 
     // 副露ブロックをブロック一覧に追加する。
     for (const auto &melded_block : hand.melds) {
-        if (melded_block.type == MeldType::Pon)
-            blocks[i].type = BlockType::Kotu | BlockType::Open;
-        else if (melded_block.type == MeldType::Ti)
-            blocks[i].type = BlockType::Syuntu | BlockType::Open;
-        else if (melded_block.type == MeldType::Ankan)
-            blocks[i].type = BlockType::Kantu;
+        if (melded_block.type == MeldType::Pong)
+            blocks[i].type = BlockType::Triplet | BlockType::Open;
+        else if (melded_block.type == MeldType::Chow)
+            blocks[i].type = BlockType::Sequence | BlockType::Open;
+        else if (melded_block.type == MeldType::ClosedKong)
+            blocks[i].type = BlockType::Kong;
         else // 明槓、加槓
-            blocks[i].type = BlockType::Kantu | BlockType::Open;
+            blocks[i].type = BlockType::Kong | BlockType::Open;
         blocks[i].min_tile = aka2normal(melded_block.tiles.front());
 
         i++;
@@ -124,11 +124,11 @@ std::vector<Block> HandSeparator::get_blocks(const std::string &s)
         Block block;
         block.min_tile = s[i] - '0';
         if (s[i + 1] == 'k')
-            block.type = BlockType::Kotu;
+            block.type = BlockType::Triplet;
         else if (s[i + 1] == 's')
-            block.type = BlockType::Syuntu;
+            block.type = BlockType::Sequence;
         else if (s[i + 1] == 'z')
-            block.type = BlockType::Toitu;
+            block.type = BlockType::Pair;
 
         blocks.emplace_back(block);
     }
@@ -155,78 +155,78 @@ void HandSeparator::create_block_patterns(
             if (block.type & BlockType::Open)
                 continue; // 副露ブロックは固定
 
-            if ((block.type & BlockType::Kotu) && block.min_tile == win_tile) {
+            if ((block.type & BlockType::Triplet) && block.min_tile == win_tile) {
                 // 双ポン待ち
                 if (tumo) {
-                    pattern.emplace_back(blocks, WaitType::Syanpon);
+                    pattern.emplace_back(blocks, WaitType::TripletWait);
                 }
                 else {
                     block.type |= BlockType::Open;
-                    pattern.emplace_back(blocks, WaitType::Syanpon);
+                    pattern.emplace_back(blocks, WaitType::TripletWait);
                     block.type &= ~BlockType::Open;
                 }
             }
-            else if (block.type == BlockType::Syuntu &&
+            else if (block.type == BlockType::Sequence &&
                      block.min_tile + 1 == win_tile) {
                 // 嵌張待ち
                 if (tumo) {
-                    pattern.emplace_back(blocks, WaitType::Kantyan);
+                    pattern.emplace_back(blocks, WaitType::ClosedWait);
                 }
                 else {
                     block.type |= BlockType::Open;
-                    pattern.emplace_back(blocks, WaitType::Kantyan);
+                    pattern.emplace_back(blocks, WaitType::ClosedWait);
                     block.type &= ~BlockType::Open;
                 }
             }
-            else if (block.type == BlockType::Syuntu &&
+            else if (block.type == BlockType::Sequence &&
                      block.min_tile + 2 == win_tile &&
                      (block.min_tile == Tile::Manzu1 ||
                       block.min_tile == Tile::Pinzu1 ||
-                      block.min_tile == Tile::Sozu1)) {
+                      block.min_tile == Tile::Souzu1)) {
                 // 辺張待ち 123
                 if (tumo) {
-                    pattern.emplace_back(blocks, WaitType::Pentyan);
+                    pattern.emplace_back(blocks, WaitType::EdgeWait);
                 }
                 else {
                     block.type |= BlockType::Open;
-                    pattern.emplace_back(blocks, WaitType::Pentyan);
+                    pattern.emplace_back(blocks, WaitType::EdgeWait);
                     block.type &= ~BlockType::Open;
                 }
             }
-            else if (block.type == BlockType::Syuntu && block.min_tile == win_tile &&
+            else if (block.type == BlockType::Sequence && block.min_tile == win_tile &&
                      (block.min_tile == Tile::Manzu7 ||
                       block.min_tile == Tile::Pinzu7 ||
-                      block.min_tile == Tile::Sozu7)) {
+                      block.min_tile == Tile::Souzu7)) {
                 // 辺張待ち 789
                 if (tumo) {
-                    pattern.emplace_back(blocks, WaitType::Pentyan);
+                    pattern.emplace_back(blocks, WaitType::EdgeWait);
                 }
                 else {
                     block.type |= BlockType::Open;
-                    pattern.emplace_back(blocks, WaitType::Pentyan);
+                    pattern.emplace_back(blocks, WaitType::EdgeWait);
                     block.type &= ~BlockType::Open;
                 }
             }
-            else if (block.type == BlockType::Syuntu &&
+            else if (block.type == BlockType::Sequence &&
                      (block.min_tile == win_tile || block.min_tile + 2 == win_tile)) {
                 // 両面待ち
                 if (tumo) {
-                    pattern.emplace_back(blocks, WaitType::Ryanmen);
+                    pattern.emplace_back(blocks, WaitType::DoubleEdgeWait);
                 }
                 else {
                     block.type |= BlockType::Open;
-                    pattern.emplace_back(blocks, WaitType::Ryanmen);
+                    pattern.emplace_back(blocks, WaitType::DoubleEdgeWait);
                     block.type &= ~BlockType::Open;
                 }
             }
-            else if (block.type == BlockType::Toitu && block.min_tile == win_tile) {
+            else if (block.type == BlockType::Pair && block.min_tile == win_tile) {
                 // 双ポン待ち
                 if (tumo) {
-                    pattern.emplace_back(blocks, WaitType::Tanki);
+                    pattern.emplace_back(blocks, WaitType::PairWait);
                 }
                 else {
                     block.type |= BlockType::Open;
-                    pattern.emplace_back(blocks, WaitType::Tanki);
+                    pattern.emplace_back(blocks, WaitType::PairWait);
                     block.type &= ~BlockType::Open;
                 }
             }

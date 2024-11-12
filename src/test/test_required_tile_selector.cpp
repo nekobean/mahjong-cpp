@@ -160,9 +160,10 @@ TEST_CASE("Required tile selection of Kokushimusou")
             int shanten = ShantenCalculator::calc_kokushimusou(hand);
 
             std::vector<int> tiles;
-            for (int tile : {Tile::Manzu1, Tile::Manzu9, Tile::Pinzu1, Tile::Pinzu9,
-                             Tile::Sozu1, Tile::Sozu9, Tile::Ton, Tile::Nan, Tile::Sya,
-                             Tile::Pe, Tile::Haku, Tile::Hatu, Tile::Tyun}) {
+            for (int tile :
+                 {Tile::Manzu1, Tile::Manzu9, Tile::Pinzu1, Tile::Pinzu9, Tile::Souzu1,
+                  Tile::Souzu9, Tile::East, Tile::South, Tile::West, Tile::North,
+                  Tile::White, Tile::Green, Tile::Red}) {
                 if (hand.counts[tile] == 4) {
                     continue;
                 }

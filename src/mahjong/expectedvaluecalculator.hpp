@@ -55,16 +55,16 @@ class Candidate
 
 inline void add_tile(Hand &hand, int tile)
 {
-    if (tile == Tile::AkaManzu5) {
+    if (tile == Tile::RedManzu5) {
         hand.counts[Tile::Manzu5]++;
         hand.aka_manzu5 = true;
     }
-    else if (tile == Tile::AkaPinzu5) {
+    else if (tile == Tile::RedPinzu5) {
         hand.counts[Tile::Pinzu5]++;
         hand.aka_pinzu5 = true;
     }
-    else if (tile == Tile::AkaSozu5) {
-        hand.counts[Tile::Sozu5]++;
+    else if (tile == Tile::RedSouzu5) {
+        hand.counts[Tile::Souzu5]++;
         hand.aka_souzu5 = true;
     }
     else {
@@ -74,16 +74,16 @@ inline void add_tile(Hand &hand, int tile)
 
 inline void remove_tile(Hand &hand, int tile)
 {
-    if (tile == Tile::AkaManzu5) {
+    if (tile == Tile::RedManzu5) {
         hand.counts[Tile::Manzu5]--;
         hand.aka_manzu5 = false;
     }
-    else if (tile == Tile::AkaPinzu5) {
+    else if (tile == Tile::RedPinzu5) {
         hand.counts[Tile::Pinzu5]--;
         hand.aka_pinzu5 = false;
     }
-    else if (tile == Tile::AkaSozu5) {
-        hand.counts[Tile::Sozu5]--;
+    else if (tile == Tile::RedSouzu5) {
+        hand.counts[Tile::Souzu5]--;
         hand.aka_souzu5 = false;
     }
     else {
@@ -93,20 +93,20 @@ inline void remove_tile(Hand &hand, int tile)
 
 inline void add_tile(Hand &hand, int tile, std::vector<int> &counts)
 {
-    if (tile == Tile::AkaManzu5) {
+    if (tile == Tile::RedManzu5) {
         hand.counts[Tile::Manzu5]++;
         hand.aka_manzu5 = true;
         counts[Tile::Manzu5]--;
     }
-    else if (tile == Tile::AkaPinzu5) {
+    else if (tile == Tile::RedPinzu5) {
         hand.counts[Tile::Pinzu5]++;
         hand.aka_pinzu5 = true;
         counts[Tile::Pinzu5]--;
     }
-    else if (tile == Tile::AkaSozu5) {
-        hand.counts[Tile::Sozu5]++;
+    else if (tile == Tile::RedSouzu5) {
+        hand.counts[Tile::Souzu5]++;
         hand.aka_souzu5 = true;
-        counts[Tile::Sozu5]--;
+        counts[Tile::Souzu5]--;
     }
     else {
         hand.counts[tile]++;
@@ -116,20 +116,20 @@ inline void add_tile(Hand &hand, int tile, std::vector<int> &counts)
 
 inline void remove_tile(Hand &hand, int tile, std::vector<int> &counts)
 {
-    if (tile == Tile::AkaManzu5) {
+    if (tile == Tile::RedManzu5) {
         hand.counts[Tile::Manzu5]--;
         hand.aka_manzu5 = false;
         counts[Tile::Manzu5]++;
     }
-    else if (tile == Tile::AkaPinzu5) {
+    else if (tile == Tile::RedPinzu5) {
         hand.counts[Tile::Pinzu5]--;
         hand.aka_pinzu5 = false;
         counts[Tile::Pinzu5]++;
     }
-    else if (tile == Tile::AkaSozu5) {
-        hand.counts[Tile::Sozu5]--;
+    else if (tile == Tile::RedSouzu5) {
+        hand.counts[Tile::Souzu5]--;
         hand.aka_souzu5 = false;
-        counts[Tile::Sozu5]++;
+        counts[Tile::Souzu5]++;
     }
     else {
         hand.counts[tile]--;
@@ -168,9 +168,9 @@ struct CacheKey
 
         // 未使用のビットをフラグ情報格納に使用する
         zihai |= n_extra_tumo << 21;
-        zihai |= counts[Tile::AkaManzu5] << 22;
-        zihai |= counts[Tile::AkaPinzu5] << 23;
-        zihai |= counts[Tile::AkaSozu5] << 24;
+        zihai |= counts[Tile::RedManzu5] << 22;
+        zihai |= counts[Tile::RedPinzu5] << 23;
+        zihai |= counts[Tile::RedSouzu5] << 24;
         zihai |= hand.aka_manzu5 << 25;
         zihai |= hand.aka_pinzu5 << 26;
         zihai |= hand.aka_souzu5 << 27;

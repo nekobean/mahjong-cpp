@@ -176,13 +176,13 @@ std::tuple<int, int64_t> UnnecessaryTileCalculator::calc_kokushimusou(const Hand
     static const auto tanyao_tiles = {
         Tile::Manzu2, Tile::Manzu3, Tile::Manzu4, Tile::Manzu5, Tile::Manzu6,
         Tile::Manzu7, Tile::Manzu8, Tile::Pinzu2, Tile::Pinzu3, Tile::Pinzu4,
-        Tile::Pinzu5, Tile::Pinzu6, Tile::Pinzu7, Tile::Pinzu8, Tile::Sozu2,
-        Tile::Sozu3,  Tile::Sozu4,  Tile::Sozu5,  Tile::Sozu6,  Tile::Sozu7,
-        Tile::Sozu8};
+        Tile::Pinzu5, Tile::Pinzu6, Tile::Pinzu7, Tile::Pinzu8, Tile::Souzu2,
+        Tile::Souzu3, Tile::Souzu4, Tile::Souzu5, Tile::Souzu6, Tile::Souzu7,
+        Tile::Souzu8};
     static const auto yaochuu_tiles = {
-        Tile::Manzu1, Tile::Manzu9, Tile::Pinzu1, Tile::Pinzu9, Tile::Sozu1,
-        Tile::Sozu9,  Tile::Ton,    Tile::Nan,    Tile::Sya,    Tile::Pe,
-        Tile::Haku,   Tile::Hatu,   Tile::Tyun};
+        Tile::Manzu1, Tile::Manzu9, Tile::Pinzu1, Tile::Pinzu9, Tile::Souzu1,
+        Tile::Souzu9, Tile::East,   Tile::South,  Tile::West,   Tile::North,
+        Tile::White,  Tile::Green,  Tile::Red};
 
     int num_pairs = 0;
     int num_types = 0;

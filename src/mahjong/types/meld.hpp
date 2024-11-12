@@ -7,85 +7,21 @@
 
 #include <boost/operators.hpp>
 
-#include "tile.hpp"
+#include "mahjong/types/const.hpp"
+#include "mahjong/types/tile.hpp"
 
 namespace mahjong
 {
-
-/**
- * @brief 副露の種類
- */
-namespace MeldType
-{
-
-enum
-{
-    Null = -1,
-    Pon,    /* ポン */
-    Ti,     /* チー */
-    Ankan,  /* 暗槓 */
-    Minkan, /* 明槓 */
-    Kakan,  /* 加槓 */
-    Length,
-};
-
-static inline const std::map<int, std::string> Name = {{Null, "Null"},   {Pon, "ポン"},
-                                                       {Ti, "チー"},     {Ankan, "暗槓"},
-                                                       {Minkan, "明槓"}, {Kakan, "加槓"}};
-
-} // namespace MeldType
-
-/**
- * @brief プレイヤーの種類
- */
-namespace PlayerType
-{
-
-enum
-{
-    Null = -1,
-    Player0,
-    Player1,
-    Player2,
-    Player3,
-    Length,
-};
-
-static inline const std::map<int, std::string> Name = {{Null, "Null"},
-                                                       {Player0, "プレイヤー1"},
-                                                       {Player1, "プレイヤー2"},
-                                                       {Player2, "プレイヤー3"},
-                                                       {Player3, "プレイヤー4"}};
-
-} // namespace PlayerType
-
-/**
- * @brief 座席の種類
- */
-namespace SeatType
-{
-
-enum
-{
-    Null = -1,
-    Zitya,   /* 自家 */
-    Kamitya, /* 上家 */
-    Toimen,  /* 対面 */
-    Simotya, /* 下家 */
-    Length,
-};
-
-static inline const std::map<int, std::string> Name = {
-    {Null, "Null"}, {Zitya, "自家"}, {Kamitya, "上家"}, {Toimen, "対面"}, {Simotya, "下家"}};
-
-} // namespace SeatType
 
 /**
  * @brief 副露ブロック
  */
 struct MeldedBlock : private boost::equality_comparable<MeldedBlock, MeldedBlock>
 {
-    MeldedBlock() : type(MeldType::Null), discarded_tile(Tile::Null), from(PlayerType::Null) {}
+    MeldedBlock()
+        : type(MeldType::Null), discarded_tile(Tile::Null), from(PlayerType::Null)
+    {
+    }
 
     MeldedBlock(int type, std::vector<int> tiles)
         : type(type)
@@ -120,8 +56,8 @@ struct MeldedBlock : private boost::equality_comparable<MeldedBlock, MeldedBlock
 inline bool operator==(const MeldedBlock &a, const MeldedBlock &b)
 {
     return a.tiles.size() == b.tiles.size() &&
-           std::equal(a.tiles.begin(), a.tiles.end(), b.tiles.begin()) && a.type == b.type &&
-           a.discarded_tile == b.discarded_tile && a.from == b.from;
+           std::equal(a.tiles.begin(), a.tiles.end(), b.tiles.begin()) &&
+           a.type == b.type && a.discarded_tile == b.discarded_tile && a.from == b.from;
 }
 
 /**

@@ -33,7 +33,8 @@ std::vector<int> count_left_tiles(const Hand &hand)
  * @param[in] tiles 有効牌の一覧
  * @return int 有効牌の合計枚数
  */
-int count_num_required_tiles(const std::vector<int> &count, const std::vector<int> &tiles)
+int count_num_required_tiles(const std::vector<int> &count,
+                             const std::vector<int> &tiles)
 {
     int n_tiles = 0;
     for (auto tile : tiles)
@@ -46,9 +47,10 @@ int main(int, char **)
 {
     // 一般手の有効牌を計算する
     {
-        Hand hand({Tile::Manzu1, Tile::Manzu1, Tile::Manzu1, Tile::Manzu2, Tile::AkaManzu5,
-                   Tile::Manzu6, Tile::Manzu7, Tile::Manzu8, Tile::Manzu9, Tile::Pinzu1,
-                   Tile::Pinzu1, Tile::Pinzu2, Tile::Pinzu2});
+        Hand hand({Tile::Manzu1, Tile::Manzu1, Tile::Manzu1, Tile::Manzu2,
+                   Tile::RedManzu5, Tile::Manzu6, Tile::Manzu7, Tile::Manzu8,
+                   Tile::Manzu9, Tile::Pinzu1, Tile::Pinzu1, Tile::Pinzu2,
+                   Tile::Pinzu2});
 
         // 有効牌を計算する。
         auto tiles = RequiredTileSelector::select(hand, SyantenType::Normal);
@@ -56,7 +58,8 @@ int main(int, char **)
         // 各牌の残り枚数を数える。
         auto count = count_left_tiles(hand);
 
-        std::cout << fmt::format("[一般手の有効牌] 手牌: {}", hand.to_string()) << std::endl;
+        std::cout << fmt::format("[一般手の有効牌] 手牌: {}", hand.to_string())
+                  << std::endl;
 
         int n_tiles = 0;
         for (auto tile : tiles) {
@@ -69,9 +72,9 @@ int main(int, char **)
 
     // 七対子手の有効牌を計算する
     {
-        Hand hand({Tile::Manzu1, Tile::Manzu1, Tile::Manzu2, Tile::Manzu2, Tile::AkaManzu5,
-                   Tile::Manzu5, Tile::Manzu8, Tile::Manzu8, Tile::Manzu8, Tile::Ton, Tile::Nan,
-                   Tile::Sya, Tile::Sya});
+        Hand hand({Tile::Manzu1, Tile::Manzu1, Tile::Manzu2, Tile::Manzu2,
+                   Tile::RedManzu5, Tile::Manzu5, Tile::Manzu8, Tile::Manzu8,
+                   Tile::Manzu8, Tile::East, Tile::South, Tile::West, Tile::West});
 
         // 有効牌を計算する。
         auto tiles = RequiredTileSelector::select(hand, SyantenType::Tiitoi);
@@ -79,7 +82,8 @@ int main(int, char **)
         // 各牌の残り枚数を数える。
         auto count = count_left_tiles(hand);
 
-        std::cout << fmt::format("[七対子手の有効牌] 手牌: {}", hand.to_string()) << std::endl;
+        std::cout << fmt::format("[七対子手の有効牌] 手牌: {}", hand.to_string())
+                  << std::endl;
 
         int n_tiles = 0;
         for (auto tile : tiles) {
@@ -92,8 +96,9 @@ int main(int, char **)
 
     // 国士無双手の有効牌を計算する
     {
-        Hand hand({Tile::Manzu1, Tile::Manzu1, Tile::Pinzu9, Tile::Sozu1, Tile::Sozu9, Tile::Sozu9,
-                   Tile::Ton, Tile::Nan, Tile::Sya, Tile::Sya, Tile::Haku, Tile::Hatu, Tile::Tyun});
+        Hand hand({Tile::Manzu1, Tile::Manzu1, Tile::Pinzu9, Tile::Souzu1, Tile::Souzu9,
+                   Tile::Souzu9, Tile::East, Tile::South, Tile::West, Tile::West,
+                   Tile::White, Tile::Green, Tile::Red});
 
         // 有効牌を計算する。
         auto tiles = RequiredTileSelector::select(hand, SyantenType::Kokusi);
@@ -101,7 +106,8 @@ int main(int, char **)
         // 各牌の残り枚数を数える。
         auto count = count_left_tiles(hand);
 
-        std::cout << fmt::format("[国士手の有効牌] 手牌: {}", hand.to_string()) << std::endl;
+        std::cout << fmt::format("[国士手の有効牌] 手牌: {}", hand.to_string())
+                  << std::endl;
 
         int n_tiles = 0;
         for (auto tile : tiles) {

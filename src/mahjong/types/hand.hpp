@@ -83,17 +83,17 @@ inline Hand::Hand(const std::vector<int> &tiles)
 #endif
 
     for (int tile : tiles) {
-        if (tile == Tile::AkaManzu5) {
+        if (tile == Tile::RedManzu5) {
             aka_manzu5 = true;
             counts[Tile::Manzu5]++;
         }
-        else if (tile == Tile::AkaPinzu5) {
+        else if (tile == Tile::RedPinzu5) {
             aka_pinzu5 = true;
             counts[Tile::Pinzu5]++;
         }
-        else if (tile == Tile::AkaSozu5) {
+        else if (tile == Tile::RedSouzu5) {
             aka_souzu5 = true;
-            counts[Tile::Sozu5]++;
+            counts[Tile::Souzu5]++;
         }
         else {
             counts[tile]++;
@@ -120,17 +120,17 @@ inline Hand::Hand(const std::vector<int> &tiles, const std::vector<MeldedBlock> 
 #endif
 
     for (int tile : tiles) {
-        if (tile == Tile::AkaManzu5) {
+        if (tile == Tile::RedManzu5) {
             aka_manzu5 = true;
             counts[Tile::Manzu5]++;
         }
-        else if (tile == Tile::AkaPinzu5) {
+        else if (tile == Tile::RedPinzu5) {
             aka_pinzu5 = true;
             counts[Tile::Pinzu5]++;
         }
-        else if (tile == Tile::AkaSozu5) {
+        else if (tile == Tile::RedSouzu5) {
             aka_souzu5 = true;
-            counts[Tile::Sozu5]++;
+            counts[Tile::Souzu5]++;
         }
         else {
             counts[tile]++;
@@ -156,14 +156,14 @@ inline bool Hand::check_arguments(const std::vector<int> &tiles,
             return false;
         }
 
-        if (tile == Tile::AkaManzu5) {
+        if (tile == Tile::RedManzu5) {
             tile_counts[Tile::Manzu5]++;
         }
-        else if (tile == Tile::AkaPinzu5) {
+        else if (tile == Tile::RedPinzu5) {
             tile_counts[Tile::Pinzu5]++;
         }
-        else if (tile == Tile::AkaSozu5) {
-            tile_counts[Tile::Sozu5]++;
+        else if (tile == Tile::RedSouzu5) {
+            tile_counts[Tile::Souzu5]++;
         }
         else {
             tile_counts[tile]++;
@@ -177,14 +177,14 @@ inline bool Hand::check_arguments(const std::vector<int> &tiles,
                 return false;
             }
 
-            if (tile == Tile::AkaManzu5) {
+            if (tile == Tile::RedManzu5) {
                 tile_counts[Tile::Manzu5]++;
             }
-            else if (tile == Tile::AkaPinzu5) {
+            else if (tile == Tile::RedPinzu5) {
                 tile_counts[Tile::Pinzu5]++;
             }
-            else if (tile == Tile::AkaSozu5) {
-                tile_counts[Tile::Sozu5]++;
+            else if (tile == Tile::RedSouzu5) {
+                tile_counts[Tile::Souzu5]++;
             }
             else {
                 tile_counts[tile]++;
@@ -205,7 +205,7 @@ inline bool Hand::check_arguments(const std::vector<int> &tiles,
 inline bool Hand::is_closed() const
 {
     for (const auto &meld : melds) {
-        if (meld.type != MeldType::Ankan) {
+        if (meld.type != MeldType::ClosedKong) {
             return false; // 暗槓以外の副露ブロックがある場合
         }
     }

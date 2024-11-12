@@ -12,10 +12,10 @@ int main(int, char **)
         // 場やルールの設定
         ////////////////////////////////////////////////////////////////////////////////
 
-        // 場風牌を Tile::Ton, Tile::Nan, Tile::Sya, Tile::Pe から設定します。
-        score.set_bakaze(Tile::Ton);
-        // 自風牌を Tile::Ton, Tile::Nan, Tile::Sya, Tile::Pe から設定します。
-        score.set_zikaze(Tile::Ton);
+        // 場風牌を Tile::East, Tile::South, Tile::West, Tile::North から設定します。
+        score.set_bakaze(Tile::East);
+        // 自風牌を Tile::East, Tile::South, Tile::West, Tile::North から設定します。
+        score.set_zikaze(Tile::East);
         // 積み棒の数を設定します。(例: 1本場なら1)
         score.set_num_tumibo(0);
         // 供託棒 (立直棒) の数を設定します。
@@ -23,23 +23,24 @@ int main(int, char **)
         // ※ ダブロン、トリロン有りのルールの場合、積み棒、供託棒を受け取らない和了者の精算時には0に設定してください。
 
         // ドラの一覧 (表示牌ではない) を設定します。
-        score.set_dora_tiles({Tile::Pe});
+        score.set_dora_tiles({Tile::North});
         // 裏ドラがある場合は、裏ドラの一覧 (表示牌ではない) を設定します。
         score.set_uradora_tiles({Tile::Pinzu9});
         // ルールを設定します。デフォルトは赤ドラ有り、喰い断有りのありありルールです。
         // な変更したい場合は以下のように設定します。
-        // score.set_rule(RuleFlag::AkaDora, false);  // 赤ドラなし
-        // score.set_rule(RuleFlag::OpenTanyao, false); // 喰い断なし
+        // score.set_rule(RuleType::RedDora, false);  // 赤ドラなし
+        // score.set_rule(RuleType::OpenTanyao, false); // 喰い断なし
 
         // 手牌、和了牌、フラグの設定
         ////////////////////////////////////////////////////////////////////////////////
 
         // 手牌
-        MeldedBlock block(MeldType::Kakan, {Tile::Ton, Tile::Ton, Tile::Ton, Tile::Ton});
+        MeldedBlock block(MeldType::AddedKong,
+                          {Tile::East, Tile::East, Tile::East, Tile::East});
         Hand hand({Tile::Manzu1, Tile::Manzu2, Tile::Manzu3, //
                    Tile::Pinzu3, Tile::Pinzu4, Tile::Pinzu5, //
-                   Tile::Sozu1, Tile::Sozu2, Tile::Sozu3,    //
-                   Tile::Sozu4, Tile::Sozu4},
+                   Tile::Souzu1, Tile::Souzu2, Tile::Souzu3, //
+                   Tile::Souzu4, Tile::Souzu4},
                   {block});
         // 和了牌
         int win_tile = Tile::Manzu1;
