@@ -1,24 +1,15 @@
-# デフォルト設定
 BasedOnStyle: LLVM
-# インデント幅
 IndentWidth: 4
-# 言語
 Language: Cpp
 Standard: c++20
-# 1行あたりの
 ColumnLimit: 88
-# 改行コード
 UseCRLF: false
-# 追加オプション
-# コンストラクタ初期化子
+# Additional options
 ConstructorInitializerAllOnOneLineOrOnePerLine: true
 AllowAllConstructorInitializersOnNextLine: true
 BreakConstructorInitializers: BeforeComma
-# パラメータ
 AllowAllArgumentsOnNextLine: true
-# 引数
 AllowAllParametersOfDeclarationOnNextLine: true
-# 改行
 BreakBeforeBraces: Custom
 BraceWrapping:
   AfterFunction: true
