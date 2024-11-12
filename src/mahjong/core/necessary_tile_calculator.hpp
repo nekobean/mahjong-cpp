@@ -1,6 +1,9 @@
-#ifndef MAHJONG_CPP_REQUIRED_TILE_CALCULATOR
-#define MAHJONG_CPP_REQUIRED_TILE_CALCULATOR
+#ifndef MAHJONG_CPP_NECESSARY_TILE_CALCULATOR
+#define MAHJONG_CPP_NECESSARY_TILE_CALCULATOR
 
+#include <array>
+#include <cstdint>
+#include <tuple>
 #include <vector>
 
 #include "mahjong/core/shanten_calculator.hpp"
@@ -36,4 +39,4 @@ class RequiredTileCalculator
 
 } // namespace mahjong
 
-#endif /* MAHJONG_CPP_REQUIRED_TILE_CALCULATOR */
+#endif /* MAHJONG_CPP_NECESSARY_TILE_CALCULATOR */

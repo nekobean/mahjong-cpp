@@ -1,6 +1,4 @@
-#include "required_tile_calculator.hpp"
-
-#include "mahjong/core/shanten_calculator.hpp"
+#include "necessary_tile_calculator.hpp"
 
 namespace mahjong
 {

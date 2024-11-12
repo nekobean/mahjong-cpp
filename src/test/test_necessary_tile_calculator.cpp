@@ -8,7 +8,7 @@
 #define CATCH_CONFIG_ENABLE_BENCHMARKING
 #include <catch2/catch.hpp>
 
-#include "mahjong/core/required_tile_calculator.hpp"
+#include "mahjong/core/necessary_tile_calculator.hpp"
 #include "mahjong/core/shanten_calculator.hpp"
 #include "mahjong/mahjong.hpp"
 

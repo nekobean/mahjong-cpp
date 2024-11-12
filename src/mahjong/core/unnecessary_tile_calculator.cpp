@@ -3,8 +3,6 @@
 #include <algorithm> // min, max, copy
 #include <limits>    // numeric_limits
 
-#include "mahjong/core/shanten_calculator.hpp"
-
 namespace mahjong
 {
 
