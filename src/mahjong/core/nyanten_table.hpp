@@ -1,5 +1,5 @@
-#ifndef MAHJONG_CPP_NYANTEN_TABLE_HPP
-#define MAHJONG_CPP_NYANTEN_TABLE_HPP
+#ifndef MAHJONG_CPP_NYANTEN_TABLE
+#define MAHJONG_CPP_NYANTEN_TABLE
 
 #include <array>
 #include <cstdint>
@@ -1744,4 +1744,4 @@ inline constexpr std::array<std::array<std::array<std::uint_fast32_t, 5u>, 15u>,
 
 } // namespace mahjong
 
-#endif /* MAHJONG_CPP_NYANTEN_TABLE_HPP */
+#endif /* MAHJONG_CPP_NYANTEN_TABLE */
