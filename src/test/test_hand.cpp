@@ -198,9 +198,11 @@ TEST_CASE("is_menzen()")
 
     SECTION("副露ブロックに暗槓以外がない場合は門前")
     {
-        MeldedBlock block1 = {
-            MeldType::Pon, {Tile::Pinzu1, Tile::Pinzu1, Tile::Pinzu1}, Tile::Pinzu1, 0};
-        MeldedBlock block2 = {MeldType::Ankan,
+        MeldedBlock block1 = {MeldType::Pong,
+                              {Tile::Pinzu1, Tile::Pinzu1, Tile::Pinzu1},
+                              Tile::Pinzu1,
+                              0};
+        MeldedBlock block2 = {MeldType::ClosedKong,
                               {Tile::Pinzu8, Tile::Pinzu8, Tile::Pinzu8, Tile::Pinzu8},
                               Tile::Pinzu1,
                               1};
@@ -213,11 +215,11 @@ TEST_CASE("is_menzen()")
 
     SECTION("副露ブロックに暗槓以外がある場合は門前でない")
     {
-        MeldedBlock block1 = {MeldType::Ankan,
+        MeldedBlock block1 = {MeldType::ClosedKong,
                               {Tile::Pinzu1, Tile::Pinzu1, Tile::Pinzu1},
                               Tile::Pinzu1,
                               0};
-        MeldedBlock block2 = {MeldType::Ankan,
+        MeldedBlock block2 = {MeldType::ClosedKong,
                               {Tile::Pinzu8, Tile::Pinzu8, Tile::Pinzu8, Tile::Pinzu8},
                               Tile::Pinzu1,
                               1};
@@ -243,9 +245,11 @@ TEST_CASE("is_melded()")
 
     SECTION("副露ブロックに暗槓以外がない")
     {
-        MeldedBlock block1 = {
-            MeldType::Pon, {Tile::Pinzu1, Tile::Pinzu1, Tile::Pinzu1}, Tile::Pinzu1, 0};
-        MeldedBlock block2 = {MeldType::Ankan,
+        MeldedBlock block1 = {MeldType::Pong,
+                              {Tile::Pinzu1, Tile::Pinzu1, Tile::Pinzu1},
+                              Tile::Pinzu1,
+                              0};
+        MeldedBlock block2 = {MeldType::ClosedKong,
                               {Tile::Pinzu8, Tile::Pinzu8, Tile::Pinzu8, Tile::Pinzu8},
                               Tile::Pinzu1,
                               1};
@@ -258,11 +262,11 @@ TEST_CASE("is_melded()")
 
     SECTION("副露ブロックに暗槓以外がある")
     {
-        MeldedBlock block1 = {MeldType::Ankan,
+        MeldedBlock block1 = {MeldType::ClosedKong,
                               {Tile::Pinzu1, Tile::Pinzu1, Tile::Pinzu1},
                               Tile::Pinzu1,
                               0};
-        MeldedBlock block2 = {MeldType::Ankan,
+        MeldedBlock block2 = {MeldType::ClosedKong,
                               {Tile::Pinzu8, Tile::Pinzu8, Tile::Pinzu8, Tile::Pinzu8},
                               Tile::Pinzu1,
                               1};

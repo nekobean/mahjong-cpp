@@ -28,8 +28,8 @@ class ShantenCalculator
 
     ShantenCalculator();
     static std::tuple<int, int>
-    calc(const Hand &hand, int type = ShantenType::Regular | ShantenType::Chiitoitsu |
-                                      ShantenType::Kokushimusou);
+    calc(const Hand &hand, int type = ShantenFlag::Regular | ShantenFlag::SevenPairs |
+                                      ShantenFlag::ThirteenOrphans);
     static bool initialize();
     static int calc_regular(const Hand &hand);
     static int calc_chiitoitsu(const Hand &hand);

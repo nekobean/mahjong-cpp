@@ -39,9 +39,10 @@ ExpectedValueCalculator::ExpectedValueCalculator()
  * @param flag フラグ
  * @return 各打牌の情報
  */
-std::tuple<bool, std::vector<Candidate>> ExpectedValueCalculator::calc(
-    const Hand &hand, const ScoreCalculator2 &score_calculator,
-    const std::vector<int> &dora_indicators, int syanten_type, int flag)
+std::tuple<bool, std::vector<Candidate>>
+ExpectedValueCalculator::calc(const Hand &hand, const ScoreCalculator &score_calculator,
+                              const std::vector<int> &dora_indicators, int syanten_type,
+                              int flag)
 {
     std::vector<int> counts = count_left_tiles(hand, dora_indicators);
     return calc(hand, score_calculator, dora_indicators, syanten_type, counts, flag);
@@ -57,8 +58,7 @@ std::tuple<bool, std::vector<Candidate>> ExpectedValueCalculator::calc(
  * @return 各打牌の情報
  */
 std::tuple<bool, std::vector<Candidate>>
-ExpectedValueCalculator::calc(const Hand &hand,
-                              const ScoreCalculator2 &score_calculator,
+ExpectedValueCalculator::calc(const Hand &hand, const ScoreCalculator &score_calculator,
                               const std::vector<int> &dora_indicators, int syanten_type,
                               const std::vector<int> &counts, int flag)
 {
@@ -175,7 +175,7 @@ ExpectedValueCalculator::count_left_tiles(const Hand &hand,
     // 副露ブロックを除く。
     for (const auto &block : hand.melds) {
         for (auto tile : block.tiles) {
-            counts[aka2normal(tile)]--;
+            counts[red2normal(tile)]--;
             counts[Tile::RedManzu5] -= tile == Tile::RedManzu5;
             counts[Tile::RedPinzu5] -= tile == Tile::RedPinzu5;
             counts[Tile::RedSouzu5] -= tile == Tile::RedSouzu5;
@@ -184,7 +184,7 @@ ExpectedValueCalculator::count_left_tiles(const Hand &hand,
 
     // ドラ表示牌を除く。
     for (auto tile : dora_indicators) {
-        counts[aka2normal(tile)]--;
+        counts[red2normal(tile)]--;
         counts[Tile::RedManzu5] -= tile == Tile::RedManzu5;
         counts[Tile::RedPinzu5] -= tile == Tile::RedPinzu5;
         counts[Tile::RedSouzu5] -= tile == Tile::RedSouzu5;
@@ -390,7 +390,7 @@ std::vector<double> ExpectedValueCalculator::get_score(const Hand &hand, int win
 {
     // 非門前の場合は自摸のみ
     int hand_flag =
-        hand.is_closed() ? (HandFlag::Tumo | HandFlag::Reach) : HandFlag::Tumo;
+        hand.is_closed() ? (WinFlag::Tsumo | WinFlag::Riichi) : WinFlag::Tsumo;
 
     // 点数計算を行う。
     Result result = score_calculator_.calc(hand, win_tile, hand_flag);

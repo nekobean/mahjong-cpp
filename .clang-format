@@ -4,7 +4,7 @@ BasedOnStyle: LLVM
 IndentWidth: 4
 # 言語
 Language: Cpp
-Standard: c++17
+Standard: c++20
 # 1行あたりの
 ColumnLimit: 88
 # 改行コード

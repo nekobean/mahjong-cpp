@@ -68,7 +68,7 @@ bool load_yakuman_cases(const std::string &filename,
 
 TEST_CASE("Ryuuiisou (All Green)")
 {
-    ScoreCalculator2 score;
+    ScoreCalculator score;
 
     std::vector<std::tuple<Hand, int, bool>> cases;
     load_yakuman_cases("test_score_ryuuiisou.txt", cases);
@@ -76,7 +76,7 @@ TEST_CASE("Ryuuiisou (All Green)")
     SECTION("Ryuuiisou (All Green)")
     {
         for (auto &[hand, win_tile, expected] : cases) {
-            bool actual = score.check_ryuuiisou(hand);
+            bool actual = score.check_all_green(hand);
             INFO(fmt::format("hand: {}, win tile: {}", hand.to_string(),
                              Tile::Name.at(win_tile)));
             REQUIRE(actual == expected);
@@ -86,13 +86,13 @@ TEST_CASE("Ryuuiisou (All Green)")
     BENCHMARK("Ryuuiisou (All Green)")
     {
         auto &[hand, win_tile, expected] = cases.front();
-        score.check_ryuuiisou(hand);
+        score.check_all_green(hand);
     };
 }
 
 TEST_CASE("Daisangen (Big Three Dragons)")
 {
-    ScoreCalculator2 score;
+    ScoreCalculator score;
 
     std::vector<std::tuple<Hand, int, bool>> cases;
     load_yakuman_cases("test_score_daisangen.txt", cases);
@@ -100,7 +100,7 @@ TEST_CASE("Daisangen (Big Three Dragons)")
     SECTION("Daisangen (Big Three Dragons)")
     {
         for (auto &[hand, win_tile, expected] : cases) {
-            bool actual = score.check_daisangen(hand);
+            bool actual = score.check_big_three_dragons(hand);
             INFO(fmt::format("hand: {}, win tile: {}", hand.to_string(),
                              Tile::Name.at(win_tile)));
             REQUIRE(actual == expected);
@@ -110,13 +110,13 @@ TEST_CASE("Daisangen (Big Three Dragons)")
     BENCHMARK("Daisangen (Big Three Dragons)")
     {
         auto &[hand, win_tile, expected] = cases.front();
-        score.check_daisangen(hand);
+        score.check_big_three_dragons(hand);
     };
 }
 
 TEST_CASE("Shousuushii (Little Four Winds)")
 {
-    ScoreCalculator2 score;
+    ScoreCalculator score;
 
     std::vector<std::tuple<Hand, int, bool>> cases;
     load_yakuman_cases("test_score_syosusi.txt", cases);
@@ -124,7 +124,7 @@ TEST_CASE("Shousuushii (Little Four Winds)")
     SECTION("Shousuushii (Little Four Winds)")
     {
         for (auto &[hand, win_tile, expected] : cases) {
-            bool actual = score.check_shousuushii(hand);
+            bool actual = score.check_little_four_winds(hand);
             INFO(fmt::format("hand: {}, win tile: {}", hand.to_string(),
                              Tile::Name.at(win_tile)));
             REQUIRE(actual == expected);
@@ -134,13 +134,13 @@ TEST_CASE("Shousuushii (Little Four Winds)")
     BENCHMARK("Shousuushii (Little Four Winds)")
     {
         auto &[hand, win_tile, expected] = cases.front();
-        score.check_shousuushii(hand);
+        score.check_little_four_winds(hand);
     };
 }
 
 TEST_CASE("Tsuuiisou (All Honors)")
 {
-    ScoreCalculator2 score;
+    ScoreCalculator score;
 
     std::vector<std::tuple<Hand, int, bool>> cases;
     load_yakuman_cases("test_score_tuiso.txt", cases);
@@ -148,7 +148,7 @@ TEST_CASE("Tsuuiisou (All Honors)")
     SECTION("Tsuuiisou (All Honors)")
     {
         for (auto &[hand, win_tile, expected] : cases) {
-            bool actual = score.check_tsuuiisou(hand);
+            bool actual = score.check_all_honors(hand);
             INFO(fmt::format("hand: {}, win tile: {}", hand.to_string(),
                              Tile::Name.at(win_tile)));
             REQUIRE(actual == expected);
@@ -158,13 +158,13 @@ TEST_CASE("Tsuuiisou (All Honors)")
     BENCHMARK("Tsuuiisou (All Honors)")
     {
         auto &[hand, win_tile, expected] = cases.front();
-        score.check_tsuuiisou(hand);
+        score.check_all_honors(hand);
     };
 }
 
 TEST_CASE("Chuuren Poutou (Nine Gates)")
 {
-    ScoreCalculator2 score;
+    ScoreCalculator score;
 
     std::vector<std::tuple<Hand, int, bool>> cases;
     load_yakuman_cases("test_score_tyurenpoto.txt", cases);
@@ -172,7 +172,7 @@ TEST_CASE("Chuuren Poutou (Nine Gates)")
     SECTION("Chuuren Poutou (Nine Gates)")
     {
         for (auto &[hand, win_tile, expected] : cases) {
-            bool actual = score.check_chuuren_poutou(hand, win_tile);
+            bool actual = score.check_nine_gates(hand, win_tile);
             INFO(fmt::format("hand: {}, win tile: {}", hand.to_string(),
                              Tile::Name.at(win_tile)));
             REQUIRE(actual == expected);
@@ -182,13 +182,13 @@ TEST_CASE("Chuuren Poutou (Nine Gates)")
     BENCHMARK("Chuuren Poutou (Nine Gates)")
     {
         auto &[hand, win_tile, expected] = cases.front();
-        score.check_chuuren_poutou(hand, win_tile);
+        score.check_nine_gates(hand, win_tile);
     };
 }
 
 TEST_CASE("Junsei Chuuren Poutou (Pure Nine Gates)")
 {
-    ScoreCalculator2 score;
+    ScoreCalculator score;
 
     std::vector<std::tuple<Hand, int, bool>> cases;
     load_yakuman_cases("test_score_tyurenpoto9.txt", cases);
@@ -196,7 +196,7 @@ TEST_CASE("Junsei Chuuren Poutou (Pure Nine Gates)")
     SECTION("Junsei Chuuren Poutou (Pure Nine Gates)")
     {
         for (auto &[hand, win_tile, expected] : cases) {
-            bool actual = score.check_chuuren_poutou9(hand, win_tile);
+            bool actual = score.check_true_nine_gates(hand, win_tile);
             INFO(fmt::format("hand: {}, win tile: {}", hand.to_string(),
                              Tile::Name.at(win_tile)));
             REQUIRE(actual == expected);
@@ -206,13 +206,13 @@ TEST_CASE("Junsei Chuuren Poutou (Pure Nine Gates)")
     BENCHMARK("Junsei Chuuren Poutou (Pure Nine Gates)")
     {
         auto &[hand, win_tile, expected] = cases.front();
-        score.check_chuuren_poutou9(hand, win_tile);
+        score.check_true_nine_gates(hand, win_tile);
     };
 }
 
 TEST_CASE("Suuankou (Four Closed Triplets)")
 {
-    ScoreCalculator2 score;
+    ScoreCalculator score;
 
     std::vector<std::tuple<Hand, int, bool>> cases;
     load_yakuman_cases("test_score_suanko.txt", cases);
@@ -220,7 +220,8 @@ TEST_CASE("Suuankou (Four Closed Triplets)")
     SECTION("Suuankou (Four Closed Triplets)")
     {
         for (auto &[hand, win_tile, expected] : cases) {
-            bool actual = score.check_suuankou(hand, HandFlag::Tumo, win_tile) >= 1;
+            bool actual = score.check_four_concealed_triplets(hand, WinFlag::Tsumo,
+                                                              win_tile) >= 1;
 
             INFO(fmt::format("hand: {}, win tile: {}", hand.to_string(),
                              Tile::Name.at(win_tile)));
@@ -231,13 +232,13 @@ TEST_CASE("Suuankou (Four Closed Triplets)")
     BENCHMARK("Suuankou (Four Closed Triplets)")
     {
         auto &[hand, win_tile, expected] = cases.front();
-        score.check_suuankou(hand, HandFlag::Tumo, win_tile);
+        score.check_four_concealed_triplets(hand, WinFlag::Tsumo, win_tile);
     };
 }
 
 TEST_CASE("Suuankou Tanki (Four Closed Triplets Single Wait)")
 {
-    ScoreCalculator2 score;
+    ScoreCalculator score;
 
     std::vector<std::tuple<Hand, int, bool>> cases;
     load_yakuman_cases("test_score_suanko_tanki.txt", cases);
@@ -245,7 +246,8 @@ TEST_CASE("Suuankou Tanki (Four Closed Triplets Single Wait)")
     SECTION("Suuankou Tanki (Four Closed Triplets)")
     {
         for (auto &[hand, win_tile, expected] : cases) {
-            bool actual = score.check_suuankou(hand, HandFlag::Tumo, win_tile) == 2;
+            bool actual = score.check_four_concealed_triplets(hand, WinFlag::Tsumo,
+                                                              win_tile) == 2;
             INFO(fmt::format("hand: {}, win tile: {}", hand.to_string(),
                              Tile::Name.at(win_tile)));
             REQUIRE(actual == expected);
@@ -255,13 +257,13 @@ TEST_CASE("Suuankou Tanki (Four Closed Triplets Single Wait)")
     BENCHMARK("Suuankou Tanki (Four Closed Triplets)")
     {
         auto &[hand, win_tile, expected] = cases.front();
-        score.check_suuankou(hand, HandFlag::Tumo, win_tile);
+        score.check_four_concealed_triplets(hand, WinFlag::Tsumo, win_tile);
     };
 }
 
 TEST_CASE("Chinroutou (All Terminals)")
 {
-    ScoreCalculator2 score;
+    ScoreCalculator score;
 
     std::vector<std::tuple<Hand, int, bool>> cases;
     load_yakuman_cases("test_score_tinroto.txt", cases);
@@ -269,7 +271,7 @@ TEST_CASE("Chinroutou (All Terminals)")
     SECTION("Chinroutou (All Terminals)")
     {
         for (auto &[hand, win_tile, expected] : cases) {
-            bool actual = score.check_chinroutou(hand);
+            bool actual = score.check_all_terminals(hand);
             INFO(fmt::format("hand: {}, win tile: {}", hand.to_string(),
                              Tile::Name.at(win_tile)));
             REQUIRE(actual == expected);
@@ -279,13 +281,13 @@ TEST_CASE("Chinroutou (All Terminals)")
     BENCHMARK("Chinroutou (All Terminals)")
     {
         auto &[hand, win_tile, expected] = cases.front();
-        score.check_chinroutou(hand);
+        score.check_all_terminals(hand);
     };
 }
 
 TEST_CASE("Suukantsu (Four Kongs)")
 {
-    ScoreCalculator2 score;
+    ScoreCalculator score;
 
     SECTION("Suukantsu (Four Kongs) established")
     {
@@ -309,7 +311,7 @@ TEST_CASE("Suukantsu (Four Kongs)")
 
         int win_tile = Tile::White;
         bool expected = true;
-        bool actual = score.check_suukantsu(hand);
+        bool actual = score.check_four_kongs(hand);
         INFO(fmt::format("hand: {}, win tile: {}", hand.to_string(),
                          Tile::Name.at(win_tile)));
         REQUIRE(actual == expected);
@@ -337,7 +339,7 @@ TEST_CASE("Suukantsu (Four Kongs)")
 
         int win_tile = Tile::White;
         bool expected = false;
-        bool actual = score.check_suukantsu(hand);
+        bool actual = score.check_four_kongs(hand);
         INFO(fmt::format("hand: {}, win tile: {}", hand.to_string(),
                          Tile::Name.at(win_tile)));
         REQUIRE(actual == expected);
@@ -362,7 +364,7 @@ TEST_CASE("Suukantsu (Four Kongs)")
 
         int win_tile = Tile::White;
         bool expected = false;
-        bool actual = score.check_suukantsu(hand);
+        bool actual = score.check_four_kongs(hand);
         INFO(fmt::format("hand: {}, win tile: {}", hand.to_string(),
                          Tile::Name.at(win_tile)));
         REQUIRE(actual == expected);
@@ -371,7 +373,7 @@ TEST_CASE("Suukantsu (Four Kongs)")
 
 TEST_CASE("Daisuushii (Big Four Winds)")
 {
-    ScoreCalculator2 score;
+    ScoreCalculator score;
 
     std::vector<std::tuple<Hand, int, bool>> cases;
     load_yakuman_cases("test_score_daisusi.txt", cases);
@@ -379,7 +381,7 @@ TEST_CASE("Daisuushii (Big Four Winds)")
     SECTION("Daisuushii (Big Four Winds)")
     {
         for (auto &[hand, win_tile, expected] : cases) {
-            bool actual = score.check_daisuushii(hand);
+            bool actual = score.check_big_four_winds(hand);
             INFO(fmt::format("hand: {}, win tile: {}", hand.to_string(),
                              Tile::Name.at(win_tile)));
             REQUIRE(actual == expected);
@@ -389,13 +391,13 @@ TEST_CASE("Daisuushii (Big Four Winds)")
     BENCHMARK("Daisuushii (Big Four Winds)")
     {
         auto &[hand, win_tile, expected] = cases.front();
-        score.check_daisuushii(hand);
+        score.check_big_four_winds(hand);
     };
 }
 
 TEST_CASE("Kokushimusou13 (Thirteen Orphans 13-sided wait)")
 {
-    ScoreCalculator2 score;
+    ScoreCalculator score;
 
     std::vector<std::tuple<Hand, int, bool>> cases;
     load_yakuman_cases("test_score_kokusi13.txt", cases);
@@ -403,7 +405,7 @@ TEST_CASE("Kokushimusou13 (Thirteen Orphans 13-sided wait)")
     SECTION("Kokushimusou13 (Thirteen Orphans 13-sided wait)")
     {
         for (auto &[hand, win_tile, expected] : cases) {
-            bool actual = score.check_kokushimusou13(hand, win_tile);
+            bool actual = score.check_thirteen_wait_thirteen_orphans(hand, win_tile);
             INFO(fmt::format("hand: {}, win tile: {}", hand.to_string(),
                              Tile::Name.at(win_tile)));
             REQUIRE(actual == expected);
@@ -413,6 +415,6 @@ TEST_CASE("Kokushimusou13 (Thirteen Orphans 13-sided wait)")
     BENCHMARK("Kokushimusou13 (Thirteen Orphans 13-sided wait)")
     {
         auto &[hand, win_tile, expected] = cases.front();
-        score.check_kokushimusou13(hand, win_tile);
+        score.check_thirteen_wait_thirteen_orphans(hand, win_tile);
     };
 }

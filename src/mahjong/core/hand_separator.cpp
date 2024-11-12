@@ -61,7 +61,7 @@ HandSeparator::separate(const Hand &hand, int win_tile, bool tumo)
             blocks[i].type = BlockType::Kong;
         else // 明槓、加槓
             blocks[i].type = BlockType::Kong | BlockType::Open;
-        blocks[i].min_tile = aka2normal(melded_block.tiles.front());
+        blocks[i].min_tile = red2normal(melded_block.tiles.front());
 
         i++;
     }

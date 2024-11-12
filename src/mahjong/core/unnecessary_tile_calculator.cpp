@@ -16,38 +16,38 @@ namespace mahjong
 std::tuple<int, int, std::vector<int>>
 UnnecessaryTileCalculator::select(const Hand &hand, const int type)
 {
-    std::tuple<int, int, int64_t> ret = {ShantenType::Null,
+    std::tuple<int, int, int64_t> ret = {ShantenFlag::Null,
                                          std::numeric_limits<int>::max(), 0};
 
-    if (type & ShantenType::Regular) {
+    if (type & ShantenFlag::Regular) {
         auto [shanten, disc] = calc_regular(hand);
         if (shanten < std::get<1>(ret)) {
-            ret = {ShantenType::Regular, shanten, disc};
+            ret = {ShantenFlag::Regular, shanten, disc};
         }
         else if (shanten == std::get<1>(ret)) {
-            std::get<0>(ret) |= ShantenType::Regular;
+            std::get<0>(ret) |= ShantenFlag::Regular;
             std::get<2>(ret) |= disc;
         }
     }
 
-    if (type & ShantenType::Chiitoitsu) {
+    if (type & ShantenFlag::SevenPairs) {
         auto [shanten, disc] = calc_chiitoitsu(hand);
         if (shanten < std::get<1>(ret)) {
-            ret = {ShantenType::Chiitoitsu, shanten, disc};
+            ret = {ShantenFlag::SevenPairs, shanten, disc};
         }
         else if (shanten == std::get<1>(ret)) {
-            std::get<0>(ret) |= ShantenType::Chiitoitsu;
+            std::get<0>(ret) |= ShantenFlag::SevenPairs;
             std::get<2>(ret) |= disc;
         }
     }
 
-    if (type & ShantenType::Kokushimusou) {
+    if (type & ShantenFlag::ThirteenOrphans) {
         auto [shanten, disc] = calc_kokushimusou(hand);
         if (shanten < std::get<1>(ret)) {
-            ret = {ShantenType::Kokushimusou, shanten, disc};
+            ret = {ShantenFlag::ThirteenOrphans, shanten, disc};
         }
         else if (shanten == std::get<1>(ret)) {
-            std::get<0>(ret) |= ShantenType::Kokushimusou;
+            std::get<0>(ret) |= ShantenFlag::ThirteenOrphans;
             std::get<2>(ret) |= disc;
         }
     }

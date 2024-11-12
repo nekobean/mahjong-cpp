@@ -13,13 +13,13 @@ int main(int, char **)
         ////////////////////////////////////////////////////////////////////////////////
 
         // 場風牌を Tile::East, Tile::South, Tile::West, Tile::North から設定します。
-        score.set_bakaze(Tile::East);
+        score.set_round_wind(Tile::East);
         // 自風牌を Tile::East, Tile::South, Tile::West, Tile::North から設定します。
-        score.set_zikaze(Tile::East);
+        score.set_self_wind(Tile::East);
         // 積み棒の数を設定します。(例: 1本場なら1)
-        score.set_num_tumibo(0);
+        score.set_bonus_stick(0);
         // 供託棒 (立直棒) の数を設定します。
-        score.set_num_kyotakubo(0);
+        score.set_deposit_stick(0);
         // ※ ダブロン、トリロン有りのルールの場合、積み棒、供託棒を受け取らない和了者の精算時には0に設定してください。
 
         // ドラの一覧 (表示牌ではない) を設定します。
@@ -28,8 +28,8 @@ int main(int, char **)
         score.set_uradora_tiles({Tile::Pinzu9});
         // ルールを設定します。デフォルトは赤ドラ有り、喰い断有りのありありルールです。
         // な変更したい場合は以下のように設定します。
-        // score.set_rule(RuleType::RedDora, false);  // 赤ドラなし
-        // score.set_rule(RuleType::OpenTanyao, false); // 喰い断なし
+        // score.set_rule(RuleFlag::RedDora, false);  // 赤ドラなし
+        // score.set_rule(RuleFlag::OpenTanyao, false); // 喰い断なし
 
         // 手牌、和了牌、フラグの設定
         ////////////////////////////////////////////////////////////////////////////////
@@ -46,19 +46,19 @@ int main(int, char **)
         int win_tile = Tile::Manzu1;
 
         // フラグ (自摸和了、立直など手牌に関係ない点数計算に必要なフラグを指定します。)
-        // HandFlag::Tumo         自摸和了 (門前かどうかに関わらず、自摸和了の場合は指定)
-        // HandFlag::Reach        立直成立
-        // HandFlag::Ippatu       一発成立
-        // HandFlag::Tyankan      搶槓成立
-        // HandFlag::Rinsyankaiho 嶺上開花成立
-        // HandFlag::Haiteitumo   海底撈月成立
-        // HandFlag::Hoteiron     河底撈魚成立
-        // HandFlag::DoubleReach  ダブル立直成立
-        // HandFlag::NagasiMangan 流し満貫成立
-        // HandFlag::Tenho        天和成立
-        // HandFlag::Tiho         地和成立
-        // HandFlag::Renho        人和成立
-        int flag = HandFlag::Tumo | HandFlag::Rinsyankaiho;
+        // WinFlag::Tsumo         自摸和了 (門前かどうかに関わらず、自摸和了の場合は指定)
+        // WinFlag::Riichi        立直成立
+        // WinFlag::Ippatsu       一発成立
+        // WinFlag::RobbingAKong      搶槓成立
+        // WinFlag::AfterAKong 嶺上開花成立
+        // WinFlag::HaiteiRaoyue   海底撈月成立
+        // WinFlag::UnderTheRiver     河底撈魚成立
+        // WinFlag::DoubleRiichi  ダブル立直成立
+        // WinFlag::NagasiMangan 流し満貫成立
+        // WinFlag::Tenho        天和成立
+        // WinFlag::Tiho         地和成立
+        // WinFlag::Renho        人和成立
+        int flag = WinFlag::Tsumo | WinFlag::AfterAKong;
 
         // 点数計算の実行
         ////////////////////////////////////////////////////////////////////////////////

@@ -71,13 +71,13 @@ inline std::string MeldedBlock::to_string() const
 
     s += "[";
     for (auto tile : tiles) {
-        if (is_akahai(tile))
+        if (is_reddora(tile))
             s += "r5";
         else if (is_manzu(tile))
             s += std::to_string(tile + 1);
         else if (is_pinzu(tile))
             s += std::to_string(tile - 8);
-        else if (is_sozu(tile))
+        else if (is_souzu(tile))
             s += std::to_string(tile - 17);
         else
             s += Tile::Name.at(tile);
@@ -87,7 +87,7 @@ inline std::string MeldedBlock::to_string() const
         s += "m";
     else if (is_pinzu(tiles[0]))
         s += "p";
-    else if (is_sozu(tiles[0]))
+    else if (is_souzu(tiles[0]))
         s += "s";
     s += fmt::format(", {}]", MeldType::Name.at(type));
 

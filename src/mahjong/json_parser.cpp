@@ -203,16 +203,16 @@ rapidjson::Value dump_candidate(const Candidate &candidate, rapidjson::Document 
  */
 DrawResponseData create_draw_response(const RequestData &req)
 {
-    ScoreCalculator2 score_calc;
+    ScoreCalculator score_calc;
     ExpectedValueCalculator exp_value_calc;
 
     auto begin = std::chrono::steady_clock::now();
 
     // 点数計算の設定
-    score_calc.set_bakaze(req.bakaze);
-    score_calc.set_zikaze(req.zikaze);
-    score_calc.set_num_tumibo(0);
-    score_calc.set_num_kyotakubo(0);
+    score_calc.set_round_wind(req.bakaze);
+    score_calc.set_self_wind(req.zikaze);
+    score_calc.set_bonus_sticks(0);
+    score_calc.set_deposit_sticks(0);
     score_calc.set_dora_indicators(req.dora_indicators);
 
     // 各打牌を分析する。
@@ -254,16 +254,16 @@ DrawResponseData create_draw_response(const RequestData &req)
  */
 DiscardResponseData create_discard_response(const RequestData &req)
 {
-    ScoreCalculator2 score_calc;
+    ScoreCalculator score_calc;
     ExpectedValueCalculator exp_value_calc;
 
     auto begin = std::chrono::steady_clock::now();
 
     // 点数計算の設定
-    score_calc.set_bakaze(req.bakaze);
-    score_calc.set_zikaze(req.zikaze);
-    score_calc.set_num_tumibo(0);
-    score_calc.set_num_kyotakubo(0);
+    score_calc.set_round_wind(req.bakaze);
+    score_calc.set_self_wind(req.zikaze);
+    score_calc.set_bonus_sticks(0);
+    score_calc.set_deposit_sticks(0);
     score_calc.set_dora_indicators(req.dora_indicators);
 
     // 各打牌を分析する。

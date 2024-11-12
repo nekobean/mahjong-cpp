@@ -1,7 +1,6 @@
 #ifndef MAHJONG_CPP_BLOCK
 #define MAHJONG_CPP_BLOCK
 
-#include <map>
 #include <string>
 #include <vector>
 
@@ -68,7 +67,7 @@ inline std::string Block::to_string() const
             s += std::to_string(tile + 1);
         else if (is_pinzu(tile))
             s += std::to_string(tile - 8);
-        else if (is_sozu(tile))
+        else if (is_souzu(tile))
             s += std::to_string(tile - 17);
         else
             s += Tile::Name.at(tile);
@@ -78,7 +77,7 @@ inline std::string Block::to_string() const
         s += "m";
     else if (is_pinzu(tiles[0]))
         s += "p";
-    else if (is_sozu(tiles[0]))
+    else if (is_souzu(tiles[0]))
         s += "s";
     s += fmt::format(", {}]", BlockType::Name.at(type));
 

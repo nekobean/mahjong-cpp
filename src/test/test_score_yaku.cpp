@@ -18,17 +18,18 @@ using namespace mahjong;
 struct TestCase
 {
     // 場況
-    int bakaze;
-    int zikaze;
-    int num_tumibo;
-    int num_kyotakubo;
+    int rules;
+    int round_wind;
+    int self_wind;
+    int num_bonus_sticks;
+    int num_deposit_sticks;
     std::vector<int> dora_tiles;
     std::vector<int> uradora_tiles;
 
     // 入力
     Hand hand;
     int win_tile;
-    int flag;
+    int win_flag;
 
     // 結果
     int han;
@@ -42,9 +43,6 @@ struct TestCase
     std::vector<int> score;
 
     std::string url;
-
-    bool enable_akadora;
-    bool enable_kuitan;
 };
 
 /**
@@ -79,10 +77,10 @@ bool load_cases(const std::string &filename, std::vector<TestCase> &cases)
     for (auto &v : doc.GetArray()) {
         TestCase testcase;
 
-        testcase.bakaze = v["bakaze"].GetInt();
-        testcase.zikaze = v["zikaze"].GetInt();
-        testcase.num_tumibo = v["num_tumibo"].GetInt();
-        testcase.num_kyotakubo = v["num_kyotakubo"].GetInt();
+        testcase.round_wind = v["bakaze"].GetInt();
+        testcase.self_wind = v["zikaze"].GetInt();
+        testcase.num_bonus_sticks = v["num_tumibo"].GetInt();
+        testcase.num_deposit_sticks = v["num_kyotakubo"].GetInt();
         for (auto &x : v["dora_tiles"].GetArray())
             testcase.dora_tiles.push_back(x.GetInt());
         for (auto &x : v["uradora_tiles"].GetArray())
@@ -107,7 +105,7 @@ bool load_cases(const std::string &filename, std::vector<TestCase> &cases)
 
         testcase.hand = Hand(tiles, melded_blocks);
         testcase.win_tile = v["win_tile"].GetInt();
-        testcase.flag = v["flag"].GetInt();
+        testcase.win_flag = v["flag"].GetInt();
 
         testcase.han = v["han"].GetInt();
         testcase.hu = v["hu"].GetInt();
@@ -127,8 +125,10 @@ bool load_cases(const std::string &filename, std::vector<TestCase> &cases)
             testcase.score.push_back(x.GetInt());
 
         testcase.url = v["url"].GetString();
-        testcase.enable_akadora = v["akadora"].GetBool();
-        testcase.enable_kuitan = v["kuitan"].GetBool();
+
+        testcase.rules = 0;
+        testcase.rules |= v["akadora"].GetBool() ? RuleFlag::RedDora : 0;
+        testcase.rules |= v["kuitan"].GetBool() ? RuleFlag::OpenTanyao : 0;
 
         cases.push_back(testcase);
     }
@@ -147,30 +147,30 @@ TEST_CASE("一般役の点数計算")
     if (!load_cases("test_score_normal_yaku.json", cases))
         return;
 
-    ScoreCalculator2 score;
+    ScoreCalculator score;
 
     SECTION("一般役の点数計算")
     {
         for (const auto &testcase : cases) {
             // 設定
-            score.set_bakaze(testcase.bakaze);
-            score.set_zikaze(testcase.zikaze);
-            score.set_num_tumibo(testcase.num_tumibo);
-            score.set_num_kyotakubo(testcase.num_kyotakubo);
+            score.set_round_wind(testcase.round_wind);
+            score.set_self_wind(testcase.self_wind);
+            score.set_bonus_sticks(testcase.num_bonus_sticks);
+            score.set_deposit_sticks(testcase.num_deposit_sticks);
             score.set_dora_tiles(testcase.dora_tiles);
             score.set_uradora_tiles(testcase.uradora_tiles);
-            score.set_rule(RuleType::RedDora, testcase.enable_akadora);
-            score.set_rule(RuleType::OpenTanyao, testcase.enable_kuitan);
+            score.set_rules(testcase.rules);
 
             // 計算
-            Result ret = score.calc(testcase.hand, testcase.win_tile, testcase.flag);
+            Result ret =
+                score.calc(testcase.hand, testcase.win_tile, testcase.win_flag);
 
             // 照合
             INFO(fmt::format("URL: {}", testcase.url));
             INFO(ret.to_string());
             std::string s;
             for (auto &[yaku, n] : testcase.yaku_list)
-                s += fmt::format(" {} {}翻\n", Yaku::Info[yaku].name, n);
+                s += fmt::format(" {} {}翻\n", Yaku::Name[yaku], n);
             INFO(s);
             REQUIRE(ret.han == testcase.han);                 // 飜
             REQUIRE(ret.fu == testcase.hu);                   // 符
@@ -195,17 +195,17 @@ TEST_CASE("一般役の点数計算")
     {
         for (const auto &testcase : cases) {
             // 設定
-            score.set_bakaze(testcase.bakaze);
-            score.set_zikaze(testcase.zikaze);
-            score.set_num_tumibo(testcase.num_tumibo);
-            score.set_num_kyotakubo(testcase.num_kyotakubo);
+            score.set_round_wind(testcase.round_wind);
+            score.set_self_wind(testcase.self_wind);
+            score.set_bonus_sticks(testcase.num_bonus_sticks);
+            score.set_deposit_sticks(testcase.num_deposit_sticks);
             score.set_dora_tiles(testcase.dora_tiles);
             score.set_uradora_tiles(testcase.uradora_tiles);
-            score.set_rule(RuleType::RedDora, testcase.enable_akadora);
-            score.set_rule(RuleType::OpenTanyao, testcase.enable_kuitan);
+            score.set_rules(testcase.rules);
 
             // 計算
-            Result ret = score.calc(testcase.hand, testcase.win_tile, testcase.flag);
+            Result ret =
+                score.calc(testcase.hand, testcase.win_tile, testcase.win_flag);
         }
     };
 }

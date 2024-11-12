@@ -12,19 +12,19 @@ namespace mahjong
 /**
  * @brief 点数計算機
  */
-class ScoreCalculator2
+class ScoreCalculator
 {
   public:
-    ScoreCalculator2();
+    ScoreCalculator();
 
-    Result calc(const Hand &hand, int win_tile, int flag = HandFlag::Null) const;
+    Result calc(const Hand &hand, int win_tile, int flag = WinFlag::Null) const;
     std::vector<std::tuple<std::string, int>>
     calc_fu_detail(const std::vector<Block> &blocks, int wait_type, bool is_menzen,
                    bool is_tumo) const;
     std::vector<int> get_scores_for_exp(const Result &result);
 
-    /* パラメータを設定・取得する関数 */
-    void set_rules(int rule = RuleType::Null);
+    /* setter and getter */
+    void set_rules(int rule = RuleFlag::Null);
     void set_rule(int rule, bool enabled);
     int rules() const;
     void set_dora_tiles(const std::vector<int> &tiles);
@@ -32,14 +32,14 @@ class ScoreCalculator2
     const std::vector<int> &dora_tiles() const;
     void set_uradora_tiles(const std::vector<int> &tiles);
     const std::vector<int> &uradora_tiles() const;
-    void set_bakaze(int tile);
-    int bakaze() const;
-    void set_zikaze(int tile);
-    int zikaze() const;
-    void set_num_tumibo(int n);
-    int num_tumibo() const;
-    void set_num_kyotakubo(int n);
-    int num_kyotakubo() const;
+    void set_round_wind(int tile);
+    int round_wind() const;
+    void set_self_wind(int tile);
+    int self_wind() const;
+    void set_bonus_sticks(int n);
+    int bonus_sticks() const;
+    void set_deposit_sticks(int n);
+    int deposit_sticks() const;
 
   public:
     std::tuple<bool, std::string> check_arguments(const Hand &hand, int win_tile,
@@ -61,50 +61,52 @@ class ScoreCalculator2
                      YakuList yaku_list) const;
     Result aggregate(const Hand &hand, int win_tile, int flag, YakuList yaku_list,
                      int fu, const std::vector<Block> &blocks, int wait_type) const;
-
-    // Functions to determine Yaku
-    bool check_ryuuiisou(const Hand &hand) const;
-    bool check_daisangen(const Hand &hand) const;
-    bool check_shousuushii(const Hand &hand) const;
-    bool check_tsuuiisou(const Hand &hand) const;
-    bool check_chuuren_poutou(const Hand &hand, int win_tile) const;
-    bool check_chuuren_poutou9(const Hand &hand, int win_tile) const;
-    int check_suuankou(const Hand &hand, int flag, int win_tile) const;
-    bool check_chinroutou(const Hand &hand) const;
-    bool check_suukantsu(const Hand &hand) const;
-    bool check_daisuushii(const Hand &hand) const;
-    bool check_kokushimusou13(const Hand &hand, int win_tile) const;
-    bool check_tanyao(const Hand &hand) const;
-    bool check_honroutou(const Hand &hand) const;
-    bool check_honitsu(const Hand &hand) const;
-    bool check_chinitsu(const Hand &hand) const;
-    bool check_shousangen(const Hand &hand) const;
-    bool check_sankantsu(const Hand &hand) const;
-    bool check_pinfu(const std::vector<Block> blocks, const int wait_type) const;
-    int check_iipeikou(const std::vector<Block> blocks) const;
-    bool check_ikkitsuukan(const std::vector<Block> blocks) const;
-    bool check_sanshoku_doukou(const std::vector<Block> blocks) const;
-    bool check_sanshoku_doujun(const std::vector<Block> blocks) const;
-    bool check_toitoihou(const std::vector<Block> blocks) const;
-    int check_chanta(const std::vector<Block> blocks) const;
-    bool check_sanankou(const std::vector<Block> blocks) const;
     int count_dora(const Hand &hand, std::vector<int> dora_list) const;
     int count_reddora(const Hand &hand) const;
 
+    // Functions to check yaku
+    bool check_tanyao(const Hand &hand) const;
+    bool check_pinfu(const std::vector<Block> &blocks, const int wait_type) const;
+    int check_pure_double_sequence(const std::vector<Block> &blocks) const;
+    bool check_all_triplets(const std::vector<Block> &blocks) const;
+    bool check_three_concealed_triplets(const std::vector<Block> &blocks) const;
+    bool check_triple_triplets(const std::vector<Block> &blocks) const;
+    bool check_mixed_triple_sequence(const std::vector<Block> &blocks) const;
+    bool check_all_terminals_and_honors(const Hand &hand) const;
+    bool check_pure_straight(const std::vector<Block> &blocks) const;
+    int check_outside_hand(const std::vector<Block> &blocks) const;
+    bool check_little_three_dragons(const Hand &hand) const;
+    bool check_three_kongs(const Hand &hand) const;
+    bool check_half_flush(const Hand &hand) const;
+    bool check_full_flush(const Hand &hand) const;
+    bool check_all_green(const Hand &hand) const;
+    bool check_big_three_dragons(const Hand &hand) const;
+    bool check_little_four_winds(const Hand &hand) const;
+    bool check_all_honors(const Hand &hand) const;
+    bool check_nine_gates(const Hand &hand, const int win_tile) const;
+    int check_four_concealed_triplets(const Hand &hand, const int win_flag,
+                                      const int win_tile) const;
+    bool check_all_terminals(const Hand &hand) const;
+    bool check_four_kongs(const Hand &hand) const;
+    bool check_big_four_winds(const Hand &hand) const;
+    bool check_true_nine_gates(const Hand &hand, const int win_tile) const;
+    bool check_thirteen_wait_thirteen_orphans(const Hand &hand,
+                                              const int win_tile) const;
+
   private:
-    /* ゲームルール */
+    /* Game rule */
     int rules_;
-    /* 場風牌 */
-    int bakaze_;
-    /* 自風牌 */
-    int zikaze_;
-    /* 積み棒の数 */
-    int n_tumibo_;
-    /* 供託棒の数 */
-    int n_kyotakubo_;
-    /* ドラの一覧 */
+    /* Round wind */
+    int round_wind_;
+    /* Self wind */
+    int self_wind_;
+    /* Number of bonus sticks */
+    int num_bonus_sticks_;
+    /* Number of deposit sticks */
+    int num_deposit_sticks_;
+    /* List of dora tiles */
     std::vector<int> dora_tiles_;
-    /* 裏ドラの一覧 */
+    /* List of ura dora tiles */
     std::vector<int> uradora_tiles_;
 };
 } // namespace mahjong

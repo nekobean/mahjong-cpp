@@ -9,6 +9,5 @@
 #include "scoretitle.hpp"
 #include "scoringtable.hpp"
 #include "tile.hpp"
-#include "yaku.hpp"
 
 #endif /* MAHJONG_CPP_TYPES */

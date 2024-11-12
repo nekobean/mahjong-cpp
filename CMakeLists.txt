@@ -4,7 +4,7 @@ project(mahjong-cpp VERSION 0.9.0)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
- 
+
 add_definitions("-DPROJECT_NAME=\"${PROJECT_NAME}\"")
 add_definitions("-DPROJECT_VERSION=\"${${PROJECT_NAME}_VERSION}\"")
 
@@ -83,6 +83,7 @@ endif()
 option(BUILD_TEST "build test programs." ON)
 if(BUILD_TEST)
   add_subdirectory(src/test)
+  add_subdirectory(src/misc/shanten_table)
 endif()
 
 # サンプル

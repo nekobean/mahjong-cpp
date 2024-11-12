@@ -18,9 +18,9 @@ class RequiredTileCalculator
 
   public:
     static std::tuple<int, int, std::vector<int>>
-    select(const Hand &hand, const int type = ShantenType::Regular |
-                                              ShantenType::Chiitoitsu |
-                                              ShantenType::Kokushimusou);
+    select(const Hand &hand, const int type = ShantenFlag::Regular |
+                                              ShantenFlag::SevenPairs |
+                                              ShantenFlag::ThirteenOrphans);
     static std::tuple<int, std::vector<int>> select_regular(const Hand &hand);
     static std::tuple<int, std::vector<int>> select_chiitoitsu(const Hand &hand);
     static std::tuple<int, std::vector<int>> select_kokushimusou(const Hand &hand);

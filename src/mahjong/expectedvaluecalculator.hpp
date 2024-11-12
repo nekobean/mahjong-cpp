@@ -257,10 +257,10 @@ class ExpectedValueCalculator
     ExpectedValueCalculator();
 
     std::tuple<bool, std::vector<Candidate>>
-    calc(const Hand &hand, const ScoreCalculator2 &score_calculator,
+    calc(const Hand &hand, const ScoreCalculator &score_calculator,
          const std::vector<int> &dora_indicators, int syanten_type, int flag = 0);
     std::tuple<bool, std::vector<Candidate>>
-    calc(const Hand &hand, const ScoreCalculator2 &score_calculator,
+    calc(const Hand &hand, const ScoreCalculator &score_calculator,
          const std::vector<int> &dora_indicators, int syanten_type,
          const std::vector<int> &counts, int flag = 0);
 
@@ -302,7 +302,7 @@ class ExpectedValueCalculator
 
     // private:
     /* 点数計算機 */
-    ScoreCalculator2 score_calculator_;
+    ScoreCalculator score_calculator_;
 
     /* 向聴数の種類 */
     int syanten_type_;

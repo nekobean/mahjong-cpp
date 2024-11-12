@@ -132,9 +132,10 @@ TEST_CASE("Shanten number")
     {
         for (auto &[hand, regular, kokushi, chiitoi] : cases) {
             int true_shanten = std::min({regular, kokushi, chiitoi});
-            int true_type = (true_shanten == regular ? ShantenType::Regular : 0) |
-                            (true_shanten == kokushi ? ShantenType::Kokushimusou : 0) |
-                            (true_shanten == chiitoi ? ShantenType::Chiitoitsu : 0);
+            int true_type =
+                (true_shanten == regular ? ShantenFlag::Regular : 0) |
+                (true_shanten == kokushi ? ShantenFlag::ThirteenOrphans : 0) |
+                (true_shanten == chiitoi ? ShantenFlag::SevenPairs : 0);
             auto [type, syanten] = ShantenCalculator::calc(hand);
 
             REQUIRE(syanten == true_shanten);

@@ -34,35 +34,35 @@ std::tuple<int, int> ShantenCalculator::calc(const Hand &hand, int type)
     }
 #endif
 
-    std::tuple<int, int> ret = {ShantenType::Null, std::numeric_limits<int>::max()};
+    std::tuple<int, int> ret = {ShantenFlag::Null, std::numeric_limits<int>::max()};
 
-    if (type & ShantenType::Regular) {
+    if (type & ShantenFlag::Regular) {
         int shanten = calc_regular(hand);
         if (shanten < std::get<1>(ret)) {
-            ret = {ShantenType::Regular, shanten};
+            ret = {ShantenFlag::Regular, shanten};
         }
         else if (shanten == std::get<1>(ret)) {
-            std::get<0>(ret) |= ShantenType::Regular;
+            std::get<0>(ret) |= ShantenFlag::Regular;
         }
     }
 
-    if (type & ShantenType::Chiitoitsu) {
+    if (type & ShantenFlag::SevenPairs) {
         int shanten = calc_chiitoitsu(hand);
         if (shanten < std::get<1>(ret)) {
-            ret = {ShantenType::Chiitoitsu, shanten};
+            ret = {ShantenFlag::SevenPairs, shanten};
         }
         else if (shanten == std::get<1>(ret)) {
-            std::get<0>(ret) |= ShantenType::Chiitoitsu;
+            std::get<0>(ret) |= ShantenFlag::SevenPairs;
         }
     }
 
-    if (type & ShantenType::Kokushimusou) {
+    if (type & ShantenFlag::ThirteenOrphans) {
         int shanten = calc_kokushimusou(hand);
         if (shanten < std::get<1>(ret)) {
-            ret = {ShantenType::Kokushimusou, shanten};
+            ret = {ShantenFlag::ThirteenOrphans, shanten};
         }
         else if (shanten == std::get<1>(ret)) {
-            std::get<0>(ret) |= ShantenType::Kokushimusou;
+            std::get<0>(ret) |= ShantenFlag::ThirteenOrphans;
         }
     }
 

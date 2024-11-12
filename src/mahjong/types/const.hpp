@@ -1,15 +1,18 @@
 #ifndef MAHJONG_CPP_CONST_HPP
 #define MAHJONG_CPP_CONST_HPP
 
+#include <array>
 #include <map>
 #include <string>
 
-#ifdef ENGLISH
+#ifdef USE_ENGLISH
 #define ENTRY(id, eng, jp) {id, eng}
 #else
 #define ENTRY(id, eng, jp) {id, jp}
 #endif
 
+namespace mahjong
+{
 /**
  * @brief Tile types
  */
@@ -113,7 +116,6 @@ enum
     Kong = 4,     /* Kong (槓子) */
     Pair = 8,     /* Pair (対子) */
     Open = 16,    /* Open (副露した牌が含まれるかどうか) */
-    Length = 6,
 };
 
 static inline const std::map<int, std::string> Name = {
@@ -144,10 +146,10 @@ enum
 };
 
 static inline const std::map<int, std::string> Name = {
-    ENTRY(Null, "Null", "Null"), ENTRY(Myself, "Myself", "自家"),
-    ENTRY(LeftPlayer, "Left Player", "上家"),
-    ENTRY(OppositePlayer, "Opposite Player", "対面"),
-    ENTRY(RightPlayer, "Right Player", "下家")};
+    ENTRY(Null, u8"Null", u8"Null"), ENTRY(Myself, u8"Myself", u8"自家"),
+    ENTRY(LeftPlayer, u8"Left Player", u8"上家"),
+    ENTRY(OppositePlayer, u8"Opposite Player", u8"対面"),
+    ENTRY(RightPlayer, u8"Right Player", u8"下家")};
 } // namespace SeatType
 
 /**
@@ -167,9 +169,12 @@ enum
 };
 
 static inline const std::map<int, std::string> Name = {
-    ENTRY(Null, "Null", "Null"),          ENTRY(Pong, "Pong", "ポン"),
-    ENTRY(Chow, "Chow", "チー"),          ENTRY(ClosedKong, "Closed Kong", "暗槓"),
-    ENTRY(OpenKong, "Open Kong", "明槓"), ENTRY(AddedKong, "Added Kong", "加槓")};
+    ENTRY(Null, u8"Null", u8"Null"),
+    ENTRY(Pong, u8"Pong", u8"ポン"),
+    ENTRY(Chow, u8"Chow", u8"チー"),
+    ENTRY(ClosedKong, u8"Closed Kong", u8"暗槓"),
+    ENTRY(OpenKong, u8"Open Kong", u8"明槓"),
+    ENTRY(AddedKong, u8"Added Kong", u8"加槓")};
 } // namespace MeldType
 
 /**
@@ -188,9 +193,10 @@ enum
 };
 
 static inline const std::map<int, std::string> Name = {
-    ENTRY(Null, "Null", "Null"), ENTRY(Player0, "Player0", "プレイヤー1"),
-    ENTRY(Player1, "Player1", "プレイヤー2"), ENTRY(Player2, "Player2", "プレイヤー3"),
-    ENTRY(Player3, "Player3", "プレイヤー4")};
+    ENTRY(Null, u8"Null", u8"Null"), ENTRY(Player0, u8"Player0", u8"プレイヤー1"),
+    ENTRY(Player1, u8"Player1", u8"プレイヤー2"),
+    ENTRY(Player2, u8"Player2", u8"プレイヤー3"),
+    ENTRY(Player3, u8"Player3", u8"プレイヤー4")};
 } // namespace PlayerType
 
 /**
@@ -206,22 +212,23 @@ enum
     ClosedWait,     /* waiting for the middle in a sequence (嵌張待ち) */
     TripletWait,    /* Waiting for a triplet (双ポン待ち) */
     PairWait,       /* Waiting for one of a pair (単騎待ち) */
+    Length,
 };
 
 static inline const std::map<int, std::string> Name = {
-    ENTRY(Null, "Null", "Null"),
-    ENTRY(DoubleEdgeWait, "Double Edge Wait", "両面待ち"),
-    ENTRY(EdgeWait, "Edge Wait", "辺張待ち"),
-    ENTRY(ClosedWait, "Closed Wait", "嵌張待ち"),
-    ENTRY(TripletWait, "Triplet Wait", "双ポン待ち"),
-    ENTRY(PairWait, "Pair Wait", "単騎待ち")};
+    ENTRY(Null, u8"Null", u8"Null"),
+    ENTRY(DoubleEdgeWait, u8"Double Edge Wait", u8"両面待ち"),
+    ENTRY(EdgeWait, u8"Edge Wait", u8"辺張待ち"),
+    ENTRY(ClosedWait, u8"Closed Wait", u8"嵌張待ち"),
+    ENTRY(TripletWait, u8"Triplet Wait", u8"双ポン待ち"),
+    ENTRY(PairWait, u8"Pair Wait", u8"単騎待ち")};
 
 } // namespace WaitType
 
 /**
- * @brief Rule types
+ * @brief Flags related to rules
  */
-namespace RuleType
+namespace RuleFlag
 {
 enum
 {
@@ -231,29 +238,338 @@ enum
 };
 
 static inline const std::map<int, std::string> Name = {
-    ENTRY(Null, "Null", "Null"), ENTRY(RedDora, "Red Dora", "赤ドラ有り"),
-    ENTRY(OpenTanyao, "Open Tanyao", "喰い断有り")};
-} // namespace RuleType
+    ENTRY(Null, u8"Null", u8"Null"), ENTRY(RedDora, u8"Red Dora", u8"赤ドラ有り"),
+    ENTRY(OpenTanyao, u8"Open Tanyao", u8"喰い断有り")};
+} // namespace RuleFlag
 
 /**
- * @brief The winning form to calculate shanten number
+ * @brief Flags related to which winning form to calculate shanten number for
  */
-namespace ShantenType
+namespace ShantenFlag
 {
 enum
 {
     Null = 0,
-    Regular = 1,     /* Shanten number of regular form (一般形の向聴数) */
-    Chiitoitsu = 2,  /* Shanten number of Chiitoitsu (七対子の向聴数) */
-    Kokushimusou = 4 /* Shanten number of Kokushimusou (国士無双の向聴数) */
+    /* Shanten number for regular form (一般形に対する向聴数) */
+    Regular = 1,
+    /* Shanten number for Seven Pairs (七対子に対する向聴数) */
+    SevenPairs = 2,
+    /* Shanten number for Thirteen Orphans (国士無双に対する向聴数) */
+    ThirteenOrphans = 4
 };
 
 static inline const std::map<int, std::string> Name = {
-    ENTRY(Null, "Null", "Null"),
-    ENTRY(Regular, "Regular", "一般形"),
-    ENTRY(Chiitoitsu, "Chiitoitsu", "七対子"),
-    ENTRY(Kokushimusou, "Kokushimusou", "国士無双"),
+    ENTRY(Null, u8"Null", u8"Null"),
+    ENTRY(Regular, u8"Regular", u8"一般形"),
+    ENTRY(SevenPairs, u8"Seven Pairs", u8"七対子"),
+    ENTRY(ThirteenOrphans, u8"Thirteen Orphans", u8"国士無双"),
 };
-}; // namespace ShantenType
+}; // namespace ShantenFlag
+
+/**
+ * @brief Flags related to win
+ *
+ *    For a Tsumo win, specify Tsumo regardless of whether hand is closed or open.
+ *    Only one of Riichi or Double Riichi can be specified.
+ *    Only one of RobbingAKong, AfterAKong, UnderTheSea, or UnderTheRiver can be specified.
+ *    Only one of BlessingOfHeaven, BlessingOfEarth, or HandOfMan can be specified.
+ */
+namespace WinFlag
+{
+enum
+{
+    Null = 0,
+    Tsumo = 1 << 1,             /* Tsumo win (自摸和了) */
+    Riichi = 1 << 2,            /* Riich established (立直成立) */
+    Ippatsu = 1 << 3,           /* One-shot Win established (一発成立) */
+    RobbingAKong = 1 << 4,      /* Robbing a Kong established (搶槓成立) */
+    AfterAKong = 1 << 5,        /* After a Kong established (嶺上開花成立) */
+    UnderTheSea = 1 << 6,       /* Under the Sea established(海底撈月成立) */
+    UnderTheRiver = 1 << 7,     /* Under the River established (河底撈魚成立) */
+    DoubleRiichi = 1 << 8,      /* Double Riichi established (ダブル立直成立) */
+    NagashiMangan = 1 << 9,     /* Mangan at Draw established(流し満貫成立) */
+    BlessingOfHeaven = 1 << 10, /* Blessing of Heaven established (天和成立) */
+    BlessingOfEarth = 1 << 11,  /* Blessing of Earth established (地和成立) */
+    HandOfMan = 1 << 12,        /* Hand of Man established (人和成立) */
+};
+
+static inline const std::map<int, std::string> Name = {
+    ENTRY(Null, u8"Null", u8"Null"),
+    ENTRY(Tsumo, u8"Tsumo win", u8"自摸和了"),
+    ENTRY(Riichi, u8"Riichi established", u8"立直成立"),
+    ENTRY(Ippatsu, u8"Ippatsu established", u8"一発成立"),
+    ENTRY(RobbingAKong, u8"Robbing a Kong", u8"搶槓成立"),
+    ENTRY(AfterAKong, u8"After a Kong established", u8"嶺上開花成立"),
+    ENTRY(UnderTheSea, u8"Under the Sea established", u8"海底撈月成立"),
+    ENTRY(UnderTheRiver, u8"Under the River established", u8"河底撈魚成立"),
+    ENTRY(DoubleRiichi, u8"Double Riichi established", u8"ダブル立直成立"),
+    ENTRY(NagashiMangan, u8"Mangan at Draw established", u8"流し満貫成立"),
+    ENTRY(BlessingOfHeaven, u8"Blessing of Heaven established", u8"天和成立"),
+    ENTRY(BlessingOfEarth, u8"Blessing of Earth established", u8"地和成立"),
+    ENTRY(HandOfMan, u8"Hand of Man established", u8"人和成立")};
+} // namespace WinFlag
+
+using YakuList = unsigned long long;
+
+/**
+ * @brief 役
+ */
+namespace Yaku
+{
+/**
+ * @brief 役の種類
+ */
+// clang-format off
+enum : YakuList
+{
+    Null = INT64_C(0),
+    Tsumo = INT64_C(1),                                 /* Win by self-draw (門前清自摸和) */
+    Riichi = INT64_C(1) << 1,                           /* Riichi (立直) */
+    Ippatsu = INT64_C(1) << 2,                          /* One-shot Win (一発) */
+    Tanyao = INT64_C(1) << 3,                           /* All Simples (断幺九) */
+    Pinfu = INT64_C(1) << 4,                            /* Pinfu (平和) */
+    PureDoubleSequence = INT64_C(1) << 5,               /* Pure Double Sequence (一盃口) */
+    RobbingAKong = INT64_C(1) << 6,                     /* Robbing a kong (槍槓) */
+    AfterAKong = INT64_C(1) << 7,                       /* After a Kong (嶺上開花) */
+    UnderTheSea = INT64_C(1) << 8,                      /* Under the Sea (海底摸月) */
+    UnderTheRiver = INT64_C(1) << 9,                    /* Under the River (河底撈魚) */
+    Dora = INT64_C(1) << 10,                            /* Dora (ドラ) */
+    UraDora = INT64_C(1) << 11,                         /* Ura Dora (裏ドラ) */
+    RedDora = INT64_C(1) << 12,                         /* Red Dora (赤ドラ) */
+    WhiteDragon = INT64_C(1) << 13,                     /* White Dragon (三元牌 白) */
+    GreenDragon = INT64_C(1) << 14,                     /* Green Dragon (三元牌 發) */
+    RedDragon = INT64_C(1) << 15,                       /* Red Dragon (三元牌 中) */
+    SelfWindEast = INT64_C(1) << 16,                    /* Self Wind East (自風 東) */
+    SelfWindSouth = INT64_C(1) << 17,                   /* Self Wind South (自風 南) */
+    SelfWindWest = INT64_C(1) << 18,                    /* Self Wind West (自風 西) */
+    SelfWindNorth = INT64_C(1) << 19,                   /* Self Wind North (自風 北) */
+    RoundWindEast = INT64_C(1) << 20,                   /* Round Wind East (場風 東) */
+    RoundWindSouth = INT64_C(1) << 21,                  /* Round Wind South (場風 南) */
+    RoundWindWest = INT64_C(1) << 22,                   /* Round Wind West (場風 西) */
+    RoundWindNorth = INT64_C(1) << 23,                  /* Round Wind North (場風 北) */
+    DoubleRiichi = INT64_C(1) << 24,                    /* Double Riichi (ダブル立直) */
+    SevenPairs = INT64_C(1) << 25,                      /* Seven Pairs (七対子) */
+    AllTriplets = INT64_C(1) << 26,                     /* All Triplets (対々和) */
+    ThreeConcealedTriplets = INT64_C(1) << 27,          /* Three Concealed Triplets (三暗刻) */
+    TripleTriplets = INT64_C(1) << 28,                  /* Triple Triplets (三色同刻) */
+    MixedTripleSequence = INT64_C(1) << 29,             /* Mixed Triple Sequence (三色同順) */
+    AllTerminalsAndHonors = INT64_C(1) << 30,           /* All Terminals and Honors (混老頭) */
+    PureStraight = INT64_C(1) << 31,                    /* Pure Straight (一気通貫) */
+    HalfOutsideHand = INT64_C(1) << 32,                 /* Half Outside Hand (混全帯幺九) */
+    LittleThreeDragons = INT64_C(1) << 33,              /* Little Three Dragons (小三元) */
+    ThreeKongs = INT64_C(1) << 34,                      /* Three Quads (三槓子) */
+    HalfFlush = INT64_C(1) << 35,                       /* Half Flush (混一色) */
+    FullyOutsideHand = INT64_C(1) << 36,                /* Fully Outside Hand (純全帯幺九) */
+    TwicePureDoubleSequence = INT64_C(1) << 37,         /* Twice Pure Double Sequence (二盃口) */
+    NagasiMangan = INT64_C(1) << 38,                    /* Mangan at Draw (流し満貫) */
+    FullFlush = INT64_C(1) << 39,                       /* Full Flush (清一色) */
+    BlessingOfHeaven = INT64_C(1) << 40,                /* Blessing of Heaven (天和) */
+    BlessingOfEarth = INT64_C(1) << 41,                 /* Blessing of Earth (地和) */
+    HandOfMan = INT64_C(1) << 42,                       /* Hand of Man (人和) */
+    AllGreen = INT64_C(1) << 43,                        /* All Green (緑一色) */
+    BigThreeDragons = INT64_C(1) << 44,                 /* Big Three Dragons (大三元) */
+    LittleFourWinds = INT64_C(1) << 45,                 /* Little Four Winds (小四喜) */
+    AllHonors = INT64_C(1) << 46,                       /* All Honors (字一色) */
+    ThirteenOrphans = INT64_C(1) << 47,                 /* Thirteen Orphans (国士無双) */
+    NineGates = INT64_C(1) << 48,                       /* Nine Gates (九連宝燈) */
+    FourConcealedTriplets = INT64_C(1) << 49,           /* Four Concealed Triplets (四暗刻) */
+    AllTerminals = INT64_C(1) << 50,                    /* All Terminals (清老頭) */
+    FourKongs = INT64_C(1) << 51,                       /* Four Kongs (四槓子) */
+    SingleWaitFourConcealedTriplets = INT64_C(1) << 52, /* Single-wait Four Concealed Triplets (四暗刻単騎) */
+    BigFourWinds = INT64_C(1) << 53,                    /* Big Four Winds (大四喜) */
+    TrueNineGates = INT64_C(1) << 54,                   /* True Nine Gates (純正九連宝燈) */
+    ThirteenWaitThirteenOrphans = INT64_C(1) << 55,     /* Thirteen-wait Thirteen Orphans (国士無双13面待ち) */
+    Length = INT64_C(56),
+};
+// clang-format on
+
+static inline std::map<YakuList, std::string> Name = {
+    ENTRY(Null, u8"Null", u8"役なし"),
+    ENTRY(Tsumo, u8"Win by self-draw", u8"門前清自摸和"),
+    ENTRY(Riichi, u8"Riichi", u8"立直"),
+    ENTRY(Ippatsu, u8"One-shot Win", u8"一発"),
+    ENTRY(Tanyao, u8"All Simples", u8"断幺九"),
+    ENTRY(Pinfu, u8"Pinfu", u8"平和"),
+    ENTRY(PureDoubleSequence, u8"Pure Double Sequence", u8"一盃口"),
+    ENTRY(RobbingAKong, u8"Robbing a Kong", u8"槍槓"),
+    ENTRY(AfterAKong, u8"After a Kong", u8"嶺上開花"),
+    ENTRY(UnderTheSea, u8"Under the Sea", u8"海底摸月"),
+    ENTRY(UnderTheRiver, u8"Under the River", u8"河底撈魚"),
+    ENTRY(Dora, u8"Dora", u8"ドラ"),
+    ENTRY(UraDora, u8"Ura Dora", u8"裏ドラ"),
+    ENTRY(RedDora, u8"Red Dora", u8"赤ドラ"),
+    ENTRY(WhiteDragon, u8"White Dragon", u8"三元牌 白"),
+    ENTRY(GreenDragon, u8"Green Dragon", u8"三元牌 發"),
+    ENTRY(RedDragon, u8"Red Dragon", u8"三元牌 中"),
+    ENTRY(SelfWindEast, u8"Self Wind East", u8"自風 東"),
+    ENTRY(SelfWindSouth, u8"Self Wind South", u8"自風 南"),
+    ENTRY(SelfWindWest, u8"Self Wind West", u8"自風 西"),
+    ENTRY(SelfWindNorth, u8"Self Wind North", u8"自風 北"),
+    ENTRY(RoundWindEast, u8"Round Wind East", u8"場風 東"),
+    ENTRY(RoundWindSouth, u8"Round Wind South", u8"場風 南"),
+    ENTRY(RoundWindWest, u8"Round Wind West", u8"場風 西"),
+    ENTRY(RoundWindNorth, u8"Round Wind North", u8"場風 北"),
+    ENTRY(DoubleRiichi, u8"Double Riichi", u8"ダブル立直"),
+    ENTRY(SevenPairs, u8"Seven Pairs", u8"七対子"),
+    ENTRY(AllTriplets, u8"All Triplets", u8"対々和"),
+    ENTRY(ThreeConcealedTriplets, u8"Three Concealed Triplets", u8"三暗刻"),
+    ENTRY(TripleTriplets, u8"Triple Triplets", u8"三色同刻"),
+    ENTRY(MixedTripleSequence, u8"Mixed Triple Sequence", u8"三色同順"),
+    ENTRY(AllTerminalsAndHonors, u8"All Terminals and Honors", u8"混老頭"),
+    ENTRY(PureStraight, u8"Pure Straight", u8"一気通貫"),
+    ENTRY(HalfOutsideHand, u8"Half Outside Hand", u8"混全帯幺九"),
+    ENTRY(LittleThreeDragons, u8"Little Three Dragons", u8"小三元"),
+    ENTRY(ThreeKongs, u8"Three Kongs", u8"三槓子"),
+    ENTRY(HalfFlush, u8"Half Flush", u8"混一色"),
+    ENTRY(FullyOutsideHand, u8"Fully Outside Hand", u8"純全帯幺九"),
+    ENTRY(TwicePureDoubleSequence, u8"Twice Pure Double Sequence", u8"二盃口"),
+    ENTRY(NagasiMangan, u8"Mangan at Draw", u8"流し満貫"),
+    ENTRY(FullFlush, u8"Full Flush", u8"清一色"),
+    ENTRY(BlessingOfHeaven, u8"Blessing of Heaven", u8"天和"),
+    ENTRY(BlessingOfEarth, u8"Blessing of Earth", u8"地和"),
+    ENTRY(HandOfMan, u8"Hand of Man", u8"人和"),
+    ENTRY(AllGreen, u8"All Green", u8"緑一色"),
+    ENTRY(BigThreeDragons, u8"Big Three Dragons", u8"大三元"),
+    ENTRY(LittleFourWinds, u8"Little Four Winds", u8"小四喜"),
+    ENTRY(AllHonors, u8"All Honors", u8"字一色"),
+    ENTRY(ThirteenOrphans, u8"Thirteen Orphans", u8"国士無双"),
+    ENTRY(NineGates, u8"Nine Gates", u8"九連宝燈"),
+    ENTRY(FourConcealedTriplets, u8"Four Concealed Triplets", u8"四暗刻"),
+    ENTRY(AllTerminals, u8"All Terminals", u8"清老頭"),
+    ENTRY(FourKongs, u8"Four Kongs", u8"四槓子"),
+    ENTRY(SingleWaitFourConcealedTriplets, u8"Single-wait Four Concealed Triplets",
+          u8"四暗刻単騎"),
+    ENTRY(BigFourWinds, u8"Big Four Winds", u8"大四喜"),
+    ENTRY(TrueNineGates, u8"True Nine Gates", u8"純正九連宝燈"),
+    ENTRY(ThirteenWaitThirteenOrphans, u8"Thirteen-wait Thirteen Orphans",
+          u8"国士無双13面待ち"),
+};
+
+/**
+ * @brief 役の情報
+ */
+// clang-format off
+static inline std::map<YakuList, std::array<int, 2>> Han = {
+    {Null,                           {0, 0}},
+    {Tsumo,                          {1, 0}},  // 門前限定
+    {Riichi,                         {1, 0}},  // 門前限定
+    {Ippatsu,                        {1, 0}},  // 門前限定
+    {Tanyao,                         {1, 1}},
+    {Pinfu,                          {1, 0}},  // 門前限定
+    {PureDoubleSequence,             {1, 0}},  // 門前限定
+    {RobbingAKong,                   {1, 1}},
+    {AfterAKong,                     {1, 1}},
+    {UnderTheSea,                    {1, 1}},
+    {UnderTheRiver,                  {1, 1}},
+    {Dora,                           {0, 0}},
+    {UraDora,                        {0, 0}},
+    {RedDora,                        {0, 0}},
+    {WhiteDragon,                    {1, 1}},
+    {GreenDragon,                    {1, 1}},
+    {RedDragon,                      {1, 1}},
+    {SelfWindEast,                   {1, 1}},
+    {SelfWindSouth,                  {1, 1}},
+    {SelfWindWest,                   {1, 1}},
+    {SelfWindNorth,                  {1, 1}},
+    {RoundWindEast,                  {1, 1}},
+    {RoundWindSouth,                 {1, 1}},
+    {RoundWindWest,                  {1, 1}},
+    {RoundWindNorth,                 {1, 1}},
+    {DoubleRiichi,                   {2, 0}},  // 門前限定
+    {SevenPairs,                     {2, 0}},  // 門前限定
+    {AllTriplets,                    {2, 2}},
+    {ThreeConcealedTriplets,         {2, 2}},
+    {TripleTriplets,                 {2, 2}},
+    {MixedTripleSequence,            {2, 1}},  // 喰い下がり
+    {AllTerminalsAndHonors,          {2, 2}},
+    {PureStraight,                   {2, 1}},  // 喰い下がり
+    {HalfOutsideHand,                {2, 1}},  // 喰い下がり
+    {LittleThreeDragons,             {2, 2}},
+    {ThreeKongs,                     {2, 2}},
+    {HalfFlush,                      {3, 2}},  // 喰い下がり
+    {FullyOutsideHand,               {3, 2}},  // 喰い下がり
+    {TwicePureDoubleSequence,        {3, 0}},  // 門前限定
+    {NagasiMangan,                   {0, 0}},  // 満貫扱い
+    {FullFlush,                      {6, 5}},  // 喰い下がり
+    {BlessingOfHeaven,               {1, 0}},  // 役満
+    {BlessingOfEarth,                {1, 0}},  // 役満
+    {HandOfMan,                      {1, 0}},  // 役満
+    {AllGreen,                       {1, 0}},  // 役満
+    {BigThreeDragons,                {1, 0}},  // 役満
+    {LittleFourWinds,                {1, 0}},  // 役満
+    {AllHonors,                      {1, 0}},  // 役満
+    {ThirteenOrphans,                {1, 0}},  // 役満
+    {NineGates,                      {1, 0}},  // 役満
+    {FourConcealedTriplets,          {1, 0}},  // 役満
+    {AllTerminals,                   {1, 0}},  // 役満
+    {FourKongs,                      {1, 0}},  // 役満
+    {SingleWaitFourConcealedTriplets,{2, 0}},  // ダブル役満
+    {BigFourWinds,                   {2, 0}},  // ダブル役満
+    {TrueNineGates,                  {2, 0}},  // ダブル役満
+    {ThirteenWaitThirteenOrphans,    {2, 0}},  // ダブル役満
+};
+// clang-format on
+
+/*! List of normal yaku */
+static inline std::vector<YakuList> NormalYaku = {
+    Tsumo,
+    Riichi,
+    Ippatsu,
+    Tanyao,
+    Pinfu,
+    PureDoubleSequence,
+    RobbingAKong,
+    AfterAKong,
+    UnderTheSea,
+    UnderTheRiver,
+    WhiteDragon,
+    GreenDragon,
+    RedDragon,
+    SelfWindEast,
+    SelfWindSouth,
+    SelfWindWest,
+    SelfWindNorth,
+    RoundWindEast,
+    RoundWindSouth,
+    RoundWindWest,
+    RoundWindNorth,
+    DoubleRiichi,
+    SevenPairs,
+    AllTriplets,
+    ThreeConcealedTriplets,
+    TripleTriplets,
+    MixedTripleSequence,
+    AllTerminalsAndHonors,
+    PureStraight,
+    HalfOutsideHand,
+    LittleThreeDragons,
+    ThreeKongs,
+    HalfFlush,
+    FullyOutsideHand,
+    TwicePureDoubleSequence,
+    FullFlush,
+};
+
+/*! List of normal yakuman */
+static inline std::vector<YakuList> Yakuman = {
+    BlessingOfHeaven,
+    BlessingOfEarth,
+    HandOfMan,
+    AllGreen,
+    BigThreeDragons,
+    LittleFourWinds,
+    AllHonors,
+    ThirteenOrphans,
+    NineGates,
+    FourConcealedTriplets,
+    AllTerminals,
+    FourKongs,
+    SingleWaitFourConcealedTriplets,
+    BigFourWinds,
+    TrueNineGates,
+    ThirteenWaitThirteenOrphans,
+};
+}; // namespace Yaku
+} // namespace mahjong
 
 #endif /* MAHJONG_CPP_CONST_HPP */

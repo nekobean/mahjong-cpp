@@ -7,55 +7,13 @@
 
 #include <spdlog/spdlog.h>
 
+#include "const.hpp"
 #include "hand.hpp"
 #include "scoretitle.hpp"
 #include "tile.hpp"
-#include "yaku.hpp"
 
 namespace mahjong
 {
-
-/**
- * @brief 手牌に関するフラグ
- *
- *    自摸和了の場合は門前かどうかに関わらず、Tumo を指定します。
- *    立直、ダブル立直はどれか1つのみ指定できます。
- *    搶槓、嶺上開花、海底撈月、河底撈魚はどれか1つのみ指定できます。
- *    天和、地和、人和はどれか1つのみ指定できます。
- */
-namespace HandFlag
-{
-enum
-{
-    Null = 0,
-    Tumo = 1 << 1,         /* 自摸和了 */
-    Reach = 1 << 2,        /* 立直成立 */
-    Ippatu = 1 << 3,       /* 一発成立 */
-    Tyankan = 1 << 4,      /* 搶槓成立 */
-    Rinsyankaiho = 1 << 5, /* 嶺上開花成立 */
-    Haiteitumo = 1 << 6,   /* 海底撈月成立 */
-    Hoteiron = 1 << 7,     /* 河底撈魚成立 */
-    DoubleReach = 1 << 8,  /* ダブル立直成立 */
-    NagasiMangan = 1 << 9, /* 流し満貫成立 */
-    Tenho = 1 << 10,       /* 天和成立 */
-    Tiho = 1 << 11,        /* 地和成立 */
-    Renho = 1 << 12,       /* 人和成立 */
-};
-
-static inline const std::map<int, std::string> Name = {{Null, "Null"},
-                                                       {Tumo, "自摸和了"},
-                                                       {Reach, "立直成立"},
-                                                       {Ippatu, "一発成立"},
-                                                       {Tyankan, "搶槓成立"},
-                                                       {Rinsyankaiho, "嶺上開花成立"},
-                                                       {Haiteitumo, "海底撈月成立"},
-                                                       {Hoteiron, "河底撈魚成立"},
-                                                       {DoubleReach, "ダブル立直成立"},
-                                                       {NagasiMangan, "流し満貫成立"},
-                                                       {Tenho, "天和成立"},
-                                                       {Tiho, "地和成立"},
-                                                       {Renho, "人和成立"}};
-} // namespace HandFlag
 
 /**
  * @brief 結果
@@ -201,7 +159,7 @@ inline std::string Result::to_string()
     s += "[結果]\n";
     s +=
         fmt::format("手牌: {}, 和了牌: {}, {}\n", hand.to_string(),
-                    Tile::Name.at(win_tile), (flag & HandFlag::Tumo) ? "自摸" : "ロン");
+                    Tile::Name.at(win_tile), (flag & WinFlag::Tsumo) ? "自摸" : "ロン");
 
     if (han > 0) {
         if (!blocks.empty()) {
@@ -214,7 +172,7 @@ inline std::string Result::to_string()
         // 役
         s += "役:\n";
         for (auto &[yaku, n] : yaku_list)
-            s += fmt::format(" {} {}翻\n", Yaku::Info[yaku].name, n);
+            s += fmt::format(" {} {}翻\n", Yaku::Name[yaku], n);
 
         // 飜、符
         s += fmt::format("{}符{}翻{}\n", fu, han,
@@ -226,7 +184,7 @@ inline std::string Result::to_string()
         // 流し満貫、役満
         s += "役:\n";
         for (auto &[yaku, n] : yaku_list)
-            s += fmt::format(" {}\n", Yaku::Info[yaku].name);
+            s += fmt::format(" {}\n", Yaku::Name[yaku]);
         s += ScoreTitle::Name[score_title] + "\n";
     }
 

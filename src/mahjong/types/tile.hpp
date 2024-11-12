@@ -14,7 +14,7 @@ namespace mahjong
  * @param tile 赤牌
  * @return int 赤なしの牌
  */
-inline int normal2aka(int tile)
+inline int normal2red(int tile)
 {
     if (tile == Tile::RedManzu5)
         return Tile::Manzu5;
@@ -32,7 +32,7 @@ inline int normal2aka(int tile)
  * @param tile 赤牌
  * @return int 赤なしの牌
  */
-inline int aka2normal(int tile)
+inline int red2normal(int tile)
 {
     if (tile <= Tile::Red)
         return tile;
@@ -50,7 +50,7 @@ inline int aka2normal(int tile)
  * @param tile 牌
  * @return bool 赤牌かどうか
  */
-inline bool is_akahai(int tile)
+inline bool is_reddora(int tile)
 {
     return tile >= Tile::RedManzu5;
 }
@@ -83,7 +83,7 @@ inline bool is_pinzu(int tile)
  * @param tile 牌
  * @return bool 索子かどうか
  */
-inline bool is_sozu(int tile)
+inline bool is_souzu(int tile)
 {
     return (Tile::Souzu1 <= tile && tile <= Tile::Souzu9) || tile == Tile::RedSouzu5;
 }
@@ -94,9 +94,9 @@ inline bool is_sozu(int tile)
  * @param tile 牌
  * @return bool 数牌かどうか
  */
-inline bool is_syuhai(int tile)
+inline bool is_suits(int tile)
 {
-    return tile < Tile::East || tile > Tile::Red;
+    return tile <= Tile::Souzu9 || tile >= Tile::RedManzu5;
 }
 
 /**
@@ -105,7 +105,7 @@ inline bool is_syuhai(int tile)
  * @param tile 牌
  * @return bool 字牌かどうか
  */
-inline bool is_zihai(int tile)
+inline bool is_honor(int tile)
 {
     return Tile::East <= tile && tile <= Tile::Red;
 }
