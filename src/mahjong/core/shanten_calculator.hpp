@@ -106,7 +106,7 @@ ShantenCalculator::calc_suits_hash(ForwardIterator first, ForwardIterator last)
         while (first != last) {
             std::uint_fast8_t const c = *first++;
             n += c;
-            h += shupai_table[i][n][c];
+            h += nyanten_suits_table[i][n][c];
             ++i;
         }
     }
@@ -136,7 +136,7 @@ ShantenCalculator::calc_honors_hash(ForwardIterator first, ForwardIterator last)
         while (first != last) {
             std::uint_fast8_t const c = *first++;
             n += c;
-            h += zipai_table[i][n][c];
+            h += nyanten_honors_table[i][n][c];
             ++i;
         }
     }
