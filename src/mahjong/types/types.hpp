@@ -6,7 +6,6 @@
 #include "hand.hpp"
 #include "meld.hpp"
 #include "result.hpp"
-#include "scoringtable.hpp"
 #include "tile.hpp"
 
 #endif /* MAHJONG_CPP_TYPES */

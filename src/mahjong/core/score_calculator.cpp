@@ -3,6 +3,7 @@
 #include <spdlog/spdlog.h>
 
 #include "mahjong/core/hand_separator.hpp"
+#include "mahjong/core/score_table.hpp"
 #include "mahjong/core/shanten_calculator.hpp"
 #include "mahjong/utils.hpp"
 
@@ -812,7 +813,7 @@ int ScoreCalculator::calc_fu(const std::vector<Block> &blocks, int wait_type,
         }
     }
 
-    return round_up_fu(fu);
+    return round_fu(fu);
 }
 
 /**
@@ -820,16 +821,16 @@ int ScoreCalculator::calc_fu(const std::vector<Block> &blocks, int wait_type,
  */
 std::vector<std::tuple<std::string, int>>
 ScoreCalculator::calc_fu_detail(const std::vector<Block> &blocks, int wait_type,
-                                bool is_menzen, bool is_tumo) const
+                                bool is_menzen, bool is_tsumo) const
 {
     bool is_pinfu = check_pinfu(blocks, wait_type);
 
     // 符計算の例外
     //////////////////////////
-    if (is_pinfu && is_tumo && is_menzen) { // 平和、自摸、門前
+    if (is_pinfu && is_tsumo && is_menzen) { // 平和、自摸、門前
         return {{"平和・自摸", 20}};
     }
-    else if (is_pinfu && !is_tumo && !is_menzen) { // 平和、ロン、非門前
+    else if (is_pinfu && !is_tsumo && !is_menzen) { // 平和、ロン、非門前
         return {{"喰い平和・ロン", 30}};
     }
 
@@ -839,9 +840,9 @@ ScoreCalculator::calc_fu_detail(const std::vector<Block> &blocks, int wait_type,
     std::vector<std::tuple<std::string, int>> fu_detail;
     fu_detail.emplace_back("副底", 20);
 
-    if (is_menzen && !is_tumo)
+    if (is_menzen && !is_tsumo)
         fu_detail.emplace_back("門前加符", 10);
-    else if (is_tumo)
+    else if (is_tsumo)
         fu_detail.emplace_back("自摸加符", 2);
 
     if (wait_type == WaitType::ClosedWait || wait_type == WaitType::EdgeWait ||
@@ -886,6 +887,133 @@ ScoreCalculator::calc_fu_detail(const std::vector<Block> &blocks, int wait_type,
     return fu_detail;
 }
 
+std::vector<int> ScoreCalculator::get_scores_for_exp(const Result &result)
+{
+    if (result.score_title >= ScoreTitle::CountedYakuman)
+        return {result.score.front()};
+
+    int fu = Hu::Keys.at(result.fu);
+
+    std::vector<int> scores;
+    for (int han = result.han; han <= 13; ++han) {
+        // 点数のタイトルを計算する。
+        int score_title = get_score_title(fu, han);
+
+        // 点数を計算する。
+        auto score = calc_score(true, score_title, han, fu);
+
+        scores.push_back(score.front());
+    }
+
+    return scores;
+}
+
+/**
+ * @brief 副露ブロックを統合した手牌を作成する。
+ *        槓子は刻子と同じ扱いで3つの牌だけ手牌に加え、統合後の手牌の枚数が14枚となるようにする。
+ *
+ * @param[in] hand 手牌
+ * @return Hand 副露ブロックを統合した手牌
+ */
+Hand ScoreCalculator::merge_hand(const Hand &hand) const
+{
+    Hand norm_hand = hand;
+    for (const auto &block : norm_hand.melds) {
+        int min_tile = red2normal(block.tiles.front()); // 赤ドラは通常の牌として扱う
+
+        if (block.type == MeldType::Chow) {
+            ++norm_hand.counts[min_tile];
+            ++norm_hand.counts[min_tile + 1];
+            ++norm_hand.counts[min_tile + 2];
+        }
+        else {
+            norm_hand.counts[min_tile] += 3;
+        }
+    }
+
+    norm_hand.manzu =
+        std::accumulate(norm_hand.counts.begin(), norm_hand.counts.begin() + 9, 0,
+                        [](int x, int y) { return x * 8 + y; });
+    norm_hand.pinzu =
+        std::accumulate(norm_hand.counts.begin() + 9, norm_hand.counts.begin() + 18, 0,
+                        [](int x, int y) { return x * 8 + y; });
+    norm_hand.souzu =
+        std::accumulate(norm_hand.counts.begin() + 18, norm_hand.counts.begin() + 27, 0,
+                        [](int x, int y) { return x * 8 + y; });
+    norm_hand.honors =
+        std::accumulate(norm_hand.counts.begin() + 27, norm_hand.counts.end(), 0,
+                        [](int x, int y) { return x * 8 + y; });
+
+    return norm_hand;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////
+/// Helper functions for calculating score
+////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * @brief Calculate score and payment.
+ *
+ * @param[in] is_tsumo Whether the player wins by Tsumo
+ * @param[in] score_title score title
+ * @param[in] han han
+ * @param[in] fu fu
+ * @return (winner score, player payment) if dealer wins by Tsumo.
+ *         (winner score, dealer payment, player payment) if player wins by Tsumo.
+ *         (winner score, discarder payment) if dealer or player wins by Ron.
+ */
+std::vector<int> ScoreCalculator::calc_score(const bool is_tsumo, const int score_title,
+                                             const int han, const int fu) const
+{
+    using namespace ScoreTable;
+    bool is_dealer = self_wind_ == Tile::East;
+
+    if (is_tsumo && is_dealer) {
+        // dealer tsumo
+        int player_payment = (score_title == ScoreTitle::Null
+                                  ? BelowMangan[TsumoPlayerToDealer][fu][han - 1]
+                                  : AboveMangan[TsumoPlayerToDealer][score_title]) +
+                             100 * num_bonus_sticks_;
+        int score = 1000 * num_deposit_sticks_ + player_payment * 3;
+
+        return {score, player_payment};
+    }
+    else if (is_tsumo && !is_dealer) {
+        // player tsumo
+        int dealer_payment = (score_title == ScoreTitle::Null
+                                  ? BelowMangan[TsumoDealerToPlayer][fu][han - 1]
+                                  : AboveMangan[TsumoDealerToPlayer][score_title]) +
+                             100 * num_bonus_sticks_;
+        int player_payment = (score_title == ScoreTitle::Null
+                                  ? BelowMangan[TsumoPlayerToPlayer][fu][han - 1]
+                                  : AboveMangan[TsumoPlayerToPlayer][score_title]) +
+                             100 * num_bonus_sticks_;
+        int score = 1000 * num_deposit_sticks_ + dealer_payment + player_payment * 2;
+
+        return {score, dealer_payment, player_payment};
+    }
+    else if (!is_tsumo && is_dealer) {
+        // dealer ron
+        int payment = (score_title == ScoreTitle::Null
+                           ? BelowMangan[RonDiscarderToDealer][fu][han - 1]
+                           : AboveMangan[RonDiscarderToDealer][score_title]) +
+                      300 * num_bonus_sticks_;
+        int score = 1000 * num_deposit_sticks_ + payment;
+
+        return {score, payment};
+    }
+    else {
+        // player ron
+        int payment = (score_title == ScoreTitle::Null
+                           ? BelowMangan[RonDiscarderToPlayer][fu][han - 1]
+                           : AboveMangan[RonDiscarderToPlayer][score_title]) +
+                      300 * num_bonus_sticks_;
+        int score = 1000 * num_deposit_sticks_ + payment;
+
+        return {score, payment};
+    }
+}
+
 /**
  * @brief Count number of dora tiles.
  *
@@ -893,7 +1021,8 @@ ScoreCalculator::calc_fu_detail(const std::vector<Block> &blocks, int wait_type,
  * @param[in] dora_tiles list of dora tiles (normalized)
  * @return int number of dora tiles
  */
-int ScoreCalculator::count_dora(const Hand &hand, std::vector<int> dora_tiles) const
+int ScoreCalculator::count_dora(const Hand &hand,
+                                const std::vector<int> &dora_tiles) const
 {
     int num_doras = 0;
     for (auto dora : dora_tiles) {
@@ -947,143 +1076,17 @@ int ScoreCalculator::count_reddora(const Hand &hand) const
 }
 
 /**
- * @brief 副露ブロックを統合した手牌を作成する。
- *        槓子は刻子と同じ扱いで3つの牌だけ手牌に加え、統合後の手牌の枚数が14枚となるようにする。
- *
- * @param[in] hand 手牌
- * @return Hand 副露ブロックを統合した手牌
- */
-Hand ScoreCalculator::merge_hand(const Hand &hand) const
-{
-    Hand norm_hand = hand;
-    for (const auto &block : norm_hand.melds) {
-        int min_tile = red2normal(block.tiles.front()); // 赤ドラは通常の牌として扱う
-
-        if (block.type == MeldType::Chow) {
-            ++norm_hand.counts[min_tile];
-            ++norm_hand.counts[min_tile + 1];
-            ++norm_hand.counts[min_tile + 2];
-        }
-        else {
-            norm_hand.counts[min_tile] += 3;
-        }
-    }
-
-    norm_hand.manzu =
-        std::accumulate(norm_hand.counts.begin(), norm_hand.counts.begin() + 9, 0,
-                        [](int x, int y) { return x * 8 + y; });
-    norm_hand.pinzu =
-        std::accumulate(norm_hand.counts.begin() + 9, norm_hand.counts.begin() + 18, 0,
-                        [](int x, int y) { return x * 8 + y; });
-    norm_hand.souzu =
-        std::accumulate(norm_hand.counts.begin() + 18, norm_hand.counts.begin() + 27, 0,
-                        [](int x, int y) { return x * 8 + y; });
-    norm_hand.honors =
-        std::accumulate(norm_hand.counts.begin() + 27, norm_hand.counts.end(), 0,
-                        [](int x, int y) { return x * 8 + y; });
-
-    return norm_hand;
-}
-
-/**
- * @brief プレイヤーの収支を計算する。
- *
- * @param[in] is_tumo 自摸和了かどうか
- * @param[in] score_title タイトル
- * @param[in] han 飜
- * @param[in] fu 符
- * @return std::vector<int>
- *         親の自摸和了の場合 (和了者の収入, 子の支出)
- *         子の自摸和了の場合 (和了者の収入, 親の支出, 子の支出)
- *         ロン和了の場合     (和了者の収入, 放銃者の支出)
- */
-std::vector<int> ScoreCalculator::calc_score(bool is_tumo, int score_title, int han,
-                                             int fu) const
-{
-    bool is_parent = self_wind_ == Tile::East;
-
-    if (is_tumo && is_parent) {
-        // 親の自摸和了
-        int child_payment =
-            (score_title == ScoreTitle::Null
-                 ? ScoringTable::ParentTumoChild[fu][han - 1]
-                 : ScoringTable::ParentTumoChildOverMangan[score_title]) +
-            100 * num_bonus_sticks_;
-        int score = 1000 * num_deposit_sticks_ + child_payment * 3;
-
-        return {score, child_payment};
-    }
-    else if (is_tumo && !is_parent) {
-        // 子の自摸和了
-        int parent_payment =
-            (score_title == ScoreTitle::Null
-                 ? ScoringTable::ChildTumoParent[fu][han - 1]
-                 : ScoringTable::ChildTumoParentOverMangan[score_title]) +
-            100 * num_bonus_sticks_;
-        int child_payment =
-            (score_title == ScoreTitle::Null
-                 ? ScoringTable::ChildTumoChild[fu][han - 1]
-                 : ScoringTable::ChildTumoChildOverMangan[score_title]) +
-            100 * num_bonus_sticks_;
-        int score = 1000 * num_deposit_sticks_ + parent_payment + child_payment * 2;
-
-        return {score, parent_payment, child_payment};
-    }
-    else if (!is_tumo && is_parent) {
-        // 親のロン和了
-        int payment = (score_title == ScoreTitle::Null
-                           ? ScoringTable::ParentRon[fu][han - 1]
-                           : ScoringTable::ParentRonOverMangan[score_title]) +
-                      300 * num_bonus_sticks_;
-        int score = 1000 * num_deposit_sticks_ + payment;
-
-        return {score, payment};
-    }
-    else {
-        // 子のロン和了
-        int payment = (score_title == ScoreTitle::Null
-                           ? ScoringTable::ChildRon[fu][han - 1]
-                           : ScoringTable::ChildRonOverMangan[score_title]) +
-                      300 * num_bonus_sticks_;
-        int score = 1000 * num_deposit_sticks_ + payment;
-
-        return {score, payment};
-    }
-}
-
-std::vector<int> ScoreCalculator::get_scores_for_exp(const Result &result)
-{
-    if (result.score_title >= ScoreTitle::CountedYakuman)
-        return {result.score.front()};
-
-    int fu = Hu::Keys.at(result.fu);
-
-    std::vector<int> scores;
-    for (int han = result.han; han <= 13; ++han) {
-        // 点数のタイトルを計算する。
-        int score_title = get_score_title(fu, han);
-
-        // 点数を計算する。
-        auto score = calc_score(true, score_title, han, fu);
-
-        scores.push_back(score.front());
-    }
-
-    return scores;
-}
-
-/**
  * @brief Get score title of non-yakuman.
  *
  * @param[in] hu Hu
  * @param[in] han Han
  * @return score title
  */
-int ScoreCalculator::get_score_title(int fu, int han)
+int ScoreCalculator::get_score_title(const int fu, const int han) const
 {
     if (han < 5) {
-        return ScoringTable::IsMangan[fu][han - 1] ? ScoreTitle::Mangan
-                                                   : ScoreTitle::Null;
+        return ScoreTable::IsMangan[fu][han - 1] ? ScoreTitle::Mangan
+                                                 : ScoreTitle::Null;
     }
 
     if (han == 5) {
@@ -1108,7 +1111,7 @@ int ScoreCalculator::get_score_title(int fu, int han)
  * @param[in] n yakuman multiplier
  * @return score title
  */
-int ScoreCalculator::get_score_title(int n)
+int ScoreCalculator::get_score_title(const int n) const
 {
     if (n == 1) {
         return ScoreTitle::Yakuman;
@@ -1138,11 +1141,11 @@ int ScoreCalculator::get_score_title(int n)
  * @param[in] hu 符
  * @return int 切り上げた符
  */
-int ScoreCalculator::round_up_fu(int hu)
+int ScoreCalculator::round_fu(const int fu) const
 {
-    hu = int(std::ceil(hu / 10.)) * 10;
+    int rounded_fu = int(std::ceil(fu / 10.)) * 10;
 
-    switch (hu) {
+    switch (rounded_fu) {
     case 20:
         return Hu::Hu20;
     case 25:

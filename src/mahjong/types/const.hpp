@@ -630,12 +630,12 @@ enum
 };
 
 static inline std::map<int, std::string> Name = {
-    ENTRY(Null, u8"Null", u8"Null"),     ENTRY(Hu20, u8"20 Fu", u8"20符"),
-    ENTRY(Hu25, u8"25 Fu", u8"25符"),    ENTRY(Hu30, u8"30 Fu", u8"30符"),
-    ENTRY(Hu40, u8"40 Fu", u8"40符"),    ENTRY(Hu50, u8"50 Fu", u8"50符"),
-    ENTRY(Hu60, u8"60 Fu", u8"60符"),    ENTRY(Hu70, u8"70 Fu", u8"70符"),
-    ENTRY(Hu80, u8"80 Fu", u8"80符"),    ENTRY(Hu90, u8"90 Fu", u8"90符"),
-    ENTRY(Hu100, u8"100 Fu", u8"100符"), ENTRY(Hu110, u8"110 Fu", u8"110符")};
+    ENTRY(Null, u8"Null", u8"Null"),    ENTRY(Hu20, u8"20Fu", u8"20符"),
+    ENTRY(Hu25, u8"25Fu", u8"25符"),    ENTRY(Hu30, u8"30Fu", u8"30符"),
+    ENTRY(Hu40, u8"40Fu", u8"40符"),    ENTRY(Hu50, u8"50Fu", u8"50符"),
+    ENTRY(Hu60, u8"60Fu", u8"60符"),    ENTRY(Hu70, u8"70Fu", u8"70符"),
+    ENTRY(Hu80, u8"80Fu", u8"80符"),    ENTRY(Hu90, u8"90Fu", u8"90符"),
+    ENTRY(Hu100, u8"100Fu", u8"100符"), ENTRY(Hu110, u8"110Fu", u8"110符")};
 
 static inline std::map<int, int> Values = {
     {Null, -1}, {Hu20, 20}, {Hu25, 25}, {Hu30, 30}, {Hu40, 40},   {Hu50, 50},

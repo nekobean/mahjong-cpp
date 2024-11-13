@@ -8,9 +8,8 @@
 
 namespace mahjong
 {
-
 /**
- * @brief 点数計算機
+ * @brief Score calculator
  */
 class ScoreCalculator
 {
@@ -55,18 +54,18 @@ class ScoreCalculator
 
     int calc_fu(const std::vector<Block> &blocks, int wait_type, bool is_menzen,
                 bool is_tumo, bool is_pinhu) const;
-    std::vector<int> calc_score(bool is_tumo, int score_type, int han = 0,
-                                int fu = 0) const;
     Result aggregate(const Hand &hand, int win_tile, int flag,
                      YakuList yaku_list) const;
     Result aggregate(const Hand &hand, int win_tile, int flag, YakuList yaku_list,
                      int fu, const std::vector<Block> &blocks, int wait_type) const;
 
-    int count_dora(const Hand &hand, std::vector<int> dora_list) const;
+    std::vector<int> calc_score(const bool is_tumo, const int score_type,
+                                const int han = 0, const int fu = 0) const;
+    int count_dora(const Hand &hand, const std::vector<int> &dora_list) const;
     int count_reddora(const Hand &hand) const;
-    static int get_score_title(int fu, int han);
-    static int get_score_title(int n);
-    static int round_up_fu(int hu);
+    int get_score_title(const int fu, const int han) const;
+    int get_score_title(const int n) const;
+    int round_fu(const int fu) const;
 
     // Functions to check yaku
     bool check_tanyao(const Hand &hand) const;
