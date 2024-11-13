@@ -83,7 +83,7 @@ TEST_CASE("necessary tile calculator for regular hand")
             }
 
             auto [_, shanten2, tiles2] =
-                RequiredTileCalculator::select(hand, ShantenFlag::Regular);
+                NecessaryTileCalculator::select(hand, ShantenFlag::Regular);
             avg_tiles += tiles.size();
 
             INFO(fmt::format("手牌: {}", hand.to_string()));
@@ -97,7 +97,7 @@ TEST_CASE("necessary tile calculator for regular hand")
     BENCHMARK("necessary tile calculator for regular hand")
     {
         for (const auto &hand : cases) {
-            RequiredTileCalculator::select(hand, ShantenFlag::Regular);
+            NecessaryTileCalculator::select(hand, ShantenFlag::Regular);
         }
     };
 }
@@ -129,7 +129,7 @@ TEST_CASE("necessary tile calculator for Seven Pairs")
             }
 
             auto [_, shanten2, tiles2] =
-                RequiredTileCalculator::select(hand, ShantenFlag::SevenPairs);
+                NecessaryTileCalculator::select(hand, ShantenFlag::SevenPairs);
             avg_tiles += tiles.size();
 
             INFO(fmt::format("手牌: {}", hand.to_string()));
@@ -143,7 +143,7 @@ TEST_CASE("necessary tile calculator for Seven Pairs")
     BENCHMARK("necessary tile calculator for Seven Pairs")
     {
         for (const auto &hand : cases) {
-            RequiredTileCalculator::select(hand, ShantenFlag::SevenPairs);
+            NecessaryTileCalculator::select(hand, ShantenFlag::SevenPairs);
         }
     };
 }
@@ -178,7 +178,7 @@ TEST_CASE("necessary tile calculator for Thirteen Orphans")
             }
 
             auto [_, shanten2, tiles2] =
-                RequiredTileCalculator::select(hand, ShantenFlag::ThirteenOrphans);
+                NecessaryTileCalculator::select(hand, ShantenFlag::ThirteenOrphans);
             avg_tiles += tiles.size();
 
             INFO(fmt::format("手牌: {}", hand.to_string()));
@@ -192,7 +192,7 @@ TEST_CASE("necessary tile calculator for Thirteen Orphans")
     BENCHMARK("necessary tile calculator for Thirteen Orphans")
     {
         for (const auto &hand : cases) {
-            RequiredTileCalculator::select(hand, ShantenFlag::ThirteenOrphans);
+            NecessaryTileCalculator::select(hand, ShantenFlag::ThirteenOrphans);
         }
     };
 }
@@ -223,7 +223,7 @@ TEST_CASE("necessary tile calculator")
                 hand.counts[tile]--;
             }
 
-            auto [type2, shanten2, tiles2] = RequiredTileCalculator::select(hand);
+            auto [type2, shanten2, tiles2] = NecessaryTileCalculator::select(hand);
 
             INFO(fmt::format("手牌: {}", hand.to_string()));
             REQUIRE(type == type2);
@@ -235,7 +235,7 @@ TEST_CASE("necessary tile calculator")
     BENCHMARK("necessary tile calculator")
     {
         for (const auto &hand : cases) {
-            RequiredTileCalculator::select(hand);
+            NecessaryTileCalculator::select(hand);
         }
     };
 }

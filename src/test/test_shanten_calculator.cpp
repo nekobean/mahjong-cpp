@@ -32,7 +32,7 @@ bool load_testcase(std::vector<std::tuple<Hand, int, int, int>> &cases)
         return false;
     }
 
-    // The format is `<tile1> <tile2> ... <tile14> <shanten number of regular hand> <shanten number of Kokushimusou> <shanten number of Chiitoitsu>`
+    // The format is `<tile1> <tile2> ... <tile14> <shanten number of regular hand> <shanten number of Thirteen Orphans> <shanten number of Seven Pairs>`
     std::string line;
     while (std::getline(ifs, line)) {
         std::vector<std::string> tokens;
@@ -77,21 +77,21 @@ TEST_CASE("Shanten number of regular hand")
     };
 }
 
-TEST_CASE("Shanten number of Chiitoitsu")
+TEST_CASE("Shanten number of Seven Pairs")
 {
     std::vector<std::tuple<Hand, int, int, int>> cases;
     if (!load_testcase(cases)) {
         return;
     }
 
-    SECTION("Shanten number of Chiitoitsu")
+    SECTION("Shanten number of Seven Pairs")
     {
         for (auto &[hand, regular, kokushi, chiitoi] : cases) {
             REQUIRE(ShantenCalculator::calc_seven_pairs(hand) == chiitoi);
         }
     };
 
-    BENCHMARK("Shanten number of Chiitoitsu")
+    BENCHMARK("Shanten number of Seven Pairs")
     {
         for (auto &[hand, regular, kokushi, chiitoi] : cases) {
             ShantenCalculator::calc_seven_pairs(hand);
@@ -99,21 +99,21 @@ TEST_CASE("Shanten number of Chiitoitsu")
     };
 }
 
-TEST_CASE("Shanten number of Kokushimusou")
+TEST_CASE("Shanten number of Thirteen Orphans")
 {
     std::vector<std::tuple<Hand, int, int, int>> cases;
     if (!load_testcase(cases)) {
         return;
     }
 
-    SECTION("Shanten number of Kokushimusou")
+    SECTION("Shanten number of Thirteen Orphans")
     {
         for (auto &[hand, regular, kokushi, chiitoi] : cases) {
             REQUIRE(ShantenCalculator::calc_thirteen_orphans(hand) == kokushi);
         }
     };
 
-    BENCHMARK("Shanten number of Kokushimusou")
+    BENCHMARK("Shanten number of Thirteen Orphans")
     {
         for (auto &[hand, regular, kokushi, chiitoi] : cases) {
             ShantenCalculator::calc_thirteen_orphans(hand);

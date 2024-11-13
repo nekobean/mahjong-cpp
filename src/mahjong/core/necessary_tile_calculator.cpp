@@ -2,7 +2,6 @@
 
 namespace mahjong
 {
-
 /**
  * @brief Calculate the necessary tiles.
  *
@@ -10,8 +9,8 @@ namespace mahjong
  * @param[in] type shanten number type
  * @return list of (shanten flag, shanten number, necessary tiles)
  */
-std::tuple<int, int, std::vector<int>> RequiredTileCalculator::select(const Hand &hand,
-                                                                      const int type)
+std::tuple<int, int, std::vector<int>> NecessaryTileCalculator::select(const Hand &hand,
+                                                                       const int type)
 {
     auto ret = calc(hand, type);
 
@@ -33,8 +32,8 @@ std::tuple<int, int, std::vector<int>> RequiredTileCalculator::select(const Hand
  * @param[in] type shanten number type
  * @return list of (shanten flag, shanten number, necessary tiles)
  */
-std::tuple<int, int, int64_t> RequiredTileCalculator::calc(const Hand &hand,
-                                                           const int type)
+std::tuple<int, int, int64_t> NecessaryTileCalculator::calc(const Hand &hand,
+                                                            const int type)
 {
     std::tuple<int, int, int64_t> ret = {ShantenFlag::Null,
                                          std::numeric_limits<int>::max(), 0};
@@ -82,7 +81,7 @@ std::tuple<int, int, int64_t> RequiredTileCalculator::calc(const Hand &hand,
  * @param[in] type shanten number type
  * @return list of (shanten flag, shanten number, necessary tiles)
  */
-std::tuple<int, int64_t> RequiredTileCalculator::calc_regular(const Hand &hand)
+std::tuple<int, int64_t> NecessaryTileCalculator::calc_regular(const Hand &hand)
 {
     ShantenCalculator::HashType manzu_hash = ShantenCalculator::calc_suits_hash(
         hand.counts.begin(), hand.counts.begin() + 9);
@@ -118,7 +117,7 @@ std::tuple<int, int64_t> RequiredTileCalculator::calc_regular(const Hand &hand)
  * @param[in] type shanten number type
  * @return list of (shanten flag, shanten number, necessary tiles)
  */
-std::tuple<int, int64_t> RequiredTileCalculator::calc_seven_pairs(const Hand &hand)
+std::tuple<int, int64_t> NecessaryTileCalculator::calc_seven_pairs(const Hand &hand)
 {
     int num_pairs = 0;
     int num_types = 0;
@@ -155,13 +154,14 @@ std::tuple<int, int64_t> RequiredTileCalculator::calc_seven_pairs(const Hand &ha
 }
 
 /**
- * @brief Calculate the necessary tiles for Yhirteen Orphans.
+ * @brief Calculate the necessary tiles for Thirteen Orphans.
  *
  * @param[in] hand hand
  * @param[in] type shanten number type
  * @return list of (shanten flag, shanten number, necessary tiles)
  */
-std::tuple<int, int64_t> RequiredTileCalculator::calc_thirteen_orphans(const Hand &hand)
+std::tuple<int, int64_t>
+NecessaryTileCalculator::calc_thirteen_orphans(const Hand &hand)
 {
     static const auto yaochuu_tiles = {
         Tile::Manzu1, Tile::Manzu9, Tile::Pinzu1, Tile::Pinzu9, Tile::Souzu1,
@@ -194,8 +194,8 @@ std::tuple<int, int64_t> RequiredTileCalculator::calc_thirteen_orphans(const Han
     return {shanten, wait};
 }
 
-void RequiredTileCalculator::add1(ResultType &lhs,
-                                  const ShantenCalculator::TableType &rhs, const int m)
+void NecessaryTileCalculator::add1(ResultType &lhs,
+                                   const ShantenCalculator::TableType &rhs, const int m)
 {
     auto lhs2 = &lhs[10];
     const auto rhs2 = &rhs[10];
@@ -227,26 +227,29 @@ void RequiredTileCalculator::add1(ResultType &lhs,
     }
 }
 
-void RequiredTileCalculator::add2(ResultType &lhs,
-                                  const ShantenCalculator::TableType &rhs, const int m)
+void NecessaryTileCalculator::add2(ResultType &lhs,
+                                   const ShantenCalculator::TableType &rhs, const int m)
 {
+    auto lhs2 = &lhs[10];
+    const auto rhs2 = &rhs[10];
+
     int i = m + 5;
     ResultType::value_type dist = lhs[i] + rhs[0];
-    ResultType::value_type wait = (lhs[i + 10] << 9) | rhs[10];
-    shift(dist, lhs[0] + rhs[i], wait, (lhs[10] << 9) | rhs[i + 10]);
+    ResultType::value_type wait = (lhs2[i] << 9) | rhs2[0];
+    shift(dist, lhs[0] + rhs[i], wait, (lhs2[0] << 9) | rhs2[i]);
     for (int j = 5; j < i; ++j) {
-        shift(dist, lhs[j] + rhs[i - j], wait, (lhs[j + 10] << 9) | rhs[i - j + 10]);
-        shift(dist, lhs[i - j] + rhs[j], wait, (lhs[i - j + 10] << 9) | rhs[j + 10]);
+        shift(dist, lhs[j] + rhs[i - j], wait, (lhs2[j] << 9) | rhs2[i - j]);
+        shift(dist, lhs[i - j] + rhs[j], wait, (lhs2[i - j] << 9) | rhs2[j]);
     }
 
     lhs[i] = dist;
-    lhs[i + 10] = wait;
+    lhs2[i] = wait;
 }
 
-void RequiredTileCalculator::shift(ResultType::value_type &lv,
-                                   const ResultType::value_type rv,
-                                   ResultType::value_type &ly,
-                                   const ResultType::value_type ry)
+void NecessaryTileCalculator::shift(ResultType::value_type &lv,
+                                    const ResultType::value_type rv,
+                                    ResultType::value_type &ly,
+                                    const ResultType::value_type ry)
 {
     if (lv == rv) {
         ly |= ry;
@@ -256,5 +259,4 @@ void RequiredTileCalculator::shift(ResultType::value_type &lv,
         ly = ry;
     }
 }
-
 } // namespace mahjong

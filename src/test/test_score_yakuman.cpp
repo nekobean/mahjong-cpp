@@ -395,14 +395,14 @@ TEST_CASE("Daisuushii (Big Four Winds)")
     };
 }
 
-TEST_CASE("Kokushimusou13 (Thirteen Orphans 13-sided wait)")
+TEST_CASE("Thirteen Orphans13 (Thirteen Orphans 13-sided wait)")
 {
     ScoreCalculator score;
 
     std::vector<std::tuple<Hand, int, bool>> cases;
     load_yakuman_cases("test_score_kokusi13.txt", cases);
 
-    SECTION("Kokushimusou13 (Thirteen Orphans 13-sided wait)")
+    SECTION("Thirteen Orphans13 (Thirteen Orphans 13-sided wait)")
     {
         for (auto &[hand, win_tile, expected] : cases) {
             bool actual = score.check_thirteen_wait_thirteen_orphans(hand, win_tile);
@@ -412,7 +412,7 @@ TEST_CASE("Kokushimusou13 (Thirteen Orphans 13-sided wait)")
         }
     };
 
-    BENCHMARK("Kokushimusou13 (Thirteen Orphans 13-sided wait)")
+    BENCHMARK("Thirteen Orphans13 (Thirteen Orphans 13-sided wait)")
     {
         auto &[hand, win_tile, expected] = cases.front();
         score.check_thirteen_wait_thirteen_orphans(hand, win_tile);
