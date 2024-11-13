@@ -4,14 +4,37 @@ namespace mahjong
 {
 
 /**
- * @brief 有効牌を選択する。
+ * @brief Calculate the necessary tiles.
  *
- * @param[in] hand 手牌
- * @param[in] type 計算対象の向聴数の種類
- * @return std::vector<int> 牌一覧
+ * @param[in] hand hand
+ * @param[in] type shanten number type
+ * @return list of (shanten flag, shanten number, necessary tiles)
  */
 std::tuple<int, int, std::vector<int>> RequiredTileCalculator::select(const Hand &hand,
                                                                       const int type)
+{
+    auto ret = calc(hand, type);
+
+    std::vector<int> tiles;
+    tiles.reserve(34);
+    for (int i = 0; i < 34; ++i) {
+        if (std::get<2>(ret) & (INT64_C(1) << i)) {
+            tiles.push_back(i);
+        }
+    }
+
+    return {std::get<0>(ret), std::get<1>(ret), tiles};
+}
+
+/**
+ * @brief Calculate the necessary tiles.
+ *
+ * @param[in] hand hand
+ * @param[in] type shanten number type
+ * @return list of (shanten flag, shanten number, necessary tiles)
+ */
+std::tuple<int, int, int64_t> RequiredTileCalculator::calc(const Hand &hand,
+                                                           const int type)
 {
     std::tuple<int, int, int64_t> ret = {ShantenFlag::Null,
                                          std::numeric_limits<int>::max(), 0};
@@ -49,65 +72,16 @@ std::tuple<int, int, std::vector<int>> RequiredTileCalculator::select(const Hand
         }
     }
 
-    std::vector<int> tiles;
-    tiles.reserve(34);
-    for (int i = 0; i < 34; ++i) {
-        if (std::get<2>(ret) & (INT64_C(1) << i)) {
-            tiles.push_back(i);
-        }
-    }
-
-    return {std::get<0>(ret), std::get<1>(ret), tiles};
+    return ret;
 }
 
-std::tuple<int, std::vector<int>>
-RequiredTileCalculator::select_regular(const Hand &hand)
-{
-    auto [shanten, wait] = calc_regular(hand);
-
-    std::vector<int> tiles;
-    tiles.reserve(34);
-    for (int i = 0; i < 34; ++i) {
-        if (wait & (INT64_C(1) << i)) {
-            tiles.push_back(i);
-        }
-    }
-
-    return {shanten, tiles};
-}
-
-std::tuple<int, std::vector<int>>
-RequiredTileCalculator::select_seven_pairs(const Hand &hand)
-{
-    auto [shanten, wait] = calc_seven_pairs(hand);
-
-    std::vector<int> tiles;
-    tiles.reserve(34);
-    for (int i = 0; i < 34; ++i) {
-        if (wait & (INT64_C(1) << i)) {
-            tiles.push_back(i);
-        }
-    }
-
-    return {shanten, tiles};
-}
-
-std::tuple<int, std::vector<int>>
-RequiredTileCalculator::select_thirteen_orphans(const Hand &hand)
-{
-    auto [shanten, wait] = calc_thirteen_orphans(hand);
-
-    std::vector<int> tiles;
-    tiles.reserve(13);
-    for (int i = 0; i < 34; ++i) {
-        if (wait & (INT64_C(1) << i)) {
-            tiles.push_back(i);
-        }
-    }
-
-    return {shanten, tiles};
-}
-
+/**
+ * @brief Calculate the necessary tiles for regular hand.
+ *
+ * @param[in] hand hand
+ * @param[in] type shanten number type
+ * @return list of (shanten flag, shanten number, necessary tiles)
+ */
 std::tuple<int, int64_t> RequiredTileCalculator::calc_regular(const Hand &hand)
 {
     ShantenCalculator::HashType manzu_hash = ShantenCalculator::calc_suits_hash(
@@ -137,6 +111,13 @@ std::tuple<int, int64_t> RequiredTileCalculator::calc_regular(const Hand &hand)
     return {shanten, wait};
 }
 
+/**
+ * @brief Calculate the necessary tiles for Seven Pairs.
+ *
+ * @param[in] hand hand
+ * @param[in] type shanten number type
+ * @return list of (shanten flag, shanten number, necessary tiles)
+ */
 std::tuple<int, int64_t> RequiredTileCalculator::calc_seven_pairs(const Hand &hand)
 {
     int num_pairs = 0;
@@ -173,6 +154,13 @@ std::tuple<int, int64_t> RequiredTileCalculator::calc_seven_pairs(const Hand &ha
     return {shanten, wait};
 }
 
+/**
+ * @brief Calculate the necessary tiles for Yhirteen Orphans.
+ *
+ * @param[in] hand hand
+ * @param[in] type shanten number type
+ * @return list of (shanten flag, shanten number, necessary tiles)
+ */
 std::tuple<int, int64_t> RequiredTileCalculator::calc_thirteen_orphans(const Hand &hand)
 {
     static const auto yaochuu_tiles = {
@@ -209,33 +197,33 @@ std::tuple<int, int64_t> RequiredTileCalculator::calc_thirteen_orphans(const Han
 void RequiredTileCalculator::add1(ResultType &lhs,
                                   const ShantenCalculator::TableType &rhs, const int m)
 {
+    auto lhs2 = &lhs[10];
+    const auto rhs2 = &rhs[10];
+
     for (int i = m + 5; i >= 5; --i) {
         ResultType::value_type dist = lhs[i] + rhs[0];
-        ResultType::value_type wait = (lhs[i + 10] << 9) | rhs[10];
-        shift(dist, lhs[0] + rhs[i], wait, (lhs[10] << 9) | rhs[i + 10]);
+        ResultType::value_type wait = (lhs2[i] << 9) | rhs2[0];
+        shift(dist, lhs[0] + rhs[i], wait, (lhs2[0] << 9) | rhs2[i]);
 
         for (int j = 5; j < i; ++j) {
-            shift(dist, lhs[j] + rhs[i - j], wait,
-                  (lhs[j + 10] << 9) | rhs[i - j + 10]);
-            shift(dist, lhs[i - j] + rhs[j], wait,
-                  (lhs[i - j + 10] << 9) | rhs[j + 10]);
+            shift(dist, lhs[j] + rhs[i - j], wait, (lhs2[j] << 9) | rhs2[i - j]);
+            shift(dist, lhs[i - j] + rhs[j], wait, (lhs2[i - j] << 9) | rhs2[j]);
         }
 
         lhs[i] = dist;
-        lhs[i + 10] = wait;
+        lhs2[i] = wait;
     }
 
     for (int i = m; i >= 0; --i) {
         ResultType::value_type dist = lhs[i] + rhs[0];
-        ResultType::value_type wait = (lhs[i + 10] << 9) | rhs[10];
+        ResultType::value_type wait = (lhs2[i] << 9) | rhs2[0];
 
         for (int j = 0; j < i; ++j) {
-            shift(dist, lhs[j] + rhs[i - j], wait,
-                  (lhs[j + 10] << 9) | rhs[i - j + 10]);
+            shift(dist, lhs[j] + rhs[i - j], wait, (lhs2[j] << 9) | rhs2[i - j]);
         }
 
         lhs[i] = dist;
-        lhs[i + 10] = wait;
+        lhs2[i] = wait;
     }
 }
 

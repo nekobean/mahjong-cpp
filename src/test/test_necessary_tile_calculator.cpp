@@ -56,14 +56,14 @@ bool load_testcase(std::vector<Hand> &cases)
     return true;
 }
 
-TEST_CASE("Required tile selection of regular hand")
+TEST_CASE("necessary tile calculator for regular hand")
 {
     std::vector<Hand> cases;
     if (!load_testcase(cases)) {
         return;
     }
 
-    SECTION("Required tile selection of regular hand")
+    SECTION("necessary tile calculator for regular hand")
     {
         double avg_tiles = 0;
         for (auto &hand : cases) {
@@ -82,7 +82,8 @@ TEST_CASE("Required tile selection of regular hand")
                 hand.counts[tile]--;
             }
 
-            auto [shanten2, tiles2] = RequiredTileCalculator::select_regular(hand);
+            auto [_, shanten2, tiles2] =
+                RequiredTileCalculator::select(hand, ShantenFlag::Regular);
             avg_tiles += tiles.size();
 
             INFO(fmt::format("手牌: {}", hand.to_string()));
@@ -93,22 +94,22 @@ TEST_CASE("Required tile selection of regular hand")
         spdlog::info("Average number of tiles: {}", avg_tiles / cases.size());
     };
 
-    BENCHMARK("Required tile selection of regular hand")
+    BENCHMARK("necessary tile calculator for regular hand")
     {
         for (const auto &hand : cases) {
-            RequiredTileCalculator::select_regular(hand);
+            RequiredTileCalculator::select(hand, ShantenFlag::Regular);
         }
     };
 }
 
-TEST_CASE("Required tile selection of Chiitoitsu")
+TEST_CASE("necessary tile calculator for Seven Pairs")
 {
     std::vector<Hand> cases;
     if (!load_testcase(cases)) {
         return;
     }
 
-    SECTION("Required tile selection of Chiitoitsu")
+    SECTION("necessary tile calculator for Seven Pairs")
     {
         double avg_tiles = 0;
         for (auto &hand : cases) {
@@ -127,7 +128,8 @@ TEST_CASE("Required tile selection of Chiitoitsu")
                 hand.counts[tile]--;
             }
 
-            auto [shanten2, tiles2] = RequiredTileCalculator::select_seven_pairs(hand);
+            auto [_, shanten2, tiles2] =
+                RequiredTileCalculator::select(hand, ShantenFlag::SevenPairs);
             avg_tiles += tiles.size();
 
             INFO(fmt::format("手牌: {}", hand.to_string()));
@@ -138,22 +140,22 @@ TEST_CASE("Required tile selection of Chiitoitsu")
         spdlog::info("Average number of tiles: {}", avg_tiles / cases.size());
     };
 
-    BENCHMARK("Required tile selection of Chiitoitsu")
+    BENCHMARK("necessary tile calculator for Seven Pairs")
     {
         for (const auto &hand : cases) {
-            RequiredTileCalculator::select_seven_pairs(hand);
+            RequiredTileCalculator::select(hand, ShantenFlag::SevenPairs);
         }
     };
 }
 
-TEST_CASE("Required tile selection of Kokushimusou")
+TEST_CASE("necessary tile calculator for Thirteen Orphans")
 {
     std::vector<Hand> cases;
     if (!load_testcase(cases)) {
         return;
     }
 
-    SECTION("Required tile selection of Kokushimusou")
+    SECTION("necessary tile calculator for Thirteen Orphans")
     {
         double avg_tiles = 0;
         for (auto &hand : cases) {
@@ -175,8 +177,8 @@ TEST_CASE("Required tile selection of Kokushimusou")
                 hand.counts[tile]--;
             }
 
-            auto [shanten2, tiles2] =
-                RequiredTileCalculator::select_thirteen_orphans(hand);
+            auto [_, shanten2, tiles2] =
+                RequiredTileCalculator::select(hand, ShantenFlag::ThirteenOrphans);
             avg_tiles += tiles.size();
 
             INFO(fmt::format("手牌: {}", hand.to_string()));
@@ -187,22 +189,22 @@ TEST_CASE("Required tile selection of Kokushimusou")
         spdlog::info("Average number of tiles: {}", avg_tiles / cases.size());
     };
 
-    BENCHMARK("Required tile selection of Kokushimusou")
+    BENCHMARK("necessary tile calculator for Thirteen Orphans")
     {
         for (const auto &hand : cases) {
-            RequiredTileCalculator::select_thirteen_orphans(hand);
+            RequiredTileCalculator::select(hand, ShantenFlag::ThirteenOrphans);
         }
     };
 }
 
-TEST_CASE("Required tile selection")
+TEST_CASE("necessary tile calculator")
 {
     std::vector<Hand> cases;
     if (!load_testcase(cases)) {
         return;
     }
 
-    SECTION("Required tile selection")
+    SECTION("necessary tile calculator")
     {
         for (auto &hand : cases) {
             auto [type, shanten] = ShantenCalculator::calc(hand);
@@ -230,7 +232,7 @@ TEST_CASE("Required tile selection")
         }
     };
 
-    BENCHMARK("Required tile selection")
+    BENCHMARK("necessary tile calculator")
     {
         for (const auto &hand : cases) {
             RequiredTileCalculator::select(hand);

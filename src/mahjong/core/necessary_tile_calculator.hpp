@@ -21,9 +21,7 @@ class RequiredTileCalculator
     select(const Hand &hand, const int type = ShantenFlag::Regular |
                                               ShantenFlag::SevenPairs |
                                               ShantenFlag::ThirteenOrphans);
-    static std::tuple<int, std::vector<int>> select_regular(const Hand &hand);
-    static std::tuple<int, std::vector<int>> select_seven_pairs(const Hand &hand);
-    static std::tuple<int, std::vector<int>> select_thirteen_orphans(const Hand &hand);
+    static std::tuple<int, int, int64_t> calc(const Hand &hand, const int type);
     static std::tuple<int, int64_t> calc_regular(const Hand &hand);
     static std::tuple<int, int64_t> calc_seven_pairs(const Hand &hand);
     static std::tuple<int, int64_t> calc_thirteen_orphans(const Hand &hand);

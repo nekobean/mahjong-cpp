@@ -145,7 +145,7 @@ int ShantenCalculator::calc_regular(const Hand &hand)
 }
 
 /**
- * @brief Calculate the shanten number for Chiitoitsu.
+ * @brief Calculate the shanten number for Seven Pairs.
  *
  * @param[in] hand The hand
  * @return int The shanten number
@@ -164,7 +164,7 @@ int ShantenCalculator::calc_seven_pairs(const Hand &hand)
 }
 
 /**
- * @brief Calculate the shanten number for Kokushimusou.
+ * @brief Calculate the shanten number for Thirteen Orphans.
  *
  * @param[in] hand The hand
  * @return int The shanten number
