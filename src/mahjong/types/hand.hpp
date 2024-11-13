@@ -19,7 +19,7 @@ namespace mahjong
 /**
  * @brief 手牌
  */
-class Hand : private boost::equality_comparable<Hand, Hand>
+class Hand
 {
   public:
     Hand();
@@ -32,7 +32,7 @@ class Hand : private boost::equality_comparable<Hand, Hand>
     std::string to_string() const;
 
   private:
-    bool check_arguments(const std::vector<int> &tiles,
+    void check_arguments(const std::vector<int> &tiles,
                          const std::vector<MeldedBlock> &melds);
     friend std::ostream &operator<<(std::ostream &os, const Hand &hand);
     friend bool operator==(const Hand &a, const Hand &b);
@@ -120,15 +120,25 @@ inline Hand::Hand(const std::vector<int> &tiles, const std::vector<MeldedBlock> 
  * @param melds 副露ブロックの一覧
  * @return 引数が問題ない場合は true、そうでない場合は false を返す。
  */
-inline bool Hand::check_arguments(const std::vector<int> &tiles,
+inline void Hand::check_arguments(const std::vector<int> &tiles,
                                   const std::vector<MeldedBlock> &melds)
 {
-    // 牌ごとの枚数及び合計枚数を数える。
-    int num_tiles = int(melds.size()) * 3;
+    // Check if the total number of tiles is 13 or 14.
+    int num_tiles = std::accumulate(tiles.begin(), tiles.end(), int(melds.size()) * 3);
+    if (num_tiles != 13 && num_tiles != 14) {
+        throw std::invalid_argument("The total number of tiles must be 13 or 14.");
+    }
+
+    // Check if the number of each tile is 4 or less.
+    std::vector<int> merged_tiles = tiles;
+    for (const auto &meld : melds) {
+        merged_tiles.insert(merged_tiles.end(), meld.tiles.begin(), meld.tiles.end());
+    }
+
     std::vector<int> tile_counts(37);
-    for (auto tile : tiles) {
+    for (int tile : merged_tiles) {
         if (tile < 0 || tile >= Tile::Length) {
-            return false;
+            throw std::invalid_argument("Invalid tile number found.");
         }
 
         if (tile == Tile::RedManzu5) {
@@ -142,31 +152,17 @@ inline bool Hand::check_arguments(const std::vector<int> &tiles,
         }
 
         ++tile_counts[tile];
-        ++num_tiles;
     }
 
-    for (const auto &block : melds) {
-        for (int tile : block.tiles) {
-            if (tile < 0 || tile >= Tile::Length) {
-                return false;
-            }
-
-            if (tile == Tile::RedManzu5) {
-                ++tile_counts[Tile::Manzu5];
-            }
-            else if (tile == Tile::RedPinzu5) {
-                ++tile_counts[Tile::Pinzu5];
-            }
-            else if (tile == Tile::RedSouzu5) {
-                ++tile_counts[Tile::Souzu5];
-            }
-            tile_counts[tile]++;
-        }
+    if (std::any_of(tile_counts.begin(), tile_counts.end(),
+                    [](int count) { return count > 4; })) {
+        throw std::invalid_argument("The number of each tile must be 4 or less.");
     }
 
-    return std::all_of(tile_counts.begin(), tile_counts.end(),
-                       [](int count) { return count <= 4; }) &&
-           (num_tiles == 13 || num_tiles == 14); // 少牌または多牌かどうか
+    if (tile_counts[Tile::RedManzu5] > 1 || tile_counts[Tile::RedPinzu5] > 1 ||
+        tile_counts[Tile::RedSouzu5] > 1) {
+        throw std::invalid_argument("The number of red fives must be 1 or less.");
+    }
 }
 
 /**
