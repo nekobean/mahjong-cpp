@@ -57,8 +57,9 @@ bool load_yakuman_cases(const std::string &filename,
                                      0, [](int x, int y) { return x * 8 + y; });
         hand.souzu = std::accumulate(hand.counts.begin() + 18, hand.counts.begin() + 27,
                                      0, [](int x, int y) { return x * 8 + y; });
-        hand.honors = std::accumulate(hand.counts.begin() + 27, hand.counts.end(), 0,
-                                      [](int x, int y) { return x * 8 + y; });
+        hand.honors =
+            std::accumulate(hand.counts.begin() + 27, hand.counts.begin() + 34, 0,
+                            [](int x, int y) { return x * 8 + y; });
 
         cases.emplace_back(hand, win_tile, is_valid);
     }

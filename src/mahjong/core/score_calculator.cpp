@@ -440,7 +440,7 @@ ScoreCalculator::check_pattern_yaku(const Hand &_hand, int win_tile, int flag,
                                  [](int x, int y) { return x * 8 + y; });
     hand.souzu = std::accumulate(hand.counts.begin() + 18, hand.counts.begin() + 27, 0,
                                  [](int x, int y) { return x * 8 + y; });
-    hand.honors = std::accumulate(hand.counts.begin() + 27, hand.counts.end(), 0,
+    hand.honors = std::accumulate(hand.counts.begin() + 27, hand.counts.begin() + 34, 0,
                                   [](int x, int y) { return x * 8 + y; });
 
     if (shanten_type == ShantenFlag::SevenPairs) {
@@ -744,7 +744,7 @@ Hand ScoreCalculator::merge_hand(const Hand &hand) const
         std::accumulate(norm_hand.counts.begin() + 18, norm_hand.counts.begin() + 27, 0,
                         [](int x, int y) { return x * 8 + y; });
     norm_hand.honors =
-        std::accumulate(norm_hand.counts.begin() + 27, norm_hand.counts.end(), 0,
+        std::accumulate(norm_hand.counts.begin() + 27, norm_hand.counts.begin() + 34, 0,
                         [](int x, int y) { return x * 8 + y; });
 
     return norm_hand;
@@ -1056,13 +1056,13 @@ int ScoreCalculator::count_reddora(const Hand &hand) const
     int num_reddora = 0;
 
     // 手牌に含まれる赤牌を集計する。
-    if (hand.counts[Tile::Manzu5] && hand.aka_manzu5) {
+    if (hand.counts[Tile::Manzu5] && hand.counts[Tile::RedManzu5]) {
         num_reddora += 1;
     }
-    if (hand.counts[Tile::Pinzu5] && hand.aka_pinzu5) {
+    if (hand.counts[Tile::Pinzu5] && hand.counts[Tile::RedPinzu5]) {
         num_reddora += 1;
     }
-    if (hand.counts[Tile::Souzu5] && hand.aka_souzu5) {
+    if (hand.counts[Tile::Souzu5] && hand.counts[Tile::RedSouzu5]) {
         num_reddora += 1;
     }
 

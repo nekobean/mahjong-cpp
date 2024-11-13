@@ -93,7 +93,7 @@ std::tuple<int, int64_t> UnnecessaryTileCalculator::calc_regular(const Hand &han
     ShantenCalculator::HashType souzu_hash = ShantenCalculator::calc_suits_hash(
         hand.counts.begin() + 18, hand.counts.begin() + 27);
     ShantenCalculator::HashType honors_hash = ShantenCalculator::calc_honors_hash(
-        hand.counts.begin() + 27, hand.counts.end());
+        hand.counts.begin() + 27, hand.counts.begin() + 34);
     auto &manzu = ShantenCalculator::suits_table_[manzu_hash];
     auto &pinzu = ShantenCalculator::suits_table_[pinzu_hash];
     auto &souzu = ShantenCalculator::suits_table_[souzu_hash];

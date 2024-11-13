@@ -38,16 +38,13 @@ bool load_testcase(std::vector<std::tuple<Hand, int, int, int>> &cases)
         std::vector<std::string> tokens;
         boost::split(tokens, line, boost::is_any_of(" "));
 
-        std::vector<int> tiles(34, 0);
+        std::vector<int> tiles;
         for (int i = 0; i < 14; ++i) {
             int tile = std::stoi(tokens[i]);
-            tiles[tile]++;
+            tiles.push_back(tile);
         }
-        Hand hand = Hand::from_array34(tiles);
-        int regular_shanten = std::stoi(tokens[14]);
-        int kokushi_shanten = std::stoi(tokens[15]);
-        int chiitoi_shanten = std::stoi(tokens[16]);
-        cases.emplace_back(hand, regular_shanten, kokushi_shanten, chiitoi_shanten);
+        cases.emplace_back(tiles, std::stoi(tokens[14]), std::stoi(tokens[15]),
+                           std::stoi(tokens[16]));
     }
 
     spdlog::info("{} testcases loaded.", cases.size());
@@ -64,14 +61,14 @@ TEST_CASE("Shanten number of regular hand")
 
     SECTION("Shanten number of regular hand")
     {
-        for (auto &[hand, regular, kokushi, chiitoi] : cases) {
+        for (auto &[hand, regular, thirteen_orphans, seven_pairs] : cases) {
             REQUIRE(ShantenCalculator::calc_regular(hand) == regular);
         }
     };
 
     BENCHMARK("Shanten number of regular hand")
     {
-        for (auto &[hand, regular, kokushi, chiitoi] : cases) {
+        for (auto &[hand, regular, thirteen_orphans, seven_pairs] : cases) {
             ShantenCalculator::calc_regular(hand);
         }
     };
@@ -86,14 +83,14 @@ TEST_CASE("Shanten number of Seven Pairs")
 
     SECTION("Shanten number of Seven Pairs")
     {
-        for (auto &[hand, regular, kokushi, chiitoi] : cases) {
-            REQUIRE(ShantenCalculator::calc_seven_pairs(hand) == chiitoi);
+        for (auto &[hand, regular, thirteen_orphans, seven_pairs] : cases) {
+            REQUIRE(ShantenCalculator::calc_seven_pairs(hand) == seven_pairs);
         }
     };
 
     BENCHMARK("Shanten number of Seven Pairs")
     {
-        for (auto &[hand, regular, kokushi, chiitoi] : cases) {
+        for (auto &[hand, regular, thirteen_orphans, seven_pairs] : cases) {
             ShantenCalculator::calc_seven_pairs(hand);
         }
     };
@@ -108,14 +105,14 @@ TEST_CASE("Shanten number of Thirteen Orphans")
 
     SECTION("Shanten number of Thirteen Orphans")
     {
-        for (auto &[hand, regular, kokushi, chiitoi] : cases) {
-            REQUIRE(ShantenCalculator::calc_thirteen_orphans(hand) == kokushi);
+        for (auto &[hand, regular, thirteen_orphans, seven_pairs] : cases) {
+            REQUIRE(ShantenCalculator::calc_thirteen_orphans(hand) == thirteen_orphans);
         }
     };
 
     BENCHMARK("Shanten number of Thirteen Orphans")
     {
-        for (auto &[hand, regular, kokushi, chiitoi] : cases) {
+        for (auto &[hand, regular, thirteen_orphans, seven_pairs] : cases) {
             ShantenCalculator::calc_thirteen_orphans(hand);
         }
     };
@@ -130,12 +127,12 @@ TEST_CASE("Shanten number")
 
     SECTION("Shanten number")
     {
-        for (auto &[hand, regular, kokushi, chiitoi] : cases) {
-            int true_shanten = std::min({regular, kokushi, chiitoi});
+        for (auto &[hand, regular, thirteen_orphans, seven_pairs] : cases) {
+            int true_shanten = std::min({regular, thirteen_orphans, seven_pairs});
             int true_type =
                 (true_shanten == regular ? ShantenFlag::Regular : 0) |
-                (true_shanten == kokushi ? ShantenFlag::ThirteenOrphans : 0) |
-                (true_shanten == chiitoi ? ShantenFlag::SevenPairs : 0);
+                (true_shanten == thirteen_orphans ? ShantenFlag::ThirteenOrphans : 0) |
+                (true_shanten == seven_pairs ? ShantenFlag::SevenPairs : 0);
             auto [type, syanten] = ShantenCalculator::calc(hand);
 
             REQUIRE(syanten == true_shanten);
@@ -145,7 +142,7 @@ TEST_CASE("Shanten number")
 
     BENCHMARK("Shanten number")
     {
-        for (auto &[hand, regular, kokushi, chiitoi] : cases) {
+        for (auto &[hand, regular, thirteen_orphans, seven_pairs] : cases) {
             ShantenCalculator::calc(hand);
         }
     };

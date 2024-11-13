@@ -57,15 +57,15 @@ inline void add_tile(Hand &hand, int tile)
 {
     if (tile == Tile::RedManzu5) {
         hand.counts[Tile::Manzu5]++;
-        hand.aka_manzu5 = true;
+        hand.counts[Tile::RedManzu5]++;
     }
     else if (tile == Tile::RedPinzu5) {
         hand.counts[Tile::Pinzu5]++;
-        hand.aka_pinzu5 = true;
+        hand.counts[Tile::RedPinzu5]++;
     }
     else if (tile == Tile::RedSouzu5) {
         hand.counts[Tile::Souzu5]++;
-        hand.aka_souzu5 = true;
+        hand.counts[Tile::RedSouzu5]++;
     }
     else {
         hand.counts[tile]++;
@@ -76,15 +76,15 @@ inline void remove_tile(Hand &hand, int tile)
 {
     if (tile == Tile::RedManzu5) {
         hand.counts[Tile::Manzu5]--;
-        hand.aka_manzu5 = false;
+        hand.counts[Tile::RedManzu5]--;
     }
     else if (tile == Tile::RedPinzu5) {
         hand.counts[Tile::Pinzu5]--;
-        hand.aka_pinzu5 = false;
+        hand.counts[Tile::RedPinzu5]--;
     }
     else if (tile == Tile::RedSouzu5) {
         hand.counts[Tile::Souzu5]--;
-        hand.aka_souzu5 = false;
+        hand.counts[Tile::RedSouzu5]--;
     }
     else {
         hand.counts[tile]--;
@@ -95,17 +95,17 @@ inline void add_tile(Hand &hand, int tile, std::vector<int> &counts)
 {
     if (tile == Tile::RedManzu5) {
         hand.counts[Tile::Manzu5]++;
-        hand.aka_manzu5 = true;
+        hand.counts[Tile::RedManzu5]++;
         counts[Tile::Manzu5]--;
     }
     else if (tile == Tile::RedPinzu5) {
         hand.counts[Tile::Pinzu5]++;
-        hand.aka_pinzu5 = true;
+        hand.counts[Tile::RedPinzu5]++;
         counts[Tile::Pinzu5]--;
     }
     else if (tile == Tile::RedSouzu5) {
         hand.counts[Tile::Souzu5]++;
-        hand.aka_souzu5 = true;
+        hand.counts[Tile::RedSouzu5]++;
         counts[Tile::Souzu5]--;
     }
     else {
@@ -118,17 +118,17 @@ inline void remove_tile(Hand &hand, int tile, std::vector<int> &counts)
 {
     if (tile == Tile::RedManzu5) {
         hand.counts[Tile::Manzu5]--;
-        hand.aka_manzu5 = false;
+        hand.counts[Tile::RedManzu5]--;
         counts[Tile::Manzu5]++;
     }
     else if (tile == Tile::RedPinzu5) {
         hand.counts[Tile::Pinzu5]--;
-        hand.aka_pinzu5 = false;
+        hand.counts[Tile::RedPinzu5]--;
         counts[Tile::Pinzu5]++;
     }
     else if (tile == Tile::RedSouzu5) {
         hand.counts[Tile::Souzu5]--;
-        hand.aka_souzu5 = false;
+        hand.counts[Tile::RedSouzu5]--;
         counts[Tile::Souzu5]++;
     }
     else {
@@ -155,7 +155,7 @@ struct CacheKey
                                  [](int x, int y) { return x * 8 + y; });
         hsouzu = std::accumulate(hand.counts.begin() + 18, hand.counts.begin() + 27, 0,
                                  [](int x, int y) { return x * 8 + y; });
-        hhonors = std::accumulate(hand.counts.begin() + 27, hand.counts.end(), 0,
+        hhonors = std::accumulate(hand.counts.begin() + 27, hand.counts.begin() + 34, 0,
                                   [](int x, int y) { return x * 8 + y; });
         for (size_t i = 0; i < 9; ++i)
             manzu = manzu * 8 + counts[i];
@@ -171,9 +171,9 @@ struct CacheKey
         zihai |= counts[Tile::RedManzu5] << 22;
         zihai |= counts[Tile::RedPinzu5] << 23;
         zihai |= counts[Tile::RedSouzu5] << 24;
-        zihai |= hand.aka_manzu5 << 25;
-        zihai |= hand.aka_pinzu5 << 26;
-        zihai |= hand.aka_souzu5 << 27;
+        zihai |= hand.counts[Tile::RedManzu5] << 25;
+        zihai |= hand.counts[Tile::RedPinzu5] << 26;
+        zihai |= hand.counts[Tile::RedSouzu5] << 27;
     }
 
     int hmanzu;

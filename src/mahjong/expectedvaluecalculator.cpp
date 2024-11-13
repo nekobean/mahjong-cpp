@@ -168,9 +168,9 @@ ExpectedValueCalculator::count_left_tiles(const Hand &hand,
     // 手牌を除く。
     for (int i = 0; i < 34; ++i)
         counts[i] -= hand.counts[i];
-    counts[Tile::RedManzu5] -= hand.aka_manzu5;
-    counts[Tile::RedPinzu5] -= hand.aka_pinzu5;
-    counts[Tile::RedSouzu5] -= hand.aka_souzu5;
+    counts[Tile::RedManzu5] -= bool(hand.counts[Tile::RedManzu5]);
+    counts[Tile::RedPinzu5] -= bool(hand.counts[Tile::RedPinzu5]);
+    counts[Tile::RedSouzu5] -= bool(hand.counts[Tile::RedSouzu5]);
 
     // 副露ブロックを除く。
     for (const auto &block : hand.melds) {
@@ -361,13 +361,13 @@ ExpectedValueCalculator::get_discard_tiles(Hand &hand, int syanten)
 
         // 赤牌以外が残っている場合はそちらを先に捨てる。
         int discard_tile = tile;
-        if (discard_tile == Tile::Manzu5 && hand.aka_manzu5 &&
+        if (discard_tile == Tile::Manzu5 && hand.counts[Tile::RedManzu5] &&
             hand.counts[Tile::Manzu5] == 1)
             discard_tile = Tile::RedManzu5;
-        else if (discard_tile == Tile::Pinzu5 && hand.aka_pinzu5 &&
+        else if (discard_tile == Tile::Pinzu5 && hand.counts[Tile::RedPinzu5] &&
                  hand.counts[Tile::Pinzu5] == 1)
             discard_tile = Tile::RedPinzu5;
-        else if (discard_tile == Tile::Souzu5 && hand.aka_souzu5 &&
+        else if (discard_tile == Tile::Souzu5 && hand.counts[Tile::RedSouzu5] &&
                  hand.counts[Tile::Souzu5] == 1)
             discard_tile = Tile::RedSouzu5;
 

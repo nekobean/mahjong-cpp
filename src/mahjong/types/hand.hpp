@@ -2,6 +2,7 @@
 #define MAHJONG_CPP_HAND
 
 #include <algorithm>
+#include <array>
 #include <iostream>
 #include <numeric>
 #include <string>
@@ -27,7 +28,6 @@ class Hand : private boost::equality_comparable<Hand, Hand>
 
     bool is_closed() const;
     int num_tiles() const;
-    static Hand from_array34(const std::vector<int> &array34);
     static Hand from_mpsz(const std::string &mpsz_str);
     std::string to_string() const;
 
@@ -39,43 +39,30 @@ class Hand : private boost::equality_comparable<Hand, Hand>
 
   public:
     /* 牌数 */
-    std::vector<int> counts;
+    std::array<int, 37> counts;
 
     /* 副露ブロック */
     std::vector<MeldedBlock> melds;
-
-    /* 赤の萬子5を持ってるかどうか */
-    bool aka_manzu5;
-
-    /* 赤の筒子5を持ってるかどうか */
-    bool aka_pinzu5;
-
-    /* 赤の索子5を持ってるかどうか */
-    bool aka_souzu5;
 
     int32_t manzu;
     int32_t pinzu;
     int32_t souzu;
     int32_t honors;
-
-    static const int TILE_TYPES = 34;
 };
 
 /**
- * @brief 手牌を作成する。
+ * @brief Create an empty hand.
  */
-inline Hand::Hand()
-    : counts(TILE_TYPES, 0), aka_manzu5(false), aka_pinzu5(false), aka_souzu5(false)
+inline Hand::Hand() : counts{0}
 {
 }
 
 /**
- * @brief 手牌を作成する。
+ * @brief Create a hand from a list of tiles.
  *
- * @param[in] tiles 牌の一覧
+ * @param[in] tiles list of tiles
  */
-inline Hand::Hand(const std::vector<int> &tiles)
-    : counts(TILE_TYPES, 0), aka_manzu5(false), aka_pinzu5(false), aka_souzu5(false)
+inline Hand::Hand(const std::vector<int> &tiles) : counts{0}
 {
 #ifdef CHECK_ARGUMENT
     if (!check_arguments(tiles, melds))
@@ -84,35 +71,27 @@ inline Hand::Hand(const std::vector<int> &tiles)
 
     for (int tile : tiles) {
         if (tile == Tile::RedManzu5) {
-            aka_manzu5 = true;
-            counts[Tile::Manzu5]++;
+            ++counts[Tile::Manzu5];
         }
         else if (tile == Tile::RedPinzu5) {
-            aka_pinzu5 = true;
-            counts[Tile::Pinzu5]++;
+            ++counts[Tile::Pinzu5];
         }
         else if (tile == Tile::RedSouzu5) {
-            aka_souzu5 = true;
-            counts[Tile::Souzu5]++;
+            ++counts[Tile::Souzu5];
         }
-        else {
-            counts[tile]++;
-        }
+
+        ++counts[tile];
     }
 }
 
 /**
- * @brief 手牌を作成する。
+ * @brief Create a hand from a list of tiles and melded blocks.
  *
- * @param[in] tiles 牌の一覧
- * @param[in] melds 副露ブロックの一覧
+ * @param[in] tiles list of tiles
+ * @param[in] melds list of melded blocks
  */
 inline Hand::Hand(const std::vector<int> &tiles, const std::vector<MeldedBlock> &melds)
-    : counts(TILE_TYPES, 0)
-    , melds(melds)
-    , aka_manzu5(false)
-    , aka_pinzu5(false)
-    , aka_souzu5(false)
+    : counts{0}, melds(melds)
 {
 #ifdef CHECK_ARGUMENT
     if (!check_arguments(tiles, melds))
@@ -121,20 +100,16 @@ inline Hand::Hand(const std::vector<int> &tiles, const std::vector<MeldedBlock> 
 
     for (int tile : tiles) {
         if (tile == Tile::RedManzu5) {
-            aka_manzu5 = true;
-            counts[Tile::Manzu5]++;
+            ++counts[Tile::Manzu5];
         }
         else if (tile == Tile::RedPinzu5) {
-            aka_pinzu5 = true;
-            counts[Tile::Pinzu5]++;
+            ++counts[Tile::Pinzu5];
         }
         else if (tile == Tile::RedSouzu5) {
-            aka_souzu5 = true;
-            counts[Tile::Souzu5]++;
+            ++counts[Tile::Souzu5];
         }
-        else {
-            counts[tile]++;
-        }
+
+        ++counts[tile];
     }
 }
 
@@ -150,24 +125,23 @@ inline bool Hand::check_arguments(const std::vector<int> &tiles,
 {
     // 牌ごとの枚数及び合計枚数を数える。
     int num_tiles = int(melds.size()) * 3;
-    std::vector<int> tile_counts(34);
+    std::vector<int> tile_counts(37);
     for (auto tile : tiles) {
         if (tile < 0 || tile >= Tile::Length) {
             return false;
         }
 
         if (tile == Tile::RedManzu5) {
-            tile_counts[Tile::Manzu5]++;
+            ++tile_counts[Tile::Manzu5];
         }
         else if (tile == Tile::RedPinzu5) {
-            tile_counts[Tile::Pinzu5]++;
+            ++tile_counts[Tile::Pinzu5];
         }
         else if (tile == Tile::RedSouzu5) {
-            tile_counts[Tile::Souzu5]++;
+            ++tile_counts[Tile::Souzu5];
         }
-        else {
-            tile_counts[tile]++;
-        }
+
+        ++tile_counts[tile];
         ++num_tiles;
     }
 
@@ -178,17 +152,15 @@ inline bool Hand::check_arguments(const std::vector<int> &tiles,
             }
 
             if (tile == Tile::RedManzu5) {
-                tile_counts[Tile::Manzu5]++;
+                ++tile_counts[Tile::Manzu5];
             }
             else if (tile == Tile::RedPinzu5) {
-                tile_counts[Tile::Pinzu5]++;
+                ++tile_counts[Tile::Pinzu5];
             }
             else if (tile == Tile::RedSouzu5) {
-                tile_counts[Tile::Souzu5]++;
+                ++tile_counts[Tile::Souzu5];
             }
-            else {
-                tile_counts[tile]++;
-            }
+            tile_counts[tile]++;
         }
     }
 
@@ -198,15 +170,15 @@ inline bool Hand::check_arguments(const std::vector<int> &tiles,
 }
 
 /**
- * @brief 門前かどうかを取得する。
+ * @brief Check if the hand is closed.
  *
- * @return 門前の場合は true、そうでない場合は false を返す。
+ * @return Returns true if the hand is closed, otherwise false.
  */
 inline bool Hand::is_closed() const
 {
     for (const auto &meld : melds) {
         if (meld.type != MeldType::ClosedKong) {
-            return false; // 暗槓以外の副露ブロックがある場合
+            return false; // contains open meld (not a closed kong)
         }
     }
 
@@ -214,28 +186,21 @@ inline bool Hand::is_closed() const
 }
 
 /**
- * @brief 手牌にある牌の合計枚数を取得する。
+ * @brief Get the total number of tiles.
  *
- * @return int 牌の合計枚数
+ * @return total number of tiles
  */
 inline int Hand::num_tiles() const
 {
-    return std::accumulate(counts.begin(), counts.end(), 0);
+    return std::accumulate(counts.begin(), counts.begin() + 34, 0);
 }
 
 /**
- * @brief 牌の一覧からビット列を作成する。
+ * @brief Create a hand from a string in MPSZ notation.
  *
- * @param[in] tiles 牌の一覧
+ * @param[in] tiles string in MPSZ notation
+ * @return Hand object
  */
-inline Hand Hand::from_array34(const std::vector<int> &array34)
-{
-    Hand hand;
-    hand.counts = array34;
-
-    return hand;
-}
-
 inline Hand Hand::from_mpsz(const std::string &tiles)
 {
     Hand hand;
@@ -270,10 +235,9 @@ inline Hand Hand::from_mpsz(const std::string &tiles)
 }
 
 /**
- * @brief 手牌を表す MPS 表記の文字列を取得する。
- *        例: 1112r56789m1122p
+ * @brief Convert the hand to a string in MPSZ notation. (e.g., "123m456p789s123z")
  *
- * @return std::string 文字列
+ * @return string in MPSZ notation
  */
 inline std::string Hand::to_string() const
 {
@@ -282,13 +246,14 @@ inline std::string Hand::to_string() const
     bool has_suit[4] = {false, false, false, false};
 
     // 萬子
-    for (int i = 0; i < TILE_TYPES; ++i) {
+    for (int i = 0; i < 34; ++i) {
         int type = i / 9;
         int num = i % 9 + 1;
 
         if (counts[i] > 0) {
-            if (num == 5 && ((type == 0 && aka_manzu5) || (type == 1 && aka_pinzu5) ||
-                             (type == 2 && aka_souzu5))) {
+            if (num == 5 && ((type == 0 && counts[Tile::RedManzu5]) ||
+                             (type == 1 && counts[Tile::RedPinzu5]) ||
+                             (type == 2 && counts[Tile::RedSouzu5]))) {
                 s += "r";
             }
             for (int j = 0; j < counts[i]; ++j) {
@@ -320,8 +285,7 @@ inline std::ostream &operator<<(std::ostream &os, const Hand &hand)
 
 inline bool operator==(const Hand &a, const Hand &b)
 {
-    return a.melds == b.melds && a.counts == b.counts && a.aka_manzu5 == b.aka_manzu5 &&
-           a.aka_pinzu5 == b.aka_pinzu5 && a.aka_souzu5 == b.aka_souzu5;
+    return a.melds == b.melds && a.counts == b.counts;
 }
 
 } // namespace mahjong

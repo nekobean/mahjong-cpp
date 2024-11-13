@@ -128,7 +128,7 @@ int ShantenCalculator::calc_regular(const Hand &hand)
     HashType souzu_hash =
         calc_suits_hash(hand.counts.begin() + 18, hand.counts.begin() + 27);
     HashType honors_hash =
-        calc_honors_hash(hand.counts.begin() + 27, hand.counts.end());
+        calc_honors_hash(hand.counts.begin() + 27, hand.counts.begin() + 34);
     auto &manzu = suits_table_[manzu_hash];
     auto &pinzu = suits_table_[pinzu_hash];
     auto &souzu = suits_table_[souzu_hash];
