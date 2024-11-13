@@ -43,10 +43,6 @@ class ScoreCalculator
   public:
     std::tuple<bool, std::string> check_arguments(const Hand &hand, int win_tile,
                                                   int yaku_list) const;
-    YakuList check_yakuman(const Hand &hand, const int win_tile, const int flag,
-                           const int shanten_type) const;
-    YakuList check_not_pattern_yaku(const Hand &hand, int win_tile, int flag,
-                                    int shanten_type) const;
     std::tuple<YakuList, int, std::vector<Block>, int>
     check_pattern_yaku(const Hand &hand, int win_tile, int flag,
                        int shanten_type) const;
@@ -59,6 +55,10 @@ class ScoreCalculator
     Result aggregate(const Hand &hand, int win_tile, int flag, YakuList yaku_list,
                      int fu, const std::vector<Block> &blocks, int wait_type) const;
 
+    YakuList check_yakuman(const Hand &hand, const int win_tile, const int flag,
+                           const int shanten_type) const;
+    YakuList check_not_pattern_yaku(const Hand &hand, const int win_tile,
+                                    const int flag, const int shanten_type) const;
     std::vector<int> calc_score(const bool is_tumo, const int score_type,
                                 const int han = 0, const int fu = 0) const;
     int count_dora(const Hand &hand, const std::vector<int> &dora_list) const;

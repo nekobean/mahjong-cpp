@@ -35,11 +35,13 @@ ScoreCalculator::ScoreCalculator()
  */
 Result ScoreCalculator::calc(const Hand &hand, int win_tile, int flag) const
 {
-    if (auto [ok, err_msg] = check_arguments(hand, win_tile, flag); !ok)
+    if (auto [ok, err_msg] = check_arguments(hand, win_tile, flag); !ok) {
         return {hand, win_tile, flag, err_msg}; // 異常終了
+    }
 
-    if (flag & WinFlag::NagashiMangan)
+    if (flag & WinFlag::NagashiMangan) {
         return aggregate(hand, win_tile, flag, Yaku::NagasiMangan);
+    }
 
     // 向聴数を計算する。
     auto [shanten_type, syanten] = ShantenCalculator::calc(hand);
@@ -68,14 +70,15 @@ Result ScoreCalculator::calc(const Hand &hand, int win_tile, int flag) const
         check_pattern_yaku(hand, norm_win_tile, flag, shanten_type);
     yaku_list |= pattern_yaku_list;
 
-    if (!yaku_list)
+    if (!yaku_list) {
         return {hand, win_tile, flag, "役がありません。"};
+    }
 
     return aggregate(hand, win_tile, flag, yaku_list, fu, blocks, wait_type);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
-/// パラメータを設定する関数
+/// setter and getter
 ////////////////////////////////////////////////////////////////////////////////////////
 
 /**
@@ -418,206 +421,6 @@ ScoreCalculator::check_arguments(const Hand &hand, int win_tile, int flag) const
 }
 
 /**
- * @brief Check if yakuman is established.
- *
- * @param[in] hand hand (normalized)
- * @param[in] win_tile win tile (normalized)
- * @param[in] flag flag
- * @param[in] shanten_type type of winning hand
- * @return YakuList list of established yaku
- */
-YakuList ScoreCalculator::check_yakuman(const Hand &hand, const int win_tile,
-                                        const int flag, const int shanten_type) const
-{
-    YakuList yaku_list = Yaku::Null;
-
-    if (flag & WinFlag::BlessingOfHeaven) {
-        yaku_list |= Yaku::BlessingOfHeaven; // 天和
-    }
-    else if (flag & WinFlag::BlessingOfEarth) {
-        yaku_list |= Yaku::BlessingOfEarth; // 地和
-    }
-    else if (flag & WinFlag::HandOfMan) {
-        yaku_list |= Yaku::HandOfMan; // 人和
-    }
-
-    // If both regular hand and seven pairs are established, prioritize the regular hand.
-    if (shanten_type & ShantenFlag::Regular) {
-        if (check_all_green(hand)) {
-            yaku_list |= Yaku::AllGreen; // 緑一色
-        }
-
-        if (check_big_three_dragons(hand)) {
-            yaku_list |= Yaku::BigThreeDragons; // 大三元
-        }
-
-        if (check_big_four_winds(hand)) {
-            yaku_list |= Yaku::BigFourWinds; // 大四喜
-        }
-        else if (check_little_four_winds(hand)) {
-            yaku_list |= Yaku::LittleFourWinds; // 小四喜
-        }
-
-        if (check_all_honors(hand)) {
-            yaku_list |= Yaku::AllHonors; // 字一色
-        }
-
-        if (check_true_nine_gates(hand, win_tile)) {
-            yaku_list |= Yaku::TrueNineGates; // 純正九蓮宝燈
-        }
-        else if (check_nine_gates(hand, win_tile)) {
-            yaku_list |= Yaku::NineGates; // 九蓮宝燈
-        }
-
-        int suuankou = check_four_concealed_triplets(hand, flag, win_tile);
-        if (suuankou == 2) {
-            yaku_list |= Yaku::SingleWaitFourConcealedTriplets; // 四暗刻単騎
-        }
-        else if (suuankou == 1) {
-            yaku_list |= Yaku::FourConcealedTriplets; // 四暗刻
-        }
-
-        if (check_all_terminals(hand)) {
-            yaku_list |= Yaku::AllTerminals; // 字一色
-        }
-
-        if (check_four_kongs(hand)) {
-            yaku_list |= Yaku::FourKongs; // 四槓子
-        }
-    }
-    else if (shanten_type & ShantenFlag::SevenPairs) {
-        if (check_all_honors(hand)) {
-            yaku_list |= Yaku::AllHonors; // 字一色
-        }
-    }
-    else {
-        if (check_thirteen_wait_thirteen_orphans(hand, win_tile)) {
-            yaku_list |= Yaku::ThirteenWaitThirteenOrphans; // 国士無双13面待ち
-        }
-        else {
-            yaku_list |= Yaku::ThirteenOrphans; // 国士無双
-        }
-    }
-
-    return yaku_list;
-}
-
-/**
- * @brief 面子構成に関係ない役を判定する。
- *
- * @param[in] hand 手牌 (normalized)
- * @param[in] win_tile 和了牌
- * @param[in] flag フラグ
- * @param[in] shanten_type 和了形の種類
- * @return YakuList 成立した役一覧
- */
-YakuList ScoreCalculator::check_not_pattern_yaku(const Hand &hand, int win_tile,
-                                                 int flag, int shanten_type) const
-{
-    YakuList yaku_list = Yaku::Null;
-
-    if (flag & WinFlag::DoubleRiichi) {
-        yaku_list |= Yaku::DoubleRiichi; // ダブル立直
-    }
-    else if (flag & WinFlag::Riichi) {
-        yaku_list |= Yaku::Riichi; // 立直
-    }
-
-    if (flag & WinFlag::Ippatsu) {
-        yaku_list |= Yaku::Ippatsu; // 一発
-    }
-
-    if (flag & WinFlag::RobbingAKong) {
-        yaku_list |= Yaku::RobbingAKong; // 搶槓
-    }
-    else if (flag & WinFlag::AfterAKong) {
-        yaku_list |= Yaku::AfterAKong; // 嶺上開花
-    }
-    else if (flag & WinFlag::UnderTheSea) {
-        yaku_list |= Yaku::UnderTheSea; // 海底摸月
-    }
-    else if (flag & WinFlag::UnderTheRiver) {
-        yaku_list |= Yaku::UnderTheRiver; // 河底撈魚
-    }
-
-    if ((flag & WinFlag::Tsumo) && hand.is_closed()) {
-        yaku_list |= Yaku::Tsumo; // 門前清自摸和
-    }
-
-    if (check_tanyao(hand)) {
-        yaku_list |= Yaku::Tanyao; // 断幺九
-    }
-
-    if (check_full_flush(hand)) {
-        yaku_list |= Yaku::FullFlush; // 清一色
-    }
-    else if (check_half_flush(hand)) {
-        yaku_list |= Yaku::HalfFlush; // 混一色
-    }
-
-    if (check_all_terminals_and_honors(hand)) {
-        yaku_list |= Yaku::AllTerminalsAndHonors; // 清老頭
-    }
-
-    if (shanten_type & ShantenFlag::Regular) {
-        if (check_little_three_dragons(hand)) {
-            yaku_list |= Yaku::LittleThreeDragons; // 小三元
-        }
-
-        if (check_three_kongs(hand)) {
-            yaku_list |= Yaku::ThreeKongs; // 三槓子
-        }
-
-        if (hand.counts[Tile::White] == 3) {
-            yaku_list |= Yaku::WhiteDragon; // 三元牌 白
-        }
-
-        if (hand.counts[Tile::Green] == 3) {
-            yaku_list |= Yaku::GreenDragon; // 三元牌 發
-        }
-
-        if (hand.counts[Tile::Red] == 3) {
-            yaku_list |= Yaku::RedDragon; // 三元牌 中
-        }
-
-        if (hand.counts[self_wind_] == 3) {
-            if (self_wind_ == Tile::East) {
-                yaku_list |= Yaku::SelfWindEast; // 自風 東
-            }
-            else if (self_wind_ == Tile::South) {
-                yaku_list |= Yaku::SelfWindSouth; // 自風 南
-            }
-            else if (self_wind_ == Tile::West) {
-                yaku_list |= Yaku::SelfWindWest; // 自風 西
-            }
-            else if (self_wind_ == Tile::North) {
-                yaku_list |= Yaku::SelfWindNorth; // 自風 北
-            }
-        }
-
-        if (hand.counts[round_wind_] == 3) {
-            if (round_wind_ == Tile::East) {
-                yaku_list |= Yaku::RoundWindEast; // 場風 東
-            }
-            else if (round_wind_ == Tile::South) {
-                yaku_list |= Yaku::RoundWindSouth; // 場風 南
-            }
-            else if (round_wind_ == Tile::West) {
-                yaku_list |= Yaku::RoundWindWest; // 場風 西
-            }
-            else if (round_wind_ == Tile::North) {
-                yaku_list |= Yaku::RoundWindNorth; // 場風 北
-            }
-        }
-    }
-    else if (shanten_type & ShantenFlag::SevenPairs) {
-        yaku_list |= Yaku::SevenPairs; // 七対子
-    }
-
-    return yaku_list;
-}
-
-/**
  * @brief Check yaku related to the composition of blocks.
  *
  * @param[in] hand hand
@@ -950,6 +753,207 @@ Hand ScoreCalculator::merge_hand(const Hand &hand) const
 ////////////////////////////////////////////////////////////////////////////////////////
 /// Helper functions for calculating score
 ////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * @brief Check if yakuman is established.
+ *
+ * @param[in] hand hand (normalized)
+ * @param[in] win_tile win tile (normalized)
+ * @param[in] flag flag
+ * @param[in] shanten_type type of winning hand
+ * @return list of established yaku
+ */
+YakuList ScoreCalculator::check_yakuman(const Hand &hand, const int win_tile,
+                                        const int flag, const int shanten_type) const
+{
+    YakuList yaku_list = Yaku::Null;
+
+    if (flag & WinFlag::BlessingOfHeaven) {
+        yaku_list |= Yaku::BlessingOfHeaven;
+    }
+    else if (flag & WinFlag::BlessingOfEarth) {
+        yaku_list |= Yaku::BlessingOfEarth;
+    }
+    else if (flag & WinFlag::HandOfMan) {
+        yaku_list |= Yaku::HandOfMan;
+    }
+
+    // If both regular hand and seven pairs are established, prioritize the regular hand.
+    if (shanten_type & ShantenFlag::Regular) {
+        if (check_all_green(hand)) {
+            yaku_list |= Yaku::AllGreen;
+        }
+
+        if (check_big_three_dragons(hand)) {
+            yaku_list |= Yaku::BigThreeDragons;
+        }
+
+        if (check_big_four_winds(hand)) {
+            yaku_list |= Yaku::BigFourWinds;
+        }
+        else if (check_little_four_winds(hand)) {
+            yaku_list |= Yaku::LittleFourWinds;
+        }
+
+        if (check_all_honors(hand)) {
+            yaku_list |= Yaku::AllHonors;
+        }
+
+        if (check_true_nine_gates(hand, win_tile)) {
+            yaku_list |= Yaku::TrueNineGates;
+        }
+        else if (check_nine_gates(hand, win_tile)) {
+            yaku_list |= Yaku::NineGates;
+        }
+
+        int suuankou = check_four_concealed_triplets(hand, flag, win_tile);
+        if (suuankou == 2) {
+            yaku_list |= Yaku::SingleWaitFourConcealedTriplets;
+        }
+        else if (suuankou == 1) {
+            yaku_list |= Yaku::FourConcealedTriplets;
+        }
+
+        if (check_all_terminals(hand)) {
+            yaku_list |= Yaku::AllTerminals;
+        }
+
+        if (check_four_kongs(hand)) {
+            yaku_list |= Yaku::FourKongs;
+        }
+    }
+    else if (shanten_type & ShantenFlag::SevenPairs) {
+        if (check_all_honors(hand)) {
+            yaku_list |= Yaku::AllHonors;
+        }
+    }
+    else {
+        if (check_thirteen_wait_thirteen_orphans(hand, win_tile)) {
+            yaku_list |= Yaku::ThirteenWaitThirteenOrphans;
+        }
+        else {
+            yaku_list |= Yaku::ThirteenOrphans;
+        }
+    }
+
+    return yaku_list;
+}
+
+/**
+ * @brief Check if yaku is established. (not dependent on how the melds are formed)
+ *
+ * @param[in] hand hand (normalized)
+ * @param[in] win_tile win tile (normalized)
+ * @param[in] flag flag
+ * @param[in] shanten_type type of winning hand
+ * @return list of established yaku
+ */
+YakuList ScoreCalculator::check_not_pattern_yaku(const Hand &hand, const int win_tile,
+                                                 const int flag,
+                                                 const int shanten_type) const
+{
+    YakuList yaku_list = Yaku::Null;
+
+    if (flag & WinFlag::DoubleRiichi) {
+        yaku_list |= Yaku::DoubleRiichi;
+    }
+    else if (flag & WinFlag::Riichi) {
+        yaku_list |= Yaku::Riichi;
+    }
+
+    if (flag & WinFlag::Ippatsu) {
+        yaku_list |= Yaku::Ippatsu;
+    }
+
+    if (flag & WinFlag::RobbingAKong) {
+        yaku_list |= Yaku::RobbingAKong;
+    }
+    else if (flag & WinFlag::AfterAKong) {
+        yaku_list |= Yaku::AfterAKong;
+    }
+    else if (flag & WinFlag::UnderTheSea) {
+        yaku_list |= Yaku::UnderTheSea;
+    }
+    else if (flag & WinFlag::UnderTheRiver) {
+        yaku_list |= Yaku::UnderTheRiver;
+    }
+
+    if ((flag & WinFlag::Tsumo) && hand.is_closed()) {
+        yaku_list |= Yaku::Tsumo;
+    }
+
+    if (check_tanyao(hand)) {
+        yaku_list |= Yaku::Tanyao;
+    }
+
+    if (check_full_flush(hand)) {
+        yaku_list |= Yaku::FullFlush;
+    }
+    else if (check_half_flush(hand)) {
+        yaku_list |= Yaku::HalfFlush;
+    }
+
+    if (check_all_terminals_and_honors(hand)) {
+        yaku_list |= Yaku::AllTerminalsAndHonors;
+    }
+
+    if (shanten_type & ShantenFlag::Regular) {
+        if (check_little_three_dragons(hand)) {
+            yaku_list |= Yaku::LittleThreeDragons;
+        }
+
+        if (check_three_kongs(hand)) {
+            yaku_list |= Yaku::ThreeKongs;
+        }
+
+        if (hand.counts[Tile::White] == 3) {
+            yaku_list |= Yaku::WhiteDragon;
+        }
+
+        if (hand.counts[Tile::Green] == 3) {
+            yaku_list |= Yaku::GreenDragon;
+        }
+
+        if (hand.counts[Tile::Red] == 3) {
+            yaku_list |= Yaku::RedDragon;
+        }
+
+        if (hand.counts[self_wind_] == 3) {
+            if (self_wind_ == Tile::East) {
+                yaku_list |= Yaku::SelfWindEast;
+            }
+            else if (self_wind_ == Tile::South) {
+                yaku_list |= Yaku::SelfWindSouth;
+            }
+            else if (self_wind_ == Tile::West) {
+                yaku_list |= Yaku::SelfWindWest;
+            }
+            else if (self_wind_ == Tile::North) {
+                yaku_list |= Yaku::SelfWindNorth;
+            }
+        }
+
+        if (hand.counts[round_wind_] == 3) {
+            if (round_wind_ == Tile::East) {
+                yaku_list |= Yaku::RoundWindEast;
+            }
+            else if (round_wind_ == Tile::South) {
+                yaku_list |= Yaku::RoundWindSouth;
+            }
+            else if (round_wind_ == Tile::West) {
+                yaku_list |= Yaku::RoundWindWest;
+            }
+            else if (round_wind_ == Tile::North) {
+                yaku_list |= Yaku::RoundWindNorth;
+            }
+        }
+    }
+    else if (shanten_type & ShantenFlag::SevenPairs) {
+        yaku_list |= Yaku::SevenPairs;
+    }
+
+    return yaku_list;
+}
 
 /**
  * @brief Calculate score and payment.
