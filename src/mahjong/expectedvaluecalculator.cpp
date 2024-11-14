@@ -40,12 +40,11 @@ ExpectedValueCalculator::ExpectedValueCalculator()
  * @return 各打牌の情報
  */
 std::tuple<bool, std::vector<Candidate>>
-ExpectedValueCalculator::calc(const Hand &hand, const ScoreCalculator &score_calculator,
-                              const std::vector<int> &dora_indicators, int syanten_type,
-                              int flag)
+ExpectedValueCalculator::calc(const Hand &hand, const std::vector<int> &dora_indicators,
+                              int syanten_type, int flag)
 {
     std::vector<int> counts = count_left_tiles(hand, dora_indicators);
-    return calc(hand, score_calculator, dora_indicators, syanten_type, counts, flag);
+    return calc(hand, dora_indicators, syanten_type, counts, flag);
 }
 
 /**
@@ -58,13 +57,12 @@ ExpectedValueCalculator::calc(const Hand &hand, const ScoreCalculator &score_cal
  * @return 各打牌の情報
  */
 std::tuple<bool, std::vector<Candidate>>
-ExpectedValueCalculator::calc(const Hand &hand, const ScoreCalculator &score_calculator,
-                              const std::vector<int> &dora_indicators, int syanten_type,
-                              const std::vector<int> &counts, int flag)
+ExpectedValueCalculator::calc(const Hand &hand, const std::vector<int> &dora_indicators,
+                              int syanten_type, const std::vector<int> &counts,
+                              int flag)
 {
     assert(counts.size() == 37);
 
-    score_calculator_ = score_calculator;
     syanten_type_ = syanten_type;
     dora_indicators_ = dora_indicators;
 
@@ -393,7 +391,7 @@ std::vector<double> ExpectedValueCalculator::get_score(const Hand &hand, int win
         hand.is_closed() ? (WinFlag::Tsumo | WinFlag::Riichi) : WinFlag::Tsumo;
 
     // 点数計算を行う。
-    Result result = score_calculator_.calc(hand, win_tile, hand_flag);
+    Result result = ScoreCalculator::calc(hand, win_tile, hand_flag, params);
 
     // 表ドラの数
     int n_dora = int(dora_indicators_.size());
@@ -403,7 +401,8 @@ std::vector<double> ExpectedValueCalculator::get_score(const Hand &hand, int win
     std::vector<double> scores(4, 0);
     if (result.success) {
         // 役ありの場合
-        std::vector<int> up_scores = score_calculator_.get_scores_for_exp(result);
+        std::vector<int> up_scores =
+            ScoreCalculator::get_scores_for_exp(result, params);
 
         if (calc_uradora_ && n_dora == 1) {
             // 裏ドラ考慮ありかつ表ドラが1枚以上の場合は、厳密に計算する。

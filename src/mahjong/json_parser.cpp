@@ -209,11 +209,16 @@ DrawResponseData create_draw_response(const RequestData &req)
     auto begin = std::chrono::steady_clock::now();
 
     // 点数計算の設定
-    score_calc.set_round_wind(req.bakaze);
-    score_calc.set_self_wind(req.zikaze);
-    score_calc.set_bonus_sticks(0);
-    score_calc.set_deposit_sticks(0);
-    score_calc.set_dora_indicators(req.dora_indicators);
+    ScoreCalculator::Params params;
+    params.self_wind = req.zikaze;
+    params.round_wind = req.bakaze;
+    params.num_bonus_sticks = 0;
+    params.num_deposit_sticks = 0;
+    std::vector<int> dora_tiles;
+    for (auto x : req.dora_indicators)
+        dora_tiles.push_back(Indicator2Dora.at(x));
+    params.dora_tiles = dora_tiles;
+    exp_value_calc.set_params(params);
 
     // 各打牌を分析する。
     bool success;
@@ -260,11 +265,16 @@ DiscardResponseData create_discard_response(const RequestData &req)
     auto begin = std::chrono::steady_clock::now();
 
     // 点数計算の設定
-    score_calc.set_round_wind(req.bakaze);
-    score_calc.set_self_wind(req.zikaze);
-    score_calc.set_bonus_sticks(0);
-    score_calc.set_deposit_sticks(0);
-    score_calc.set_dora_indicators(req.dora_indicators);
+    ScoreCalculator::Params params;
+    params.self_wind = req.zikaze;
+    params.round_wind = req.bakaze;
+    params.num_bonus_sticks = 0;
+    params.num_deposit_sticks = 0;
+    std::vector<int> dora_tiles;
+    for (auto x : req.dora_indicators)
+        dora_tiles.push_back(Indicator2Dora.at(x));
+    params.dora_tiles = dora_tiles;
+    exp_value_calc.set_params(params);
 
     // 各打牌を分析する。
     bool success;

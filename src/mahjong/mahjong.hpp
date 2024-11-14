@@ -1,6 +1,7 @@
 #ifndef MAHJONG_CPP_MAHJONG
 #define MAHJONG_CPP_MAHJONG
 
+#include "mahjong/core/expected_score_calculator.hpp"
 #include "mahjong/core/necessary_tile_calculator.hpp"
 #include "mahjong/core/score_calculator.hpp"
 #include "mahjong/core/shanten_calculator.hpp"

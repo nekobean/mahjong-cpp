@@ -147,23 +147,22 @@ TEST_CASE("一般役の点数計算")
     if (!load_cases("test_score_normal_yaku.json", cases))
         return;
 
-    ScoreCalculator score;
-
     SECTION("一般役の点数計算")
     {
         for (const auto &testcase : cases) {
             // 設定
-            score.set_round_wind(testcase.round_wind);
-            score.set_self_wind(testcase.self_wind);
-            score.set_bonus_sticks(testcase.num_bonus_sticks);
-            score.set_deposit_sticks(testcase.num_deposit_sticks);
-            score.set_dora_tiles(testcase.dora_tiles);
-            score.set_uradora_tiles(testcase.uradora_tiles);
-            score.set_rules(testcase.rules);
+            ScoreCalculator::Params params;
+            params.round_wind = testcase.round_wind;
+            params.self_wind = testcase.self_wind;
+            params.num_bonus_sticks = testcase.num_bonus_sticks;
+            params.num_deposit_sticks = testcase.num_deposit_sticks;
+            params.dora_tiles = testcase.dora_tiles;
+            params.uradora_tiles = testcase.uradora_tiles;
+            params.rules = testcase.rules;
 
             // 計算
-            Result ret =
-                score.calc(testcase.hand, testcase.win_tile, testcase.win_flag);
+            Result ret = ScoreCalculator::calc(testcase.hand, testcase.win_tile,
+                                               testcase.win_flag, params);
 
             // 照合
             INFO(fmt::format("URL: {}", testcase.url));
@@ -195,17 +194,18 @@ TEST_CASE("一般役の点数計算")
     {
         for (const auto &testcase : cases) {
             // 設定
-            score.set_round_wind(testcase.round_wind);
-            score.set_self_wind(testcase.self_wind);
-            score.set_bonus_sticks(testcase.num_bonus_sticks);
-            score.set_deposit_sticks(testcase.num_deposit_sticks);
-            score.set_dora_tiles(testcase.dora_tiles);
-            score.set_uradora_tiles(testcase.uradora_tiles);
-            score.set_rules(testcase.rules);
+            ScoreCalculator::Params params;
+            params.round_wind = testcase.round_wind;
+            params.self_wind = testcase.self_wind;
+            params.num_bonus_sticks = testcase.num_bonus_sticks;
+            params.num_deposit_sticks = testcase.num_deposit_sticks;
+            params.dora_tiles = testcase.dora_tiles;
+            params.uradora_tiles = testcase.uradora_tiles;
+            params.rules = testcase.rules;
 
             // 計算
-            Result ret =
-                score.calc(testcase.hand, testcase.win_tile, testcase.win_flag);
+            Result ret = ScoreCalculator::calc(testcase.hand, testcase.win_tile,
+                                               testcase.win_flag, params);
         }
     };
 }

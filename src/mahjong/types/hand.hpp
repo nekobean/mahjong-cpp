@@ -31,6 +31,15 @@ class Hand
     static Hand from_mpsz(const std::string &mpsz_str);
     std::string to_string() const;
 
+    static Hand from_counts(const std::vector<int> &tiles)
+    {
+        Hand hand;
+        for (int i = 0; i < 34; ++i) {
+            hand.counts[i] = tiles[i];
+        }
+        return hand;
+    }
+
   private:
     void check_arguments(const std::vector<int> &tiles,
                          const std::vector<MeldedBlock> &melds);

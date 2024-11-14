@@ -254,14 +254,19 @@ class ExpectedValueCalculator
             1 << 7, /* 和了確率を最大化 (指定されていない場合は期待値を最大化) */
     };
 
+    ScoreCalculator::Params params;
+    void set_params(const ScoreCalculator::Params &params)
+    {
+        this->params = params;
+    }
+
     ExpectedValueCalculator();
 
     std::tuple<bool, std::vector<Candidate>>
-    calc(const Hand &hand, const ScoreCalculator &score_calculator,
-         const std::vector<int> &dora_indicators, int syanten_type, int flag = 0);
+    calc(const Hand &hand, const std::vector<int> &dora_indicators, int syanten_type,
+         int flag = 0);
     std::tuple<bool, std::vector<Candidate>>
-    calc(const Hand &hand, const ScoreCalculator &score_calculator,
-         const std::vector<int> &dora_indicators, int syanten_type,
+    calc(const Hand &hand, const std::vector<int> &dora_indicators, int syanten_type,
          const std::vector<int> &counts, int flag = 0);
 
     static std::vector<std::tuple<int, int>>
