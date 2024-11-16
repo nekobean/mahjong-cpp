@@ -203,13 +203,12 @@ rapidjson::Value dump_candidate(const Candidate &candidate, rapidjson::Document 
  */
 DrawResponseData create_draw_response(const RequestData &req)
 {
-    ScoreCalculator score_calc;
     ExpectedValueCalculator exp_value_calc;
 
     auto begin = std::chrono::steady_clock::now();
 
     // 点数計算の設定
-    ScoreCalculator::Params params;
+    Round params;
     params.self_wind = req.zikaze;
     params.round_wind = req.bakaze;
     params.num_bonus_sticks = 0;
@@ -226,11 +225,10 @@ DrawResponseData create_draw_response(const RequestData &req)
 
     if (req.counts.empty())
         std::tie(success, candidates) = exp_value_calc.calc(
-            req.hand, score_calc, req.dora_indicators, req.syanten_type, req.flag);
+            req.hand, req.dora_indicators, req.syanten_type, req.flag);
     else
-        std::tie(success, candidates) =
-            exp_value_calc.calc(req.hand, score_calc, req.dora_indicators,
-                                req.syanten_type, req.counts, req.flag);
+        std::tie(success, candidates) = exp_value_calc.calc(
+            req.hand, req.dora_indicators, req.syanten_type, req.counts, req.flag);
 
     auto end = std::chrono::steady_clock::now();
     auto elapsed_us =
@@ -259,13 +257,12 @@ DrawResponseData create_draw_response(const RequestData &req)
  */
 DiscardResponseData create_discard_response(const RequestData &req)
 {
-    ScoreCalculator score_calc;
     ExpectedValueCalculator exp_value_calc;
 
     auto begin = std::chrono::steady_clock::now();
 
     // 点数計算の設定
-    ScoreCalculator::Params params;
+    Round params;
     params.self_wind = req.zikaze;
     params.round_wind = req.bakaze;
     params.num_bonus_sticks = 0;
@@ -282,11 +279,10 @@ DiscardResponseData create_discard_response(const RequestData &req)
 
     if (req.counts.empty())
         std::tie(success, candidates) = exp_value_calc.calc(
-            req.hand, score_calc, req.dora_indicators, req.syanten_type, req.flag);
+            req.hand, req.dora_indicators, req.syanten_type, req.flag);
     else
-        std::tie(success, candidates) =
-            exp_value_calc.calc(req.hand, score_calc, req.dora_indicators,
-                                req.syanten_type, req.counts, req.flag);
+        std::tie(success, candidates) = exp_value_calc.calc(
+            req.hand, req.dora_indicators, req.syanten_type, req.counts, req.flag);
 
     auto end = std::chrono::steady_clock::now();
     auto elapsed_us =

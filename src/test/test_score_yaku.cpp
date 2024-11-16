@@ -151,7 +151,7 @@ TEST_CASE("一般役の点数計算")
     {
         for (const auto &testcase : cases) {
             // 設定
-            ScoreCalculator::Params params;
+            Round params;
             params.round_wind = testcase.round_wind;
             params.self_wind = testcase.self_wind;
             params.num_bonus_sticks = testcase.num_bonus_sticks;
@@ -194,7 +194,7 @@ TEST_CASE("一般役の点数計算")
     {
         for (const auto &testcase : cases) {
             // 設定
-            ScoreCalculator::Params params;
+            Round params;
             params.round_wind = testcase.round_wind;
             params.self_wind = testcase.self_wind;
             params.num_bonus_sticks = testcase.num_bonus_sticks;

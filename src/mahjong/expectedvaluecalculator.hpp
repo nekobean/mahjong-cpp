@@ -254,8 +254,8 @@ class ExpectedValueCalculator
             1 << 7, /* 和了確率を最大化 (指定されていない場合は期待値を最大化) */
     };
 
-    ScoreCalculator::Params params;
-    void set_params(const ScoreCalculator::Params &params)
+    Round params;
+    void set_params(const Round &params)
     {
         this->params = params;
     }

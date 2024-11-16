@@ -4,6 +4,7 @@
 #include <array>
 #include <map>
 #include <string>
+#include <vector>
 
 #ifdef USE_ENGLISH
 #define ENTRY(id, eng, jp) {id, eng}
@@ -62,44 +63,16 @@ enum
 };
 
 static inline const std::map<int, std::string> Name = {
-    ENTRY(Null, u8"Null", u8"Null"),
-    ENTRY(Manzu1, u8"Manzu1", u8"一萬"),
-    ENTRY(Manzu2, u8"Manzu2", u8"二萬"),
-    ENTRY(Manzu3, u8"Manzu3", u8"三萬"),
-    ENTRY(Manzu4, u8"Manzu4", u8"四萬"),
-    ENTRY(Manzu5, u8"Manzu5", u8"五萬"),
-    ENTRY(Manzu6, u8"Manzu6", u8"六萬"),
-    ENTRY(Manzu7, u8"Manzu7", u8"七萬"),
-    ENTRY(Manzu8, u8"Manzu8", u8"八萬"),
-    ENTRY(Manzu9, u8"Manzu9", u8"九萬"),
-    ENTRY(Pinzu1, u8"Pinzu1", u8"一筒"),
-    ENTRY(Pinzu2, u8"Pinzu2", u8"二筒"),
-    ENTRY(Pinzu3, u8"Pinzu3", u8"三筒"),
-    ENTRY(Pinzu4, u8"Pinzu4", u8"四筒"),
-    ENTRY(Pinzu5, u8"Pinzu5", u8"五筒"),
-    ENTRY(Pinzu6, u8"Pinzu6", u8"六筒"),
-    ENTRY(Pinzu7, u8"Pinzu7", u8"七筒"),
-    ENTRY(Pinzu8, u8"Pinzu8", u8"八筒"),
-    ENTRY(Pinzu9, u8"Pinzu9", u8"九筒"),
-    ENTRY(Souzu1, u8"Souzu1", u8"一索"),
-    ENTRY(Souzu2, u8"Souzu2", u8"二索"),
-    ENTRY(Souzu3, u8"Souzu3", u8"三索"),
-    ENTRY(Souzu4, u8"Souzu4", u8"四索"),
-    ENTRY(Souzu5, u8"Souzu5", u8"五索"),
-    ENTRY(Souzu6, u8"Souzu6", u8"六索"),
-    ENTRY(Souzu7, u8"Souzu7", u8"七索"),
-    ENTRY(Souzu8, u8"Souzu8", u8"八索"),
-    ENTRY(Souzu9, u8"Souzu9", u8"九索"),
-    ENTRY(East, u8"East", u8"東"),
-    ENTRY(South, u8"South", u8"南"),
-    ENTRY(West, u8"West", u8"西"),
-    ENTRY(North, u8"North", u8"北"),
-    ENTRY(White, u8"White", u8"白"),
-    ENTRY(Green, u8"Green", u8"發"),
-    ENTRY(Red, u8"Red", u8"中"),
-    ENTRY(RedManzu5, u8"RedManzu5", u8"赤五萬"),
-    ENTRY(RedPinzu5, u8"RedPinzu5", u8"赤五筒"),
-    ENTRY(RedSouzu5, u8"RedSouzu5", u8"赤五索"),
+    {Null, u8"Null"},     {Manzu1, u8"1m"},     {Manzu2, u8"2m"}, {Manzu3, u8"3m"},
+    {Manzu4, u8"4m"},     {Manzu5, u8"5m"},     {Manzu6, u8"6m"}, {Manzu7, u8"7m"},
+    {Manzu8, u8"8m"},     {Manzu9, u8"9m"},     {Pinzu1, u8"1p"}, {Pinzu2, u8"2p"},
+    {Pinzu3, u8"3p"},     {Pinzu4, u8"4p"},     {Pinzu5, u8"5p"}, {Pinzu6, u8"6p"},
+    {Pinzu7, u8"7p"},     {Pinzu8, u8"8p"},     {Pinzu9, u8"9p"}, {Souzu1, u8"1s"},
+    {Souzu2, u8"2s"},     {Souzu3, u8"3s"},     {Souzu4, u8"4s"}, {Souzu5, u8"5s"},
+    {Souzu6, u8"6s"},     {Souzu7, u8"7s"},     {Souzu8, u8"8s"}, {Souzu9, u8"9s"},
+    {East, u8"1z"},       {South, u8"2z"},      {West, u8"3z"},   {North, u8"4z"},
+    {White, u8"5z"},      {Green, u8"6z"},      {Red, u8"7z"},    {RedManzu5, u8"r5m"},
+    {RedPinzu5, u8"r5p"}, {RedSouzu5, u8"r5s"},
 };
 }; // namespace Tile
 

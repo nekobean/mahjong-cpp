@@ -21,7 +21,7 @@ namespace mahjong
  * @return Result 結果
  */
 Result ScoreCalculator::calc(const Hand &hand, int win_tile, int win_flag,
-                             const Params &params)
+                             const Round &params)
 {
     if (auto [ok, err_msg] = check_arguments(hand, win_tile, win_flag); !ok) {
         return {hand, win_tile, win_flag, err_msg}; // 異常終了
@@ -77,7 +77,7 @@ Result ScoreCalculator::calc(const Hand &hand, int win_tile, int win_flag,
  * @return Result 結果
  */
 Result ScoreCalculator::aggregate(const Hand &hand, int win_tile, int flag,
-                                  YakuList yaku_list, const Params &params)
+                                  YakuList yaku_list, const Round &params)
 {
     int score_title;
     std::vector<std::tuple<YakuList, int>> yaku_han_list;
@@ -124,7 +124,7 @@ Result ScoreCalculator::aggregate(const Hand &hand, int win_tile, int flag,
 Result ScoreCalculator::aggregate(const Hand &hand, int win_tile, int flag,
                                   YakuList yaku_list, int fu,
                                   const std::vector<Block> &blocks, int wait_type,
-                                  const Params &params)
+                                  const Round &params)
 {
     // 飜を計算する。
     int han = 0;
@@ -253,7 +253,7 @@ std::tuple<bool, std::string> ScoreCalculator::check_arguments(const Hand &hand,
  */
 std::tuple<YakuList, int, std::vector<Block>, int>
 ScoreCalculator::check_pattern_yaku(const Hand &_hand, int win_tile, int flag,
-                                    int shanten_type, const Params &params)
+                                    int shanten_type, const Round &params)
 {
     Hand hand = _hand;
     hand.manzu = std::accumulate(hand.counts.begin(), hand.counts.begin() + 9, 0,
@@ -376,7 +376,7 @@ ScoreCalculator::check_pattern_yaku(const Hand &_hand, int win_tile, int flag,
  */
 int ScoreCalculator::calc_fu(const std::vector<Block> &blocks, int wait_type,
                              bool is_closed, bool is_tsumo, bool is_pinfu,
-                             const Params &params)
+                             const Round &params)
 {
     // Exceptions
     //////////////////////////
@@ -451,7 +451,7 @@ int ScoreCalculator::calc_fu(const std::vector<Block> &blocks, int wait_type,
  */
 std::vector<std::tuple<std::string, int>>
 ScoreCalculator::calc_fu_detail(const std::vector<Block> &blocks, int wait_type,
-                                bool is_menzen, bool is_tsumo, const Params &params)
+                                bool is_menzen, bool is_tsumo, const Round &params)
 {
     bool is_pinfu = check_pinfu(blocks, wait_type, params);
 
@@ -520,7 +520,7 @@ ScoreCalculator::calc_fu_detail(const std::vector<Block> &blocks, int wait_type,
 }
 
 std::vector<int> ScoreCalculator::get_scores_for_exp(const Result &result,
-                                                     const Params &params)
+                                                     const Round &params)
 {
     if (result.score_title >= ScoreTitle::CountedYakuman)
         return {result.score.front()};
@@ -680,7 +680,7 @@ YakuList ScoreCalculator::check_yakuman(const Hand &hand, const int win_tile,
  */
 YakuList ScoreCalculator::check_not_pattern_yaku(const Hand &hand, const int win_tile,
                                                  const int flag, const int shanten_type,
-                                                 const Params &params)
+                                                 const Round &params)
 {
     YakuList yaku_list = Yaku::Null;
 
@@ -797,7 +797,7 @@ YakuList ScoreCalculator::check_not_pattern_yaku(const Hand &hand, const int win
  *         (winner score, discarder payment) if dealer or player wins by Ron.
  */
 std::vector<int> ScoreCalculator::calc_score(const bool is_tsumo, const int score_title,
-                                             const Params &params, const int han,
+                                             const Round &params, const int han,
                                              const int fu)
 {
     using namespace ScoreTable;
@@ -1015,7 +1015,7 @@ int ScoreCalculator::round_fu(const int fu)
 /**
  * @brief Check if All Simples (断幺九) is established.
  */
-bool ScoreCalculator::check_tanyao(const Hand &hand, const Params &params)
+bool ScoreCalculator::check_tanyao(const Hand &hand, const Round &params)
 {
     if (!(params.rules & RuleFlag::OpenTanyao) && !hand.is_closed()) {
         return false; // If Open Tanyao is not allowed, closed hand only
@@ -1031,7 +1031,7 @@ bool ScoreCalculator::check_tanyao(const Hand &hand, const Params &params)
  * @brief Check if Pinfu (平和) is established.
  */
 bool ScoreCalculator::check_pinfu(const std::vector<Block> &blocks, const int wait_type,
-                                  const Params &params)
+                                  const Round &params)
 {
     // Check if the hand is closed before calling this function.
 
