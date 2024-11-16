@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "mahjong/types/const.hpp"
+#include "mahjong/types/meld.hpp"
 
 namespace mahjong
 {
@@ -14,7 +15,13 @@ namespace mahjong
 class MyPlayer
 {
   public:
-    int self_wind; // 自風
+    MyPlayer() : self_wind(Tile::East)
+    {
+    }
+
+    std::vector<int> hand;
+    std::vector<MeldedBlock> melds;
+    int self_wind;
 };
 
 } // namespace mahjong

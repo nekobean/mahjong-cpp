@@ -13,7 +13,7 @@ namespace mahjong
 {
 
 /**
- * @brief ブロック
+ * @brief Block that composes a hand
  */
 struct Block
 {
@@ -25,10 +25,10 @@ struct Block
     {
     }
 
-    /*! ブロックの種類 */
+    /*! block type */
     int type;
 
-    /*! 最小の構成牌 */
+    /*! The smallest tile that composes the block */
     int min_tile;
 
     std::string to_string() const;

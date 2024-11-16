@@ -63,16 +63,16 @@ enum
 };
 
 static inline const std::map<int, std::string> Name = {
-    {Null, u8"Null"},     {Manzu1, u8"1m"},     {Manzu2, u8"2m"}, {Manzu3, u8"3m"},
-    {Manzu4, u8"4m"},     {Manzu5, u8"5m"},     {Manzu6, u8"6m"}, {Manzu7, u8"7m"},
-    {Manzu8, u8"8m"},     {Manzu9, u8"9m"},     {Pinzu1, u8"1p"}, {Pinzu2, u8"2p"},
-    {Pinzu3, u8"3p"},     {Pinzu4, u8"4p"},     {Pinzu5, u8"5p"}, {Pinzu6, u8"6p"},
-    {Pinzu7, u8"7p"},     {Pinzu8, u8"8p"},     {Pinzu9, u8"9p"}, {Souzu1, u8"1s"},
-    {Souzu2, u8"2s"},     {Souzu3, u8"3s"},     {Souzu4, u8"4s"}, {Souzu5, u8"5s"},
-    {Souzu6, u8"6s"},     {Souzu7, u8"7s"},     {Souzu8, u8"8s"}, {Souzu9, u8"9s"},
-    {East, u8"1z"},       {South, u8"2z"},      {West, u8"3z"},   {North, u8"4z"},
-    {White, u8"5z"},      {Green, u8"6z"},      {Red, u8"7z"},    {RedManzu5, u8"r5m"},
-    {RedPinzu5, u8"r5p"}, {RedSouzu5, u8"r5s"},
+    {Null, u8"Null"},    {Manzu1, u8"1m"},    {Manzu2, u8"2m"}, {Manzu3, u8"3m"},
+    {Manzu4, u8"4m"},    {Manzu5, u8"5m"},    {Manzu6, u8"6m"}, {Manzu7, u8"7m"},
+    {Manzu8, u8"8m"},    {Manzu9, u8"9m"},    {Pinzu1, u8"1p"}, {Pinzu2, u8"2p"},
+    {Pinzu3, u8"3p"},    {Pinzu4, u8"4p"},    {Pinzu5, u8"5p"}, {Pinzu6, u8"6p"},
+    {Pinzu7, u8"7p"},    {Pinzu8, u8"8p"},    {Pinzu9, u8"9p"}, {Souzu1, u8"1s"},
+    {Souzu2, u8"2s"},    {Souzu3, u8"3s"},    {Souzu4, u8"4s"}, {Souzu5, u8"5s"},
+    {Souzu6, u8"6s"},    {Souzu7, u8"7s"},    {Souzu8, u8"8s"}, {Souzu9, u8"9s"},
+    {East, u8"1z"},      {South, u8"2z"},     {West, u8"3z"},   {North, u8"4z"},
+    {White, u8"5z"},     {Green, u8"6z"},     {Red, u8"7z"},    {RedManzu5, u8"0m"},
+    {RedPinzu5, u8"0p"}, {RedSouzu5, u8"0s"},
 };
 }; // namespace Tile
 
