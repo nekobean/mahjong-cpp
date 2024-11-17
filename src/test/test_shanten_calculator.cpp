@@ -24,17 +24,15 @@ using TestCase = std::tuple<std::vector<int>, int, int, int>;
  *
  * @param filepath The path to the file containing the test case data.
  * @param cases list of test cases.
+ * @return true if the test case is loaded successfully, false otherwise.
  */
-bool load_testcase(std::vector<TestCase> &cases)
+bool load_testcase(const std::string &filepath, std::vector<TestCase> &cases)
 {
     cases.clear();
 
-    boost::filesystem::path path =
-        boost::filesystem::path(CMAKE_TESTCASE_DIR) / "test_shanten_calculator.txt";
-
-    std::ifstream ifs(path.string());
+    std::ifstream ifs(filepath);
     if (!ifs) {
-        std::cerr << "Failed to open " << path.string() << "." << std::endl;
+        spdlog::error("Failed to open {}.", filepath);
         return false;
     }
 
@@ -66,8 +64,11 @@ bool load_testcase(std::vector<TestCase> &cases)
 
 TEST_CASE("Shanten number of regular hand")
 {
+    boost::filesystem::path filepath =
+        boost::filesystem::path(CMAKE_TESTCASE_DIR) / "test_shanten_calculator.txt";
+
     std::vector<TestCase> cases;
-    if (!load_testcase(cases)) {
+    if (!load_testcase(filepath.string(), cases)) {
         return;
     }
 
@@ -89,8 +90,11 @@ TEST_CASE("Shanten number of regular hand")
 
 TEST_CASE("Shanten number of Seven Pairs")
 {
+    boost::filesystem::path filepath =
+        boost::filesystem::path(CMAKE_TESTCASE_DIR) / "test_shanten_calculator.txt";
+
     std::vector<TestCase> cases;
-    if (!load_testcase(cases)) {
+    if (!load_testcase(filepath.string(), cases)) {
         return;
     }
 
@@ -112,8 +116,11 @@ TEST_CASE("Shanten number of Seven Pairs")
 
 TEST_CASE("Shanten number of Thirteen Orphans")
 {
+    boost::filesystem::path filepath =
+        boost::filesystem::path(CMAKE_TESTCASE_DIR) / "test_shanten_calculator.txt";
+
     std::vector<TestCase> cases;
-    if (!load_testcase(cases)) {
+    if (!load_testcase(filepath.string(), cases)) {
         return;
     }
 
@@ -135,8 +142,11 @@ TEST_CASE("Shanten number of Thirteen Orphans")
 
 TEST_CASE("Shanten number")
 {
+    boost::filesystem::path filepath =
+        boost::filesystem::path(CMAKE_TESTCASE_DIR) / "test_shanten_calculator.txt";
+
     std::vector<TestCase> cases;
-    if (!load_testcase(cases)) {
+    if (!load_testcase(filepath.string(), cases)) {
         return;
     }
 

@@ -8,9 +8,10 @@
 #include "mahjong/core/table.hpp"
 #include "mahjong/types/types.hpp"
 
+//#define USE_NYANTEN_TABLE
+
 namespace mahjong
 {
-//#define USE_NYANTEN_TABLE
 
 /**
  * @brief Class for calculating shanten number

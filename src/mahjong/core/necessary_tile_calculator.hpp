@@ -11,6 +11,7 @@
 
 namespace mahjong
 {
+
 class NecessaryTileCalculator
 {
     using ResultType = std::array<int64_t, 30>;
@@ -31,6 +32,7 @@ class NecessaryTileCalculator
     static void shift(ResultType::value_type &lv, const ResultType::value_type rv,
                       ResultType::value_type &ly, const ResultType::value_type ry);
 };
+
 } // namespace mahjong
 
 #endif /* MAHJONG_CPP_NECESSARY_TILE_CALCULATOR */

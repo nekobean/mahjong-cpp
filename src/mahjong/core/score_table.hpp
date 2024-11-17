@@ -5,6 +5,7 @@
 
 namespace mahjong
 {
+
 /**
  * @brief Score table
  */
@@ -142,6 +143,7 @@ static const inline std::array<std::array<int, 11>, 5> AboveMangan = {
      // (Tsumo) player -> player
      {2000, 3000, 4000, 6000, 8000, 8000, 16000, 24000, 32000, 40000, 48000}}};
 }; // namespace ScoreTable
+
 } // namespace mahjong
 
 #endif /* MAHJONG_CPP_SCORE_TABLE */

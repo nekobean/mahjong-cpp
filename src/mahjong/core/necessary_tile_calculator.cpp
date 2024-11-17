@@ -11,6 +11,7 @@
 
 namespace mahjong
 {
+
 /**
  * @brief Calculate the necessary tiles.
  *
@@ -289,4 +290,5 @@ void NecessaryTileCalculator::shift(ResultType::value_type &lv,
         ly = ry;
     }
 }
+
 } // namespace mahjong

@@ -8,6 +8,7 @@
 
 namespace mahjong
 {
+
 inline std::string to_mpsz(const std::vector<int> &hand)
 {
     std::string s;

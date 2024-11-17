@@ -30,6 +30,7 @@ class HandSeparator
     static std::map<int, std::vector<std::vector<Block>>> s_tbl_;
     static std::map<int, std::vector<std::vector<Block>>> z_tbl_;
 };
+
 } // namespace mahjong
 
 #endif /* MAHJONG_CPP_HAND_SEPARATOR */

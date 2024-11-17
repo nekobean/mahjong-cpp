@@ -46,11 +46,11 @@ struct TestCase
 };
 
 /**
- * @brief 初期化する。
+ * Load a test case from the specified file.
  *
- * @param[in] path パス
- * @param[out] table テーブル
- * @return 初期化に成功した場合は true、そうでない場合は false を返す。
+ * @param filepath The path to the file containing the test case data.
+ * @param cases list of test cases.
+ * @return true if the test case is loaded successfully, false otherwise.
  */
 bool load_cases(const std::string &filename, std::vector<TestCase> &cases)
 {

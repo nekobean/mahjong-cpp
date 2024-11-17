@@ -9,6 +9,7 @@
 
 namespace mahjong
 {
+
 inline constexpr std::array<std::array<std::array<std::uint_fast32_t, 5u>, 15u>, 9u>
     nyanten_suits_table = {{
         {{

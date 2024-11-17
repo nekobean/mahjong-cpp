@@ -10,6 +10,7 @@
 #include <boost/algorithm/string/split.hpp>
 #include <boost/dll.hpp>
 #include <catch2/catch.hpp>
+#include <spdlog/spdlog.h>
 
 #include "mahjong/core/shanten_calculator.hpp"
 #include "mahjong/core/string.hpp"
@@ -24,17 +25,15 @@ using TestCase = std::vector<int>;
  *
  * @param filepath The path to the file containing the test case data.
  * @param cases list of test cases.
+ * @return true if the test case is loaded successfully, false otherwise.
  */
-bool load_testcase(std::vector<TestCase> &cases)
+bool load_testcase(const std::string &filepath, std::vector<TestCase> &cases)
 {
     cases.clear();
 
-    boost::filesystem::path path = boost::filesystem::path(CMAKE_TESTCASE_DIR) /
-                                   "test_unnecessary_tile_selector.txt";
-
-    std::ifstream ifs(path.string());
+    std::ifstream ifs(filepath);
     if (!ifs) {
-        std::cerr << "Failed to open " << path.string() << "." << std::endl;
+        spdlog::error("Failed to open {}.", filepath);
         return false;
     }
 
@@ -65,8 +64,11 @@ bool load_testcase(std::vector<TestCase> &cases)
 
 TEST_CASE("Unnecessary tile calculator for regular hand")
 {
+    boost::filesystem::path filepath = boost::filesystem::path(CMAKE_TESTCASE_DIR) /
+                                       "test_unnecessary_tile_calculator.txt";
+
     std::vector<TestCase> cases;
-    if (!load_testcase(cases)) {
+    if (!load_testcase(filepath.string(), cases)) {
         return;
     }
 
@@ -106,8 +108,11 @@ TEST_CASE("Unnecessary tile calculator for regular hand")
 
 TEST_CASE("Unnecessary tile calculator for Seven Pairs")
 {
+    boost::filesystem::path filepath = boost::filesystem::path(CMAKE_TESTCASE_DIR) /
+                                       "test_unnecessary_tile_calculator.txt";
+
     std::vector<TestCase> cases;
-    if (!load_testcase(cases)) {
+    if (!load_testcase(filepath.string(), cases)) {
         return;
     }
 
@@ -146,8 +151,11 @@ TEST_CASE("Unnecessary tile calculator for Seven Pairs")
 
 TEST_CASE("Unnecessary tile calculator for Thirteen Orphans")
 {
+    boost::filesystem::path filepath = boost::filesystem::path(CMAKE_TESTCASE_DIR) /
+                                       "test_unnecessary_tile_calculator.txt";
+
     std::vector<TestCase> cases;
-    if (!load_testcase(cases)) {
+    if (!load_testcase(filepath.string(), cases)) {
         return;
     }
 
@@ -186,8 +194,11 @@ TEST_CASE("Unnecessary tile calculator for Thirteen Orphans")
 
 TEST_CASE("Unnecessary tile selection")
 {
+    boost::filesystem::path filepath = boost::filesystem::path(CMAKE_TESTCASE_DIR) /
+                                       "test_unnecessary_tile_calculator.txt";
+
     std::vector<TestCase> cases;
-    if (!load_testcase(cases)) {
+    if (!load_testcase(filepath.string(), cases)) {
         return;
     }
 

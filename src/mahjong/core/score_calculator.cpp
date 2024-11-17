@@ -12,6 +12,7 @@
 
 namespace mahjong
 {
+
 /**
  * @brief 点数を計算する。
  *
@@ -1501,4 +1502,5 @@ bool ScoreCalculator::check_thirteen_wait_thirteen_orphans(const Hand &hand,
     return (manzu == terminals_mask) && (pinzu == terminals_mask) &&
            (sozu == terminals_mask) && (zihai == honors_mask);
 }
+
 } // namespace mahjong

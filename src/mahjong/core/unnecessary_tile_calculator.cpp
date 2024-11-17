@@ -11,6 +11,7 @@
 
 namespace mahjong
 {
+
 /**
  * @brief Calculate unnecessary tiles.
  *
@@ -300,4 +301,5 @@ void UnnecessaryTileCalculator::shift(ResultType::value_type &lv,
         ly = ry;
     }
 }
+
 } // namespace mahjong

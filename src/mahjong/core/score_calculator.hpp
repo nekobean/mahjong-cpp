@@ -8,6 +8,7 @@
 
 namespace mahjong
 {
+
 /**
  * @brief Score calculator
  */
@@ -83,7 +84,7 @@ class ScoreCalculator
     static bool check_thirteen_wait_thirteen_orphans(const Hand &hand,
                                                      const int win_tile);
 };
-;
+
 } // namespace mahjong
 
 #endif /* MAHJONG_CPP_SCORE_CALCULATOR */
