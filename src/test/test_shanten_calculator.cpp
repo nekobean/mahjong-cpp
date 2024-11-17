@@ -1,25 +1,29 @@
 #include <fstream>
 #include <iostream>
 
+#define CATCH_CONFIG_MAIN
+#define CATCH_CONFIG_ENABLE_BENCHMARKING
+
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/dll.hpp>
-#define CATCH_CONFIG_MAIN
-#define CATCH_CONFIG_ENABLE_BENCHMARKING
 #include <catch2/catch.hpp>
+#include <spdlog/spdlog.h>
 
 #include "mahjong/core/shanten_calculator.hpp"
 #include "mahjong/mahjong.hpp"
 
 using namespace mahjong;
 
+using TestCase = std::tuple<std::vector<int>, int, int, int>;
+
 /**
- * @brief Load test cases.
+ * Load a test case from the specified file.
  *
- * @param[out] cases Test cases
- * @return Returns true if the read was successful, false otherwise.
+ * @param filepath The path to the file containing the test case data.
+ * @param cases list of test cases.
  */
-bool load_testcase(std::vector<std::tuple<Hand, int, int, int>> &cases)
+bool load_testcase(std::vector<TestCase> &cases)
 {
     cases.clear();
 
@@ -32,16 +36,17 @@ bool load_testcase(std::vector<std::tuple<Hand, int, int, int>> &cases)
         return false;
     }
 
-    // The format is `<tile1> <tile2> ... <tile14> <shanten number of regular hand> <shanten number of Thirteen Orphans> <shanten number of Seven Pairs>`
+    // The format is `<tile1> <tile2> ... <tile14> <shanten number of regular hand>
+    //                <shanten number of Thirteen Orphans> <shanten number of Seven Pairs>`
     std::string line;
     while (std::getline(ifs, line)) {
         std::vector<std::string> tokens;
         boost::split(tokens, line, boost::is_any_of(" "));
 
-        std::vector<int> tiles;
+        std::vector<int> tiles(34, 0);
         for (int i = 0; i < 14; ++i) {
             int tile = std::stoi(tokens[i]);
-            tiles.push_back(tile);
+            ++tiles[red2normal(tile)];
         }
         cases.emplace_back(tiles, std::stoi(tokens[14]), std::stoi(tokens[15]),
                            std::stoi(tokens[16]));
@@ -54,7 +59,7 @@ bool load_testcase(std::vector<std::tuple<Hand, int, int, int>> &cases)
 
 TEST_CASE("Shanten number of regular hand")
 {
-    std::vector<std::tuple<Hand, int, int, int>> cases;
+    std::vector<TestCase> cases;
     if (!load_testcase(cases)) {
         return;
     }
@@ -62,22 +67,21 @@ TEST_CASE("Shanten number of regular hand")
     SECTION("Shanten number of regular hand")
     {
         for (auto &[hand, regular, thirteen_orphans, seven_pairs] : cases) {
-            REQUIRE(ShantenCalculator::calc_regular(hand.counts, hand.melds.size()) ==
-                    regular);
+            REQUIRE(ShantenCalculator::calc_regular(hand, 0) == regular);
         }
     };
 
     BENCHMARK("Shanten number of regular hand")
     {
         for (auto &[hand, regular, thirteen_orphans, seven_pairs] : cases) {
-            ShantenCalculator::calc_regular(hand.counts, hand.melds.size());
+            ShantenCalculator::calc_regular(hand, 0);
         }
     };
 }
 
 TEST_CASE("Shanten number of Seven Pairs")
 {
-    std::vector<std::tuple<Hand, int, int, int>> cases;
+    std::vector<TestCase> cases;
     if (!load_testcase(cases)) {
         return;
     }
@@ -85,21 +89,21 @@ TEST_CASE("Shanten number of Seven Pairs")
     SECTION("Shanten number of Seven Pairs")
     {
         for (auto &[hand, regular, thirteen_orphans, seven_pairs] : cases) {
-            REQUIRE(ShantenCalculator::calc_seven_pairs(hand.counts) == seven_pairs);
+            REQUIRE(ShantenCalculator::calc_seven_pairs(hand) == seven_pairs);
         }
     };
 
     BENCHMARK("Shanten number of Seven Pairs")
     {
         for (auto &[hand, regular, thirteen_orphans, seven_pairs] : cases) {
-            ShantenCalculator::calc_seven_pairs(hand.counts);
+            ShantenCalculator::calc_seven_pairs(hand);
         }
     };
 }
 
 TEST_CASE("Shanten number of Thirteen Orphans")
 {
-    std::vector<std::tuple<Hand, int, int, int>> cases;
+    std::vector<TestCase> cases;
     if (!load_testcase(cases)) {
         return;
     }
@@ -107,22 +111,21 @@ TEST_CASE("Shanten number of Thirteen Orphans")
     SECTION("Shanten number of Thirteen Orphans")
     {
         for (auto &[hand, regular, thirteen_orphans, seven_pairs] : cases) {
-            REQUIRE(ShantenCalculator::calc_thirteen_orphans(hand.counts) ==
-                    thirteen_orphans);
+            REQUIRE(ShantenCalculator::calc_thirteen_orphans(hand) == thirteen_orphans);
         }
     };
 
     BENCHMARK("Shanten number of Thirteen Orphans")
     {
         for (auto &[hand, regular, thirteen_orphans, seven_pairs] : cases) {
-            ShantenCalculator::calc_thirteen_orphans(hand.counts);
+            ShantenCalculator::calc_thirteen_orphans(hand);
         }
     };
 }
 
 TEST_CASE("Shanten number")
 {
-    std::vector<std::tuple<Hand, int, int, int>> cases;
+    std::vector<TestCase> cases;
     if (!load_testcase(cases)) {
         return;
     }
@@ -135,8 +138,7 @@ TEST_CASE("Shanten number")
                 (true_shanten == regular ? ShantenFlag::Regular : 0) |
                 (true_shanten == thirteen_orphans ? ShantenFlag::ThirteenOrphans : 0) |
                 (true_shanten == seven_pairs ? ShantenFlag::SevenPairs : 0);
-            auto [type, syanten] =
-                ShantenCalculator::calc(hand.counts, hand.melds.size());
+            auto [type, syanten] = ShantenCalculator::calc(hand, 0);
 
             REQUIRE(syanten == true_shanten);
             REQUIRE(type == true_type);
@@ -146,7 +148,7 @@ TEST_CASE("Shanten number")
     BENCHMARK("Shanten number")
     {
         for (auto &[hand, regular, thirteen_orphans, seven_pairs] : cases) {
-            ShantenCalculator::calc(hand.counts, hand.melds.size());
+            ShantenCalculator::calc(hand, 0);
         }
     };
 }

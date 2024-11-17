@@ -83,18 +83,18 @@ std::tuple<int, int, int64_t> NecessaryTileCalculator::calc(const Hand &hand,
  */
 std::tuple<int, int64_t> NecessaryTileCalculator::calc_regular(const Hand &hand)
 {
-    ShantenCalculator::HashType manzu_hash = ShantenCalculator::calc_suits_hash(
-        hand.counts.begin(), hand.counts.begin() + 9);
-    ShantenCalculator::HashType pinzu_hash = ShantenCalculator::calc_suits_hash(
-        hand.counts.begin() + 9, hand.counts.begin() + 18);
-    ShantenCalculator::HashType souzu_hash = ShantenCalculator::calc_suits_hash(
-        hand.counts.begin() + 18, hand.counts.begin() + 27);
-    ShantenCalculator::HashType honors_hash = ShantenCalculator::calc_honors_hash(
-        hand.counts.begin() + 27, hand.counts.begin() + 34);
-    auto &manzu = ShantenCalculator::suits_table_[manzu_hash];
-    auto &pinzu = ShantenCalculator::suits_table_[pinzu_hash];
-    auto &souzu = ShantenCalculator::suits_table_[souzu_hash];
-    auto &honors = ShantenCalculator::honors_table_[honors_hash];
+    Table::HashType manzu_hash =
+        Table::suits_hash(hand.counts.begin(), hand.counts.begin() + 9);
+    Table::HashType pinzu_hash =
+        Table::suits_hash(hand.counts.begin() + 9, hand.counts.begin() + 18);
+    Table::HashType souzu_hash =
+        Table::suits_hash(hand.counts.begin() + 18, hand.counts.begin() + 27);
+    Table::HashType honors_hash =
+        Table::honors_hash(hand.counts.begin() + 27, hand.counts.begin() + 34);
+    auto &manzu = Table::suits_table_[manzu_hash];
+    auto &pinzu = Table::suits_table_[pinzu_hash];
+    auto &souzu = Table::suits_table_[souzu_hash];
+    auto &honors = Table::honors_table_[honors_hash];
 
     int m = 4 - static_cast<int>(hand.melds.size());
 
@@ -194,8 +194,8 @@ NecessaryTileCalculator::calc_thirteen_orphans(const Hand &hand)
     return {shanten, wait};
 }
 
-void NecessaryTileCalculator::add1(ResultType &lhs,
-                                   const ShantenCalculator::TableType &rhs, const int m)
+void NecessaryTileCalculator::add1(ResultType &lhs, const Table::TableType &rhs,
+                                   const int m)
 {
     auto lhs2 = &lhs[10];
     const auto rhs2 = &rhs[10];
@@ -227,8 +227,8 @@ void NecessaryTileCalculator::add1(ResultType &lhs,
     }
 }
 
-void NecessaryTileCalculator::add2(ResultType &lhs,
-                                   const ShantenCalculator::TableType &rhs, const int m)
+void NecessaryTileCalculator::add2(ResultType &lhs, const Table::TableType &rhs,
+                                   const int m)
 {
     auto lhs2 = &lhs[10];
     const auto rhs2 = &rhs[10];

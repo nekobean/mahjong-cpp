@@ -13,11 +13,6 @@
 namespace mahjong
 {
 
-ShantenCalculator::ShantenCalculator()
-{
-    initialize();
-}
-
 /**
  * @brief Calculate the shanten number.
  *
@@ -72,27 +67,7 @@ std::tuple<int, int> ShantenCalculator::calc(const std::vector<int> &hand,
     return ret;
 }
 
-/**
- * @brief Initialize the calculator.
- *
- * @return Returns true if initialization is successful, otherwise false.
- */
-bool ShantenCalculator::initialize()
-{
-    boost::filesystem::path exe_path = boost::dll::program_location().parent_path();
-#ifdef USE_NYANTEN_TABLE
-    boost::filesystem::path suits_table_path = exe_path / "suits_table_nyanten.bin";
-    boost::filesystem::path honors_table_path = exe_path / "honors_table_nyanten.bin";
-#else
-    boost::filesystem::path suits_table_path = exe_path / "suits_table.bin";
-    boost::filesystem::path honors_table_path = exe_path / "honors_table.bin";
-#endif
-
-    return load_table(suits_table_path.string(), suits_table_) &&
-           load_table(honors_table_path.string(), honors_table_);
-}
-
-void ShantenCalculator::add1(ResultType &lhs, const TableType &rhs, const int m)
+void ShantenCalculator::add1(ResultType &lhs, const Table::TableType &rhs, const int m)
 {
     for (int i = m + 5; i >= 5; --i) {
         int32_t dist = std::min(lhs[i] + rhs[0], lhs[0] + rhs[i]);
@@ -112,7 +87,7 @@ void ShantenCalculator::add1(ResultType &lhs, const TableType &rhs, const int m)
     }
 }
 
-void ShantenCalculator::add2(ResultType &lhs, const TableType &rhs, const int m)
+void ShantenCalculator::add2(ResultType &lhs, const Table::TableType &rhs, const int m)
 {
     int i = m + 5;
     int32_t dist = std::min(lhs[i] + rhs[0], lhs[0] + rhs[i]);
@@ -125,14 +100,16 @@ void ShantenCalculator::add2(ResultType &lhs, const TableType &rhs, const int m)
 
 int ShantenCalculator::calc_regular(const std::vector<int> &hand, const int num_melds)
 {
-    HashType manzu_hash = calc_suits_hash(hand.begin(), hand.begin() + 9);
-    HashType pinzu_hash = calc_suits_hash(hand.begin() + 9, hand.begin() + 18);
-    HashType souzu_hash = calc_suits_hash(hand.begin() + 18, hand.begin() + 27);
-    HashType honors_hash = calc_honors_hash(hand.begin() + 27, hand.begin() + 34);
-    auto &manzu = suits_table_[manzu_hash];
-    auto &pinzu = suits_table_[pinzu_hash];
-    auto &souzu = suits_table_[souzu_hash];
-    auto &honors = honors_table_[honors_hash];
+    Table::HashType manzu_hash = Table::suits_hash(hand.begin(), hand.begin() + 9);
+    Table::HashType pinzu_hash = Table::suits_hash(hand.begin() + 9, hand.begin() + 18);
+    Table::HashType souzu_hash =
+        Table::suits_hash(hand.begin() + 18, hand.begin() + 27);
+    Table::HashType honors_hash =
+        Table::honors_hash(hand.begin() + 27, hand.begin() + 34);
+    auto &manzu = Table::suits_table_[manzu_hash];
+    auto &pinzu = Table::suits_table_[pinzu_hash];
+    auto &souzu = Table::suits_table_[souzu_hash];
+    auto &honors = Table::honors_table_[honors_hash];
     int m = 4 - num_melds;
 
     ResultType ret;
@@ -182,12 +159,5 @@ int ShantenCalculator::calc_thirteen_orphans(const std::vector<int> &hand)
 
     return 13 - num_types - has_toitsu;
 }
-
-std::array<ShantenCalculator::TableType, ShantenCalculator::SuitsTableSize>
-    ShantenCalculator::suits_table_;
-std::array<ShantenCalculator::TableType, ShantenCalculator::HonorsTableSize>
-    ShantenCalculator::honors_table_;
-
-static ShantenCalculator inst;
 
 } // namespace mahjong

@@ -6,7 +6,7 @@
 #include <tuple>
 #include <vector>
 
-#include "mahjong/core/shanten_calculator.hpp"
+#include "mahjong/core/table.hpp"
 #include "mahjong/types/types.hpp"
 
 namespace mahjong
@@ -26,10 +26,8 @@ class NecessaryTileCalculator
     static std::tuple<int, int64_t> calc_regular(const Hand &hand);
     static std::tuple<int, int64_t> calc_seven_pairs(const Hand &hand);
     static std::tuple<int, int64_t> calc_thirteen_orphans(const Hand &hand);
-    static void add1(ResultType &lhs, const ShantenCalculator::TableType &rhs,
-                     const int m);
-    static void add2(ResultType &lhs, const ShantenCalculator::TableType &rhs,
-                     const int m);
+    static void add1(ResultType &lhs, const Table::TableType &rhs, const int m);
+    static void add2(ResultType &lhs, const Table::TableType &rhs, const int m);
     static void shift(ResultType::value_type &lv, const ResultType::value_type rv,
                       ResultType::value_type &ly, const ResultType::value_type ry);
 };

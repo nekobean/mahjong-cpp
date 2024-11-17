@@ -13,13 +13,14 @@
 #include <boost/filesystem.hpp>
 #include <cppitertools/combinations_with_replacement.hpp>
 #include <cppitertools/product.hpp>
+#include <spdlog/spdlog.h>
 
-#include "mahjong/core/shanten_calculator.hpp"
+#include "mahjong/core/table.hpp"
 
 using namespace mahjong;
-using KeyType = uint32_t;
-using ValueType = std::array<KeyType, 10>;
-using HashType = ShantenCalculator::HashType;
+
+using KeyType = int32_t;
+using ValueType = std::array<int32_t, 10>;
 
 std::vector<int> range(int n)
 {
@@ -195,16 +196,15 @@ int calc_distance(const std::vector<int> &before, const std::vector<int> &after)
     return distance;
 }
 
-std::map<HashType, ValueType>
+std::map<Table::HashType, ValueType>
 create_table(const std::vector<std::vector<int>> &patterns,
              const std::vector<std::vector<int>> &win_patterns)
 {
-    std::map<HashType, ValueType> table;
+    std::map<Table::HashType, ValueType> table;
     for (const auto &pattern : patterns) {
-        HashType hash =
-            pattern.size() == 9
-                ? ShantenCalculator::calc_suits_hash(pattern.begin(), pattern.end())
-                : ShantenCalculator::calc_honors_hash(pattern.begin(), pattern.end());
+        Table::HashType hash = pattern.size() == 9
+                                   ? Table::suits_hash(pattern.begin(), pattern.end())
+                                   : Table::honors_hash(pattern.begin(), pattern.end());
         table[hash].fill(std::numeric_limits<int>::max());
     }
 
@@ -212,11 +212,10 @@ create_table(const std::vector<std::vector<int>> &patterns,
     std::for_each(
         std::execution::par, patterns.begin(), patterns.end(),
         [&](const auto &pattern) {
-            HashType hash =
+            Table::HashType hash =
                 pattern.size() == 9
-                    ? ShantenCalculator::calc_suits_hash(pattern.begin(), pattern.end())
-                    : ShantenCalculator::calc_honors_hash(pattern.begin(),
-                                                          pattern.end());
+                    ? Table::suits_hash(pattern.begin(), pattern.end())
+                    : Table::honors_hash(pattern.begin(), pattern.end());
             auto &distances = table[hash];
 
             for (const auto &win_pattern : win_patterns) {
@@ -255,7 +254,8 @@ create_table(const std::vector<std::vector<int>> &patterns,
     return table;
 }
 
-bool write_file(const std::string &filename, const std::map<HashType, ValueType> &table)
+bool write_file(const std::string &filename,
+                const std::map<Table::HashType, ValueType> &table)
 {
     std::ofstream file(filename, std::ios::binary);
     if (!file) {
@@ -280,22 +280,22 @@ bool write_file(const std::string &filename, const std::map<HashType, ValueType>
 
 void create_shanten_table()
 {
-    std::cout << "Creating suits table..." << std::endl;
+    spdlog::info("Creating suits table...");
 #ifdef USE_NYANTEN_TABLE
     boost::filesystem::path suits_table_path =
-        boost::filesystem::path(CMAKE_CONFIG_DIR) / "suits_table5_nyanten.bin";
+        boost::filesystem::path(CMAKE_CONFIG_DIR) / "suits_table_nyanten.bin";
 #else
     boost::filesystem::path suits_table_path =
-        boost::filesystem::path(CMAKE_CONFIG_DIR) / "suits_table5.bin";
+        boost::filesystem::path(CMAKE_CONFIG_DIR) / "suits_table.bin";
 #endif
     auto suits_patterns = list_suits_patterns();
     auto suits_win_patterns = list_suits_win_patterns();
     auto suits_table = create_table(suits_patterns, suits_win_patterns);
     write_file(suits_table_path.string(), suits_table);
-    std::cout << "suits patterns: " << suits_patterns.size() << std::endl;
-    std::cout << "suits win patterns: " << suits_win_patterns.size() << std::endl;
+    spdlog::info("suits patterns: {}", suits_patterns.size());
+    spdlog::info("suits win patterns: {}", suits_win_patterns.size());
 
-    std::cout << "Creating honors table..." << std::endl;
+    spdlog::info("Creating honors table...");
 #ifdef USE_NYANTEN_TABLE
     boost::filesystem::path honors_table_path =
         boost::filesystem::path(CMAKE_CONFIG_DIR) / "honors_table_nyanten.bin";
@@ -307,8 +307,8 @@ void create_shanten_table()
     auto honors_win_patterns = list_honors_win_patterns();
     auto honors_table = create_table(honors_patterns, honors_win_patterns);
     write_file(honors_table_path.string(), honors_table);
-    std::cout << "honors patterns: " << honors_patterns.size() << std::endl;
-    std::cout << "honors win patterns: " << honors_win_patterns.size() << std::endl;
+    spdlog::info("honors patterns: {}", honors_patterns.size());
+    spdlog::info("honors win patterns: {}", honors_win_patterns.size());
 }
 
 int main()
@@ -316,7 +316,7 @@ int main()
     auto start = std::chrono::high_resolution_clock::now();
     create_shanten_table();
     auto end = std::chrono::high_resolution_clock::now();
-    std::cout << "Elapsed time: "
-              << std::chrono::duration_cast<std::chrono::seconds>(end - start).count()
-              << " s" << std::endl;
+    auto elapsed_s =
+        std::chrono::duration_cast<std::chrono::seconds>(end - start).count();
+    spdlog::info("Elapsed time: {} s", elapsed_s);
 }
