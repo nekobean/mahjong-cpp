@@ -48,7 +48,7 @@ class Hand
 
   public:
     /* 牌数 */
-    std::array<int, 37> counts;
+    std::vector<int> counts;
 
     /* 副露ブロック */
     std::vector<MeldedBlock> melds;
@@ -62,7 +62,7 @@ class Hand
 /**
  * @brief Create an empty hand.
  */
-inline Hand::Hand() : counts{0}
+inline Hand::Hand() : counts(37, 0)
 {
 }
 
@@ -71,7 +71,7 @@ inline Hand::Hand() : counts{0}
  *
  * @param[in] tiles list of tiles
  */
-inline Hand::Hand(const std::vector<int> &tiles) : counts{0}
+inline Hand::Hand(const std::vector<int> &tiles) : counts(37, 0)
 {
 #ifdef CHECK_ARGUMENT
     if (!check_arguments(tiles, melds))
@@ -100,7 +100,7 @@ inline Hand::Hand(const std::vector<int> &tiles) : counts{0}
  * @param[in] melds list of melded blocks
  */
 inline Hand::Hand(const std::vector<int> &tiles, const std::vector<MeldedBlock> &melds)
-    : counts{0}, melds(melds)
+    : counts(37, 0), melds(melds)
 {
 #ifdef CHECK_ARGUMENT
     if (!check_arguments(tiles, melds))

@@ -16,9 +16,10 @@ class Round
   public:
     Round()
         : rules(RuleFlag::RedDora | RuleFlag::OpenTanyao)
-        , round_wind(Tile::East)
-        , num_bonus_sticks(0)
-        , num_deposit_sticks(0)
+        , wind(Tile::Null)
+        , kyoku(1)
+        , honba(0)
+        , kyotaku(0)
         , self_wind(Tile::East)
     {
     }
@@ -26,12 +27,14 @@ class Round
   public:
     /* Game rule */
     int rules;
-    /* Round wind */
-    int round_wind;
-    /* Number of bonus sticks */
-    int num_bonus_sticks;
-    /* Number of deposit sticks */
-    int num_deposit_sticks;
+    /* Round wind (場風) */
+    int wind;
+    /* Kyoku (局) */
+    int kyoku;
+    /* Honba (本場) */
+    int honba;
+    /* Kyotaku (供託棒の数) */
+    int kyotaku;
     /* List of dora tiles */
     std::vector<int> dora_tiles;
     /* List of uradora tiles */

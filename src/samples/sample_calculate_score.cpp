@@ -13,7 +13,7 @@ int main(int, char **)
         ////////////////////////////////////////////////////////////////////////////////
 
         // 場風牌を Tile::East, Tile::South, Tile::West, Tile::North から設定します。
-        score.set_round_wind(Tile::East);
+        score.set_wind(Tile::East);
         // 自風牌を Tile::East, Tile::South, Tile::West, Tile::North から設定します。
         score.set_self_wind(Tile::East);
         // 積み棒の数を設定します。(例: 1本場なら1)

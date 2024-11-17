@@ -431,13 +431,11 @@ int ScoreCalculator::calc_fu(const std::vector<Block> &blocks, int wait_type,
             fu += yaotyu ? block_fu * 2 : block_fu;
         }
         else if (block.type & BlockType::Pair) { // 対子の場合
-            if (block.min_tile == params.self_wind &&
-                block.min_tile == params.round_wind) {
+            if (block.min_tile == params.self_wind && block.min_tile == params.wind) {
                 fu += 4; // 連風牌
             }
             else if (block.min_tile == params.self_wind ||
-                     block.min_tile == params.round_wind ||
-                     block.min_tile >= Tile::White) {
+                     block.min_tile == params.wind || block.min_tile >= Tile::White) {
                 fu += 2; // 役牌
             }
         }
@@ -504,13 +502,11 @@ ScoreCalculator::calc_fu_detail(const std::vector<Block> &blocks, int wait_type,
         }
         else if (block.type & BlockType::Pair) {
             // 対子
-            if (block.min_tile == params.self_wind &&
-                block.min_tile == params.round_wind)
+            if (block.min_tile == params.self_wind && block.min_tile == params.wind)
                 fu_detail.emplace_back(
                     fmt::format("雀頭: {} 連風牌", block.to_string()), 4);
             else if (block.min_tile == params.self_wind ||
-                     block.min_tile == params.round_wind ||
-                     block.min_tile >= Tile::White)
+                     block.min_tile == params.wind || block.min_tile >= Tile::White)
                 fu_detail.emplace_back(fmt::format("雀頭: {} 役牌", block.to_string()),
                                        2);
         }
@@ -763,17 +759,17 @@ YakuList ScoreCalculator::check_not_pattern_yaku(const Hand &hand, const int win
             }
         }
 
-        if (hand.counts[params.round_wind] == 3) {
-            if (params.round_wind == Tile::East) {
+        if (hand.counts[params.wind] == 3) {
+            if (params.wind == Tile::East) {
                 yaku_list |= Yaku::RoundWindEast;
             }
-            else if (params.round_wind == Tile::South) {
+            else if (params.wind == Tile::South) {
                 yaku_list |= Yaku::RoundWindSouth;
             }
-            else if (params.round_wind == Tile::West) {
+            else if (params.wind == Tile::West) {
                 yaku_list |= Yaku::RoundWindWest;
             }
-            else if (params.round_wind == Tile::North) {
+            else if (params.wind == Tile::North) {
                 yaku_list |= Yaku::RoundWindNorth;
             }
         }
@@ -808,8 +804,8 @@ std::vector<int> ScoreCalculator::calc_score(const bool is_tsumo, const int scor
         int player_payment = (score_title == ScoreTitle::Null
                                   ? BelowMangan[TsumoPlayerToDealer][fu][han - 1]
                                   : AboveMangan[TsumoPlayerToDealer][score_title]) +
-                             100 * params.num_bonus_sticks;
-        int score = 1000 * params.num_deposit_sticks + player_payment * 3;
+                             100 * params.honba;
+        int score = 1000 * params.kyotaku + player_payment * 3;
 
         return {score, player_payment};
     }
@@ -818,13 +814,12 @@ std::vector<int> ScoreCalculator::calc_score(const bool is_tsumo, const int scor
         int dealer_payment = (score_title == ScoreTitle::Null
                                   ? BelowMangan[TsumoDealerToPlayer][fu][han - 1]
                                   : AboveMangan[TsumoDealerToPlayer][score_title]) +
-                             100 * params.num_bonus_sticks;
+                             100 * params.honba;
         int player_payment = (score_title == ScoreTitle::Null
                                   ? BelowMangan[TsumoPlayerToPlayer][fu][han - 1]
                                   : AboveMangan[TsumoPlayerToPlayer][score_title]) +
-                             100 * params.num_bonus_sticks;
-        int score =
-            1000 * params.num_deposit_sticks + dealer_payment + player_payment * 2;
+                             100 * params.honba;
+        int score = 1000 * params.kyotaku + dealer_payment + player_payment * 2;
 
         return {score, dealer_payment, player_payment};
     }
@@ -833,8 +828,8 @@ std::vector<int> ScoreCalculator::calc_score(const bool is_tsumo, const int scor
         int payment = (score_title == ScoreTitle::Null
                            ? BelowMangan[RonDiscarderToDealer][fu][han - 1]
                            : AboveMangan[RonDiscarderToDealer][score_title]) +
-                      300 * params.num_bonus_sticks;
-        int score = 1000 * params.num_deposit_sticks + payment;
+                      300 * params.honba;
+        int score = 1000 * params.kyotaku + payment;
 
         return {score, payment};
     }
@@ -843,8 +838,8 @@ std::vector<int> ScoreCalculator::calc_score(const bool is_tsumo, const int scor
         int payment = (score_title == ScoreTitle::Null
                            ? BelowMangan[RonDiscarderToPlayer][fu][han - 1]
                            : AboveMangan[RonDiscarderToPlayer][score_title]) +
-                      300 * params.num_bonus_sticks;
-        int score = 1000 * params.num_deposit_sticks + payment;
+                      300 * params.honba;
+        int score = 1000 * params.kyotaku + payment;
 
         return {score, payment};
     }
@@ -1046,8 +1041,8 @@ bool ScoreCalculator::check_pinfu(const std::vector<Block> &blocks, const int wa
         }
 
         if ((block.type & BlockType::Pair) &&
-            (block.min_tile == params.self_wind ||
-             block.min_tile == params.round_wind || block.min_tile >= Tile::White)) {
+            (block.min_tile == params.self_wind || block.min_tile == params.wind ||
+             block.min_tile >= Tile::White)) {
             return false; // yakuhai pair
         }
     }

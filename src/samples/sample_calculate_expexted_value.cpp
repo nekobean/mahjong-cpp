@@ -50,7 +50,7 @@ int main(int, char **)
     ScoreCalculator score_calculator;
 
     // 点数計算の設定
-    score_calculator.set_round_wind(bakaze);
+    score_calculator.set_wind(bakaze);
     score_calculator.set_self_wind(zikaze);
     score_calculator.set_dora_indicators(dora_indicators);
 

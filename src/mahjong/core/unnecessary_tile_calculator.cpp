@@ -6,7 +6,7 @@
 namespace mahjong
 {
 /**
- * @brief Calculate the unnecessary tiles.
+ * @brief Calculate unnecessary tiles.
  *
  * @param[in] hand hand
  * @param[in] type shanten number type

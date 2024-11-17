@@ -19,10 +19,10 @@ struct TestCase
 {
     // 場況
     int rules;
-    int round_wind;
+    int wind;
     int self_wind;
-    int num_bonus_sticks;
-    int num_deposit_sticks;
+    int honba;
+    int kyotaku;
     std::vector<int> dora_tiles;
     std::vector<int> uradora_tiles;
 
@@ -77,10 +77,10 @@ bool load_cases(const std::string &filename, std::vector<TestCase> &cases)
     for (auto &v : doc.GetArray()) {
         TestCase testcase;
 
-        testcase.round_wind = v["bakaze"].GetInt();
+        testcase.wind = v["bakaze"].GetInt();
         testcase.self_wind = v["zikaze"].GetInt();
-        testcase.num_bonus_sticks = v["num_tumibo"].GetInt();
-        testcase.num_deposit_sticks = v["num_kyotakubo"].GetInt();
+        testcase.honba = v["num_tumibo"].GetInt();
+        testcase.kyotaku = v["num_kyotakubo"].GetInt();
         for (auto &x : v["dora_tiles"].GetArray())
             testcase.dora_tiles.push_back(x.GetInt());
         for (auto &x : v["uradora_tiles"].GetArray())
@@ -152,10 +152,10 @@ TEST_CASE("一般役の点数計算")
         for (const auto &testcase : cases) {
             // 設定
             Round params;
-            params.round_wind = testcase.round_wind;
+            params.wind = testcase.wind;
             params.self_wind = testcase.self_wind;
-            params.num_bonus_sticks = testcase.num_bonus_sticks;
-            params.num_deposit_sticks = testcase.num_deposit_sticks;
+            params.honba = testcase.honba;
+            params.kyotaku = testcase.kyotaku;
             params.dora_tiles = testcase.dora_tiles;
             params.uradora_tiles = testcase.uradora_tiles;
             params.rules = testcase.rules;
@@ -195,10 +195,10 @@ TEST_CASE("一般役の点数計算")
         for (const auto &testcase : cases) {
             // 設定
             Round params;
-            params.round_wind = testcase.round_wind;
+            params.wind = testcase.wind;
             params.self_wind = testcase.self_wind;
-            params.num_bonus_sticks = testcase.num_bonus_sticks;
-            params.num_deposit_sticks = testcase.num_deposit_sticks;
+            params.honba = testcase.honba;
+            params.kyotaku = testcase.kyotaku;
             params.dora_tiles = testcase.dora_tiles;
             params.uradora_tiles = testcase.uradora_tiles;
             params.rules = testcase.rules;

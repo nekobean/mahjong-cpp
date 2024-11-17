@@ -75,7 +75,7 @@ inline std::string print_round_info(const ScoreCalculator &score)
 
     // s +=
     //     fmt::format("[場] 場風: {}, 自風: {}, 積み棒の数: {}, 供託棒の数: {}\n",
-    //                 Tile::Name.at(score.round_wind()), Tile::Name.at(score.self_wind()),
+    //                 Tile::Name.at(score.wind()), Tile::Name.at(score.self_wind()),
     //                 score.bonus_sticks(), score.deposit_sticks());
 
     // s += "[表ドラ] ";

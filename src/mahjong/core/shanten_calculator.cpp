@@ -25,7 +25,8 @@ ShantenCalculator::ShantenCalculator()
  * @param[in] type The type of shanten number to calculate
  * @return std::tuple<int, int> (Type of shanten number, shanten number)
  */
-std::tuple<int, int> ShantenCalculator::calc(const Hand &hand, int type)
+std::tuple<int, int> ShantenCalculator::calc(const std::vector<int> &hand,
+                                             const int num_melds, int type)
 {
 #ifdef CHECK_ARGUMENT
     if (type < 0 || type > 7) {
@@ -37,7 +38,7 @@ std::tuple<int, int> ShantenCalculator::calc(const Hand &hand, int type)
     std::tuple<int, int> ret = {ShantenFlag::Null, std::numeric_limits<int>::max()};
 
     if (type & ShantenFlag::Regular) {
-        int shanten = calc_regular(hand);
+        int shanten = calc_regular(hand, num_melds);
         if (shanten < std::get<1>(ret)) {
             ret = {ShantenFlag::Regular, shanten};
         }
@@ -46,7 +47,8 @@ std::tuple<int, int> ShantenCalculator::calc(const Hand &hand, int type)
         }
     }
 
-    if (type & ShantenFlag::SevenPairs) {
+    if ((type & ShantenFlag::SevenPairs) && num_melds == 0) {
+        // closed hand only
         int shanten = calc_seven_pairs(hand);
         if (shanten < std::get<1>(ret)) {
             ret = {ShantenFlag::SevenPairs, shanten};
@@ -56,7 +58,8 @@ std::tuple<int, int> ShantenCalculator::calc(const Hand &hand, int type)
         }
     }
 
-    if (type & ShantenFlag::ThirteenOrphans) {
+    if ((type & ShantenFlag::ThirteenOrphans) && num_melds == 0) {
+        // closed hand only
         int shanten = calc_thirteen_orphans(hand);
         if (shanten < std::get<1>(ret)) {
             ret = {ShantenFlag::ThirteenOrphans, shanten};
@@ -120,20 +123,17 @@ void ShantenCalculator::add2(ResultType &lhs, const TableType &rhs, const int m)
     lhs[i] = dist;
 }
 
-int ShantenCalculator::calc_regular(const Hand &hand)
+int ShantenCalculator::calc_regular(const std::vector<int> &hand, const int num_melds)
 {
-    HashType manzu_hash = calc_suits_hash(hand.counts.begin(), hand.counts.begin() + 9);
-    HashType pinzu_hash =
-        calc_suits_hash(hand.counts.begin() + 9, hand.counts.begin() + 18);
-    HashType souzu_hash =
-        calc_suits_hash(hand.counts.begin() + 18, hand.counts.begin() + 27);
-    HashType honors_hash =
-        calc_honors_hash(hand.counts.begin() + 27, hand.counts.begin() + 34);
+    HashType manzu_hash = calc_suits_hash(hand.begin(), hand.begin() + 9);
+    HashType pinzu_hash = calc_suits_hash(hand.begin() + 9, hand.begin() + 18);
+    HashType souzu_hash = calc_suits_hash(hand.begin() + 18, hand.begin() + 27);
+    HashType honors_hash = calc_honors_hash(hand.begin() + 27, hand.begin() + 34);
     auto &manzu = suits_table_[manzu_hash];
     auto &pinzu = suits_table_[pinzu_hash];
     auto &souzu = suits_table_[souzu_hash];
     auto &honors = honors_table_[honors_hash];
-    int m = 4 - static_cast<int>(hand.melds.size());
+    int m = 4 - num_melds;
 
     ResultType ret;
     std::copy(manzu.begin(), manzu.begin() + 10, ret.begin());
@@ -150,13 +150,13 @@ int ShantenCalculator::calc_regular(const Hand &hand)
  * @param[in] hand The hand
  * @return int The shanten number
  */
-int ShantenCalculator::calc_seven_pairs(const Hand &hand)
+int ShantenCalculator::calc_seven_pairs(const std::vector<int> &hand)
 {
     int num_types = 0;
     int num_pairs = 0;
     for (size_t i = 0; i < 34; ++i) {
-        num_types += hand.counts[i] > 0;
-        num_pairs += hand.counts[i] >= 2;
+        num_types += hand[i] > 0;
+        num_pairs += hand[i] >= 2;
     }
 
     // 4枚持ちの牌はそのうち2枚しか対子として使用できないため、その分向聴数を増やす。
@@ -169,15 +169,15 @@ int ShantenCalculator::calc_seven_pairs(const Hand &hand)
  * @param[in] hand The hand
  * @return int The shanten number
  */
-int ShantenCalculator::calc_thirteen_orphans(const Hand &hand)
+int ShantenCalculator::calc_thirteen_orphans(const std::vector<int> &hand)
 {
     int num_types = 0;
     bool has_toitsu = false;
     for (int i : {Tile::Manzu1, Tile::Manzu9, Tile::Pinzu1, Tile::Pinzu9, Tile::Souzu1,
                   Tile::Souzu9, Tile::East, Tile::South, Tile::West, Tile::North,
                   Tile::White, Tile::Green, Tile::Red}) {
-        num_types += hand.counts[i] > 0;
-        has_toitsu |= hand.counts[i] >= 2;
+        num_types += hand[i] > 0;
+        has_toitsu |= hand[i] >= 2;
     }
 
     return 13 - num_types - has_toitsu;

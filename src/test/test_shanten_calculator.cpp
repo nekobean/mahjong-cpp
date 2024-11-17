@@ -62,14 +62,15 @@ TEST_CASE("Shanten number of regular hand")
     SECTION("Shanten number of regular hand")
     {
         for (auto &[hand, regular, thirteen_orphans, seven_pairs] : cases) {
-            REQUIRE(ShantenCalculator::calc_regular(hand) == regular);
+            REQUIRE(ShantenCalculator::calc_regular(hand.counts, hand.melds.size()) ==
+                    regular);
         }
     };
 
     BENCHMARK("Shanten number of regular hand")
     {
         for (auto &[hand, regular, thirteen_orphans, seven_pairs] : cases) {
-            ShantenCalculator::calc_regular(hand);
+            ShantenCalculator::calc_regular(hand.counts, hand.melds.size());
         }
     };
 }
@@ -84,14 +85,14 @@ TEST_CASE("Shanten number of Seven Pairs")
     SECTION("Shanten number of Seven Pairs")
     {
         for (auto &[hand, regular, thirteen_orphans, seven_pairs] : cases) {
-            REQUIRE(ShantenCalculator::calc_seven_pairs(hand) == seven_pairs);
+            REQUIRE(ShantenCalculator::calc_seven_pairs(hand.counts) == seven_pairs);
         }
     };
 
     BENCHMARK("Shanten number of Seven Pairs")
     {
         for (auto &[hand, regular, thirteen_orphans, seven_pairs] : cases) {
-            ShantenCalculator::calc_seven_pairs(hand);
+            ShantenCalculator::calc_seven_pairs(hand.counts);
         }
     };
 }
@@ -106,14 +107,15 @@ TEST_CASE("Shanten number of Thirteen Orphans")
     SECTION("Shanten number of Thirteen Orphans")
     {
         for (auto &[hand, regular, thirteen_orphans, seven_pairs] : cases) {
-            REQUIRE(ShantenCalculator::calc_thirteen_orphans(hand) == thirteen_orphans);
+            REQUIRE(ShantenCalculator::calc_thirteen_orphans(hand.counts) ==
+                    thirteen_orphans);
         }
     };
 
     BENCHMARK("Shanten number of Thirteen Orphans")
     {
         for (auto &[hand, regular, thirteen_orphans, seven_pairs] : cases) {
-            ShantenCalculator::calc_thirteen_orphans(hand);
+            ShantenCalculator::calc_thirteen_orphans(hand.counts);
         }
     };
 }
@@ -133,7 +135,8 @@ TEST_CASE("Shanten number")
                 (true_shanten == regular ? ShantenFlag::Regular : 0) |
                 (true_shanten == thirteen_orphans ? ShantenFlag::ThirteenOrphans : 0) |
                 (true_shanten == seven_pairs ? ShantenFlag::SevenPairs : 0);
-            auto [type, syanten] = ShantenCalculator::calc(hand);
+            auto [type, syanten] =
+                ShantenCalculator::calc(hand.counts, hand.melds.size());
 
             REQUIRE(syanten == true_shanten);
             REQUIRE(type == true_type);
@@ -143,7 +146,7 @@ TEST_CASE("Shanten number")
     BENCHMARK("Shanten number")
     {
         for (auto &[hand, regular, thirteen_orphans, seven_pairs] : cases) {
-            ShantenCalculator::calc(hand);
+            ShantenCalculator::calc(hand.counts, hand.melds.size());
         }
     };
 }

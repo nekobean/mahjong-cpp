@@ -15,13 +15,21 @@ namespace mahjong
 class MyPlayer
 {
   public:
-    MyPlayer() : self_wind(Tile::East)
+    MyPlayer() : wind(Tile::Null)
     {
     }
 
+    // Seat wind (自風)
+    int wind;
+
+    // Count of hand tiles (手牌の各牌の枚数)
     std::vector<int> hand;
+
+    // Count of tiles (手牌+副露ブロックの各牌の枚数)
+    std::vector<int> counts;
+
+    // List of meld blocks (副露ブロックの一覧)
     std::vector<MeldedBlock> melds;
-    int self_wind;
 };
 
 } // namespace mahjong

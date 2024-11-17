@@ -210,9 +210,9 @@ DrawResponseData create_draw_response(const RequestData &req)
     // 点数計算の設定
     Round params;
     params.self_wind = req.zikaze;
-    params.round_wind = req.bakaze;
-    params.num_bonus_sticks = 0;
-    params.num_deposit_sticks = 0;
+    params.wind = req.bakaze;
+    params.honba = 0;
+    params.kyotaku = 0;
     std::vector<int> dora_tiles;
     for (auto x : req.dora_indicators)
         dora_tiles.push_back(Indicator2Dora.at(x));
@@ -239,11 +239,17 @@ DrawResponseData create_draw_response(const RequestData &req)
     res.tenpai_probs = candidates.front().tenpai_probs;
     res.win_probs = candidates.front().win_probs;
     res.exp_values = candidates.front().exp_values;
-    auto [_, syanten] = ShantenCalculator::calc(req.hand, req.syanten_type);
+    auto [_, syanten] = ShantenCalculator::calc(req.hand.counts, req.hand.melds.size(),
+                                                req.syanten_type);
     res.syanten = syanten;
-    res.normal_syanten = ShantenCalculator::calc_regular(req.hand);
-    res.tiitoi_syanten = ShantenCalculator::calc_seven_pairs(req.hand);
-    res.kokusi_syanten = ShantenCalculator::calc_thirteen_orphans(req.hand);
+    res.normal_syanten =
+        ShantenCalculator::calc_regular(req.hand.counts, req.hand.melds.size());
+    res.tiitoi_syanten = req.hand.melds.empty()
+                             ? ShantenCalculator::calc_seven_pairs(req.hand.counts)
+                             : -2;
+    res.kokusi_syanten = req.hand.melds.empty()
+                             ? ShantenCalculator::calc_thirteen_orphans(req.hand.counts)
+                             : -2;
     res.time_us = elapsed_us;
 
     return res;
@@ -264,9 +270,9 @@ DiscardResponseData create_discard_response(const RequestData &req)
     // 点数計算の設定
     Round params;
     params.self_wind = req.zikaze;
-    params.round_wind = req.bakaze;
-    params.num_bonus_sticks = 0;
-    params.num_deposit_sticks = 0;
+    params.wind = req.bakaze;
+    params.honba = 0;
+    params.kyotaku = 0;
     std::vector<int> dora_tiles;
     for (auto x : req.dora_indicators)
         dora_tiles.push_back(Indicator2Dora.at(x));
@@ -289,11 +295,17 @@ DiscardResponseData create_discard_response(const RequestData &req)
         std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
 
     DiscardResponseData res;
-    auto [_, syanten] = ShantenCalculator::calc(req.hand, req.syanten_type);
+    auto [_, syanten] = ShantenCalculator::calc(req.hand.counts, req.hand.melds.size(),
+                                                req.syanten_type);
     res.syanten = syanten;
-    res.normal_syanten = ShantenCalculator::calc_regular(req.hand);
-    res.tiitoi_syanten = ShantenCalculator::calc_seven_pairs(req.hand);
-    res.kokusi_syanten = ShantenCalculator::calc_thirteen_orphans(req.hand);
+    res.normal_syanten =
+        ShantenCalculator::calc_regular(req.hand.counts, req.hand.melds.size());
+    res.tiitoi_syanten = req.hand.melds.empty()
+                             ? ShantenCalculator::calc_seven_pairs(req.hand.counts)
+                             : -2;
+    res.kokusi_syanten = req.hand.melds.empty()
+                             ? ShantenCalculator::calc_thirteen_orphans(req.hand.counts)
+                             : -2;
     res.time_us = elapsed_us;
     res.candidates = candidates;
 

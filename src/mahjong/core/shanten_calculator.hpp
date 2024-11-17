@@ -6,7 +6,6 @@
 #include <tuple>
 
 #include "mahjong/types/types.hpp"
-#include "nyanten_table.hpp"
 
 namespace mahjong
 {
@@ -18,8 +17,8 @@ namespace mahjong
 class ShantenCalculator
 {
     // table size is the maximum hash value + 1
-    static const size_t SuitsTableSize = 1943751;
-    static const size_t HonorsTableSize = 77751;
+    static constexpr size_t SuitsTableSize = 1943751;
+    static constexpr size_t HonorsTableSize = 77751;
     using ResultType = std::array<int32_t, 30>;
 
   public:
@@ -27,19 +26,20 @@ class ShantenCalculator
     using HashType = uint32_t;
 
     ShantenCalculator();
-    static std::tuple<int, int>
-    calc(const Hand &hand, int type = ShantenFlag::Regular | ShantenFlag::SevenPairs |
-                                      ShantenFlag::ThirteenOrphans);
-    static bool initialize();
-    static int calc_regular(const Hand &hand);
-    static int calc_seven_pairs(const Hand &hand);
-    static int calc_thirteen_orphans(const Hand &hand);
+    static std::tuple<int, int> calc(const std::vector<int> &hand, const int num_melds,
+                                     int type = ShantenFlag::Regular |
+                                                ShantenFlag::SevenPairs |
+                                                ShantenFlag::ThirteenOrphans);
+    static int calc_regular(const std::vector<int> &hand, const int num_melds);
+    static int calc_seven_pairs(const std::vector<int> &hand);
+    static int calc_thirteen_orphans(const std::vector<int> &hand);
     template <typename ForwardIterator>
     static HashType calc_suits_hash(ForwardIterator first, ForwardIterator last);
     template <typename ForwardIterator>
     static HashType calc_honors_hash(ForwardIterator first, ForwardIterator last);
 
   private:
+    static bool initialize();
     template <size_t TableSize>
     static bool load_table(const std::string &filepath,
                            std::array<TableType, TableSize> &table);
