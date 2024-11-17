@@ -84,7 +84,7 @@ ExpectedValueCalculator::calc(const Hand &hand, const std::vector<int> &dora_ind
 
     // 現在の向聴数を計算する。
     auto [_, syanten] =
-        ShantenCalculator::calc(hand.counts, hand.melds.size(), syanten_type_);
+        ShantenCalculator::calc(hand.counts, int(hand.melds.size()), syanten_type_);
     if (syanten == -1)
         return {false, {}}; // 手牌が和了形の場合
 
@@ -133,7 +133,7 @@ ExpectedValueCalculator::get_required_tiles(const Hand &hand, int syanten_type,
 
     // 現在の向聴数を計算する。
     auto [_, syanten] =
-        ShantenCalculator::calc(_hand.counts, _hand.melds.size(), syanten_type);
+        ShantenCalculator::calc(_hand.counts, int(_hand.melds.size()), syanten_type);
 
     std::vector<std::tuple<int, int>> required_tiles;
     for (int tile = 0; tile < 34; ++tile) {
@@ -141,8 +141,8 @@ ExpectedValueCalculator::get_required_tiles(const Hand &hand, int syanten_type,
             continue;
 
         add_tile(_hand, tile);
-        auto [_, syanten_after] =
-            ShantenCalculator::calc(_hand.counts, _hand.melds.size(), syanten_type);
+        auto [_, syanten_after] = ShantenCalculator::calc(
+            _hand.counts, int(_hand.melds.size()), syanten_type);
         remove_tile(_hand, tile);
 
         if (syanten_after - syanten == -1)
@@ -291,7 +291,7 @@ ExpectedValueCalculator::get_draw_tiles(Hand &hand, int syanten,
 
         add_tile(hand, tile);
         auto [_, syanten_after] =
-            ShantenCalculator::calc(hand.counts, hand.melds.size(), syanten_type_);
+            ShantenCalculator::calc(hand.counts, int(hand.melds.size()), syanten_type_);
         remove_tile(hand, tile);
         int syanten_diff = syanten_after - syanten;
 
@@ -358,7 +358,7 @@ ExpectedValueCalculator::get_discard_tiles(Hand &hand, int syanten)
 
         remove_tile(hand, tile);
         auto [_, syanten_after] =
-            ShantenCalculator::calc(hand.counts, hand.melds.size(), syanten_type_);
+            ShantenCalculator::calc(hand.counts, int(hand.melds.size()), syanten_type_);
         add_tile(hand, tile);
         int syanten_diff = syanten_after - syanten;
 

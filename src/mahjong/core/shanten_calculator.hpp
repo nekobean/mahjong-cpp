@@ -21,9 +21,7 @@ class ShantenCalculator
 
   public:
     static std::tuple<int, int> calc(const std::vector<int> &hand, const int num_melds,
-                                     int type = ShantenFlag::Regular |
-                                                ShantenFlag::SevenPairs |
-                                                ShantenFlag::ThirteenOrphans);
+                                     int type);
     static int calc_regular(const std::vector<int> &hand, const int num_melds);
     static int calc_seven_pairs(const std::vector<int> &hand);
     static int calc_thirteen_orphans(const std::vector<int> &hand);

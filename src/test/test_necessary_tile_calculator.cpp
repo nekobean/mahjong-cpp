@@ -1,26 +1,31 @@
+#define CATCH_CONFIG_MAIN
+#define CATCH_CONFIG_ENABLE_BENCHMARKING
+#undef NDEBUG
+
+#include <cassert>
 #include <fstream>
 #include <iostream>
 
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/dll.hpp>
-#define CATCH_CONFIG_MAIN
-#define CATCH_CONFIG_ENABLE_BENCHMARKING
 #include <catch2/catch.hpp>
 
 #include "mahjong/core/necessary_tile_calculator.hpp"
 #include "mahjong/core/shanten_calculator.hpp"
-#include "mahjong/mahjong.hpp"
+#include "mahjong/core/string.hpp"
 
 using namespace mahjong;
 
+using TestCase = std::vector<int>;
+
 /**
- * @brief Load test cases.
+ * Load a test case from the specified file.
  *
- * @param[out] cases Test cases
- * @return Returns true if loading is successful, otherwise false.
+ * @param filepath The path to the file containing the test case data.
+ * @param cases list of test cases.
  */
-bool load_testcase(std::vector<Hand> &cases)
+bool load_testcase(std::vector<TestCase> &cases)
 {
     cases.clear();
 
@@ -43,10 +48,12 @@ bool load_testcase(std::vector<Hand> &cases)
         std::vector<std::string> tokens;
         boost::split(tokens, line, boost::is_any_of(" "));
 
-        std::vector<int> tiles(14);
-        for (int i = 0; i < 14; ++i) {
-            tiles[i] = std::stoi(tokens[i]);
+        std::vector<int> tiles(34, 0);
+        for (int i = 0; i < 13; ++i) { // 13枚だけ読み込む
+            int tile = std::stoi(tokens[i]);
+            ++tiles[red2normal(tile)];
         }
+        assert(std::accumulate(tiles.begin(), tiles.end(), 0) == 13);
 
         cases.emplace_back(tiles);
     }
@@ -56,37 +63,37 @@ bool load_testcase(std::vector<Hand> &cases)
     return true;
 }
 
-TEST_CASE("necessary tile calculator for regular hand")
+TEST_CASE("Necessary tile calculator for regular hand")
 {
-    std::vector<Hand> cases;
+    std::vector<TestCase> cases;
     if (!load_testcase(cases)) {
         return;
     }
 
-    SECTION("necessary tile calculator for regular hand")
+    SECTION("Necessary tile calculator for regular hand")
     {
         double avg_tiles = 0;
         for (auto &hand : cases) {
-            int shanten = ShantenCalculator::calc_regular(hand);
+            int shanten = ShantenCalculator::calc_regular(hand, 0);
 
             std::vector<int> tiles;
             for (int tile = 0; tile < 34; ++tile) {
-                if (hand.counts[tile] == 4) {
+                if (hand[tile] == 4) {
                     continue;
                 }
 
-                hand.counts[tile]++;
-                if (shanten > ShantenCalculator::calc_regular(hand)) {
+                hand[tile]++;
+                if (shanten > ShantenCalculator::calc_regular(hand, 0)) {
                     tiles.push_back(tile);
                 }
-                hand.counts[tile]--;
+                hand[tile]--;
             }
 
             auto [_, shanten2, tiles2] =
-                NecessaryTileCalculator::select(hand, ShantenFlag::Regular);
+                NecessaryTileCalculator::select(hand, 0, ShantenFlag::Regular);
             avg_tiles += tiles.size();
 
-            INFO(fmt::format("手牌: {}", hand.to_string()));
+            INFO(fmt::format("手牌: {}", to_mpsz(hand)));
             REQUIRE(shanten == shanten2);
             REQUIRE(tiles == tiles2);
         }
@@ -94,22 +101,22 @@ TEST_CASE("necessary tile calculator for regular hand")
         spdlog::info("Average number of tiles: {}", avg_tiles / cases.size());
     };
 
-    BENCHMARK("necessary tile calculator for regular hand")
+    BENCHMARK("Necessary tile calculator for regular hand")
     {
         for (const auto &hand : cases) {
-            NecessaryTileCalculator::select(hand, ShantenFlag::Regular);
+            NecessaryTileCalculator::select(hand, 0, ShantenFlag::Regular);
         }
     };
 }
 
-TEST_CASE("necessary tile calculator for Seven Pairs")
+TEST_CASE("Necessary tile calculator for Seven Pairs")
 {
-    std::vector<Hand> cases;
+    std::vector<TestCase> cases;
     if (!load_testcase(cases)) {
         return;
     }
 
-    SECTION("necessary tile calculator for Seven Pairs")
+    SECTION("Necessary tile calculator for Seven Pairs")
     {
         double avg_tiles = 0;
         for (auto &hand : cases) {
@@ -117,22 +124,22 @@ TEST_CASE("necessary tile calculator for Seven Pairs")
 
             std::vector<int> tiles;
             for (int tile = 0; tile < 34; ++tile) {
-                if (hand.counts[tile] == 4) {
+                if (hand[tile] == 4) {
                     continue;
                 }
 
-                hand.counts[tile]++;
+                hand[tile]++;
                 if (shanten > ShantenCalculator::calc_seven_pairs(hand)) {
                     tiles.push_back(tile);
                 }
-                hand.counts[tile]--;
+                hand[tile]--;
             }
 
             auto [_, shanten2, tiles2] =
-                NecessaryTileCalculator::select(hand, ShantenFlag::SevenPairs);
+                NecessaryTileCalculator::select(hand, 0, ShantenFlag::SevenPairs);
             avg_tiles += tiles.size();
 
-            INFO(fmt::format("手牌: {}", hand.to_string()));
+            INFO(fmt::format("手牌: {}", to_mpsz(hand)));
             REQUIRE(shanten == shanten2);
             REQUIRE(tiles == tiles2);
         }
@@ -140,22 +147,22 @@ TEST_CASE("necessary tile calculator for Seven Pairs")
         spdlog::info("Average number of tiles: {}", avg_tiles / cases.size());
     };
 
-    BENCHMARK("necessary tile calculator for Seven Pairs")
+    BENCHMARK("Necessary tile calculator for Seven Pairs")
     {
         for (const auto &hand : cases) {
-            NecessaryTileCalculator::select(hand, ShantenFlag::SevenPairs);
+            NecessaryTileCalculator::select(hand, 0, ShantenFlag::SevenPairs);
         }
     };
 }
 
-TEST_CASE("necessary tile calculator for Thirteen Orphans")
+TEST_CASE("Necessary tile calculator for Thirteen Orphans")
 {
-    std::vector<Hand> cases;
+    std::vector<TestCase> cases;
     if (!load_testcase(cases)) {
         return;
     }
 
-    SECTION("necessary tile calculator for Thirteen Orphans")
+    SECTION("Necessary tile calculator for Thirteen Orphans")
     {
         double avg_tiles = 0;
         for (auto &hand : cases) {
@@ -166,22 +173,22 @@ TEST_CASE("necessary tile calculator for Thirteen Orphans")
                  {Tile::Manzu1, Tile::Manzu9, Tile::Pinzu1, Tile::Pinzu9, Tile::Souzu1,
                   Tile::Souzu9, Tile::East, Tile::South, Tile::West, Tile::North,
                   Tile::White, Tile::Green, Tile::Red}) {
-                if (hand.counts[tile] == 4) {
+                if (hand[tile] == 4) {
                     continue;
                 }
 
-                hand.counts[tile]++;
+                hand[tile]++;
                 if (shanten > ShantenCalculator::calc_thirteen_orphans(hand)) {
                     tiles.push_back(tile);
                 }
-                hand.counts[tile]--;
+                hand[tile]--;
             }
 
             auto [_, shanten2, tiles2] =
-                NecessaryTileCalculator::select(hand, ShantenFlag::ThirteenOrphans);
+                NecessaryTileCalculator::select(hand, 0, ShantenFlag::ThirteenOrphans);
             avg_tiles += tiles.size();
 
-            INFO(fmt::format("手牌: {}", hand.to_string()));
+            INFO(fmt::format("手牌: {}", to_mpsz(hand)));
             REQUIRE(shanten == shanten2);
             REQUIRE(tiles == tiles2);
         }
@@ -189,53 +196,55 @@ TEST_CASE("necessary tile calculator for Thirteen Orphans")
         spdlog::info("Average number of tiles: {}", avg_tiles / cases.size());
     };
 
-    BENCHMARK("necessary tile calculator for Thirteen Orphans")
+    BENCHMARK("Necessary tile calculator for Thirteen Orphans")
     {
         for (const auto &hand : cases) {
-            NecessaryTileCalculator::select(hand, ShantenFlag::ThirteenOrphans);
+            NecessaryTileCalculator::select(hand, 0, ShantenFlag::ThirteenOrphans);
         }
     };
 }
 
-TEST_CASE("necessary tile calculator")
+TEST_CASE("Necessary tile calculator")
 {
-    std::vector<Hand> cases;
+    std::vector<TestCase> cases;
     if (!load_testcase(cases)) {
         return;
     }
 
-    SECTION("necessary tile calculator")
+    SECTION("Necessary tile calculator")
     {
         for (auto &hand : cases) {
-            auto [type, shanten] = ShantenCalculator::calc(hand);
+            auto [type, shanten] = ShantenCalculator::calc(hand, 0, ShantenFlag::All);
 
             std::vector<int> tiles;
             for (int tile = 0; tile < 34; ++tile) {
-                if (hand.counts[tile] == 4) {
+                if (hand[tile] == 4) {
                     continue;
                 }
 
-                hand.counts[tile]++;
-                auto [type_after, shanten_after] = ShantenCalculator::calc(hand);
+                hand[tile]++;
+                auto [type_after, shanten_after] =
+                    ShantenCalculator::calc(hand, 0, ShantenFlag::All);
                 if (shanten_after < shanten) {
                     tiles.push_back(tile);
                 }
-                hand.counts[tile]--;
+                hand[tile]--;
             }
 
-            auto [type2, shanten2, tiles2] = NecessaryTileCalculator::select(hand);
+            auto [type2, shanten2, tiles2] =
+                NecessaryTileCalculator::select(hand, 0, ShantenFlag::All);
 
-            INFO(fmt::format("手牌: {}", hand.to_string()));
+            INFO(fmt::format("手牌: {}", to_mpsz(hand)));
             REQUIRE(type == type2);
             REQUIRE(shanten == shanten2);
             REQUIRE(tiles == tiles2);
         }
     };
 
-    BENCHMARK("necessary tile calculator")
+    BENCHMARK("Necessary tile calculator")
     {
         for (const auto &hand : cases) {
-            NecessaryTileCalculator::select(hand);
+            NecessaryTileCalculator::select(hand, 0, ShantenFlag::All);
         }
     };
 }

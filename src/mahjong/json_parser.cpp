@@ -239,11 +239,11 @@ DrawResponseData create_draw_response(const RequestData &req)
     res.tenpai_probs = candidates.front().tenpai_probs;
     res.win_probs = candidates.front().win_probs;
     res.exp_values = candidates.front().exp_values;
-    auto [_, syanten] = ShantenCalculator::calc(req.hand.counts, req.hand.melds.size(),
-                                                req.syanten_type);
+    auto [_, syanten] = ShantenCalculator::calc(
+        req.hand.counts, int(req.hand.melds.size()), req.syanten_type);
     res.syanten = syanten;
     res.normal_syanten =
-        ShantenCalculator::calc_regular(req.hand.counts, req.hand.melds.size());
+        ShantenCalculator::calc_regular(req.hand.counts, int(req.hand.melds.size()));
     res.tiitoi_syanten = req.hand.melds.empty()
                              ? ShantenCalculator::calc_seven_pairs(req.hand.counts)
                              : -2;
@@ -295,11 +295,11 @@ DiscardResponseData create_discard_response(const RequestData &req)
         std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
 
     DiscardResponseData res;
-    auto [_, syanten] = ShantenCalculator::calc(req.hand.counts, req.hand.melds.size(),
-                                                req.syanten_type);
+    auto [_, syanten] = ShantenCalculator::calc(
+        req.hand.counts, int(req.hand.melds.size()), req.syanten_type);
     res.syanten = syanten;
     res.normal_syanten =
-        ShantenCalculator::calc_regular(req.hand.counts, req.hand.melds.size());
+        ShantenCalculator::calc_regular(req.hand.counts, int(req.hand.melds.size()));
     res.tiitoi_syanten = req.hand.melds.empty()
                              ? ShantenCalculator::calc_seven_pairs(req.hand.counts)
                              : -2;

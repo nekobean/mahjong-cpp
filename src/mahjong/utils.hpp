@@ -1,5 +1,5 @@
-#ifndef MAHJONG_CPP_UTILS
-#define MAHJONG_CPP_UTILS
+#ifndef MAHJONG_CPP_UTILS2
+#define MAHJONG_CPP_UTILS2
 
 #include <string>
 

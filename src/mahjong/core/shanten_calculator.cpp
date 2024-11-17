@@ -1,11 +1,10 @@
 #include "shanten_calculator.hpp"
 
-#include <algorithm> // min, max, copy
+#include <algorithm> // min, max, copy, any_of
 #include <limits>    // numeric_limits
 #include <numeric>   // accumulate
 #include <stdexcept> // invalid_argument
 
-#include <boost/dll.hpp>
 #include <spdlog/spdlog.h>
 
 #include "mahjong/types/types.hpp"
@@ -23,12 +22,22 @@ namespace mahjong
 std::tuple<int, int> ShantenCalculator::calc(const std::vector<int> &hand,
                                              const int num_melds, int type)
 {
-#ifdef CHECK_ARGUMENT
-    if (type < 0 || type > 7) {
-        spdlog::warn("Invalid type {} passed.", type);
-        throw std::invalid_argument("Invalid type passed.");
+#ifdef CHECK_ARGUMENTS
+    int num_tiles = std::accumulate(hand.begin(), hand.end(), 0) + num_melds * 3;
+    bool is_valid_count =
+        std::any_of(hand.begin(), hand.end(), [](int x) { return x < 0 || x > 4; });
+    if (num_tiles % 3 == 0 || num_tiles > 14 || is_valid_count) {
+        throw std::invalid_argument(fmt::format("Invalid hand passed."));
     }
-#endif
+
+    if (num_melds < 0 || num_melds > 4) {
+        throw std::invalid_argument(fmt::format("Invalid num_melds passed."));
+    }
+
+    if (type < 0 || type > 7) {
+        throw std::invalid_argument(fmt::format("Invalid type passed."));
+    }
+#endif // CHECK_ARGUMENTS
 
     std::tuple<int, int> ret = {ShantenFlag::Null, std::numeric_limits<int>::max()};
 
@@ -65,37 +74,6 @@ std::tuple<int, int> ShantenCalculator::calc(const std::vector<int> &hand,
     }
 
     return ret;
-}
-
-void ShantenCalculator::add1(ResultType &lhs, const Table::TableType &rhs, const int m)
-{
-    for (int i = m + 5; i >= 5; --i) {
-        int32_t dist = std::min(lhs[i] + rhs[0], lhs[0] + rhs[i]);
-        for (int j = 5; j < i; ++j) {
-            dist = std::min(dist, lhs[j] + rhs[i - j]);
-            dist = std::min(dist, lhs[i - j] + rhs[j]);
-        }
-        lhs[i] = dist;
-    }
-
-    for (int i = m; i >= 0; --i) {
-        int32_t dist = lhs[i] + rhs[0];
-        for (int j = 0; j < i; ++j) {
-            dist = std::min(dist, lhs[j] + rhs[i - j]);
-        }
-        lhs[i] = dist;
-    }
-}
-
-void ShantenCalculator::add2(ResultType &lhs, const Table::TableType &rhs, const int m)
-{
-    int i = m + 5;
-    int32_t dist = std::min(lhs[i] + rhs[0], lhs[0] + rhs[i]);
-    for (int j = 5; j < i; ++j) {
-        dist = std::min(dist, lhs[j] + rhs[i - j]);
-        dist = std::min(dist, lhs[i - j] + rhs[j]);
-    }
-    lhs[i] = dist;
 }
 
 int ShantenCalculator::calc_regular(const std::vector<int> &hand, const int num_melds)
@@ -158,6 +136,37 @@ int ShantenCalculator::calc_thirteen_orphans(const std::vector<int> &hand)
     }
 
     return 13 - num_types - has_toitsu;
+}
+
+void ShantenCalculator::add1(ResultType &lhs, const Table::TableType &rhs, const int m)
+{
+    for (int i = m + 5; i >= 5; --i) {
+        int32_t dist = std::min(lhs[i] + rhs[0], lhs[0] + rhs[i]);
+        for (int j = 5; j < i; ++j) {
+            dist = std::min(dist, lhs[j] + rhs[i - j]);
+            dist = std::min(dist, lhs[i - j] + rhs[j]);
+        }
+        lhs[i] = dist;
+    }
+
+    for (int i = m; i >= 0; --i) {
+        int32_t dist = lhs[i] + rhs[0];
+        for (int j = 0; j < i; ++j) {
+            dist = std::min(dist, lhs[j] + rhs[i - j]);
+        }
+        lhs[i] = dist;
+    }
+}
+
+void ShantenCalculator::add2(ResultType &lhs, const Table::TableType &rhs, const int m)
+{
+    int i = m + 5;
+    int32_t dist = std::min(lhs[i] + rhs[0], lhs[0] + rhs[i]);
+    for (int j = 5; j < i; ++j) {
+        dist = std::min(dist, lhs[j] + rhs[i - j]);
+        dist = std::min(dist, lhs[i - j] + rhs[j]);
+    }
+    lhs[i] = dist;
 }
 
 } // namespace mahjong

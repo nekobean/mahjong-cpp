@@ -1,26 +1,31 @@
+#define CATCH_CONFIG_MAIN
+#define CATCH_CONFIG_ENABLE_BENCHMARKING
+#undef NDEBUG
+
+#include <cassert>
 #include <fstream>
 #include <iostream>
 
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/dll.hpp>
-#define CATCH_CONFIG_MAIN
-#define CATCH_CONFIG_ENABLE_BENCHMARKING
 #include <catch2/catch.hpp>
 
 #include "mahjong/core/shanten_calculator.hpp"
+#include "mahjong/core/string.hpp"
 #include "mahjong/core/unnecessary_tile_calculator.hpp"
-#include "mahjong/mahjong.hpp"
 
 using namespace mahjong;
 
+using TestCase = std::vector<int>;
+
 /**
- * @brief Load test cases.
+ * Load a test case from the specified file.
  *
- * @param[out] cases Test cases
- * @return Returns true if loading is successful, otherwise false.
+ * @param filepath The path to the file containing the test case data.
+ * @param cases list of test cases.
  */
-bool load_testcase(std::vector<Hand> &cases)
+bool load_testcase(std::vector<TestCase> &cases)
 {
     cases.clear();
 
@@ -43,10 +48,12 @@ bool load_testcase(std::vector<Hand> &cases)
         std::vector<std::string> tokens;
         boost::split(tokens, line, boost::is_any_of(" "));
 
-        std::vector<int> tiles(14);
+        std::vector<int> tiles(34, 0);
         for (int i = 0; i < 14; ++i) {
-            tiles[i] = std::stoi(tokens[i]);
+            int tile = std::stoi(tokens[i]);
+            ++tiles[red2normal(tile)];
         }
+        assert(std::accumulate(tiles.begin(), tiles.end(), 0) == 14);
 
         cases.emplace_back(tiles);
     }
@@ -58,7 +65,7 @@ bool load_testcase(std::vector<Hand> &cases)
 
 TEST_CASE("Unnecessary tile calculator for regular hand")
 {
-    std::vector<Hand> cases;
+    std::vector<TestCase> cases;
     if (!load_testcase(cases)) {
         return;
     }
@@ -66,23 +73,24 @@ TEST_CASE("Unnecessary tile calculator for regular hand")
     SECTION("Unnecessary tile calculator for regular hand")
     {
         for (auto &hand : cases) {
-            int shanten = ShantenCalculator::calc_regular(hand);
+            assert(hand.size() == 34);
+            int shanten = ShantenCalculator::calc_regular(hand, 0);
 
             std::vector<int> tiles;
             for (int tile = 0; tile < 34; ++tile) {
-                if (hand.counts[tile] > 0) {
-                    hand.counts[tile]--;
-                    if (shanten == ShantenCalculator::calc_regular(hand)) {
+                if (hand[tile] > 0) {
+                    hand[tile]--;
+                    if (shanten == ShantenCalculator::calc_regular(hand, 0)) {
                         tiles.push_back(tile);
                     }
-                    hand.counts[tile]++;
+                    hand[tile]++;
                 }
             }
 
             auto [_, shanten2, tiles2] =
-                UnnecessaryTileCalculator::select(hand, ShantenFlag::Regular);
+                UnnecessaryTileCalculator::select(hand, 0, ShantenFlag::Regular);
 
-            INFO(fmt::format("手牌: {}", hand.to_string()));
+            INFO(fmt::format("手牌: {}", to_mpsz(hand)));
             REQUIRE(shanten == shanten2);
             REQUIRE(tiles == tiles2);
         }
@@ -91,14 +99,14 @@ TEST_CASE("Unnecessary tile calculator for regular hand")
     BENCHMARK("Unnecessary tile calculator for regular hand")
     {
         for (const auto &hand : cases) {
-            UnnecessaryTileCalculator::select(hand, ShantenFlag::Regular);
+            UnnecessaryTileCalculator::select(hand, 0, ShantenFlag::Regular);
         }
     };
 }
 
 TEST_CASE("Unnecessary tile calculator for Seven Pairs")
 {
-    std::vector<Hand> cases;
+    std::vector<TestCase> cases;
     if (!load_testcase(cases)) {
         return;
     }
@@ -110,19 +118,19 @@ TEST_CASE("Unnecessary tile calculator for Seven Pairs")
 
             std::vector<int> tiles;
             for (int tile = 0; tile < 34; ++tile) {
-                if (hand.counts[tile] > 0) {
-                    hand.counts[tile]--;
+                if (hand[tile] > 0) {
+                    hand[tile]--;
                     if (shanten == ShantenCalculator::calc_seven_pairs(hand)) {
                         tiles.push_back(tile);
                     }
-                    hand.counts[tile]++;
+                    hand[tile]++;
                 }
             }
 
             auto [_, shanten2, tiles2] =
-                UnnecessaryTileCalculator::select(hand, ShantenFlag::SevenPairs);
+                UnnecessaryTileCalculator::select(hand, 0, ShantenFlag::SevenPairs);
 
-            INFO(fmt::format("手牌: {}", hand.to_string()));
+            INFO(fmt::format("手牌: {}", to_mpsz(hand)));
             REQUIRE(shanten == shanten2);
             REQUIRE(tiles == tiles2);
         }
@@ -131,14 +139,14 @@ TEST_CASE("Unnecessary tile calculator for Seven Pairs")
     BENCHMARK("Unnecessary tile calculator for Seven Pairs")
     {
         for (const auto &hand : cases) {
-            UnnecessaryTileCalculator::select(hand, ShantenFlag::SevenPairs);
+            UnnecessaryTileCalculator::select(hand, 0, ShantenFlag::SevenPairs);
         }
     };
 }
 
 TEST_CASE("Unnecessary tile calculator for Thirteen Orphans")
 {
-    std::vector<Hand> cases;
+    std::vector<TestCase> cases;
     if (!load_testcase(cases)) {
         return;
     }
@@ -150,19 +158,19 @@ TEST_CASE("Unnecessary tile calculator for Thirteen Orphans")
 
             std::vector<int> tiles;
             for (int tile = 0; tile < 34; ++tile) {
-                if (hand.counts[tile] > 0) {
-                    hand.counts[tile]--;
+                if (hand[tile] > 0) {
+                    hand[tile]--;
                     if (shanten == ShantenCalculator::calc_thirteen_orphans(hand)) {
                         tiles.push_back(tile);
                     }
-                    hand.counts[tile]++;
+                    hand[tile]++;
                 }
             }
 
-            auto [_, shanten2, tiles2] =
-                UnnecessaryTileCalculator::select(hand, ShantenFlag::ThirteenOrphans);
+            auto [_, shanten2, tiles2] = UnnecessaryTileCalculator::select(
+                hand, 0, ShantenFlag::ThirteenOrphans);
 
-            INFO(fmt::format("手牌: {}", hand.to_string()));
+            INFO(fmt::format("手牌: {}", to_mpsz(hand)));
             REQUIRE(shanten == shanten2);
             REQUIRE(tiles == tiles2);
         }
@@ -171,14 +179,14 @@ TEST_CASE("Unnecessary tile calculator for Thirteen Orphans")
     BENCHMARK("Unnecessary tile calculator for Thirteen Orphans")
     {
         for (const auto &hand : cases) {
-            UnnecessaryTileCalculator::select(hand, ShantenFlag::ThirteenOrphans);
+            UnnecessaryTileCalculator::select(hand, 0, ShantenFlag::ThirteenOrphans);
         }
     };
 }
 
 TEST_CASE("Unnecessary tile selection")
 {
-    std::vector<Hand> cases;
+    std::vector<TestCase> cases;
     if (!load_testcase(cases)) {
         return;
     }
@@ -186,23 +194,25 @@ TEST_CASE("Unnecessary tile selection")
     SECTION("Unnecessary tile selection")
     {
         for (auto &hand : cases) {
-            auto [type, shanten] = ShantenCalculator::calc(hand);
+            auto [type, shanten] = ShantenCalculator::calc(hand, 0, ShantenFlag::All);
 
             std::vector<int> tiles;
             for (int tile = 0; tile < 34; ++tile) {
-                if (hand.counts[tile] > 0) {
-                    hand.counts[tile]--;
-                    auto [type_after, shanten_after] = ShantenCalculator::calc(hand);
+                if (hand[tile] > 0) {
+                    hand[tile]--;
+                    auto [type_after, shanten_after] =
+                        ShantenCalculator::calc(hand, 0, ShantenFlag::All);
                     if (shanten == shanten_after) {
                         tiles.push_back(tile);
                     }
-                    hand.counts[tile]++;
+                    hand[tile]++;
                 }
             }
 
-            auto [type2, shanten2, tiles2] = UnnecessaryTileCalculator::select(hand);
+            auto [type2, shanten2, tiles2] =
+                UnnecessaryTileCalculator::select(hand, 0, ShantenFlag::All);
 
-            INFO(fmt::format("手牌: {}", hand.to_string()));
+            INFO(fmt::format("手牌: {}", to_mpsz(hand)));
             REQUIRE(type == type2);
             REQUIRE(shanten == shanten2);
             REQUIRE(tiles == tiles2);
@@ -212,7 +222,7 @@ TEST_CASE("Unnecessary tile selection")
     BENCHMARK("Unnecessary tile selection")
     {
         for (const auto &hand : cases) {
-            UnnecessaryTileCalculator::select(hand);
+            UnnecessaryTileCalculator::select(hand, 0, ShantenFlag::All);
         }
     };
 }

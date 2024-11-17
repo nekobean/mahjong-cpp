@@ -228,7 +228,8 @@ enum
     /* Shanten number for Seven Pairs (七対子に対する向聴数) */
     SevenPairs = 2,
     /* Shanten number for Thirteen Orphans (国士無双に対する向聴数) */
-    ThirteenOrphans = 4
+    ThirteenOrphans = 4,
+    All = Regular | SevenPairs | ThirteenOrphans,
 };
 
 static inline const std::map<int, std::string> Name = {

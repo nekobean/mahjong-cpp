@@ -33,7 +33,7 @@ Result ScoreCalculator::calc(const Hand &hand, int win_tile, int win_flag,
 
     // 向聴数を計算する。
     auto [shanten_type, syanten] =
-        ShantenCalculator::calc(hand.counts, hand.melds.size());
+        ShantenCalculator::calc(hand.counts, int(hand.melds.size()), ShantenFlag::All);
     if (syanten != -1) {
         return {hand, win_tile, win_flag, "和了形ではありません。"};
     }
