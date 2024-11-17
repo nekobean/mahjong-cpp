@@ -30,6 +30,16 @@ class MyPlayer
 
     // List of meld blocks (副露ブロックの一覧)
     std::vector<MeldedBlock> melds;
+
+    int num_melds() const
+    {
+        return static_cast<int>(melds.size());
+    }
+
+    bool is_closed() const
+    {
+        return melds.empty();
+    }
 };
 
 } // namespace mahjong

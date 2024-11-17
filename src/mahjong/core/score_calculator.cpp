@@ -5,6 +5,7 @@
 #include "mahjong/core/hand_separator.hpp"
 #include "mahjong/core/score_table.hpp"
 #include "mahjong/core/shanten_calculator.hpp"
+#include "mahjong/core/utils.hpp"
 #include "mahjong/utils.hpp"
 
 #undef NDEBUG

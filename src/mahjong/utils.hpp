@@ -91,11 +91,6 @@ inline std::string print_round_info(const ScoreCalculator &score)
     // return s;
 }
 
-static bool check_exclusive(unsigned long long x)
-{
-    return !x || !(x & (x - 1));
-}
-
 } // namespace mahjong
 
 #endif /* MAHJONG_CPP_UTILS */

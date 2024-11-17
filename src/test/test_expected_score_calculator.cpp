@@ -40,7 +40,7 @@ bool load_testcase(std::vector<Hand> &cases)
     cases.clear();
 
     boost::filesystem::path path = boost::filesystem::path(CMAKE_TESTCASE_DIR) /
-                                   "test_unnecessary_tile_selector.txt";
+                                   "test_unnecessary_tile_calculator.txt";
 
     std::ifstream ifs(path.string());
     if (!ifs) {
