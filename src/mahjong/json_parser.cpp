@@ -10,6 +10,7 @@
 
 #include "mahjong/core/score_calculator.hpp"
 #include "mahjong/core/shanten_calculator.hpp"
+#include "mahjong/core/utils.hpp"
 
 using namespace mahjong;
 
@@ -215,7 +216,7 @@ DrawResponseData create_draw_response(const RequestData &req)
     params.kyotaku = 0;
     std::vector<int> dora_tiles;
     for (auto x : req.dora_indicators)
-        dora_tiles.push_back(Indicator2Dora.at(x));
+        dora_tiles.push_back(ToDora.at(x));
     params.dora_tiles = dora_tiles;
     exp_value_calc.set_params(params);
 
@@ -275,7 +276,7 @@ DiscardResponseData create_discard_response(const RequestData &req)
     params.kyotaku = 0;
     std::vector<int> dora_tiles;
     for (auto x : req.dora_indicators)
-        dora_tiles.push_back(Indicator2Dora.at(x));
+        dora_tiles.push_back(ToDora.at(x));
     params.dora_tiles = dora_tiles;
     exp_value_calc.set_params(params);
 

@@ -17,7 +17,7 @@ int count_uradora(const std::vector<int> &yama, const std::vector<int> &hand, in
 
     int n_uradora = 0;
     for (auto uradora_indicator : uradora_indicators) {
-        int uradora = Indicator2Dora.at(uradora_indicator);
+        int uradora = ToDora.at(uradora_indicator);
         n_uradora += int(std::count(hand.begin(), hand.end(), uradora));
     }
 
