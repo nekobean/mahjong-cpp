@@ -20,7 +20,7 @@ namespace mahjong
  * @return list of (shanten flag, shanten number, unnecessary tiles)
  */
 std::tuple<int, int, std::vector<int>>
-UnnecessaryTileCalculator::select(const std::vector<int> &hand, const int num_melds,
+UnnecessaryTileCalculator::select(const HandType &hand, const int num_melds,
                                   const int type)
 {
     auto ret = calc(hand, num_melds, type);
@@ -43,9 +43,9 @@ UnnecessaryTileCalculator::select(const std::vector<int> &hand, const int num_me
  * @param[in] type shanten number type
  * @return list of (shanten flag, shanten number, unnecessary tiles)
  */
-std::tuple<int, int, int64_t>
-UnnecessaryTileCalculator::calc(const std::vector<int> &hand, const int num_melds,
-                                const int type)
+std::tuple<int, int, int64_t> UnnecessaryTileCalculator::calc(const HandType &hand,
+                                                              const int num_melds,
+                                                              const int type)
 {
 #ifdef CHECK_ARGUMENTS
     int num_tiles = std::accumulate(hand.begin(), hand.end(), 0) + num_melds * 3;
@@ -112,9 +112,8 @@ UnnecessaryTileCalculator::calc(const std::vector<int> &hand, const int num_meld
  * @param[in] type shanten number type
  * @return list of (shanten flag, shanten number, unnecessary tiles)
  */
-std::tuple<int, int64_t>
-UnnecessaryTileCalculator::calc_regular(const std::vector<int> &hand,
-                                        const int num_melds)
+std::tuple<int, int64_t> UnnecessaryTileCalculator::calc_regular(const HandType &hand,
+                                                                 const int num_melds)
 {
     Table::HashType manzu_hash = Table::suits_hash(hand.begin(), hand.begin() + 9);
     Table::HashType pinzu_hash = Table::suits_hash(hand.begin() + 9, hand.begin() + 18);
@@ -149,7 +148,7 @@ UnnecessaryTileCalculator::calc_regular(const std::vector<int> &hand,
  * @return list of (shanten flag, shanten number, unnecessary tiles)
  */
 std::tuple<int, int64_t>
-UnnecessaryTileCalculator::calc_seven_pairs(const std::vector<int> &hand)
+UnnecessaryTileCalculator::calc_seven_pairs(const HandType &hand)
 {
     int num_pairs = 0;
     int num_types = 0;
@@ -186,7 +185,7 @@ UnnecessaryTileCalculator::calc_seven_pairs(const std::vector<int> &hand)
  * @return list of (shanten flag, shanten number, unnecessary tiles)
  */
 std::tuple<int, int64_t>
-UnnecessaryTileCalculator::calc_thirteen_orphans(const std::vector<int> &hand)
+UnnecessaryTileCalculator::calc_thirteen_orphans(const HandType &hand)
 {
     static const auto tanyao_tiles = {
         Tile::Manzu2, Tile::Manzu3, Tile::Manzu4, Tile::Manzu5, Tile::Manzu6,

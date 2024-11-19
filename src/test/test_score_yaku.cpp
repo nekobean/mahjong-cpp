@@ -166,7 +166,7 @@ TEST_CASE("一般役の点数計算")
 
             // 照合
             INFO(fmt::format("URL: {}", testcase.url));
-            INFO(ret.to_string());
+            INFO(to_string(ret));
             std::string s;
             for (auto &[yaku, n] : testcase.yaku_list)
                 s += fmt::format(" {} {}翻\n", Yaku::Name[yaku], n);

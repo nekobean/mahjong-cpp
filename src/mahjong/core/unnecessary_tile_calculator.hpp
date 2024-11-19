@@ -18,15 +18,15 @@ class UnnecessaryTileCalculator
 
   public:
     static std::tuple<int, int, std::vector<int>>
-    select(const std::vector<int> &hand, const int num_melds, const int type);
-    static std::tuple<int, int, int64_t> calc(const std::vector<int> &hand,
-                                              const int num_melds, const int type);
+    select(const HandType &hand, const int num_melds, const int type);
+    static std::tuple<int, int, int64_t> calc(const HandType &hand, const int num_melds,
+                                              const int type);
 
   private:
-    static std::tuple<int, int64_t> calc_regular(const std::vector<int> &hand,
+    static std::tuple<int, int64_t> calc_regular(const HandType &hand,
                                                  const int num_melds);
-    static std::tuple<int, int64_t> calc_seven_pairs(const std::vector<int> &hand);
-    static std::tuple<int, int64_t> calc_thirteen_orphans(const std::vector<int> &hand);
+    static std::tuple<int, int64_t> calc_seven_pairs(const HandType &hand);
+    static std::tuple<int, int64_t> calc_thirteen_orphans(const HandType &hand);
     static void add1(ResultType &lhs, const Table::TableType &rhs, const int m);
     static void add2(ResultType &lhs, const Table::TableType &rhs, const int m);
     static void shift(ResultType::value_type &lv, const ResultType::value_type rv,

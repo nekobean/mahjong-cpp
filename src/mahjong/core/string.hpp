@@ -9,7 +9,7 @@
 namespace mahjong
 {
 
-inline std::string to_mpsz(const std::vector<int> &hand)
+inline std::string to_mpsz(const HandType &hand)
 {
     std::string s;
     const std::string suffix = "mpsz";
@@ -48,57 +48,58 @@ inline std::string to_mpsz(const std::vector<int> &hand)
     return s;
 }
 
-// inline std::string Result::to_string()
-// {
-//     std::string s;
+inline std::string to_string(const Result &result)
+{
+    //     std::string s;
 
-//     if (!success) {
-//         s += fmt::format("エラー: {}", err_msg);
-//         return s;
-//     }
+    //     if (!success) {
+    //         s += fmt::format("エラー: {}", err_msg);
+    //         return s;
+    //     }
 
-//     s += "[結果]\n";
-//     s +=
-//         fmt::format("手牌: {}, 和了牌: {}, {}\n", to_mpsz(hand.counts),
-//                     Tile::Name.at(win_tile), (flag & WinFlag::Tsumo) ? "自摸" : "ロン");
+    //     s += "[結果]\n";
+    //     s +=
+    //         fmt::format("手牌: {}, 和了牌: {}, {}\n", to_mpsz(hand.counts),
+    //                     Tile::Name.at(win_tile), (flag & WinFlag::Tsumo) ? "自摸" : "ロン");
 
-//     if (han > 0) {
-//         if (!blocks.empty()) {
-//             s += "面子構成:\n";
-//             for (const auto &block : blocks)
-//                 s += fmt::format("  {}\n", block.to_string());
-//         }
-//         s += fmt::format("待ち: {}\n", WaitType::Name.at(wait_type));
+    //     if (han > 0) {
+    //         if (!blocks.empty()) {
+    //             s += "面子構成:\n";
+    //             for (const auto &block : blocks)
+    //                 s += fmt::format("  {}\n", block.to_string());
+    //         }
+    //         s += fmt::format("待ち: {}\n", WaitType::Name.at(wait_type));
 
-//         // 役
-//         s += "役:\n";
-//         for (auto &[yaku, n] : yaku_list)
-//             s += fmt::format(" {} {}翻\n", Yaku::Name[yaku], n);
+    //         // 役
+    //         s += "役:\n";
+    //         for (auto &[yaku, n] : yaku_list)
+    //             s += fmt::format(" {} {}翻\n", Yaku::Name[yaku], n);
 
-//         // 飜、符
-//         s += fmt::format("{}符{}翻{}\n", fu, han,
-//                          score_title != ScoreTitle::Null
-//                              ? " " + ScoreTitle::Name.at(score_title)
-//                              : "");
-//     }
-//     else {
-//         // 流し満貫、役満
-//         s += "役:\n";
-//         for (auto &[yaku, n] : yaku_list)
-//             s += fmt::format(" {}\n", Yaku::Name[yaku]);
-//         s += ScoreTitle::Name[score_title] + "\n";
-//     }
+    //         // 飜、符
+    //         s += fmt::format("{}符{}翻{}\n", fu, han,
+    //                          score_title != ScoreTitle::Null
+    //                              ? " " + ScoreTitle::Name.at(score_title)
+    //                              : "");
+    //     }
+    //     else {
+    //         // 流し満貫、役満
+    //         s += "役:\n";
+    //         for (auto &[yaku, n] : yaku_list)
+    //             s += fmt::format(" {}\n", Yaku::Name[yaku]);
+    //         s += ScoreTitle::Name[score_title] + "\n";
+    //     }
 
-//     if (score.size() == 3)
-//         s += fmt::format(
-//             "和了者の獲得点数: {}点, 親の支払い点数: {}, 子の支払い点数: {}\n",
-//             score[0], score[1], score[2]);
-//     else
-//         s += fmt::format("和了者の獲得点数: {}点, 放銃者の支払い点数: {}\n", score[0],
-//                          score[1]);
+    //     if (score.size() == 3)
+    //         s += fmt::format(
+    //             "和了者の獲得点数: {}点, 親の支払い点数: {}, 子の支払い点数: {}\n",
+    //             score[0], score[1], score[2]);
+    //     else
+    //         s += fmt::format("和了者の獲得点数: {}点, 放銃者の支払い点数: {}\n", score[0],
+    //                          score[1]);
 
-//     return s;
-// }
+    //     return s;
+    return "";
+}
 
 } // namespace mahjong
 

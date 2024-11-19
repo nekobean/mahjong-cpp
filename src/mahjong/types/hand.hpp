@@ -13,6 +13,8 @@
 #include "meld.hpp"
 #include "tile.hpp"
 
+using HandType = std::array<int, 37>;
+
 namespace mahjong
 {
 
@@ -42,12 +44,11 @@ class Hand
   private:
     void check_arguments(const std::vector<int> &tiles,
                          const std::vector<MeldedBlock> &melds);
-    friend std::ostream &operator<<(std::ostream &os, const Hand &hand);
     friend bool operator==(const Hand &a, const Hand &b);
 
   public:
     /* 牌数 */
-    std::vector<int> counts;
+    HandType counts;
 
     /* 副露ブロック */
     std::vector<MeldedBlock> melds;
@@ -61,7 +62,7 @@ class Hand
 /**
  * @brief Create an empty hand.
  */
-inline Hand::Hand() : counts(37, 0)
+inline Hand::Hand() : counts{0}
 {
 }
 
@@ -70,7 +71,7 @@ inline Hand::Hand() : counts(37, 0)
  *
  * @param[in] tiles list of tiles
  */
-inline Hand::Hand(const std::vector<int> &tiles) : counts(37, 0)
+inline Hand::Hand(const std::vector<int> &tiles) : counts{0}
 {
 #ifdef CHECK_ARGUMENT
     if (!check_arguments(tiles, melds))
@@ -99,7 +100,7 @@ inline Hand::Hand(const std::vector<int> &tiles) : counts(37, 0)
  * @param[in] melds list of melded blocks
  */
 inline Hand::Hand(const std::vector<int> &tiles, const std::vector<MeldedBlock> &melds)
-    : counts(37, 0), melds(melds)
+    : counts{0}, melds(melds)
 {
 #ifdef CHECK_ARGUMENT
     if (!check_arguments(tiles, melds))

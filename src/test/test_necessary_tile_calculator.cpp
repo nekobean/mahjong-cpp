@@ -18,7 +18,7 @@
 
 using namespace mahjong;
 
-using TestCase = std::vector<int>;
+using TestCase = HandType;
 
 /**
  * Load a test case from the specified file.
@@ -47,14 +47,14 @@ bool load_testcase(const std::string &filepath, std::vector<TestCase> &cases)
         std::vector<std::string> tokens;
         boost::split(tokens, line, boost::is_any_of(" "));
 
-        std::vector<int> tiles(34, 0);
+        HandType hand{0};
         for (int i = 0; i < 13; ++i) { // 13枚だけ読み込む
             int tile = std::stoi(tokens[i]);
-            ++tiles[red2normal(tile)];
+            ++hand[red2normal(tile)];
         }
-        assert(std::accumulate(tiles.begin(), tiles.end(), 0) == 13);
+        assert(std::accumulate(hand.begin(), hand.begin() + 34, 0) == 13);
 
-        cases.emplace_back(tiles);
+        cases.emplace_back(hand);
     }
 
     spdlog::info("{} testcases loaded.", cases.size());
