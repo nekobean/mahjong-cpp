@@ -29,7 +29,6 @@ class Hand
     bool is_closed() const;
     int num_tiles() const;
     static Hand from_mpsz(const std::string &mpsz_str);
-    std::string to_string() const;
 
     static Hand from_counts(const std::vector<int> &tiles)
     {
@@ -237,55 +236,6 @@ inline Hand Hand::from_mpsz(const std::string &tiles)
     }
 
     return hand;
-}
-
-/**
- * @brief Convert the hand to a string in MPSZ notation. (e.g., "123m456p789s123z")
- *
- * @return string in MPSZ notation
- */
-inline std::string Hand::to_string() const
-{
-    std::string s;
-    const std::string suffix = "mpsz";
-    bool has_suit[4] = {false, false, false, false};
-
-    // 萬子
-    for (int i = 0; i < 34; ++i) {
-        int type = i / 9;
-        int num = i % 9 + 1;
-
-        if (counts[i] > 0) {
-            if (num == 5 && ((type == 0 && counts[Tile::RedManzu5]) ||
-                             (type == 1 && counts[Tile::RedPinzu5]) ||
-                             (type == 2 && counts[Tile::RedSouzu5]))) {
-                s += "r";
-            }
-            for (int j = 0; j < counts[i]; ++j) {
-                s += std::to_string(num);
-            }
-            has_suit[type] = true;
-        }
-
-        if ((i == 8 || i == 17 || i == 26 || i == 33) && has_suit[type]) {
-            s += suffix[type];
-        }
-    }
-
-    // 副露ブロック
-    if (!s.empty() && !melds.empty()) {
-        s += " ";
-        for (const auto &block : melds) {
-            s += block.to_string();
-        }
-    }
-
-    return s;
-}
-
-inline std::ostream &operator<<(std::ostream &os, const Hand &hand)
-{
-    return os << hand.to_string();
 }
 
 inline bool operator==(const Hand &a, const Hand &b)

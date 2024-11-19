@@ -5,8 +5,8 @@
 #include "mahjong/core/hand_separator.hpp"
 #include "mahjong/core/score_table.hpp"
 #include "mahjong/core/shanten_calculator.hpp"
+#include "mahjong/core/string.hpp"
 #include "mahjong/core/utils.hpp"
-#include "mahjong/utils.hpp"
 
 #undef NDEBUG
 #include <cassert>
@@ -188,8 +188,9 @@ std::tuple<bool, std::string> ScoreCalculator::check_arguments(const Hand &hand,
 {
     // 和了牌をチェックする。
     if (!hand.counts[red2normal(win_tile)]) {
-        std::string err_msg = fmt::format("和了牌 {} が手牌 {} に含まれていません。",
-                                          Tile::Name.at(win_tile), hand.to_string());
+        std::string err_msg =
+            fmt::format("和了牌 {} が手牌 {} に含まれていません。",
+                        Tile::Name.at(win_tile), to_mpsz(hand.counts));
         return {false, err_msg};
     }
 

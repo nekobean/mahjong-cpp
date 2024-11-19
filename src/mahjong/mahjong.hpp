@@ -5,7 +5,9 @@
 #include "mahjong/core/necessary_tile_calculator.hpp"
 #include "mahjong/core/score_calculator.hpp"
 #include "mahjong/core/shanten_calculator.hpp"
+#include "mahjong/core/string.hpp"
 #include "mahjong/core/unnecessary_tile_calculator.hpp"
+#include "mahjong/core/utils.hpp"
 #include "mahjong/expectedvaluecalculator.hpp"
 #include "mahjong/utils.hpp"
 

@@ -11,6 +11,8 @@
 #include <fstream>
 #include <iostream>
 
+#include "mahjong/core/string.hpp"
+
 //#define OUTPUT_DETAIL_LOG
 #ifdef OUTPUT_DETAIL_LOG
 #include <filesystem>
@@ -66,7 +68,7 @@ void Server::log_request(const RequestData &req)
                                 "{}, フラグ: {}, ドラ表示牌: {}, 残り枚数: {}",
                                 req.ip, req.version, Tile::Name.at(req.bakaze),
                                 Tile::Name.at(req.zikaze), req.turn, req.syanten_type,
-                                req.hand.to_string(), req.flag, dora_indicators,
+                                to_mpsz(req.hand.counts), req.flag, dora_indicators,
                                 counts);
 }
 
@@ -172,7 +174,7 @@ std::string Server::process_request(const std::string &json)
         if (!boost::filesystem::exists(save_dir))
             boost::filesystem::create_directory(save_dir);
         std::string req_save_path =
-            save_dir.string() + "\\" + (req.hand.to_string() + ".json");
+            save_dir.string() + "\\" + (to_mpsz(req.hand.counts) + ".json");
         std::filesystem::path pa =
             std::filesystem::u8path((const char *)req_save_path.c_str());
         std::ofstream ofs(pa.string());
@@ -186,7 +188,7 @@ std::string Server::process_request(const std::string &json)
         if (!boost::filesystem::exists(save_dir))
             boost::filesystem::create_directory(save_dir);
         std::string req_save_path =
-            save_dir.string() + "\\" + (req.hand.to_string() + ".json");
+            save_dir.string() + "\\" + (to_mpsz(req.hand.counts) + ".json");
         std::filesystem::path pa =
             std::filesystem::u8path((const char *)req_save_path.c_str());
         std::ofstream ofs(pa.string());

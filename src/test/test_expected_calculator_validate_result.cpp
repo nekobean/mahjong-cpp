@@ -8,6 +8,7 @@
 #include <rapidjson/prettywriter.h>
 #include <rapidjson/stringbuffer.h>
 
+#include "mahjong/core/string.hpp"
 #include "mahjong/json_parser.hpp"
 #include "mahjong/mahjong.hpp"
 //#include "naiveexpectedvaluecalculator.hpp"
@@ -101,7 +102,7 @@ void write_output_data()
     for (const auto &req_path : paths) {
         RequestData req_data;
         load_input_data(req_path, req_data);
-        spdlog::info(req_data.hand.to_string());
+        spdlog::info(to_mpsz(req_data.hand.counts));
 
         DiscardResponseData res_data = create_discard_response(req_data);
 
@@ -370,14 +371,14 @@ TEST_CASE("期待値計算の計算時間")
         return;
 
     for (size_t i = 0; i < req_data_list.size(); ++i) {
-        if (req_data_list[i].hand.to_string() == "123mr567789p22223s") {
+        if (to_mpsz(req_data_list[i].hand.counts) == "123m067789p22223s") {
             continue;
         }
         const RequestData &req_data = req_data_list[i];
         const std::string &req_path = paths[i];
         fs::path res_path = response_dir / fs::path(paths[i]).filename();
 
-        spdlog::info(req_data_list[i].hand.to_string());
+        spdlog::info(to_mpsz(req_data_list[i].hand.counts));
         DiscardResponseData actual = create_discard_response(req_data);
         DiscardResponseData expected;
         if (!load_output_data(res_path.string(), expected))

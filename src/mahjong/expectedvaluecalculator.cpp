@@ -11,7 +11,7 @@
 #include <boost/dll.hpp>
 
 #include "mahjong/core/shanten_calculator.hpp"
-#include "utils.hpp"
+#include "mahjong/core/utils.hpp"
 
 namespace mahjong
 {
@@ -417,8 +417,8 @@ std::vector<double> ExpectedValueCalculator::get_score(const Hand &hand, int win
                 int n = hand.counts[tile];
                 if (n > 0) {
                     // ドラ表示牌の枚数を数える。
-                    n_indicators[n] += counts[Dora2Indicator.at(tile)];
-                    sum_indicators += counts[Dora2Indicator.at(tile)];
+                    n_indicators[n] += counts[ToIndicator.at(tile)];
+                    sum_indicators += counts[ToIndicator.at(tile)];
                 }
             }
 

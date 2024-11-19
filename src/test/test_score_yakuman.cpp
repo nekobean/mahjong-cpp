@@ -76,7 +76,7 @@ TEST_CASE("Ryuuiisou (All Green)")
     {
         for (auto &[hand, win_tile, expected] : cases) {
             bool actual = ScoreCalculator::check_all_green(hand);
-            INFO(fmt::format("hand: {}, win tile: {}", hand.to_string(),
+            INFO(fmt::format("hand: {}, win tile: {}", to_mpsz(hand.counts),
                              Tile::Name.at(win_tile)));
             REQUIRE(actual == expected);
         }
@@ -98,7 +98,7 @@ TEST_CASE("Daisangen (Big Three Dragons)")
     {
         for (auto &[hand, win_tile, expected] : cases) {
             bool actual = ScoreCalculator::check_big_three_dragons(hand);
-            INFO(fmt::format("hand: {}, win tile: {}", hand.to_string(),
+            INFO(fmt::format("hand: {}, win tile: {}", to_mpsz(hand.counts),
                              Tile::Name.at(win_tile)));
             REQUIRE(actual == expected);
         }
@@ -120,7 +120,7 @@ TEST_CASE("Shousuushii (Little Four Winds)")
     {
         for (auto &[hand, win_tile, expected] : cases) {
             bool actual = ScoreCalculator::check_little_four_winds(hand);
-            INFO(fmt::format("hand: {}, win tile: {}", hand.to_string(),
+            INFO(fmt::format("hand: {}, win tile: {}", to_mpsz(hand.counts),
                              Tile::Name.at(win_tile)));
             REQUIRE(actual == expected);
         }
@@ -142,7 +142,7 @@ TEST_CASE("Tsuuiisou (All Honors)")
     {
         for (auto &[hand, win_tile, expected] : cases) {
             bool actual = ScoreCalculator::check_all_honors(hand);
-            INFO(fmt::format("hand: {}, win tile: {}", hand.to_string(),
+            INFO(fmt::format("hand: {}, win tile: {}", to_mpsz(hand.counts),
                              Tile::Name.at(win_tile)));
             REQUIRE(actual == expected);
         }
@@ -164,7 +164,7 @@ TEST_CASE("Chuuren Poutou (Nine Gates)")
     {
         for (auto &[hand, win_tile, expected] : cases) {
             bool actual = ScoreCalculator::check_nine_gates(hand, win_tile);
-            INFO(fmt::format("hand: {}, win tile: {}", hand.to_string(),
+            INFO(fmt::format("hand: {}, win tile: {}", to_mpsz(hand.counts),
                              Tile::Name.at(win_tile)));
             REQUIRE(actual == expected);
         }
@@ -186,7 +186,7 @@ TEST_CASE("Junsei Chuuren Poutou (Pure Nine Gates)")
     {
         for (auto &[hand, win_tile, expected] : cases) {
             bool actual = ScoreCalculator::check_true_nine_gates(hand, win_tile);
-            INFO(fmt::format("hand: {}, win tile: {}", hand.to_string(),
+            INFO(fmt::format("hand: {}, win tile: {}", to_mpsz(hand.counts),
                              Tile::Name.at(win_tile)));
             REQUIRE(actual == expected);
         }
@@ -210,7 +210,7 @@ TEST_CASE("Suuankou (Four Closed Triplets)")
             bool actual = ScoreCalculator::check_four_concealed_triplets(
                               hand, WinFlag::Tsumo, win_tile) >= 1;
 
-            INFO(fmt::format("hand: {}, win tile: {}", hand.to_string(),
+            INFO(fmt::format("hand: {}, win tile: {}", to_mpsz(hand.counts),
                              Tile::Name.at(win_tile)));
             REQUIRE(actual == expected);
         }
@@ -233,7 +233,7 @@ TEST_CASE("Suuankou Tanki (Four Closed Triplets Single Wait)")
         for (auto &[hand, win_tile, expected] : cases) {
             bool actual = ScoreCalculator::check_four_concealed_triplets(
                               hand, WinFlag::Tsumo, win_tile) == 2;
-            INFO(fmt::format("hand: {}, win tile: {}", hand.to_string(),
+            INFO(fmt::format("hand: {}, win tile: {}", to_mpsz(hand.counts),
                              Tile::Name.at(win_tile)));
             REQUIRE(actual == expected);
         }
@@ -255,7 +255,7 @@ TEST_CASE("Chinroutou (All Terminals)")
     {
         for (auto &[hand, win_tile, expected] : cases) {
             bool actual = ScoreCalculator::check_all_terminals(hand);
-            INFO(fmt::format("hand: {}, win tile: {}", hand.to_string(),
+            INFO(fmt::format("hand: {}, win tile: {}", to_mpsz(hand.counts),
                              Tile::Name.at(win_tile)));
             REQUIRE(actual == expected);
         }
@@ -293,7 +293,7 @@ TEST_CASE("Suukantsu (Four Kongs)")
         int win_tile = Tile::White;
         bool expected = true;
         bool actual = ScoreCalculator::check_four_kongs(hand);
-        INFO(fmt::format("hand: {}, win tile: {}", hand.to_string(),
+        INFO(fmt::format("hand: {}, win tile: {}", to_mpsz(hand.counts),
                          Tile::Name.at(win_tile)));
         REQUIRE(actual == expected);
     };
@@ -321,7 +321,7 @@ TEST_CASE("Suukantsu (Four Kongs)")
         int win_tile = Tile::White;
         bool expected = false;
         bool actual = ScoreCalculator::check_four_kongs(hand);
-        INFO(fmt::format("hand: {}, win tile: {}", hand.to_string(),
+        INFO(fmt::format("hand: {}, win tile: {}", to_mpsz(hand.counts),
                          Tile::Name.at(win_tile)));
         REQUIRE(actual == expected);
     };
@@ -346,7 +346,7 @@ TEST_CASE("Suukantsu (Four Kongs)")
         int win_tile = Tile::White;
         bool expected = false;
         bool actual = ScoreCalculator::check_four_kongs(hand);
-        INFO(fmt::format("hand: {}, win tile: {}", hand.to_string(),
+        INFO(fmt::format("hand: {}, win tile: {}", to_mpsz(hand.counts),
                          Tile::Name.at(win_tile)));
         REQUIRE(actual == expected);
     };
@@ -361,7 +361,7 @@ TEST_CASE("Daisuushii (Big Four Winds)")
     {
         for (auto &[hand, win_tile, expected] : cases) {
             bool actual = ScoreCalculator::check_big_four_winds(hand);
-            INFO(fmt::format("hand: {}, win tile: {}", hand.to_string(),
+            INFO(fmt::format("hand: {}, win tile: {}", to_mpsz(hand.counts),
                              Tile::Name.at(win_tile)));
             REQUIRE(actual == expected);
         }
@@ -384,7 +384,7 @@ TEST_CASE("Thirteen Orphans13 (Thirteen Orphans 13-sided wait)")
         for (auto &[hand, win_tile, expected] : cases) {
             bool actual =
                 ScoreCalculator::check_thirteen_wait_thirteen_orphans(hand, win_tile);
-            INFO(fmt::format("hand: {}, win tile: {}", hand.to_string(),
+            INFO(fmt::format("hand: {}, win tile: {}", to_mpsz(hand.counts),
                              Tile::Name.at(win_tile)));
             REQUIRE(actual == expected);
         }
