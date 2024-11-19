@@ -1,5 +1,7 @@
 #include "score_calculator.hpp"
 
+#include <numeric>
+
 #include <spdlog/spdlog.h>
 
 #include "mahjong/core/hand_separator.hpp"

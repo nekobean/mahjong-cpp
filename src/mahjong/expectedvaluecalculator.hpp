@@ -53,93 +53,93 @@ class Candidate
     bool syanten_down;
 };
 
-inline void add_tile(Hand &hand, int tile)
+inline void add_tile(MyPlayer &player, int tile)
 {
     if (tile == Tile::RedManzu5) {
-        hand.counts[Tile::Manzu5]++;
-        hand.counts[Tile::RedManzu5]++;
+        player.hand[Tile::Manzu5]++;
+        player.hand[Tile::RedManzu5]++;
     }
     else if (tile == Tile::RedPinzu5) {
-        hand.counts[Tile::Pinzu5]++;
-        hand.counts[Tile::RedPinzu5]++;
+        player.hand[Tile::Pinzu5]++;
+        player.hand[Tile::RedPinzu5]++;
     }
     else if (tile == Tile::RedSouzu5) {
-        hand.counts[Tile::Souzu5]++;
-        hand.counts[Tile::RedSouzu5]++;
+        player.hand[Tile::Souzu5]++;
+        player.hand[Tile::RedSouzu5]++;
     }
     else {
-        hand.counts[tile]++;
+        player.hand[tile]++;
     }
 }
 
-inline void remove_tile(Hand &hand, int tile)
+inline void remove_tile(MyPlayer &player, int tile)
 {
     if (tile == Tile::RedManzu5) {
-        hand.counts[Tile::Manzu5]--;
-        hand.counts[Tile::RedManzu5]--;
+        player.hand[Tile::Manzu5]--;
+        player.hand[Tile::RedManzu5]--;
     }
     else if (tile == Tile::RedPinzu5) {
-        hand.counts[Tile::Pinzu5]--;
-        hand.counts[Tile::RedPinzu5]--;
+        player.hand[Tile::Pinzu5]--;
+        player.hand[Tile::RedPinzu5]--;
     }
     else if (tile == Tile::RedSouzu5) {
-        hand.counts[Tile::Souzu5]--;
-        hand.counts[Tile::RedSouzu5]--;
+        player.hand[Tile::Souzu5]--;
+        player.hand[Tile::RedSouzu5]--;
     }
     else {
-        hand.counts[tile]--;
+        player.hand[tile]--;
     }
 }
 
-inline void add_tile(Hand &hand, int tile, std::vector<int> &counts)
+inline void add_tile(MyPlayer &player, int tile, std::vector<int> &counts)
 {
     if (tile == Tile::RedManzu5) {
-        hand.counts[Tile::Manzu5]++;
-        hand.counts[Tile::RedManzu5]++;
+        player.hand[Tile::Manzu5]++;
+        player.hand[Tile::RedManzu5]++;
         counts[Tile::Manzu5]--;
     }
     else if (tile == Tile::RedPinzu5) {
-        hand.counts[Tile::Pinzu5]++;
-        hand.counts[Tile::RedPinzu5]++;
+        player.hand[Tile::Pinzu5]++;
+        player.hand[Tile::RedPinzu5]++;
         counts[Tile::Pinzu5]--;
     }
     else if (tile == Tile::RedSouzu5) {
-        hand.counts[Tile::Souzu5]++;
-        hand.counts[Tile::RedSouzu5]++;
+        player.hand[Tile::Souzu5]++;
+        player.hand[Tile::RedSouzu5]++;
         counts[Tile::Souzu5]--;
     }
     else {
-        hand.counts[tile]++;
+        player.hand[tile]++;
     }
     counts[tile]--;
 }
 
-inline void remove_tile(Hand &hand, int tile, std::vector<int> &counts)
+inline void remove_tile(MyPlayer &player, int tile, std::vector<int> &counts)
 {
     if (tile == Tile::RedManzu5) {
-        hand.counts[Tile::Manzu5]--;
-        hand.counts[Tile::RedManzu5]--;
+        player.hand[Tile::Manzu5]--;
+        player.hand[Tile::RedManzu5]--;
         counts[Tile::Manzu5]++;
     }
     else if (tile == Tile::RedPinzu5) {
-        hand.counts[Tile::Pinzu5]--;
-        hand.counts[Tile::RedPinzu5]--;
+        player.hand[Tile::Pinzu5]--;
+        player.hand[Tile::RedPinzu5]--;
         counts[Tile::Pinzu5]++;
     }
     else if (tile == Tile::RedSouzu5) {
-        hand.counts[Tile::Souzu5]--;
-        hand.counts[Tile::RedSouzu5]--;
+        player.hand[Tile::Souzu5]--;
+        player.hand[Tile::RedSouzu5]--;
         counts[Tile::Souzu5]++;
     }
     else {
-        hand.counts[tile]--;
+        player.hand[tile]--;
     }
     counts[tile]++;
 }
 
 struct CacheKey
 {
-    CacheKey(const Hand &hand, const std::vector<int> &counts, int n_extra_tumo)
+    CacheKey(const MyPlayer &player, const std::vector<int> &counts, int n_extra_tumo)
         : hmanzu(0)
         , hpinzu(0)
         , hsouzu(0)
@@ -149,13 +149,13 @@ struct CacheKey
         , sozu(0)
         , zihai(0)
     {
-        hmanzu = std::accumulate(hand.counts.begin(), hand.counts.begin() + 9, 0,
+        hmanzu = std::accumulate(player.hand.begin(), player.hand.begin() + 9, 0,
                                  [](int x, int y) { return x * 8 + y; });
-        hpinzu = std::accumulate(hand.counts.begin() + 9, hand.counts.begin() + 18, 0,
+        hpinzu = std::accumulate(player.hand.begin() + 9, player.hand.begin() + 18, 0,
                                  [](int x, int y) { return x * 8 + y; });
-        hsouzu = std::accumulate(hand.counts.begin() + 18, hand.counts.begin() + 27, 0,
+        hsouzu = std::accumulate(player.hand.begin() + 18, player.hand.begin() + 27, 0,
                                  [](int x, int y) { return x * 8 + y; });
-        hhonors = std::accumulate(hand.counts.begin() + 27, hand.counts.begin() + 34, 0,
+        hhonors = std::accumulate(player.hand.begin() + 27, player.hand.begin() + 34, 0,
                                   [](int x, int y) { return x * 8 + y; });
         for (size_t i = 0; i < 9; ++i)
             manzu = manzu * 8 + counts[i];
@@ -171,9 +171,9 @@ struct CacheKey
         zihai |= counts[Tile::RedManzu5] << 22;
         zihai |= counts[Tile::RedPinzu5] << 23;
         zihai |= counts[Tile::RedSouzu5] << 24;
-        zihai |= hand.counts[Tile::RedManzu5] << 25;
-        zihai |= hand.counts[Tile::RedPinzu5] << 26;
-        zihai |= hand.counts[Tile::RedSouzu5] << 27;
+        zihai |= player.hand[Tile::RedManzu5] << 25;
+        zihai |= player.hand[Tile::RedPinzu5] << 26;
+        zihai |= player.hand[Tile::RedSouzu5] << 27;
     }
 
     int hmanzu;
@@ -263,16 +263,16 @@ class ExpectedValueCalculator
     ExpectedValueCalculator();
 
     std::tuple<bool, std::vector<Candidate>>
-    calc(const Hand &hand, const std::vector<int> &dora_indicators, int syanten_type,
-         int flag = 0);
+    calc(const MyPlayer &player, const std::vector<int> &dora_indicators,
+         int syanten_type, int flag = 0);
     std::tuple<bool, std::vector<Candidate>>
-    calc(const Hand &hand, const std::vector<int> &dora_indicators, int syanten_type,
-         const std::vector<int> &counts, int flag = 0);
+    calc(const MyPlayer &player, const std::vector<int> &dora_indicators,
+         int syanten_type, const std::vector<int> &counts, int flag = 0);
 
     static std::vector<std::tuple<int, int>>
-    get_required_tiles(const Hand &hand, int syanten_type,
+    get_required_tiles(const MyPlayer &player, int syanten_type,
                        const std::vector<int> &counts);
-    static std::vector<int> count_left_tiles(const Hand &hand,
+    static std::vector<int> count_left_tiles(const MyPlayer &player,
                                              const std::vector<int> &dora_indicators);
 
     // private:
@@ -280,29 +280,29 @@ class ExpectedValueCalculator
     void create_prob_table(int n_left_tiles);
     void clear_cache();
     std::vector<std::tuple<int, int, int>>
-    get_draw_tiles(Hand &hand, int syanten, const std::vector<int> &counts);
-    std::vector<std::tuple<int, int>> get_discard_tiles(Hand &hand, int syanten);
-    std::vector<double> get_score(const Hand &hand, int win_tile,
+    get_draw_tiles(MyPlayer &player, int syanten, const std::vector<int> &counts);
+    std::vector<std::tuple<int, int>> get_discard_tiles(MyPlayer &player, int syanten);
+    std::vector<double> get_score(const MyPlayer &player, int win_tile,
                                   const std::vector<int> &counts);
 
-    std::vector<Candidate> analyze_discard(int n_extra_tumo, int syanten, Hand hand,
+    std::vector<Candidate> analyze_discard(int n_extra_tumo, int syanten,
+                                           MyPlayer player, std::vector<int> counts);
+    std::vector<Candidate> analyze_discard(int syanten, MyPlayer player,
                                            std::vector<int> counts);
-    std::vector<Candidate> analyze_discard(int syanten, Hand hand,
-                                           std::vector<int> counts);
-    std::vector<Candidate> analyze_draw(int n_extra_tumo, int syanten, Hand hand,
+    std::vector<Candidate> analyze_draw(int n_extra_tumo, int syanten, MyPlayer player,
                                         std::vector<int> counts);
-    std::vector<Candidate> analyze_draw(int syanten, Hand hand,
+    std::vector<Candidate> analyze_draw(int syanten, MyPlayer player,
                                         std::vector<int> counts);
 
     std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
-    discard(int n_extra_tumo, int syanten, Hand &hand, std::vector<int> &counts);
+    discard(int n_extra_tumo, int syanten, MyPlayer &player, std::vector<int> &counts);
     std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
-    draw(int n_extra_tumo, int syanten, Hand &hand, std::vector<int> &counts);
+    draw(int n_extra_tumo, int syanten, MyPlayer &player, std::vector<int> &counts);
     std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
-    draw_without_tegawari(int n_extra_tumo, int syanten, Hand &hand,
+    draw_without_tegawari(int n_extra_tumo, int syanten, MyPlayer &player,
                           std::vector<int> &counts);
     std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
-    draw_with_tegawari(int n_extra_tumo, int syanten, Hand &hand,
+    draw_with_tegawari(int n_extra_tumo, int syanten, MyPlayer &player,
                        std::vector<int> &counts);
 
     // private:

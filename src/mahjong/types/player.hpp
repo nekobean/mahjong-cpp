@@ -1,6 +1,9 @@
 #ifndef MAHJONG_CPP_PLAYER
 #define MAHJONG_CPP_PLAYER
 
+#include <algorithm> // any_of
+#include <numeric>   // accumulate
+#include <stdexcept> // invalid_argument
 #include <vector>
 
 #include "mahjong/types/const.hpp"

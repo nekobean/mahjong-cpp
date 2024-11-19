@@ -4,7 +4,6 @@
 #include <vector>
 
 #include "const.hpp"
-#include "hand.hpp"
 
 namespace mahjong
 {

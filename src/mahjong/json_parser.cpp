@@ -81,7 +81,7 @@ RequestData parse_request(const rapidjson::Value &doc)
 
         melds.emplace_back(meld_type, tiles, discarded_tile, from);
     }
-    req.hand = Hand(hand_tiles, melds);
+    req.player = MyPlayer(hand_tiles, melds, req.zikaze);
 
     if (doc.HasMember("ip"))
         req.ip = doc["ip"].GetString();
@@ -226,10 +226,10 @@ DrawResponseData create_draw_response(const RequestData &req)
 
     if (req.counts.empty())
         std::tie(success, candidates) = exp_value_calc.calc(
-            req.hand, req.dora_indicators, req.syanten_type, req.flag);
+            req.player, req.dora_indicators, req.syanten_type, req.flag);
     else
         std::tie(success, candidates) = exp_value_calc.calc(
-            req.hand, req.dora_indicators, req.syanten_type, req.counts, req.flag);
+            req.player, req.dora_indicators, req.syanten_type, req.counts, req.flag);
 
     auto end = std::chrono::steady_clock::now();
     auto elapsed_us =
@@ -241,15 +241,15 @@ DrawResponseData create_draw_response(const RequestData &req)
     res.win_probs = candidates.front().win_probs;
     res.exp_values = candidates.front().exp_values;
     auto [_, syanten] = ShantenCalculator::calc(
-        req.hand.counts, int(req.hand.melds.size()), req.syanten_type);
+        req.player.hand, int(req.player.melds.size()), req.syanten_type);
     res.syanten = syanten;
     res.normal_syanten =
-        ShantenCalculator::calc_regular(req.hand.counts, int(req.hand.melds.size()));
-    res.tiitoi_syanten = req.hand.melds.empty()
-                             ? ShantenCalculator::calc_seven_pairs(req.hand.counts)
+        ShantenCalculator::calc_regular(req.player.hand, int(req.player.melds.size()));
+    res.tiitoi_syanten = req.player.melds.empty()
+                             ? ShantenCalculator::calc_seven_pairs(req.player.hand)
                              : -2;
-    res.kokusi_syanten = req.hand.melds.empty()
-                             ? ShantenCalculator::calc_thirteen_orphans(req.hand.counts)
+    res.kokusi_syanten = req.player.melds.empty()
+                             ? ShantenCalculator::calc_thirteen_orphans(req.player.hand)
                              : -2;
     res.time_us = elapsed_us;
 
@@ -286,10 +286,10 @@ DiscardResponseData create_discard_response(const RequestData &req)
 
     if (req.counts.empty())
         std::tie(success, candidates) = exp_value_calc.calc(
-            req.hand, req.dora_indicators, req.syanten_type, req.flag);
+            req.player, req.dora_indicators, req.syanten_type, req.flag);
     else
         std::tie(success, candidates) = exp_value_calc.calc(
-            req.hand, req.dora_indicators, req.syanten_type, req.counts, req.flag);
+            req.player, req.dora_indicators, req.syanten_type, req.counts, req.flag);
 
     auto end = std::chrono::steady_clock::now();
     auto elapsed_us =
@@ -297,15 +297,15 @@ DiscardResponseData create_discard_response(const RequestData &req)
 
     DiscardResponseData res;
     auto [_, syanten] = ShantenCalculator::calc(
-        req.hand.counts, int(req.hand.melds.size()), req.syanten_type);
+        req.player.hand, int(req.player.melds.size()), req.syanten_type);
     res.syanten = syanten;
     res.normal_syanten =
-        ShantenCalculator::calc_regular(req.hand.counts, int(req.hand.melds.size()));
-    res.tiitoi_syanten = req.hand.melds.empty()
-                             ? ShantenCalculator::calc_seven_pairs(req.hand.counts)
+        ShantenCalculator::calc_regular(req.player.hand, int(req.player.melds.size()));
+    res.tiitoi_syanten = req.player.melds.empty()
+                             ? ShantenCalculator::calc_seven_pairs(req.player.hand)
                              : -2;
-    res.kokusi_syanten = req.hand.melds.empty()
-                             ? ShantenCalculator::calc_thirteen_orphans(req.hand.counts)
+    res.kokusi_syanten = req.player.melds.empty()
+                             ? ShantenCalculator::calc_thirteen_orphans(req.player.hand)
                              : -2;
     res.time_us = elapsed_us;
     res.candidates = candidates;
@@ -395,7 +395,7 @@ rapidjson::Value dump_discard_response(const DiscardResponseData &res,
 rapidjson::Value create_response(const RequestData &req, rapidjson::Document &doc)
 {
     // 手牌の枚数を求める。
-    int n_tiles = req.hand.num_tiles() + int(req.hand.melds.size()) * 3;
+    int n_tiles = req.player.num_tiles() + int(req.player.melds.size()) * 3;
 
     if (n_tiles == 14) {
         DiscardResponseData res = create_discard_response(req);

@@ -3,7 +3,6 @@
 
 #include "block.hpp"
 #include "const.hpp"
-#include "hand.hpp"
 #include "meld.hpp"
 #include "player.hpp"
 #include "result.hpp"

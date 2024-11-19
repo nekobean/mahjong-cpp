@@ -76,6 +76,8 @@ static inline const std::map<int, std::string> Name = {
 };
 }; // namespace Tile
 
+using HandType = std::array<int, 37>;
+
 /**
  * @brief Block types
  */
