@@ -48,10 +48,9 @@ class ScoreCalculator
     static std::vector<int> calc_score(const bool is_tumo, const int score_type,
                                        const Round &params, const int han = 0,
                                        const int fu = 0);
-    static int count_dora(const HandType &hand, const std::vector<MeldedBlock> &melds,
+    static int count_dora(const Hand &hand, const std::vector<MeldedBlock> &melds,
                           const std::vector<int> &dora_list);
-    static int count_reddora(const HandType &hand,
-                             const std::vector<MeldedBlock> &melds);
+    static int count_reddora(const Hand &hand, const std::vector<MeldedBlock> &melds);
     static int get_score_title(const int fu, const int han);
     static int get_score_title(const int n);
     static int round_fu(const int fu);

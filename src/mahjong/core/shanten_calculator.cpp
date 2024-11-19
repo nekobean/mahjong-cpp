@@ -19,7 +19,7 @@ namespace mahjong
  * @param[in] type The type of shanten number to calculate
  * @return std::tuple<int, int> (Type of shanten number, shanten number)
  */
-std::tuple<int, int> ShantenCalculator::calc(const HandType &hand, const int num_melds,
+std::tuple<int, int> ShantenCalculator::calc(const Hand &hand, const int num_melds,
                                              int type)
 {
 #ifdef CHECK_ARGUMENTS
@@ -76,7 +76,7 @@ std::tuple<int, int> ShantenCalculator::calc(const HandType &hand, const int num
     return ret;
 }
 
-int ShantenCalculator::calc_regular(const HandType &hand, const int num_melds)
+int ShantenCalculator::calc_regular(const Hand &hand, const int num_melds)
 {
     Table::HashType manzu_hash = Table::suits_hash(hand.begin(), hand.begin() + 9);
     Table::HashType pinzu_hash = Table::suits_hash(hand.begin() + 9, hand.begin() + 18);
@@ -105,7 +105,7 @@ int ShantenCalculator::calc_regular(const HandType &hand, const int num_melds)
  * @param[in] hand The hand
  * @return int The shanten number
  */
-int ShantenCalculator::calc_seven_pairs(const HandType &hand)
+int ShantenCalculator::calc_seven_pairs(const Hand &hand)
 {
     int num_types = 0;
     int num_pairs = 0;
@@ -124,7 +124,7 @@ int ShantenCalculator::calc_seven_pairs(const HandType &hand)
  * @param[in] hand The hand
  * @return int The shanten number
  */
-int ShantenCalculator::calc_thirteen_orphans(const HandType &hand)
+int ShantenCalculator::calc_thirteen_orphans(const Hand &hand)
 {
     int num_types = 0;
     bool has_toitsu = false;

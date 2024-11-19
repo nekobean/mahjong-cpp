@@ -20,8 +20,7 @@ namespace mahjong
  * @return list of (shanten flag, shanten number, necessary tiles)
  */
 std::tuple<int, int, std::vector<int>>
-NecessaryTileCalculator::select(const HandType &hand, const int num_melds,
-                                const int type)
+NecessaryTileCalculator::select(const Hand &hand, const int num_melds, const int type)
 {
     auto ret = calc(hand, num_melds, type);
 
@@ -44,7 +43,7 @@ NecessaryTileCalculator::select(const HandType &hand, const int num_melds,
  * @return list of (shanten flag, shanten number, necessary tiles)
  */
 std::tuple<int, int, int64_t>
-NecessaryTileCalculator::calc(const HandType &hand, const int num_melds, const int type)
+NecessaryTileCalculator::calc(const Hand &hand, const int num_melds, const int type)
 {
 #ifdef CHECK_ARGUMENTS
     int num_tiles = std::accumulate(hand.begin(), hand.end(), 0) + num_melds * 3;
@@ -111,7 +110,7 @@ NecessaryTileCalculator::calc(const HandType &hand, const int num_melds, const i
  * @param[in] type shanten number type
  * @return list of (shanten flag, shanten number, necessary tiles)
  */
-std::tuple<int, int64_t> NecessaryTileCalculator::calc_regular(const HandType &hand,
+std::tuple<int, int64_t> NecessaryTileCalculator::calc_regular(const Hand &hand,
                                                                const int num_melds)
 {
     Table::HashType manzu_hash = Table::suits_hash(hand.begin(), hand.begin() + 9);
@@ -146,7 +145,7 @@ std::tuple<int, int64_t> NecessaryTileCalculator::calc_regular(const HandType &h
  * @param[in] type shanten number type
  * @return list of (shanten flag, shanten number, necessary tiles)
  */
-std::tuple<int, int64_t> NecessaryTileCalculator::calc_seven_pairs(const HandType &hand)
+std::tuple<int, int64_t> NecessaryTileCalculator::calc_seven_pairs(const Hand &hand)
 {
     int num_pairs = 0;
     int num_types = 0;
@@ -190,7 +189,7 @@ std::tuple<int, int64_t> NecessaryTileCalculator::calc_seven_pairs(const HandTyp
  * @return list of (shanten flag, shanten number, necessary tiles)
  */
 std::tuple<int, int64_t>
-NecessaryTileCalculator::calc_thirteen_orphans(const HandType &hand)
+NecessaryTileCalculator::calc_thirteen_orphans(const Hand &hand)
 {
     static const auto yaochuu_tiles = {
         Tile::Manzu1, Tile::Manzu9, Tile::Pinzu1, Tile::Pinzu9, Tile::Souzu1,

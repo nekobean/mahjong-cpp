@@ -17,7 +17,7 @@
 
 using namespace mahjong;
 
-using TestCase = std::tuple<HandType, int, int, int>;
+using TestCase = std::tuple<Hand, int, int, int>;
 
 /**
  * Load a test case from the specified file.
@@ -47,7 +47,7 @@ bool load_testcase(const std::string &filepath, std::vector<TestCase> &cases)
         std::vector<std::string> tokens;
         boost::split(tokens, line, boost::is_any_of(" "));
 
-        HandType hand{0};
+        Hand hand{0};
         for (int i = 0; i < 14; ++i) {
             int tile = std::stoi(tokens[i]);
             ++hand[red2normal(tile)];

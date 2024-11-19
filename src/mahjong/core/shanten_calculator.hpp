@@ -21,11 +21,10 @@ class ShantenCalculator
     using ResultType = std::array<int32_t, 30>;
 
   public:
-    static std::tuple<int, int> calc(const HandType &hand, const int num_melds,
-                                     int type);
-    static int calc_regular(const HandType &hand, const int num_melds);
-    static int calc_seven_pairs(const HandType &hand);
-    static int calc_thirteen_orphans(const HandType &hand);
+    static std::tuple<int, int> calc(const Hand &hand, const int num_melds, int type);
+    static int calc_regular(const Hand &hand, const int num_melds);
+    static int calc_seven_pairs(const Hand &hand);
+    static int calc_thirteen_orphans(const Hand &hand);
 
   private:
     static void add1(ResultType &lhs, const Table::TableType &rhs, const int m);

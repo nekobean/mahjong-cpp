@@ -14,8 +14,8 @@ class HandSeparator
   public:
     struct Input
     {
-        HandType merged_hand;
-        HandType hand;
+        Hand merged_hand;
+        Hand hand;
         std::vector<MeldedBlock> melds;
 
         bool is_closed() const

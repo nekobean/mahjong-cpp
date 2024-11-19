@@ -17,7 +17,7 @@ constexpr int L = 64;
 
 namespace mahjong
 {
-int64_t calc_disc2(const HandType &hand)
+int64_t calc_disc2(const Hand &hand)
 {
     int64_t ret = 0LL;
 
@@ -30,7 +30,7 @@ int64_t calc_disc2(const HandType &hand)
     return ret;
 }
 
-int64_t calc_wait2(const HandType &hand)
+int64_t calc_wait2(const Hand &hand)
 {
     int64_t ret = 0LL;
 
@@ -62,9 +62,9 @@ std::vector<int> encode(const std::vector<int> &hand, const std::vector<int> &re
     return ret;
 }
 
-HandType create_wall(const Round &round, const MyPlayer &player)
+Hand create_wall(const Round &round, const MyPlayer &player)
 {
-    HandType wall{0};
+    Hand wall{0};
     std::fill(wall.begin(), wall.begin() + K, 4);
     wall[Tile::RedManzu5] = 1;
     wall[Tile::RedPinzu5] = 1;
@@ -129,7 +129,7 @@ HandType create_wall(const Round &round, const MyPlayer &player)
     return wall;
 }
 
-std::vector<int> encode(const HandType &counts)
+std::vector<int> encode(const Hand &counts)
 {
     std::vector<int> ret(2 * K, 0);
 

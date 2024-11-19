@@ -18,15 +18,15 @@ namespace mahjong
 class MyPlayer
 {
   public:
-    MyPlayer() : MyPlayer(HandType{}, {}, 0)
+    MyPlayer() : MyPlayer(Hand{}, {}, 0)
     {
     }
 
-    MyPlayer(const HandType &hand, int wind) : MyPlayer(hand, {}, wind)
+    MyPlayer(const Hand &hand, int wind) : MyPlayer(hand, {}, wind)
     {
     }
 
-    MyPlayer(const HandType &hand, const std::vector<MeldedBlock> &melds, int wind)
+    MyPlayer(const Hand &hand, const std::vector<MeldedBlock> &melds, int wind)
         : hand(hand), melds(melds), wind(wind)
     {
 #ifdef CHECK_ARGUMENT
@@ -51,9 +51,9 @@ class MyPlayer
      * @param[in] tiles list of tiles
      * @param[in] melds list of melded blocks
      */
-    inline HandType to_hand(const std::vector<int> &tiles)
+    inline Hand to_hand(const std::vector<int> &tiles)
     {
-        HandType hand{0};
+        Hand hand{0};
 
         for (int tile : tiles) {
             if (tile == Tile::RedManzu5) {
@@ -72,7 +72,7 @@ class MyPlayer
     }
 
     // Count of hand tiles (手牌の各牌の枚数)
-    HandType hand;
+    Hand hand;
 
     // List of meld blocks (副露ブロックの一覧)
     std::vector<MeldedBlock> melds;

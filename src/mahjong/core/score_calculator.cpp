@@ -852,8 +852,7 @@ std::vector<int> ScoreCalculator::calc_score(const bool is_tsumo, const int scor
  * @param[in] dora_tiles list of dora tiles (normalized)
  * @return int number of dora tiles
  */
-int ScoreCalculator::count_dora(const HandType &hand,
-                                const std::vector<MeldedBlock> &melds,
+int ScoreCalculator::count_dora(const Hand &hand, const std::vector<MeldedBlock> &melds,
                                 const std::vector<int> &dora_tiles)
 {
     int num_doras = 0;
@@ -879,7 +878,7 @@ int ScoreCalculator::count_dora(const HandType &hand,
  * @param[in] dora_tiles list of dora tiles (normalized)
  * @return int number of dora tiles
  */
-int ScoreCalculator::count_reddora(const HandType &hand,
+int ScoreCalculator::count_reddora(const Hand &hand,
                                    const std::vector<MeldedBlock> &melds)
 {
     int num_reddora = 0;
