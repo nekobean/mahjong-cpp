@@ -11,7 +11,6 @@
 #include <spdlog/spdlog.h>
 
 #include "meld.hpp"
-#include "tile.hpp"
 
 using HandType = std::array<int, 37>;
 
@@ -43,7 +42,6 @@ class Hand
   private:
     void check_arguments(const std::vector<int> &tiles,
                          const std::vector<MeldedBlock> &melds);
-    friend bool operator==(const Hand &a, const Hand &b);
 
   public:
     /* 牌数 */
@@ -197,11 +195,6 @@ inline bool Hand::is_closed() const
 inline int Hand::num_tiles() const
 {
     return std::accumulate(counts.begin(), counts.begin() + 34, 0);
-}
-
-inline bool operator==(const Hand &a, const Hand &b)
-{
-    return a.melds == b.melds && a.counts == b.counts;
 }
 
 } // namespace mahjong

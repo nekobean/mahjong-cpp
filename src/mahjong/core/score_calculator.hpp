@@ -18,16 +18,16 @@ class ScoreCalculator
     using Input = HandSeparator::Input;
 
   public:
-    static Input create_input(const Hand &hand, int win_tile, int win_flag);
+    static Input create_input(const MyPlayer &player, int win_tile, int win_flag);
 
-    static Result calc(const Hand &hand, int win_tile, int win_flag,
-                       const Round &params);
+    static Result calc(const Round &round, const MyPlayer &player, int win_tile,
+                       int win_flag);
     static std::vector<int> get_scores_for_exp(const Result &result,
                                                const Round &params);
 
   public:
-    static std::tuple<bool, std::string> check_arguments(const Hand &hand, int win_tile,
-                                                         int yaku_list);
+    static std::tuple<bool, std::string> check_arguments(const MyPlayer &player,
+                                                         int win_tile, int yaku_list);
     static std::tuple<YakuList, int, std::vector<Block>, int>
     check_pattern_yaku(const Input &input, int shanten_type, const Round &params);
 

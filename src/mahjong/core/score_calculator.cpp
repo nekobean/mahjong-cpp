@@ -13,17 +13,17 @@
 
 namespace mahjong
 {
-HandSeparator::Input ScoreCalculator::create_input(const Hand &hand, int win_tile,
+HandSeparator::Input ScoreCalculator::create_input(const MyPlayer &player, int win_tile,
                                                    int win_flag)
 {
     Input input;
-    input.hand = hand.counts;
+    input.hand = player.hand;
     input.win_tile = red2normal(win_tile);
     input.win_flag = win_flag;
-    input.melds = hand.melds;
+    input.melds = player.melds;
 
-    input.merged_hand = hand.counts;
-    for (const auto &block : hand.melds) {
+    input.merged_hand = player.hand;
+    for (const auto &block : player.melds) {
         int min_tile = red2normal(block.tiles.front()); // 赤ドラは通常の牌として扱う
 
         if (block.type == MeldType::Chow) {
@@ -69,22 +69,22 @@ HandSeparator::Input ScoreCalculator::create_input(const Hand &hand, int win_til
  * @param[in] flag フラグ
  * @return Result 結果
  */
-Result ScoreCalculator::calc(const Hand &hand, int win_tile, int win_flag,
-                             const Round &params)
+Result ScoreCalculator::calc(const Round &round, const MyPlayer &player, int win_tile,
+                             int win_flag)
 {
-    Input input = create_input(hand, win_tile, win_flag);
+    Input input = create_input(player, win_tile, win_flag);
 
-    if (auto [ok, err_msg] = check_arguments(hand, win_tile, win_flag); !ok) {
+    if (auto [ok, err_msg] = check_arguments(player, win_tile, win_flag); !ok) {
         return {input.hand, input.win_tile, input.win_flag, err_msg}; // 異常終了
     }
 
     if (win_flag & WinFlag::NagashiMangan) {
-        return aggregate(input, Yaku::NagasiMangan, params);
+        return aggregate(input, Yaku::NagasiMangan, round);
     }
 
     // 向聴数を計算する。
-    auto [shanten_type, syanten] =
-        ShantenCalculator::calc(hand.counts, int(hand.melds.size()), ShantenFlag::All);
+    auto [shanten_type, syanten] = ShantenCalculator::calc(
+        player.hand, int(player.melds.size()), ShantenFlag::All);
     if (syanten != -1) {
         return {input.hand, input.win_tile, input.win_flag, "和了形ではありません。"};
     }
@@ -94,22 +94,22 @@ Result ScoreCalculator::calc(const Hand &hand, int win_tile, int win_flag,
     // 役満をチェックする。
     yaku_list |= check_yakuman(input, shanten_type);
     if (yaku_list) {
-        return aggregate(input, yaku_list, params);
+        return aggregate(input, yaku_list, round);
     }
 
     // 面子構成に関係ない役を調べる。
-    yaku_list |= check_not_pattern_yaku(input, shanten_type, params);
+    yaku_list |= check_not_pattern_yaku(input, shanten_type, round);
 
     // 面子構成に関係ある役を調べる。
     auto [pattern_yaku_list, fu, blocks, wait_type] =
-        check_pattern_yaku(input, shanten_type, params);
+        check_pattern_yaku(input, shanten_type, round);
     yaku_list |= pattern_yaku_list;
 
     if (!yaku_list) {
         return {input.hand, input.win_tile, input.win_flag, "役がありません。"};
     }
 
-    return aggregate(input, yaku_list, fu, blocks, wait_type, params);
+    return aggregate(input, yaku_list, fu, blocks, wait_type, round);
 }
 
 /**
@@ -226,14 +226,14 @@ Result ScoreCalculator::aggregate(const Input &input, YakuList yaku_list, int fu
  * @param[in] int フラグ
  * @return (エラーかどうか, エラーメッセージ)
  */
-std::tuple<bool, std::string> ScoreCalculator::check_arguments(const Hand &hand,
+std::tuple<bool, std::string> ScoreCalculator::check_arguments(const MyPlayer &player,
                                                                int win_tile, int flag)
 {
     // 和了牌をチェックする。
-    if (!hand.counts[red2normal(win_tile)]) {
+    if (!player.hand[red2normal(win_tile)]) {
         std::string err_msg =
             fmt::format("和了牌 {} が手牌 {} に含まれていません。",
-                        Tile::Name.at(win_tile), to_mpsz(hand.counts));
+                        Tile::Name.at(win_tile), to_mpsz(player.hand));
         return {false, err_msg};
     }
 
@@ -264,7 +264,7 @@ std::tuple<bool, std::string> ScoreCalculator::check_arguments(const Hand &hand,
     }
 
     // 条件が必要なフラグをチェックする。
-    if ((flag & (WinFlag::Riichi | WinFlag::DoubleRiichi)) && !hand.is_closed()) {
+    if ((flag & (WinFlag::Riichi | WinFlag::DoubleRiichi)) && !player.is_closed()) {
         std::string err_msg =
             fmt::format("{}、{}は門前の場合のみ指定できます。",
                         Yaku::Name[Yaku::Riichi], Yaku::Name[Yaku::DoubleRiichi]);
@@ -488,68 +488,69 @@ std::vector<std::tuple<std::string, int>>
 ScoreCalculator::calc_fu_detail(const std::vector<Block> &blocks, int wait_type,
                                 bool is_menzen, bool is_tsumo, const Round &params)
 {
-    bool is_pinfu = check_pinfu(blocks, wait_type, params);
+    return std::vector<std::tuple<std::string, int>>();
+    // bool is_pinfu = check_pinfu(blocks, wait_type, params);
 
-    // 符計算の例外
-    //////////////////////////
-    if (is_pinfu && is_tsumo && is_menzen) { // 平和、自摸、門前
-        return {{"平和・自摸", 20}};
-    }
-    else if (is_pinfu && !is_tsumo && !is_menzen) { // 平和、ロン、非門前
-        return {{"喰い平和・ロン", 30}};
-    }
+    // // 符計算の例外
+    // //////////////////////////
+    // if (is_pinfu && is_tsumo && is_menzen) { // 平和、自摸、門前
+    //     return {{"平和・自摸", 20}};
+    // }
+    // else if (is_pinfu && !is_tsumo && !is_menzen) { // 平和、ロン、非門前
+    //     return {{"喰い平和・ロン", 30}};
+    // }
 
-    // 通常の符計算
-    //////////////////////////
+    // // 通常の符計算
+    // //////////////////////////
 
-    std::vector<std::tuple<std::string, int>> fu_detail;
-    fu_detail.emplace_back("副底", 20);
+    // std::vector<std::tuple<std::string, int>> fu_detail;
+    // fu_detail.emplace_back("副底", 20);
 
-    if (is_menzen && !is_tsumo)
-        fu_detail.emplace_back("門前加符", 10);
-    else if (is_tsumo)
-        fu_detail.emplace_back("自摸加符", 2);
+    // if (is_menzen && !is_tsumo)
+    //     fu_detail.emplace_back("門前加符", 10);
+    // else if (is_tsumo)
+    //     fu_detail.emplace_back("自摸加符", 2);
 
-    if (wait_type == WaitType::ClosedWait || wait_type == WaitType::EdgeWait ||
-        wait_type == WaitType::PairWait)
-        fu_detail.emplace_back(fmt::format("待ち: {}", WaitType::Name.at(wait_type)),
-                               2);
+    // if (wait_type == WaitType::ClosedWait || wait_type == WaitType::EdgeWait ||
+    //     wait_type == WaitType::PairWait)
+    //     fu_detail.emplace_back(fmt::format("待ち: {}", WaitType::Name.at(wait_type)),
+    //                            2);
 
-    for (const auto &block : blocks) {
-        if (block.type & (BlockType::Triplet | BlockType::Kong)) {
-            int block_fu = 0;
-            if (block.type == (BlockType::Triplet | BlockType::Open))
-                block_fu = 2; // 明刻子
-            else if (block.type == BlockType::Triplet)
-                block_fu = 4; // 暗刻子
-            else if (block.type == (BlockType::Kong | BlockType::Open))
-                block_fu = 8; // 明槓子
-            else if (block.type == BlockType::Kong)
-                block_fu = 16; // 暗槓子
+    // for (const auto &block : blocks) {
+    //     if (block.type & (BlockType::Triplet | BlockType::Kong)) {
+    //         int block_fu = 0;
+    //         if (block.type == (BlockType::Triplet | BlockType::Open))
+    //             block_fu = 2; // 明刻子
+    //         else if (block.type == BlockType::Triplet)
+    //             block_fu = 4; // 暗刻子
+    //         else if (block.type == (BlockType::Kong | BlockType::Open))
+    //             block_fu = 8; // 明槓子
+    //         else if (block.type == BlockType::Kong)
+    //             block_fu = 16; // 暗槓子
 
-            bool yaotyu =
-                block.min_tile == Tile::Manzu1 || block.min_tile == Tile::Manzu9 ||
-                block.min_tile == Tile::Pinzu1 || block.min_tile == Tile::Pinzu9 ||
-                block.min_tile == Tile::Souzu1 || block.min_tile == Tile::Souzu9 ||
-                block.min_tile >= Tile::East;
+    //         bool yaotyu =
+    //             block.min_tile == Tile::Manzu1 || block.min_tile == Tile::Manzu9 ||
+    //             block.min_tile == Tile::Pinzu1 || block.min_tile == Tile::Pinzu9 ||
+    //             block.min_tile == Tile::Souzu1 || block.min_tile == Tile::Souzu9 ||
+    //             block.min_tile >= Tile::East;
 
-            fu_detail.emplace_back(fmt::format("面子構成: {} {}", block.to_string(),
-                                               yaotyu ? "幺九牌" : "断幺牌"),
-                                   yaotyu ? block_fu * 2 : block_fu);
-        }
-        else if (block.type & BlockType::Pair) {
-            // 対子
-            if (block.min_tile == params.self_wind && block.min_tile == params.wind)
-                fu_detail.emplace_back(
-                    fmt::format("雀頭: {} 連風牌", block.to_string()), 4);
-            else if (block.min_tile == params.self_wind ||
-                     block.min_tile == params.wind || block.min_tile >= Tile::White)
-                fu_detail.emplace_back(fmt::format("雀頭: {} 役牌", block.to_string()),
-                                       2);
-        }
-    }
+    //         fu_detail.emplace_back(fmt::format("面子構成: {} {}", block.to_string(),
+    //                                            yaotyu ? "幺九牌" : "断幺牌"),
+    //                                yaotyu ? block_fu * 2 : block_fu);
+    //     }
+    //     else if (block.type & BlockType::Pair) {
+    //         // 対子
+    //         if (block.min_tile == params.self_wind && block.min_tile == params.wind)
+    //             fu_detail.emplace_back(
+    //                 fmt::format("雀頭: {} 連風牌", block.to_string()), 4);
+    //         else if (block.min_tile == params.self_wind ||
+    //                  block.min_tile == params.wind || block.min_tile >= Tile::White)
+    //             fu_detail.emplace_back(fmt::format("雀頭: {} 役牌", block.to_string()),
+    //                                    2);
+    //     }
+    // }
 
-    return fu_detail;
+    // return fu_detail;
 }
 
 std::vector<int> ScoreCalculator::get_scores_for_exp(const Result &result,

@@ -1,15 +1,10 @@
 #ifndef MAHJONG_CPP_RESULT
 #define MAHJONG_CPP_RESULT
 
-#include <map>
-#include <string>
 #include <vector>
-
-#include <spdlog/spdlog.h>
 
 #include "const.hpp"
 #include "hand.hpp"
-#include "tile.hpp"
 
 namespace mahjong
 {

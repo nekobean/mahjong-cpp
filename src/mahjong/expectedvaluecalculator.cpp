@@ -396,7 +396,9 @@ std::vector<double> ExpectedValueCalculator::get_score(const Hand &hand, int win
         hand.is_closed() ? (WinFlag::Tsumo | WinFlag::Riichi) : WinFlag::Tsumo;
 
     // 点数計算を行う。
-    Result result = ScoreCalculator::calc(hand, win_tile, hand_flag, params);
+    MyPlayer player;
+    std::copy(hand.counts.begin(), hand.counts.end(), player.hand.begin());
+    Result result = ScoreCalculator::calc(params, player, win_tile, hand_flag);
 
     // 表ドラの数
     int n_dora = int(dora_indicators_.size());

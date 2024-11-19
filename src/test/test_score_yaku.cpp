@@ -20,14 +20,13 @@ struct TestCase
     // 場況
     int rules;
     int wind;
-    int self_wind;
     int honba;
     int kyotaku;
     std::vector<int> dora_tiles;
     std::vector<int> uradora_tiles;
 
     // 入力
-    Hand hand;
+    MyPlayer player;
     int win_tile;
     int win_flag;
 
@@ -78,7 +77,6 @@ bool load_cases(const std::string &filename, std::vector<TestCase> &cases)
         TestCase testcase;
 
         testcase.wind = v["bakaze"].GetInt();
-        testcase.self_wind = v["zikaze"].GetInt();
         testcase.honba = v["num_tumibo"].GetInt();
         testcase.kyotaku = v["num_kyotakubo"].GetInt();
         for (auto &x : v["dora_tiles"].GetArray())
@@ -103,7 +101,8 @@ bool load_cases(const std::string &filename, std::vector<TestCase> &cases)
             melded_blocks.push_back(melded_block);
         }
 
-        testcase.hand = Hand(tiles, melded_blocks);
+        MyPlayer player(tiles, melded_blocks, v["zikaze"].GetInt());
+        testcase.player = player;
         testcase.win_tile = v["win_tile"].GetInt();
         testcase.win_flag = v["flag"].GetInt();
 
@@ -141,19 +140,19 @@ bool load_cases(const std::string &filename, std::vector<TestCase> &cases)
     return true;
 }
 
-TEST_CASE("一般役の点数計算")
+TEST_CASE("Score Calculator")
 {
     std::vector<TestCase> cases;
     if (!load_cases("test_score_normal_yaku.json", cases))
         return;
 
-    SECTION("一般役の点数計算")
+    SECTION("Score Calculator")
     {
         for (const auto &testcase : cases) {
             // 設定
             Round params;
             params.wind = testcase.wind;
-            params.self_wind = testcase.self_wind;
+            params.self_wind = testcase.player.wind;
             params.honba = testcase.honba;
             params.kyotaku = testcase.kyotaku;
             params.dora_tiles = testcase.dora_tiles;
@@ -161,8 +160,8 @@ TEST_CASE("一般役の点数計算")
             params.rules = testcase.rules;
 
             // 計算
-            Result ret = ScoreCalculator::calc(testcase.hand, testcase.win_tile,
-                                               testcase.win_flag, params);
+            Result ret = ScoreCalculator::calc(params, testcase.player,
+                                               testcase.win_tile, testcase.win_flag);
 
             // 照合
             INFO(fmt::format("URL: {}", testcase.url));
@@ -190,13 +189,13 @@ TEST_CASE("一般役の点数計算")
         }
     };
 
-    BENCHMARK("一般役の点数計算")
+    BENCHMARK("Score Calculator")
     {
         for (const auto &testcase : cases) {
             // 設定
             Round params;
             params.wind = testcase.wind;
-            params.self_wind = testcase.self_wind;
+            params.self_wind = testcase.player.wind;
             params.honba = testcase.honba;
             params.kyotaku = testcase.kyotaku;
             params.dora_tiles = testcase.dora_tiles;
@@ -204,8 +203,8 @@ TEST_CASE("一般役の点数計算")
             params.rules = testcase.rules;
 
             // 計算
-            Result ret = ScoreCalculator::calc(testcase.hand, testcase.win_tile,
-                                               testcase.win_flag, params);
+            Result ret = ScoreCalculator::calc(params, testcase.player,
+                                               testcase.win_tile, testcase.win_flag);
         }
     };
 }

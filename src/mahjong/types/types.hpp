@@ -8,6 +8,5 @@
 #include "player.hpp"
 #include "result.hpp"
 #include "round.hpp"
-#include "tile.hpp"
 
 #endif /* MAHJONG_CPP_TYPES */

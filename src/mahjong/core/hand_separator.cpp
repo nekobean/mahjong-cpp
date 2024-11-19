@@ -9,6 +9,8 @@
 #include <cstdio>
 #include <fstream>
 
+#include "mahjong/core/utils.hpp"
+
 namespace mahjong
 {
 

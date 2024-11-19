@@ -13,7 +13,7 @@
 
 using namespace mahjong;
 
-using TestCase = std::tuple<HandSeparator::Input, Hand, int, bool>;
+using TestCase = std::tuple<HandSeparator::Input, int, bool>;
 
 /**
  * @brief Load test cases.
@@ -51,21 +51,11 @@ bool load_yakuman_cases(const std::string &filename, std::vector<TestCase> &case
         int win_tile = std::stoi(tokens[14]);
         bool is_valid = tokens[15] == "1";
 
-        Hand hand(tiles);
-        hand.manzu = std::accumulate(hand.counts.begin(), hand.counts.begin() + 9, 0,
-                                     [](int x, int y) { return x * 8 + y; });
-        hand.pinzu = std::accumulate(hand.counts.begin() + 9, hand.counts.begin() + 18,
-                                     0, [](int x, int y) { return x * 8 + y; });
-        hand.souzu = std::accumulate(hand.counts.begin() + 18, hand.counts.begin() + 27,
-                                     0, [](int x, int y) { return x * 8 + y; });
-        hand.honors =
-            std::accumulate(hand.counts.begin() + 27, hand.counts.begin() + 34, 0,
-                            [](int x, int y) { return x * 8 + y; });
-
+        MyPlayer player(tiles, Tile::East);
         HandSeparator::Input input =
-            ScoreCalculator::create_input(hand, win_tile, WinFlag::Null);
+            ScoreCalculator::create_input(player, win_tile, WinFlag::Null);
 
-        cases.emplace_back(input, hand, win_tile, is_valid);
+        cases.emplace_back(input, win_tile, is_valid);
     }
 
     return true;
@@ -80,9 +70,9 @@ TEST_CASE("All Green")
 
     SECTION("All Green")
     {
-        for (auto &[input, hand, win_tile, expected] : cases) {
+        for (auto &[input, win_tile, expected] : cases) {
             bool actual = ScoreCalculator::check_all_green(input);
-            INFO(fmt::format("hand: {}, win tile: {}", to_mpsz(hand.counts),
+            INFO(fmt::format("hand: {}, win tile: {}", to_mpsz(input.hand),
                              Tile::Name.at(win_tile)));
             REQUIRE(actual == expected);
         }
@@ -90,7 +80,7 @@ TEST_CASE("All Green")
 
     BENCHMARK("All Green")
     {
-        auto &[input, hand, win_tile, expected] = cases.front();
+        auto &[input, win_tile, expected] = cases.front();
         ScoreCalculator::check_all_green(input);
     };
 }
@@ -104,9 +94,9 @@ TEST_CASE("Big Three Dragons")
 
     SECTION("Big Three Dragons")
     {
-        for (auto &[input, hand, win_tile, expected] : cases) {
+        for (auto &[input, win_tile, expected] : cases) {
             bool actual = ScoreCalculator::check_big_three_dragons(input);
-            INFO(fmt::format("hand: {}, win tile: {}", to_mpsz(hand.counts),
+            INFO(fmt::format("hand: {}, win tile: {}", to_mpsz(input.hand),
                              Tile::Name.at(win_tile)));
             REQUIRE(actual == expected);
         }
@@ -114,7 +104,7 @@ TEST_CASE("Big Three Dragons")
 
     BENCHMARK("Big Three Dragons")
     {
-        auto &[input, hand, win_tile, expected] = cases.front();
+        auto &[input, win_tile, expected] = cases.front();
         ScoreCalculator::check_big_three_dragons(input);
     };
 }
@@ -128,9 +118,9 @@ TEST_CASE("Little Four Winds")
 
     SECTION("Little Four Winds")
     {
-        for (auto &[input, hand, win_tile, expected] : cases) {
+        for (auto &[input, win_tile, expected] : cases) {
             bool actual = ScoreCalculator::check_little_four_winds(input);
-            INFO(fmt::format("hand: {}, win tile: {}", to_mpsz(hand.counts),
+            INFO(fmt::format("hand: {}, win tile: {}", to_mpsz(input.hand),
                              Tile::Name.at(win_tile)));
             REQUIRE(actual == expected);
         }
@@ -138,7 +128,7 @@ TEST_CASE("Little Four Winds")
 
     BENCHMARK("Little Four Winds")
     {
-        auto &[input, hand, win_tile, expected] = cases.front();
+        auto &[input, win_tile, expected] = cases.front();
         ScoreCalculator::check_little_four_winds(input);
     };
 }
@@ -152,9 +142,9 @@ TEST_CASE("All Honors")
 
     SECTION("All Honors")
     {
-        for (auto &[input, hand, win_tile, expected] : cases) {
+        for (auto &[input, win_tile, expected] : cases) {
             bool actual = ScoreCalculator::check_all_honors(input);
-            INFO(fmt::format("hand: {}, win tile: {}", to_mpsz(hand.counts),
+            INFO(fmt::format("hand: {}, win tile: {}", to_mpsz(input.hand),
                              Tile::Name.at(win_tile)));
             REQUIRE(actual == expected);
         }
@@ -162,7 +152,7 @@ TEST_CASE("All Honors")
 
     BENCHMARK("All Honors")
     {
-        auto &[input, hand, win_tile, expected] = cases.front();
+        auto &[input, win_tile, expected] = cases.front();
         ScoreCalculator::check_all_honors(input);
     };
 }
@@ -176,9 +166,9 @@ TEST_CASE("Nine Gates")
 
     SECTION("Nine Gates")
     {
-        for (auto &[input, hand, win_tile, expected] : cases) {
+        for (auto &[input, win_tile, expected] : cases) {
             bool actual = ScoreCalculator::check_nine_gates(input);
-            INFO(fmt::format("hand: {}, win tile: {}", to_mpsz(hand.counts),
+            INFO(fmt::format("hand: {}, win tile: {}", to_mpsz(input.hand),
                              Tile::Name.at(win_tile)));
             REQUIRE(actual == expected);
         }
@@ -186,7 +176,7 @@ TEST_CASE("Nine Gates")
 
     BENCHMARK("Nine Gates")
     {
-        auto &[input, hand, win_tile, expected] = cases.front();
+        auto &[input, win_tile, expected] = cases.front();
         ScoreCalculator::check_nine_gates(input);
     };
 }
@@ -200,9 +190,9 @@ TEST_CASE("True Nine Gates")
 
     SECTION("True Nine Gates")
     {
-        for (auto &[input, hand, win_tile, expected] : cases) {
+        for (auto &[input, win_tile, expected] : cases) {
             bool actual = ScoreCalculator::check_true_nine_gates(input);
-            INFO(fmt::format("hand: {}, win tile: {}", to_mpsz(hand.counts),
+            INFO(fmt::format("hand: {}, win tile: {}", to_mpsz(input.hand),
                              Tile::Name.at(win_tile)));
             REQUIRE(actual == expected);
         }
@@ -210,7 +200,7 @@ TEST_CASE("True Nine Gates")
 
     BENCHMARK("True Nine Gates")
     {
-        auto &[input, hand, win_tile, expected] = cases.front();
+        auto &[input, win_tile, expected] = cases.front();
         ScoreCalculator::check_true_nine_gates(input);
     };
 }
@@ -225,12 +215,12 @@ TEST_CASE("Four Concealed Triplets")
 
     SECTION("Four Concealed Triplets")
     {
-        for (auto &[input, hand, win_tile, expected] : cases) {
+        for (auto &[input, win_tile, expected] : cases) {
             HandSeparator::Input input2 = input;
             input2.win_flag = WinFlag::Tsumo;
             bool actual = ScoreCalculator::check_four_concealed_triplets(input2) >= 1;
 
-            INFO(fmt::format("hand: {}, win tile: {}", to_mpsz(hand.counts),
+            INFO(fmt::format("hand: {}, win tile: {}", to_mpsz(input.hand),
                              Tile::Name.at(win_tile)));
             REQUIRE(actual == expected);
         }
@@ -238,7 +228,7 @@ TEST_CASE("Four Concealed Triplets")
 
     BENCHMARK("Four Concealed Triplets")
     {
-        auto &[input, hand, win_tile, expected] = cases.front();
+        auto &[input, win_tile, expected] = cases.front();
         HandSeparator::Input input2 = input;
         input2.win_flag = WinFlag::Tsumo;
         ScoreCalculator::check_four_concealed_triplets(input2);
@@ -255,11 +245,11 @@ TEST_CASE("Single Wait Four Concealed Triplets")
 
     SECTION("Single Wait Four Concealed Triplets")
     {
-        for (auto &[input, hand, win_tile, expected] : cases) {
+        for (auto &[input, win_tile, expected] : cases) {
             HandSeparator::Input input2 = input;
             input2.win_flag = WinFlag::Tsumo;
             bool actual = ScoreCalculator::check_four_concealed_triplets(input2) == 2;
-            INFO(fmt::format("hand: {}, win tile: {}", to_mpsz(hand.counts),
+            INFO(fmt::format("hand: {}, win tile: {}", to_mpsz(input.hand),
                              Tile::Name.at(win_tile)));
             REQUIRE(actual == expected);
         }
@@ -267,7 +257,7 @@ TEST_CASE("Single Wait Four Concealed Triplets")
 
     BENCHMARK("Single Wait Four Concealed Triplets")
     {
-        auto &[input, hand, win_tile, expected] = cases.front();
+        auto &[input, win_tile, expected] = cases.front();
         HandSeparator::Input input2 = input;
         input2.win_flag = WinFlag::Tsumo;
         ScoreCalculator::check_four_concealed_triplets(input2);
@@ -283,9 +273,9 @@ TEST_CASE("All Terminals")
 
     SECTION("All Terminals")
     {
-        for (auto &[input, hand, win_tile, expected] : cases) {
+        for (auto &[input, win_tile, expected] : cases) {
             bool actual = ScoreCalculator::check_all_terminals(input);
-            INFO(fmt::format("hand: {}, win tile: {}", to_mpsz(hand.counts),
+            INFO(fmt::format("hand: {}, win tile: {}", to_mpsz(input.hand),
                              Tile::Name.at(win_tile)));
             REQUIRE(actual == expected);
         }
@@ -293,7 +283,7 @@ TEST_CASE("All Terminals")
 
     BENCHMARK("All Terminals")
     {
-        auto &[input, hand, win_tile, expected] = cases.front();
+        auto &[input, win_tile, expected] = cases.front();
         ScoreCalculator::check_all_terminals(input);
     };
 }
@@ -321,9 +311,9 @@ TEST_CASE("Four Kongs")
         std::vector<MeldedBlock> melds = {block1, block2, block3, block4};
         std::vector<int> tiles = {Tile::White, Tile::White};
 
-        Hand hand(tiles, melds);
+        MyPlayer player(tiles, melds, Tile::East);
         HandSeparator::Input input =
-            ScoreCalculator::create_input(hand, Tile::White, WinFlag::Null);
+            ScoreCalculator::create_input(player, Tile::White, WinFlag::Null);
 
         bool expected = true;
         bool actual = ScoreCalculator::check_four_kongs(input);
@@ -352,10 +342,10 @@ TEST_CASE("Four Kongs")
                             PlayerType::Player1});
         std::vector<MeldedBlock> melds = {block1, block2, block3, block4};
         std::vector<int> tiles = {Tile::White, Tile::White};
+        MyPlayer player(tiles, melds, Tile::East);
 
-        Hand hand(tiles, melds);
         HandSeparator::Input input =
-            ScoreCalculator::create_input(hand, Tile::White, WinFlag::Null);
+            ScoreCalculator::create_input(player, Tile::White, WinFlag::Null);
 
         int win_tile = Tile::White;
         bool expected = false;
@@ -381,10 +371,10 @@ TEST_CASE("Four Kongs")
                             PlayerType::Player1});
         std::vector<MeldedBlock> melds = {block1, block2, block3};
         std::vector<int> tiles = {Tile::White, Tile::White};
+        MyPlayer player(tiles, melds, Tile::East);
 
-        Hand hand(tiles, melds);
         HandSeparator::Input input =
-            ScoreCalculator::create_input(hand, Tile::White, WinFlag::Null);
+            ScoreCalculator::create_input(player, Tile::White, WinFlag::Null);
 
         int win_tile = Tile::White;
         bool expected = false;
@@ -404,9 +394,9 @@ TEST_CASE("Big Four Winds")
 
     SECTION("Big Four Winds")
     {
-        for (auto &[input, hand, win_tile, expected] : cases) {
+        for (auto &[input, win_tile, expected] : cases) {
             bool actual = ScoreCalculator::check_big_four_winds(input);
-            INFO(fmt::format("hand: {}, win tile: {}", to_mpsz(hand.counts),
+            INFO(fmt::format("hand: {}, win tile: {}", to_mpsz(input.hand),
                              Tile::Name.at(win_tile)));
             REQUIRE(actual == expected);
         }
@@ -414,7 +404,7 @@ TEST_CASE("Big Four Winds")
 
     BENCHMARK("Big Four Winds")
     {
-        auto &[input, hand, win_tile, expected] = cases.front();
+        auto &[input, win_tile, expected] = cases.front();
         ScoreCalculator::check_big_four_winds(input);
     };
 }
@@ -429,9 +419,9 @@ TEST_CASE("Thirteen Orphans 13-sided wait")
 
     SECTION("Thirteen Orphans 13-sided wait")
     {
-        for (auto &[input, hand, win_tile, expected] : cases) {
+        for (auto &[input, win_tile, expected] : cases) {
             bool actual = ScoreCalculator::check_thirteen_wait_thirteen_orphans(input);
-            INFO(fmt::format("hand: {}, win tile: {}", to_mpsz(hand.counts),
+            INFO(fmt::format("hand: {}, win tile: {}", to_mpsz(input.hand),
                              Tile::Name.at(win_tile)));
             REQUIRE(actual == expected);
         }
@@ -439,7 +429,7 @@ TEST_CASE("Thirteen Orphans 13-sided wait")
 
     BENCHMARK("Thirteen Orphans 13-sided wait")
     {
-        auto &[input, hand, win_tile, expected] = cases.front();
+        auto &[input, win_tile, expected] = cases.front();
         ScoreCalculator::check_thirteen_wait_thirteen_orphans(input);
     };
 }
