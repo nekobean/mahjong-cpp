@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "mahjong/types/const.hpp"
+#include "mahjong/types/hand.hpp"
 #include "mahjong/types/meld.hpp"
 
 namespace mahjong
@@ -15,18 +16,23 @@ namespace mahjong
 class MyPlayer
 {
   public:
-    MyPlayer() : wind(Tile::Null)
+    MyPlayer() : hand{0}, wind(Tile::Null)
     {
     }
+
+    // Count of hand tiles (手牌の各牌の枚数)
+    HandType hand;
+
+    // List of meld blocks (副露ブロックの一覧)
+    std::vector<MeldedBlock> melds;
 
     // Seat wind (自風)
     int wind;
 
-    // Count of hand tiles (手牌の各牌の枚数)
-    std::vector<int> hand;
-
-    // List of meld blocks (副露ブロックの一覧)
-    std::vector<MeldedBlock> melds;
+    int num_tiles() const
+    {
+        return std::accumulate(hand.begin(), hand.begin() + 34, 0);
+    }
 
     int num_melds() const
     {

@@ -48,6 +48,63 @@ inline std::string to_mpsz(const HandType &hand)
     return s;
 }
 
+/**
+ * @brief Create a hand from a string in MPSZ notation.
+ *
+ * @param[in] tiles string in MPSZ notation
+ * @return Hand object
+ */
+inline HandType from_mpsz(const std::string &tiles)
+{
+    HandType hand{0};
+
+    std::string type;
+    for (auto it = tiles.rbegin(); it != tiles.rend(); ++it) {
+        if (std::isspace(*it)) {
+            continue;
+        }
+
+        if (*it == 'm' || *it == 'p' || *it == 's' || *it == 'z') {
+            type = *it;
+        }
+        else if (std::isdigit(*it)) {
+            int tile = *it - '0' - 1;
+            if (type == "m") {
+                if (tile == -1) {
+                    hand[Tile::RedManzu5]++;
+                    hand[Tile::Manzu5]++;
+                }
+                else {
+                    hand[tile]++;
+                }
+            }
+            else if (type == "p") {
+                if (tile == -1) {
+                    hand[Tile::RedPinzu5]++;
+                    hand[Tile::Pinzu5]++;
+                }
+                else {
+                    hand[tile + 9]++;
+                }
+            }
+            else if (type == "s") {
+                if (tile == -1) {
+                    hand[Tile::RedSouzu5]++;
+                    hand[Tile::Souzu5]++;
+                }
+                else {
+                    hand[tile + 18]++;
+                }
+            }
+            else if (type == "z") {
+                hand[tile + 27]++;
+            }
+        }
+    }
+
+    return hand;
+}
+
 inline std::string to_string(const Result &result)
 {
     //     std::string s;

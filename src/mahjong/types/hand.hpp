@@ -30,7 +30,6 @@ class Hand
 
     bool is_closed() const;
     int num_tiles() const;
-    static Hand from_mpsz(const std::string &mpsz_str);
 
     static Hand from_counts(const std::vector<int> &tiles)
     {
@@ -198,45 +197,6 @@ inline bool Hand::is_closed() const
 inline int Hand::num_tiles() const
 {
     return std::accumulate(counts.begin(), counts.begin() + 34, 0);
-}
-
-/**
- * @brief Create a hand from a string in MPSZ notation.
- *
- * @param[in] tiles string in MPSZ notation
- * @return Hand object
- */
-inline Hand Hand::from_mpsz(const std::string &tiles)
-{
-    Hand hand;
-
-    std::string type;
-    for (auto it = tiles.rbegin(); it != tiles.rend(); ++it) {
-        if (std::isspace(*it)) {
-            continue;
-        }
-
-        if (*it == 'm' || *it == 'p' || *it == 's' || *it == 'z') {
-            type = *it;
-        }
-        else if (std::isdigit(*it)) {
-            int tile = *it - '0' - 1;
-            if (type == "m") {
-                hand.counts[tile]++;
-            }
-            else if (type == "p") {
-                hand.counts[tile + 9]++;
-            }
-            else if (type == "s") {
-                hand.counts[tile + 18]++;
-            }
-            else if (type == "z") {
-                hand.counts[tile + 27]++;
-            }
-        }
-    }
-
-    return hand;
 }
 
 inline bool operator==(const Hand &a, const Hand &b)
