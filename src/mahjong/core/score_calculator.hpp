@@ -36,11 +36,11 @@ class ScoreCalculator
     static std::vector<std::tuple<std::string, int>>
     calc_fu_detail(const std::vector<Block> &blocks, int wait_type, bool is_menzen,
                    bool is_tumo, const Round &params);
-    static Result aggregate(const Input &input, YakuList yaku_list,
-                            const Round &params);
+    static Result aggregate(const Input &input, YakuList yaku_list, const Round &params,
+                            const MyPlayer &player);
     static Result aggregate(const Input &input, YakuList yaku_list, int fu,
                             const std::vector<Block> &blocks, int wait_type,
-                            const Round &params);
+                            const Round &params, const MyPlayer &player);
 
     static YakuList check_yakuman(const Input &input, const int shanten_type);
     static YakuList check_not_pattern_yaku(const Input &input, const int shanten_type,

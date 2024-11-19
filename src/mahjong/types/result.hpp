@@ -18,7 +18,7 @@ struct Result
      *
      * @param[in] hand 手牌
      * @param[in] win_tile 和了牌
-     * @param[in] flag フラグ
+     * @param[in] win_flag フラグ
      * @param[in] yaku_list (成立した役, 飜) の一覧
      * @param[in] han 翻
      * @param[in] hu 符
@@ -27,14 +27,14 @@ struct Result
      * @param[in] blocks 面子構成
      * @param[in] wait_type 待ちの種類
      */
-    Result(const Hand &hand, int win_tile, int flag,
+    Result(const MyPlayer &player, int win_tile, int win_flag,
            const std::vector<std::tuple<YakuList, int>> &yaku_list, int han, int hu,
            int score_title, const std::vector<int> &score,
            const std::vector<Block> &blocks, int wait_type)
         : success(true)
-        , hand(hand)
+        , player(player)
         , win_tile(win_tile)
-        , flag(flag)
+        , win_flag(win_flag)
         , yaku_list(yaku_list)
         , han(han)
         , fu(Hu::Values.at(hu))
@@ -50,18 +50,18 @@ struct Result
      *
      * @param[in] hand 手牌
      * @param[in] win_tile 和了牌
-     * @param[in] flag フラグ
+     * @param[in] win_flag フラグ
      * @param[in] yaku_list (成立した役, 飜) の一覧
      * @param[in] score_title 点数のタイトル
      * @param[in] score 点数
      */
-    Result(const Hand &hand, int win_tile, int flag,
+    Result(const MyPlayer &player, int win_tile, int win_flag,
            const std::vector<std::tuple<YakuList, int>> &yaku_list, int score_title,
            const std::vector<int> &score)
         : success(true)
-        , hand(hand)
+        , player(player)
         , win_tile(win_tile)
-        , flag(flag)
+        , win_flag(win_flag)
         , yaku_list(yaku_list)
         , han(0)
         , fu(Hu::Null)
@@ -74,17 +74,18 @@ struct Result
     /**
      * @brief エラーの結果
      *
-     * @param[in] hand 手牌
+     * @param[in] player 手牌
      * @param[in] win_tile 和了牌
-     * @param[in] flag フラグ
+     * @param[in] win_flag フラグ
      * @param[in] err_msg エラーメッセージ
      */
-    Result(const Hand &hand, int win_tile, int flag, const std::string &err_msg)
+    Result(const MyPlayer &player, int win_tile, int win_flag,
+           const std::string &err_msg)
         : success(false)
         , err_msg(err_msg)
-        , hand(hand)
+        , player(player)
         , win_tile(win_tile)
-        , flag(flag)
+        , win_flag(win_flag)
         , yaku_list(Yaku::Null)
         , han(0)
         , fu(Hu::Null)
@@ -93,48 +94,45 @@ struct Result
     {
     }
 
-    /* 正常終了したかどうか */
+    /* Whether the operation was successful */
     bool success;
 
-    /* 異常終了した場合のエラーメッセージ */
+    /* Error message */
     std::string err_msg;
 
-    /**
-     * 入力情報
-     */
+    // Input
+    ////////////////////////
 
-    /* 手牌 */
-    Hand hand;
+    /* Player infomation */
+    MyPlayer player;
 
-    /* 和了牌 */
+    /* Win tile */
     int win_tile;
 
-    /* フラグ */
-    int flag;
+    /* Win flag */
+    int win_flag;
 
-    /**
-     * 結果情報
-     */
+    // Output
 
-    /* (成立した役, 飜) の一覧 */
+    /* list of (yaku, han) */
     std::vector<std::tuple<YakuList, int>> yaku_list;
 
-    /* 飜 */
+    /* han */
     int han;
 
-    /* 符 */
+    /* fu */
     int fu;
 
-    /* 点数の種類 */
+    /* score title */
     int score_title;
 
-    /* 点数 */
+    /* score */
     std::vector<int> score;
 
-    /* 面子構成 */
+    /* block */
     std::vector<Block> blocks;
 
-    /* 待ちの種類 */
+    /* wait type */
     int wait_type;
 };
 

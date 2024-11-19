@@ -22,7 +22,7 @@ struct MeldedBlock
         : type(type)
         , tiles(tiles)
         , discarded_tile(!tiles.empty() ? tiles.front() : Tile::Null)
-        , from(PlayerType::Player0)
+        , from(PlayerType::Null)
     {
     }
 

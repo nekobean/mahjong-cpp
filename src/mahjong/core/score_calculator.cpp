@@ -77,18 +77,18 @@ Result ScoreCalculator::calc(const Round &round, const MyPlayer &player, int win
     Input input = create_input(player, win_tile, win_flag);
 
     if (auto [ok, err_msg] = check_arguments(player, win_tile, win_flag); !ok) {
-        return {input.hand, input.win_tile, input.win_flag, err_msg}; // 異常終了
+        return {player, input.win_tile, input.win_flag, err_msg}; // 異常終了
     }
 
     if (win_flag & WinFlag::NagashiMangan) {
-        return aggregate(input, Yaku::NagasiMangan, round);
+        return aggregate(input, Yaku::NagasiMangan, round, player);
     }
 
     // 向聴数を計算する。
     auto [shanten_type, syanten] = ShantenCalculator::calc(
         player.hand, int(player.melds.size()), ShantenFlag::All);
     if (syanten != -1) {
-        return {input.hand, input.win_tile, input.win_flag, "和了形ではありません。"};
+        return {player, input.win_tile, input.win_flag, "和了形ではありません。"};
     }
 
     YakuList yaku_list = Yaku::Null;
@@ -96,7 +96,7 @@ Result ScoreCalculator::calc(const Round &round, const MyPlayer &player, int win
     // 役満をチェックする。
     yaku_list |= check_yakuman(input, shanten_type);
     if (yaku_list) {
-        return aggregate(input, yaku_list, round);
+        return aggregate(input, yaku_list, round, player);
     }
 
     // 面子構成に関係ない役を調べる。
@@ -108,10 +108,10 @@ Result ScoreCalculator::calc(const Round &round, const MyPlayer &player, int win
     yaku_list |= pattern_yaku_list;
 
     if (!yaku_list) {
-        return {input.hand, input.win_tile, input.win_flag, "役がありません。"};
+        return {player, input.win_tile, input.win_flag, "役がありません。"};
     }
 
-    return aggregate(input, yaku_list, fu, blocks, wait_type, round);
+    return aggregate(input, yaku_list, fu, blocks, wait_type, round, player);
 }
 
 /**
@@ -124,7 +124,7 @@ Result ScoreCalculator::calc(const Round &round, const MyPlayer &player, int win
  * @return Result 結果
  */
 Result ScoreCalculator::aggregate(const Input &input, YakuList yaku_list,
-                                  const Round &params)
+                                  const Round &params, const MyPlayer &player)
 {
     int score_title;
     std::vector<std::tuple<YakuList, int>> yaku_han_list;
@@ -155,8 +155,7 @@ Result ScoreCalculator::aggregate(const Input &input, YakuList yaku_list,
         score = calc_score(input.win_flag & WinFlag::Tsumo, score_title, params);
     }
 
-    return {input.hand,    input.win_tile, input.win_flag,
-            yaku_han_list, score_title,    score};
+    return {player, input.win_tile, input.win_flag, yaku_han_list, score_title, score};
 }
 
 /**
@@ -171,7 +170,7 @@ Result ScoreCalculator::aggregate(const Input &input, YakuList yaku_list,
  */
 Result ScoreCalculator::aggregate(const Input &input, YakuList yaku_list, int fu,
                                   const std::vector<Block> &blocks, int wait_type,
-                                  const Round &params)
+                                  const Round &params, const MyPlayer &player)
 {
     // 飜を計算する。
     int han = 0;
@@ -216,8 +215,8 @@ Result ScoreCalculator::aggregate(const Input &input, YakuList yaku_list, int fu
         yaku_han_list.begin(), yaku_han_list.end(),
         [](const auto &a, const auto &b) { return std::get<0>(a) < std::get<0>(b); });
 
-    return {input.hand, input.win_tile, input.win_flag, yaku_han_list, han,
-            fu,         score_title,    score,          blocks,        wait_type};
+    return {player, input.win_tile, input.win_flag, yaku_han_list, han,
+            fu,     score_title,    score,          blocks,        wait_type};
 }
 
 /**
