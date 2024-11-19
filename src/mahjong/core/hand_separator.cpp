@@ -45,14 +45,14 @@ bool HandSeparator::initialize()
  * @return std::vector<std::vector<Block>> 面子構成の一覧
  */
 std::vector<std::tuple<std::vector<Block>, int>>
-HandSeparator::separate(const Hand &hand, int win_tile, bool tumo)
+HandSeparator::separate(const Input &input)
 {
     std::vector<std::tuple<std::vector<Block>, int>> pattern;
     std::vector<Block> blocks(5);
     int i = 0;
 
     // 副露ブロックをブロック一覧に追加する。
-    for (const auto &melded_block : hand.melds) {
+    for (const auto &melded_block : input.melds) {
         if (melded_block.type == MeldType::Pong)
             blocks[i].type = BlockType::Triplet | BlockType::Open;
         else if (melded_block.type == MeldType::Chow)
@@ -67,7 +67,7 @@ HandSeparator::separate(const Hand &hand, int win_tile, bool tumo)
     }
 
     // 手牌の切り分けパターンを列挙する。
-    create_block_patterns(hand, win_tile, tumo, pattern, blocks, i);
+    create_block_patterns(input, pattern, blocks, i);
 
     return pattern;
 }
@@ -146,10 +146,12 @@ std::vector<Block> HandSeparator::get_blocks(const std::string &s)
  * @return YakuList 成立した役一覧
  */
 void HandSeparator::create_block_patterns(
-    const Hand &hand, int win_tile, bool tumo,
-    std::vector<std::tuple<std::vector<Block>, int>> &pattern,
+    const Input &input, std::vector<std::tuple<std::vector<Block>, int>> &pattern,
     std::vector<Block> &blocks, size_t i, int d)
 {
+    int win_tile = input.win_tile;
+    bool tumo = input.win_flag & WinFlag::Tsumo;
+
     if (d == 4) {
         for (auto &block : blocks) {
             if (block.type & BlockType::Open)
@@ -237,50 +239,50 @@ void HandSeparator::create_block_patterns(
 
     if (d == 0) {
         // 萬子の面子構成
-        if (s_tbl_[hand.manzu].empty())
-            create_block_patterns(hand, win_tile, tumo, pattern, blocks, i, d + 1);
+        if (s_tbl_[input.manzu].empty())
+            create_block_patterns(input, pattern, blocks, i, d + 1);
 
-        for (const auto &manzu_pattern : s_tbl_[hand.manzu]) {
+        for (const auto &manzu_pattern : s_tbl_[input.manzu]) {
             for (const auto &block : manzu_pattern)
                 blocks[i++] = block;
-            create_block_patterns(hand, win_tile, tumo, pattern, blocks, i, d + 1);
+            create_block_patterns(input, pattern, blocks, i, d + 1);
             i -= manzu_pattern.size();
         }
     }
     else if (d == 1) {
         // 筒子の面子構成
-        if (s_tbl_[hand.pinzu].empty())
-            create_block_patterns(hand, win_tile, tumo, pattern, blocks, i, d + 1);
+        if (s_tbl_[input.pinzu].empty())
+            create_block_patterns(input, pattern, blocks, i, d + 1);
 
-        for (const auto &pinzu_pattern : s_tbl_[hand.pinzu]) {
+        for (const auto &pinzu_pattern : s_tbl_[input.pinzu]) {
             for (const auto &block : pinzu_pattern)
                 blocks[i++] = {block.type, block.min_tile + 9};
 
-            create_block_patterns(hand, win_tile, tumo, pattern, blocks, i, d + 1);
+            create_block_patterns(input, pattern, blocks, i, d + 1);
             i -= pinzu_pattern.size();
         }
     }
     else if (d == 2) {
         // 索子の面子構成
-        if (s_tbl_[hand.souzu].empty())
-            create_block_patterns(hand, win_tile, tumo, pattern, blocks, i, d + 1);
+        if (s_tbl_[input.souzu].empty())
+            create_block_patterns(input, pattern, blocks, i, d + 1);
 
-        for (const auto &sozu_pattern : s_tbl_[hand.souzu]) {
+        for (const auto &sozu_pattern : s_tbl_[input.souzu]) {
             for (const auto &block : sozu_pattern)
                 blocks[i++] = {block.type, block.min_tile + 18};
-            create_block_patterns(hand, win_tile, tumo, pattern, blocks, i, d + 1);
+            create_block_patterns(input, pattern, blocks, i, d + 1);
             i -= sozu_pattern.size();
         }
     }
     else if (d == 3) {
         // 字牌の面子構成
-        if (z_tbl_[hand.honors].empty())
-            create_block_patterns(hand, win_tile, tumo, pattern, blocks, i, d + 1);
+        if (z_tbl_[input.honors].empty())
+            create_block_patterns(input, pattern, blocks, i, d + 1);
 
-        for (const auto &zihai_pattern : z_tbl_[hand.honors]) {
+        for (const auto &zihai_pattern : z_tbl_[input.honors]) {
             for (const auto &block : zihai_pattern)
                 blocks[i++] = {block.type, block.min_tile + 27};
-            create_block_patterns(hand, win_tile, tumo, pattern, blocks, i, d + 1);
+            create_block_patterns(input, pattern, blocks, i, d + 1);
             i -= zihai_pattern.size();
         }
     }

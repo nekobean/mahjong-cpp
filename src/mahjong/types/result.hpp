@@ -33,7 +33,7 @@ struct Result
      * @param[in] blocks 面子構成
      * @param[in] wait_type 待ちの種類
      */
-    Result(const Hand &hand, int win_tile, int flag,
+    Result(const HandType &hand, int win_tile, int flag,
            const std::vector<std::tuple<YakuList, int>> &yaku_list, int han, int hu,
            int score_title, const std::vector<int> &score,
            const std::vector<Block> &blocks, int wait_type)
@@ -61,7 +61,7 @@ struct Result
      * @param[in] score_title 点数のタイトル
      * @param[in] score 点数
      */
-    Result(const Hand &hand, int win_tile, int flag,
+    Result(const HandType &hand, int win_tile, int flag,
            const std::vector<std::tuple<YakuList, int>> &yaku_list, int score_title,
            const std::vector<int> &score)
         : success(true)
@@ -85,7 +85,7 @@ struct Result
      * @param[in] flag フラグ
      * @param[in] err_msg エラーメッセージ
      */
-    Result(const Hand &hand, int win_tile, int flag, const std::string &err_msg)
+    Result(const HandType &hand, int win_tile, int flag, const std::string &err_msg)
         : success(false)
         , err_msg(err_msg)
         , hand(hand)
@@ -110,7 +110,7 @@ struct Result
      */
 
     /* 手牌 */
-    Hand hand;
+    HandType hand;
 
     /* 和了牌 */
     int win_tile;
