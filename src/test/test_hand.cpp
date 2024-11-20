@@ -198,14 +198,14 @@ TEST_CASE("is_menzen()")
 
     SECTION("副露ブロックに暗槓以外がない場合は門前")
     {
-        MeldedBlock block1 = {MeldType::Pong,
-                              {Tile::Pinzu1, Tile::Pinzu1, Tile::Pinzu1},
-                              Tile::Pinzu1,
-                              0};
-        MeldedBlock block2 = {MeldType::ClosedKong,
-                              {Tile::Pinzu8, Tile::Pinzu8, Tile::Pinzu8, Tile::Pinzu8},
-                              Tile::Pinzu1,
-                              1};
+        Meld block1 = {MeldType::Pong,
+                       {Tile::Pinzu1, Tile::Pinzu1, Tile::Pinzu1},
+                       Tile::Pinzu1,
+                       0};
+        Meld block2 = {MeldType::ClosedKong,
+                       {Tile::Pinzu8, Tile::Pinzu8, Tile::Pinzu8, Tile::Pinzu8},
+                       Tile::Pinzu1,
+                       1};
         Hand hand({Tile::Manzu1, Tile::Manzu1, Tile::Manzu2, Tile::Manzu2, Tile::Manzu6,
                    Tile::Manzu7, Tile::Manzu8},
                   {block1, block2});
@@ -215,14 +215,14 @@ TEST_CASE("is_menzen()")
 
     SECTION("副露ブロックに暗槓以外がある場合は門前でない")
     {
-        MeldedBlock block1 = {MeldType::ClosedKong,
-                              {Tile::Pinzu1, Tile::Pinzu1, Tile::Pinzu1},
-                              Tile::Pinzu1,
-                              0};
-        MeldedBlock block2 = {MeldType::ClosedKong,
-                              {Tile::Pinzu8, Tile::Pinzu8, Tile::Pinzu8, Tile::Pinzu8},
-                              Tile::Pinzu1,
-                              1};
+        Meld block1 = {MeldType::ClosedKong,
+                       {Tile::Pinzu1, Tile::Pinzu1, Tile::Pinzu1},
+                       Tile::Pinzu1,
+                       0};
+        Meld block2 = {MeldType::ClosedKong,
+                       {Tile::Pinzu8, Tile::Pinzu8, Tile::Pinzu8, Tile::Pinzu8},
+                       Tile::Pinzu1,
+                       1};
         Hand hand({Tile::Manzu1, Tile::Manzu1, Tile::Manzu2, Tile::Manzu2, Tile::Manzu6,
                    Tile::Manzu7, Tile::Manzu8},
                   {block1, block2});
@@ -245,14 +245,14 @@ TEST_CASE("is_melded()")
 
     SECTION("副露ブロックに暗槓以外がない")
     {
-        MeldedBlock block1 = {MeldType::Pong,
-                              {Tile::Pinzu1, Tile::Pinzu1, Tile::Pinzu1},
-                              Tile::Pinzu1,
-                              0};
-        MeldedBlock block2 = {MeldType::ClosedKong,
-                              {Tile::Pinzu8, Tile::Pinzu8, Tile::Pinzu8, Tile::Pinzu8},
-                              Tile::Pinzu1,
-                              1};
+        Meld block1 = {MeldType::Pong,
+                       {Tile::Pinzu1, Tile::Pinzu1, Tile::Pinzu1},
+                       Tile::Pinzu1,
+                       0};
+        Meld block2 = {MeldType::ClosedKong,
+                       {Tile::Pinzu8, Tile::Pinzu8, Tile::Pinzu8, Tile::Pinzu8},
+                       Tile::Pinzu1,
+                       1};
         Hand hand({Tile::Manzu1, Tile::Manzu1, Tile::Manzu2, Tile::Manzu2, Tile::Manzu6,
                    Tile::Manzu7, Tile::Manzu8},
                   {block1, block2});
@@ -262,14 +262,14 @@ TEST_CASE("is_melded()")
 
     SECTION("副露ブロックに暗槓以外がある")
     {
-        MeldedBlock block1 = {MeldType::ClosedKong,
-                              {Tile::Pinzu1, Tile::Pinzu1, Tile::Pinzu1},
-                              Tile::Pinzu1,
-                              0};
-        MeldedBlock block2 = {MeldType::ClosedKong,
-                              {Tile::Pinzu8, Tile::Pinzu8, Tile::Pinzu8, Tile::Pinzu8},
-                              Tile::Pinzu1,
-                              1};
+        Meld block1 = {MeldType::ClosedKong,
+                       {Tile::Pinzu1, Tile::Pinzu1, Tile::Pinzu1},
+                       Tile::Pinzu1,
+                       0};
+        Meld block2 = {MeldType::ClosedKong,
+                       {Tile::Pinzu8, Tile::Pinzu8, Tile::Pinzu8, Tile::Pinzu8},
+                       Tile::Pinzu1,
+                       1};
         Hand hand({Tile::Manzu1, Tile::Manzu1, Tile::Manzu2, Tile::Manzu2, Tile::Manzu6,
                    Tile::Manzu7, Tile::Manzu8},
                   {block1, block2});

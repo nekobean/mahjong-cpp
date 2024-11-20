@@ -116,27 +116,27 @@ TEST_CASE("to_string(Block)")
 
 TEST_CASE("to_string(Meld)")
 {
-    MeldedBlock meld1(MeldType::Pong, {Tile::Manzu1, Tile::Manzu1, Tile::Manzu1},
-                      Tile::Manzu1, PlayerType::Player1);
+    Meld meld1(MeldType::Pong, {Tile::Manzu1, Tile::Manzu1, Tile::Manzu1}, Tile::Manzu1,
+               PlayerType::Player1);
     REQUIRE(to_string(meld1) == u8"[111m ポン]");
 
-    MeldedBlock meld2(MeldType::Chow, {Tile::Manzu1, Tile::Manzu2, Tile::Manzu3},
-                      Tile::Manzu1, PlayerType::Player1);
+    Meld meld2(MeldType::Chow, {Tile::Manzu1, Tile::Manzu2, Tile::Manzu3}, Tile::Manzu1,
+               PlayerType::Player1);
     REQUIRE(to_string(meld2) == u8"[123m チー]");
 
-    MeldedBlock meld3(MeldType::ClosedKong,
-                      {Tile::Manzu1, Tile::Manzu1, Tile::Manzu1, Tile::Manzu1},
-                      Tile::Manzu1, PlayerType::Player0);
+    Meld meld3(MeldType::ClosedKong,
+               {Tile::Manzu1, Tile::Manzu1, Tile::Manzu1, Tile::Manzu1}, Tile::Manzu1,
+               PlayerType::Player0);
     REQUIRE(to_string(meld3) == u8"[1111m 暗槓]");
 
-    MeldedBlock meld4(MeldType::OpenKong,
-                      {Tile::Manzu1, Tile::Manzu1, Tile::Manzu1, Tile::Manzu1},
-                      Tile::Manzu1, PlayerType::Player1);
+    Meld meld4(MeldType::OpenKong,
+               {Tile::Manzu1, Tile::Manzu1, Tile::Manzu1, Tile::Manzu1}, Tile::Manzu1,
+               PlayerType::Player1);
     REQUIRE(to_string(meld4) == u8"[1111m 明槓]");
 
-    MeldedBlock meld5(MeldType::AddedKong,
-                      {Tile::Manzu1, Tile::Manzu1, Tile::Manzu1, Tile::Manzu1},
-                      Tile::Manzu1, PlayerType::Player1);
+    Meld meld5(MeldType::AddedKong,
+               {Tile::Manzu1, Tile::Manzu1, Tile::Manzu1, Tile::Manzu1}, Tile::Manzu1,
+               PlayerType::Player1);
     REQUIRE(to_string(meld5) == u8"[1111m 加槓]");
 }
 
@@ -156,10 +156,10 @@ TEST_CASE("to_string(Round)")
 TEST_CASE("to_string(Player)")
 {
     Hand hand = from_mpsz(u8"222567m34p33667s1z");
-    std::vector<MeldedBlock> melds = {{MeldType::Pong,
-                                       {Tile::Manzu1, Tile::Manzu1, Tile::Manzu1},
-                                       Tile::Manzu1,
-                                       PlayerType::Player0}};
+    std::vector<Meld> melds = {{MeldType::Pong,
+                                {Tile::Manzu1, Tile::Manzu1, Tile::Manzu1},
+                                Tile::Manzu1,
+                                PlayerType::Player0}};
     MyPlayer player(hand, melds, Tile::East);
 
     std::cout << to_string(player) << std::endl;

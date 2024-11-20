@@ -138,5 +138,24 @@ inline bool is_honor(int tile)
     return Tile::East <= tile && tile <= Tile::Red;
 }
 
+inline bool is_terminal(int tile)
+{
+    const int n = tile % 9;
+    return tile <= Tile::Souzu9 && (n == 0 || n == 8);
+}
+
+inline bool is_terminal_or_honor(int tile)
+{
+    const int n = tile % 9;
+    return tile <= Tile::Red && (n == 0 || n == 8 || Tile::East <= tile);
+}
+
+inline bool is_simples(int tile)
+{
+    const int n = tile % 9;
+    return tile <= Tile::Souzu9 && n != 0 && n != 8;
+}
+
 } // namespace mahjong
+
 #endif /* MAHJONG_CPP_UTILS */

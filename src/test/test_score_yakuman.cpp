@@ -292,23 +292,23 @@ TEST_CASE("Four Kongs")
 {
     SECTION("Four Kongs established")
     {
-        MeldedBlock block1({MeldType::ClosedKong,
-                            {Tile::Manzu1, Tile::Manzu1, Tile::Manzu1, Tile::Manzu1},
-                            Tile::Manzu1,
-                            PlayerType::Null});
-        MeldedBlock block2({MeldType::OpenKong,
-                            {Tile::Pinzu1, Tile::Pinzu1, Tile::Pinzu1, Tile::Pinzu1},
-                            Tile::Pinzu1,
-                            PlayerType::Player1});
-        MeldedBlock block3({MeldType::ClosedKong,
-                            {Tile::Souzu1, Tile::Souzu1, Tile::Souzu1, Tile::Souzu1},
-                            Tile::Souzu1,
-                            PlayerType::Null});
-        MeldedBlock block4({MeldType::AddedKong,
-                            {Tile::East, Tile::East, Tile::East, Tile::East},
-                            Tile::East,
-                            PlayerType::Player1});
-        std::vector<MeldedBlock> melds = {block1, block2, block3, block4};
+        Meld block1({MeldType::ClosedKong,
+                     {Tile::Manzu1, Tile::Manzu1, Tile::Manzu1, Tile::Manzu1},
+                     Tile::Manzu1,
+                     PlayerType::Null});
+        Meld block2({MeldType::OpenKong,
+                     {Tile::Pinzu1, Tile::Pinzu1, Tile::Pinzu1, Tile::Pinzu1},
+                     Tile::Pinzu1,
+                     PlayerType::Player1});
+        Meld block3({MeldType::ClosedKong,
+                     {Tile::Souzu1, Tile::Souzu1, Tile::Souzu1, Tile::Souzu1},
+                     Tile::Souzu1,
+                     PlayerType::Null});
+        Meld block4({MeldType::AddedKong,
+                     {Tile::East, Tile::East, Tile::East, Tile::East},
+                     Tile::East,
+                     PlayerType::Player1});
+        std::vector<Meld> melds = {block1, block2, block3, block4};
         std::vector<int> tiles = {Tile::White, Tile::White};
 
         MyPlayer player(tiles, melds, Tile::East);
@@ -324,23 +324,23 @@ TEST_CASE("Four Kongs")
 
     SECTION("Four Kongs not established")
     {
-        MeldedBlock block1({MeldType::Pong,
-                            {Tile::Manzu1, Tile::Manzu1, Tile::Manzu1},
-                            Tile::Manzu1,
-                            PlayerType::Player1});
-        MeldedBlock block2({MeldType::OpenKong,
-                            {Tile::Pinzu1, Tile::Pinzu1, Tile::Pinzu1, Tile::Pinzu1},
-                            Tile::Pinzu1,
-                            PlayerType::Player1});
-        MeldedBlock block3({MeldType::ClosedKong,
-                            {Tile::Souzu1, Tile::Souzu1, Tile::Souzu1, Tile::Souzu1},
-                            Tile::Souzu1,
-                            PlayerType::Null});
-        MeldedBlock block4({MeldType::AddedKong,
-                            {Tile::East, Tile::East, Tile::East, Tile::East},
-                            Tile::East,
-                            PlayerType::Player1});
-        std::vector<MeldedBlock> melds = {block1, block2, block3, block4};
+        Meld block1({MeldType::Pong,
+                     {Tile::Manzu1, Tile::Manzu1, Tile::Manzu1},
+                     Tile::Manzu1,
+                     PlayerType::Player1});
+        Meld block2({MeldType::OpenKong,
+                     {Tile::Pinzu1, Tile::Pinzu1, Tile::Pinzu1, Tile::Pinzu1},
+                     Tile::Pinzu1,
+                     PlayerType::Player1});
+        Meld block3({MeldType::ClosedKong,
+                     {Tile::Souzu1, Tile::Souzu1, Tile::Souzu1, Tile::Souzu1},
+                     Tile::Souzu1,
+                     PlayerType::Null});
+        Meld block4({MeldType::AddedKong,
+                     {Tile::East, Tile::East, Tile::East, Tile::East},
+                     Tile::East,
+                     PlayerType::Player1});
+        std::vector<Meld> melds = {block1, block2, block3, block4};
         std::vector<int> tiles = {Tile::White, Tile::White};
         MyPlayer player(tiles, melds, Tile::East);
 
@@ -357,19 +357,19 @@ TEST_CASE("Four Kongs")
 
     SECTION("Four Kongs not established")
     {
-        MeldedBlock block1({MeldType::OpenKong,
-                            {Tile::Pinzu1, Tile::Pinzu1, Tile::Pinzu1, Tile::Pinzu1},
-                            Tile::Pinzu1,
-                            PlayerType::Player1});
-        MeldedBlock block2({MeldType::ClosedKong,
-                            {Tile::Souzu1, Tile::Souzu1, Tile::Souzu1, Tile::Souzu1},
-                            Tile::Souzu1,
-                            PlayerType::Null});
-        MeldedBlock block3({MeldType::AddedKong,
-                            {Tile::East, Tile::East, Tile::East, Tile::East},
-                            Tile::East,
-                            PlayerType::Player1});
-        std::vector<MeldedBlock> melds = {block1, block2, block3};
+        Meld block1({MeldType::OpenKong,
+                     {Tile::Pinzu1, Tile::Pinzu1, Tile::Pinzu1, Tile::Pinzu1},
+                     Tile::Pinzu1,
+                     PlayerType::Player1});
+        Meld block2({MeldType::ClosedKong,
+                     {Tile::Souzu1, Tile::Souzu1, Tile::Souzu1, Tile::Souzu1},
+                     Tile::Souzu1,
+                     PlayerType::Null});
+        Meld block3({MeldType::AddedKong,
+                     {Tile::East, Tile::East, Tile::East, Tile::East},
+                     Tile::East,
+                     PlayerType::Player1});
+        std::vector<Meld> melds = {block1, block2, block3};
         std::vector<int> tiles = {Tile::White, Tile::White};
         MyPlayer player(tiles, melds, Tile::East);
 

@@ -11,14 +11,13 @@ namespace mahjong
 /**
  * @brief 副露ブロック
  */
-struct MeldedBlock
+struct Meld
 {
-    MeldedBlock()
-        : type(MeldType::Null), discarded_tile(Tile::Null), from(PlayerType::Null)
+    Meld() : type(MeldType::Null), discarded_tile(Tile::Null), from(PlayerType::Null)
     {
     }
 
-    MeldedBlock(int type, std::vector<int> tiles)
+    Meld(int type, std::vector<int> tiles)
         : type(type)
         , tiles(tiles)
         , discarded_tile(!tiles.empty() ? tiles.front() : Tile::Null)
@@ -26,7 +25,7 @@ struct MeldedBlock
     {
     }
 
-    MeldedBlock(int type, std::vector<int> tiles, int discarded_tile, int from)
+    Meld(int type, std::vector<int> tiles, int discarded_tile, int from)
         : type(type), tiles(tiles), discarded_tile(discarded_tile), from(from)
     {
     }

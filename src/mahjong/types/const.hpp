@@ -14,11 +14,15 @@
 
 namespace mahjong
 {
+
+using Hand = std::array<int, 37>;
+
 /**
  * @brief Tile types
  */
 namespace Tile
 {
+
 enum
 {
     Null = -1,
@@ -74,15 +78,15 @@ static inline const std::map<int, std::string> Name = {
     {White, u8"5z"},     {Green, u8"6z"},     {Red, u8"7z"},    {RedManzu5, u8"0m"},
     {RedPinzu5, u8"0p"}, {RedSouzu5, u8"0s"},
 };
-}; // namespace Tile
 
-using Hand = std::array<int, 37>;
+}; // namespace Tile
 
 /**
  * @brief Block types
  */
 namespace BlockType
 {
+
 enum
 {
     Null = 0,
@@ -103,6 +107,7 @@ static inline const std::map<int, std::string> Name = {
     ENTRY(Pair, u8"Closed Pair", u8"暗対子"),
     ENTRY(Pair | Open, u8"Open Pair", u8"明対子"),
 };
+
 } // namespace BlockType
 
 /**
@@ -110,6 +115,7 @@ static inline const std::map<int, std::string> Name = {
  */
 namespace SeatType
 {
+
 enum
 {
     Null = -1,
@@ -125,6 +131,7 @@ static inline const std::map<int, std::string> Name = {
     ENTRY(LeftPlayer, u8"Left Player", u8"上家"),
     ENTRY(OppositePlayer, u8"Opposite Player", u8"対面"),
     ENTRY(RightPlayer, u8"Right Player", u8"下家")};
+
 } // namespace SeatType
 
 /**
@@ -132,6 +139,7 @@ static inline const std::map<int, std::string> Name = {
  */
 namespace MeldType
 {
+
 enum
 {
     Null = -1,
@@ -150,6 +158,7 @@ static inline const std::map<int, std::string> Name = {
     ENTRY(ClosedKong, u8"Closed Kong", u8"暗槓"),
     ENTRY(OpenKong, u8"Open Kong", u8"明槓"),
     ENTRY(AddedKong, u8"Added Kong", u8"加槓")};
+
 } // namespace MeldType
 
 /**
@@ -157,6 +166,7 @@ static inline const std::map<int, std::string> Name = {
  */
 namespace PlayerType
 {
+
 enum
 {
     Null = -1,
@@ -172,6 +182,7 @@ static inline const std::map<int, std::string> Name = {
     ENTRY(Player1, u8"Player1", u8"プレイヤー2"),
     ENTRY(Player2, u8"Player2", u8"プレイヤー3"),
     ENTRY(Player3, u8"Player3", u8"プレイヤー4")};
+
 } // namespace PlayerType
 
 /**
@@ -179,6 +190,7 @@ static inline const std::map<int, std::string> Name = {
  */
 namespace WaitType
 {
+
 enum
 {
     Null = -1,
@@ -205,6 +217,7 @@ static inline const std::map<int, std::string> Name = {
  */
 namespace RuleFlag
 {
+
 enum
 {
     Null = 0,
@@ -215,6 +228,7 @@ enum
 static inline const std::map<int, std::string> Name = {
     ENTRY(Null, u8"Null", u8"Null"), ENTRY(RedDora, u8"Red Dora", u8"赤ドラ有り"),
     ENTRY(OpenTanyao, u8"Open Tanyao", u8"喰い断有り")};
+
 } // namespace RuleFlag
 
 /**
@@ -222,6 +236,7 @@ static inline const std::map<int, std::string> Name = {
  */
 namespace ShantenFlag
 {
+
 enum
 {
     Null = 0,
@@ -240,6 +255,7 @@ static inline const std::map<int, std::string> Name = {
     ENTRY(SevenPairs, u8"Seven Pairs", u8"七対子"),
     ENTRY(ThirteenOrphans, u8"Thirteen Orphans", u8"国士無双"),
 };
+
 }; // namespace ShantenFlag
 
 /**
@@ -288,13 +304,11 @@ static inline const std::map<int, std::string> Name = {
 using YakuList = unsigned long long;
 
 /**
- * @brief 役
+ * @brief Yaku
  */
 namespace Yaku
 {
-/**
- * @brief 役の種類
- */
+
 // clang-format off
 enum : YakuList
 {
@@ -421,9 +435,6 @@ static inline std::map<YakuList, std::string> Name = {
           u8"国士無双13面待ち"),
 };
 
-/**
- * @brief 役の情報
- */
 // clang-format off
 static inline std::map<YakuList, std::array<int, 2>> Han = {
     {Null,                           {0, 0}},
@@ -486,65 +497,6 @@ static inline std::map<YakuList, std::array<int, 2>> Han = {
 };
 // clang-format on
 
-/*! List of normal yaku */
-static inline std::vector<YakuList> NormalYaku = {
-    Tsumo,
-    Riichi,
-    Ippatsu,
-    Tanyao,
-    Pinfu,
-    PureDoubleSequence,
-    RobbingAKong,
-    AfterAKong,
-    UnderTheSea,
-    UnderTheRiver,
-    WhiteDragon,
-    GreenDragon,
-    RedDragon,
-    SelfWindEast,
-    SelfWindSouth,
-    SelfWindWest,
-    SelfWindNorth,
-    RoundWindEast,
-    RoundWindSouth,
-    RoundWindWest,
-    RoundWindNorth,
-    DoubleRiichi,
-    SevenPairs,
-    AllTriplets,
-    ThreeConcealedTriplets,
-    TripleTriplets,
-    MixedTripleSequence,
-    AllTerminalsAndHonors,
-    PureStraight,
-    HalfOutsideHand,
-    LittleThreeDragons,
-    ThreeKongs,
-    HalfFlush,
-    FullyOutsideHand,
-    TwicePureDoubleSequence,
-    FullFlush,
-};
-
-/*! List of normal yakuman */
-static inline std::vector<YakuList> Yakuman = {
-    BlessingOfHeaven,
-    BlessingOfEarth,
-    HandOfMan,
-    AllGreen,
-    BigThreeDragons,
-    LittleFourWinds,
-    AllHonors,
-    ThirteenOrphans,
-    NineGates,
-    FourConcealedTriplets,
-    AllTerminals,
-    FourKongs,
-    SingleWaitFourConcealedTriplets,
-    BigFourWinds,
-    TrueNineGates,
-    ThirteenWaitThirteenOrphans,
-};
 }; // namespace Yaku
 
 /**
@@ -552,6 +504,7 @@ static inline std::vector<YakuList> Yakuman = {
  */
 namespace ScoreTitle
 {
+
 enum
 {
     Null = -1,
@@ -582,6 +535,7 @@ static inline std::map<int, std::string> Name = {
     ENTRY(QuadrupleYakuman, u8"Quadruple Yakuman", u8"4倍役満"),
     ENTRY(QuintupleYakuman, u8"Quintuple Yakuman", u8"5倍役満"),
     ENTRY(SextupleYakuman, u8"Sextuple Yakuman", u8"6倍役満")};
+
 } // namespace ScoreTitle
 
 /**
@@ -589,6 +543,7 @@ static inline std::map<int, std::string> Name = {
  */
 namespace Hu
 {
+
 enum
 {
     Null = -1,
@@ -622,6 +577,7 @@ static inline std::map<int, int> Keys = {
     {60, Hu60}, {70, Hu70}, {80, Hu80}, {90, Hu90}, {100, Hu100}, {110, Hu110}};
 
 } // namespace Hu
+
 } // namespace mahjong
 
 #endif /* MAHJONG_CPP_CONST_HPP */

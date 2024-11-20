@@ -26,7 +26,7 @@ class MyPlayer
     {
     }
 
-    MyPlayer(const Hand &hand, const std::vector<MeldedBlock> &melds, int wind)
+    MyPlayer(const Hand &hand, const std::vector<Meld> &melds, int wind)
         : hand(hand), melds(melds), wind(wind)
     {
 #ifdef CHECK_ARGUMENT
@@ -39,8 +39,7 @@ class MyPlayer
     {
     }
 
-    MyPlayer(const std::vector<int> &tiles, const std::vector<MeldedBlock> &melds,
-             int wind)
+    MyPlayer(const std::vector<int> &tiles, const std::vector<Meld> &melds, int wind)
         : MyPlayer(to_hand(tiles), melds, wind)
     {
     }
@@ -75,7 +74,7 @@ class MyPlayer
     Hand hand;
 
     // List of meld blocks (副露ブロックの一覧)
-    std::vector<MeldedBlock> melds;
+    std::vector<Meld> melds;
 
     // Seat wind (自風)
     int wind;
@@ -110,7 +109,7 @@ class MyPlayer
  * @return 引数が問題ない場合は true、そうでない場合は false を返す。
  */
 inline void check_arguments(const std::vector<int> &tiles,
-                            const std::vector<MeldedBlock> &melds)
+                            const std::vector<Meld> &melds)
 {
     // Check if the total number of tiles is 13 or 14.
     int num_tiles = std::accumulate(tiles.begin(), tiles.end(), int(melds.size()) * 3);

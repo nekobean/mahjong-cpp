@@ -16,7 +16,7 @@ class HandSeparator
     {
         Hand merged_hand;
         Hand hand;
-        std::vector<MeldedBlock> melds;
+        std::vector<Meld> melds;
 
         bool is_closed() const
         {

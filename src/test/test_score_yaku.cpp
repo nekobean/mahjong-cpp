@@ -85,12 +85,12 @@ bool load_cases(const std::string &filename, std::vector<TestCase> &cases)
             testcase.uradora_tiles.push_back(x.GetInt());
 
         std::vector<int> tiles;
-        std::vector<MeldedBlock> melded_blocks;
+        std::vector<Meld> melded_blocks;
         for (auto &x : v["hand_tiles"].GetArray())
             tiles.push_back(x.GetInt());
 
         for (auto &x : v["melded_blocks"].GetArray()) {
-            MeldedBlock melded_block;
+            Meld melded_block;
             melded_block.type = x["type"].GetInt();
             melded_block.discarded_tile = x["discarded_tile"].GetInt();
             melded_block.from = x["from"].GetInt();

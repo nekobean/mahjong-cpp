@@ -147,7 +147,7 @@ std::string to_string(const Block &block)
     return fmt::format("[{} {}]", to_mpsz(tiles), BlockType::Name.at(block.type));
 }
 
-std::string to_string(const MeldedBlock &meld)
+std::string to_string(const Meld &meld)
 {
     return fmt::format("[{} {}]", to_mpsz(meld.tiles), MeldType::Name.at(meld.type));
 }

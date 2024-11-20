@@ -13,7 +13,7 @@ std::string to_mpsz(const Hand &hand);
 std::string to_mpsz(const std::vector<int> &tiles);
 Hand from_mpsz(const std::string &tiles);
 std::string to_string(const Block &block);
-std::string to_string(const MeldedBlock &meld);
+std::string to_string(const Meld &meld);
 std::string to_string(const Round &round);
 std::string to_string(const MyPlayer &player);
 std::string to_string(const Result &result);

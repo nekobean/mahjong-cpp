@@ -70,7 +70,7 @@ RequestData parse_request(const rapidjson::Value &doc)
     for (const auto &x : doc["hand_tiles"].GetArray())
         hand_tiles.push_back(x.GetInt());
 
-    std::vector<MeldedBlock> melds;
+    std::vector<Meld> melds;
     for (const auto &meld : doc["melded_blocks"].GetArray()) {
         int meld_type = meld["type"].GetInt();
         std::vector<int> tiles;

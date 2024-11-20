@@ -14,32 +14,32 @@ Miscellaneous programs about Japanese Mahjong
 
 ![麻雀何切るシミュレーター](docs/mahjong-nanikiru-simulator.png)
 
-* アプリの紹介: [麻雀 - 期待値計算ツール 何切るシミュレーター](https://pystyle.info/mahjong-nanikiru-simulator/)
-* 期待値計算の詳細: [麻雀における期待値の計算方法](https://pystyle.info/mahjong-expected-value-in-mahjong/)
+- アプリの紹介: [麻雀 - 期待値計算ツール 何切るシミュレーター](https://pystyle.info/mahjong-nanikiru-simulator/)
+- 期待値計算の詳細: [麻雀における期待値の計算方法](https://pystyle.info/mahjong-expected-value-in-mahjong/)
 
 ## Features (機能)
 
 🚧This program is under development. Currently the following features have been implemented.🚧
 
-* [x] Syanten Number Calculation (向聴数計算)
-* [x] Score Calculation (点数計算)
-* [x] Required Tile Selection (有効牌列挙)
-* [x] Unnecessary Tile Selection (不要牌列挙)
-* [x] Expected Score Calculation (期待値計算)
-  * [x] 向聴戻し考慮
-  * [x] 手変わり考慮
-  * [x] ダブル立直、一発、海底撈月考慮
-  * [x] 裏ドラ考慮
-  * [x] 副露している手牌に対応
-  * [x] 赤ドラ対応
+- [x] Syanten Number Calculation (向聴数計算)
+- [x] Score Calculation (点数計算)
+- [x] Required Tile Selection (有効牌列挙)
+- [x] Unnecessary Tile Selection (不要牌列挙)
+- [x] Expected Score Calculation (期待値計算)
+  - [x] 向聴戻し考慮
+  - [x] 手変わり考慮
+  - [x] ダブル立直、一発、海底撈月考慮
+  - [x] 裏ドラ考慮
+  - [x] 副露している手牌に対応
+  - [x] 赤ドラ対応
 
 ## Requirements (依存ライブラリ)
 
-* C++17 (See [C++ compiler support - cppreference.com](https://en.cppreference.com/w/cpp/compiler_support))
-  * e.x. Microsoft Visual Studio Community 2019 Version 16.7.2
-  * e.x. gcc 9.3.0
-* [Boost C++ Libraries](https://www.boost.org/) >= 1.66
-* [CMake](https://cmake.org/) >= 3.1.1
+- C++17 (See [C++ compiler support - cppreference.com](https://en.cppreference.com/w/cpp/compiler_support))
+  - e.x. Microsoft Visual Studio Community 2019 Version 16.7.2
+  - e.x. gcc 9.3.0
+- [Boost C++ Libraries](https://www.boost.org/) >= 1.66
+- [CMake](https://cmake.org/) >= 3.1.1
 
 ## How to build (ビルド方法)
 
@@ -85,11 +85,11 @@ Build program on the created container.
 
 ## Usage (使い方)
 
-* [向聴数計算 (Syanten Number Calculation)](src/samples/sample_calculate_syanten.cpp)
-* [点数計算 (Score Calculation)](src/samples/sample_calculate_score.cpp)
-* [有効牌選択 (Required Tile Selection)](src/samples/sample_required_tile_selector.cpp)
-* [不要牌選択 (Unnecessary Tile Selection)](src/samples/sample_unnecessary_tile_selector.cpp)
-* [期待値計算 (Expected Value Calculation)](src/samples/sample_calculate_expexted_value.cpp)
+- [向聴数計算 (Syanten Number Calculation)](src/samples/sample_calculate_syanten.cpp)
+- [点数計算 (Score Calculation)](src/samples/sample_calculate_score.cpp)
+- [有効牌選択 (Required Tile Selection)](src/samples/sample_required_tile_selector.cpp)
+- [不要牌選択 (Unnecessary Tile Selection)](src/samples/sample_unnecessary_tile_selector.cpp)
+- [期待値計算 (Expected Value Calculation)](src/samples/sample_calculate_expexted_value.cpp)
 
 ### Score Calculation (点数計算の例)
 
@@ -112,7 +112,7 @@ int main(int, char **)
 
     // 手牌、和了牌、フラグの設定
     // 手牌
-    MeldedBlock block(MeldType::Kakan, {Tile::Ton, Tile::Ton, Tile::Ton, Tile::Ton});
+    Meld block(MeldType::Kakan, {Tile::Ton, Tile::Ton, Tile::Ton, Tile::Ton});
     Hand hand({Tile::Manzu1, Tile::Manzu2, Tile::Manzu3, Tile::Pinzu3, Tile::Pinzu4,
                 Tile::Pinzu5, Tile::Sozu1, Tile::Sozu2, Tile::Sozu3, Tile::Sozu4, Tile::Sozu4},
                 {block});
@@ -163,38 +163,38 @@ int main(int, char **)
 
 ## Benchmark (ベンチマーク)
 
-* Core™ i9-9900K 3.6 GHz
+- Core™ i9-9900K 3.6 GHz
 
 ### Syanten Number Calculation (向聴数計算)
 
-|          | N=40000 | 1手あたりの平均計算時間 |
-| -------- | ------- | ----------------------- |
-| 一般手   | 576 us  | 14.4ns                  |
-| 七対子手 | 240 us  | 6.0ns                   |
-| 国士手   | 147 us  | 3.7ns                   |
+|          | N=40000 | 1 手あたりの平均計算時間 |
+| -------- | ------- | ------------------------ |
+| 一般手   | 576 us  | 14.4ns                   |
+| 七対子手 | 240 us  | 6.0ns                    |
+| 国士手   | 147 us  | 3.7ns                    |
 
-* 検証: 40000パターンのテストケースがパスすることを確認
+- 検証: 40000 パターンのテストケースがパスすることを確認
 
 ### Score Calculation (点数計算)
 
-|        | N=410831 | 1手あたりの平均計算時間 |
-| ------ | -------- | ----------------------- |
-| 一般手 | 128ms    | 311ns                   |
+|        | N=410831 | 1 手あたりの平均計算時間 |
+| ------ | -------- | ------------------------ |
+| 一般手 | 128ms    | 311ns                    |
 
-* 検証: 実践の牌譜から取得した1486960パターンのテストケースがパスすることを確認
+- 検証: 実践の牌譜から取得した 1486960 パターンのテストケースがパスすることを確認
 
 ### Unnecessary Tile Selection (不要牌選択)
 
-|          | N=100000 | 1手あたりの平均計算時間 |
-| -------- | -------- | ----------------------- |
-| 一般手   | 33 ms    | 330ns                   |
-| 七対子手 | 21 ms    | 210ns                   |
-| 国士手   | 12 ms    | 120ns                   |
+|          | N=100000 | 1 手あたりの平均計算時間 |
+| -------- | -------- | ------------------------ |
+| 一般手   | 33 ms    | 330ns                    |
+| 七対子手 | 21 ms    | 210ns                    |
+| 国士手   | 12 ms    | 120ns                    |
 
 ### Necessary Tile Selection (有効牌選択)
 
-|          | N=100000 | 1手あたりの平均計算時間 |
-| -------- | -------- | ----------------------- |
-| 一般手   | 62 ms    | 620ns                   |
-| 七対子手 | 35 ms    | 350ns                   |
-| 国士手   | 13 ms    | 130ns                   |
+|          | N=100000 | 1 手あたりの平均計算時間 |
+| -------- | -------- | ------------------------ |
+| 一般手   | 62 ms    | 620ns                    |
+| 七対子手 | 35 ms    | 350ns                    |
+| 国士手   | 13 ms    | 130ns                    |

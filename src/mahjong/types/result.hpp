@@ -9,26 +9,26 @@ namespace mahjong
 {
 
 /**
- * @brief 結果
+ * @brief Score calculation result
  */
 struct Result
 {
     /**
-     * @brief 通常役の結果
+     * @brief Result for normal yaku
      *
-     * @param[in] hand 手牌
-     * @param[in] win_tile 和了牌
-     * @param[in] win_flag フラグ
-     * @param[in] yaku_list (成立した役, 飜) の一覧
-     * @param[in] han 翻
-     * @param[in] hu 符
-     * @param[in] score_title 点数のタイトル
-     * @param[in] score 点数
-     * @param[in] blocks 面子構成
-     * @param[in] wait_type 待ちの種類
+     * @param[in] player player
+     * @param[in] win_tile win tile
+     * @param[in] win_flag win flag
+     * @param[in] yaku_list list of (yaku, han)
+     * @param[in] han han
+     * @param[in] fu fu
+     * @param[in] score_title score tile
+     * @param[in] score score
+     * @param[in] blocks list of blocks
+     * @param[in] wait_type wait type
      */
     Result(const MyPlayer &player, int win_tile, int win_flag,
-           const std::vector<std::tuple<YakuList, int>> &yaku_list, int han, int hu,
+           const std::vector<std::tuple<YakuList, int>> &yaku_list, int han, int fu,
            int score_title, const std::vector<int> &score,
            const std::vector<Block> &blocks, int wait_type)
         : success(true)
@@ -37,7 +37,7 @@ struct Result
         , win_flag(win_flag)
         , yaku_list(yaku_list)
         , han(han)
-        , fu(Hu::Values.at(hu))
+        , fu(fu)
         , score_title(score_title)
         , score(score)
         , blocks(blocks)
@@ -46,14 +46,14 @@ struct Result
     }
 
     /**
-     * @brief 役満、流し満貫の結果
+     * @brief Result for Nagashi Mangan or Yakuman
      *
-     * @param[in] hand 手牌
-     * @param[in] win_tile 和了牌
-     * @param[in] win_flag フラグ
-     * @param[in] yaku_list (成立した役, 飜) の一覧
-     * @param[in] score_title 点数のタイトル
-     * @param[in] score 点数
+     * @param[in] player player
+     * @param[in] win_tile win tile
+     * @param[in] win_flag win flag
+     * @param[in] yaku_list list of (yaku, han)
+     * @param[in] score_title score tile
+     * @param[in] score score
      */
     Result(const MyPlayer &player, int win_tile, int win_flag,
            const std::vector<std::tuple<YakuList, int>> &yaku_list, int score_title,
@@ -72,12 +72,12 @@ struct Result
     }
 
     /**
-     * @brief エラーの結果
+     * @brief Result for error
      *
-     * @param[in] player 手牌
-     * @param[in] win_tile 和了牌
-     * @param[in] win_flag フラグ
-     * @param[in] err_msg エラーメッセージ
+     * @param[in] player player
+     * @param[in] win_tile win tile
+     * @param[in] win_flag win flag
+     * @param[in] err_msg error message
      */
     Result(const MyPlayer &player, int win_tile, int win_flag,
            const std::string &err_msg)
@@ -94,13 +94,16 @@ struct Result
     {
     }
 
-    /* Whether the operation was successful */
+    // Error information
+    ////////////////////////
+
+    /* Whether the calculation is successful */
     bool success;
 
     /* Error message */
     std::string err_msg;
 
-    // Input
+    // Input information
     ////////////////////////
 
     /* Player infomation */
@@ -112,7 +115,8 @@ struct Result
     /* Win flag */
     int win_flag;
 
-    // Output
+    // Output information
+    ////////////////////////
 
     /* list of (yaku, han) */
     std::vector<std::tuple<YakuList, int>> yaku_list;
