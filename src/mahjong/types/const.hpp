@@ -541,7 +541,7 @@ static inline std::map<int, std::string> Name = {
 /**
  * @brief Fu types
  */
-namespace Hu
+namespace Fu
 {
 
 enum
@@ -576,7 +576,7 @@ static inline std::map<int, int> Keys = {
     {-1, Null}, {20, Hu20}, {25, Hu25}, {30, Hu30}, {40, Hu40},   {50, Hu50},
     {60, Hu60}, {70, Hu70}, {80, Hu80}, {90, Hu90}, {100, Hu100}, {110, Hu110}};
 
-} // namespace Hu
+} // namespace Fu
 
 } // namespace mahjong
 

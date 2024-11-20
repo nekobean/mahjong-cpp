@@ -281,7 +281,7 @@ Result ScoreCalculator::aggregate(const Round &round, const MyPlayer &player,
         yaku_han_list.begin(), yaku_han_list.end(),
         [](const auto &a, const auto &b) { return std::get<0>(a) < std::get<0>(b); });
 
-    return {player,      win_tile, win_flag, yaku_han_list, han, Hu::Values.at(fu),
+    return {player,      win_tile, win_flag, yaku_han_list, han, Fu::Values.at(fu),
             score_title, score,    blocks,   wait_type};
 }
 
@@ -376,10 +376,10 @@ int ScoreCalculator::calc_fu(const std::vector<Block> &blocks, const int wait_ty
     // Exceptions
     //////////////////////////
     if (is_pinfu && is_tsumo && is_closed) {
-        return Hu::Hu20; // Pinfu + Tsumo
+        return Fu::Hu20; // Pinfu + Tsumo
     }
     else if (is_pinfu && !is_tsumo && !is_closed) {
-        return Hu::Hu30; // Pinfu + Ron
+        return Fu::Hu30; // Pinfu + Ron
     }
 
     // Normal calculation
@@ -434,85 +434,13 @@ int ScoreCalculator::calc_fu(const std::vector<Block> &blocks, const int wait_ty
     return round_fu(fu);
 }
 
-/**
- * @brief 符を計算する (内訳)。
- */
-std::vector<std::tuple<std::string, int>>
-ScoreCalculator::calc_fu_detail(const std::vector<Block> &blocks, int wait_type,
-                                bool is_menzen, bool is_tsumo, const Round &round)
-{
-    return std::vector<std::tuple<std::string, int>>();
-    // bool is_pinfu = check_pinfu(blocks, wait_type, round);
-
-    // // 符計算の例外
-    // //////////////////////////
-    // if (is_pinfu && is_tsumo && is_menzen) { // 平和、自摸、門前
-    //     return {{"平和・自摸", 20}};
-    // }
-    // else if (is_pinfu && !is_tsumo && !is_menzen) { // 平和、ロン、非門前
-    //     return {{"喰い平和・ロン", 30}};
-    // }
-
-    // // 通常の符計算
-    // //////////////////////////
-
-    // std::vector<std::tuple<std::string, int>> fu_detail;
-    // fu_detail.emplace_back("副底", 20);
-
-    // if (is_menzen && !is_tsumo)
-    //     fu_detail.emplace_back("門前加符", 10);
-    // else if (is_tsumo)
-    //     fu_detail.emplace_back("自摸加符", 2);
-
-    // if (wait_type == WaitType::ClosedWait || wait_type == WaitType::EdgeWait ||
-    //     wait_type == WaitType::PairWait)
-    //     fu_detail.emplace_back(fmt::format("待ち: {}", WaitType::Name.at(wait_type)),
-    //                            2);
-
-    // for (const auto &block : blocks) {
-    //     if (block.type & (BlockType::Triplet | BlockType::Kong)) {
-    //         int block_fu = 0;
-    //         if (block.type == (BlockType::Triplet | BlockType::Open))
-    //             block_fu = 2; // 明刻子
-    //         else if (block.type == BlockType::Triplet)
-    //             block_fu = 4; // 暗刻子
-    //         else if (block.type == (BlockType::Kong | BlockType::Open))
-    //             block_fu = 8; // 明槓子
-    //         else if (block.type == BlockType::Kong)
-    //             block_fu = 16; // 暗槓子
-
-    //         bool yaotyu =
-    //             block.min_tile == Tile::Manzu1 || block.min_tile == Tile::Manzu9 ||
-    //             block.min_tile == Tile::Pinzu1 || block.min_tile == Tile::Pinzu9 ||
-    //             block.min_tile == Tile::Souzu1 || block.min_tile == Tile::Souzu9 ||
-    //             block.min_tile >= Tile::East;
-
-    //         fu_detail.emplace_back(fmt::format("面子構成: {} {}", block.to_string(),
-    //                                            yaotyu ? "幺九牌" : "断幺牌"),
-    //                                yaotyu ? block_fu * 2 : block_fu);
-    //     }
-    //     else if (block.type & BlockType::Pair) {
-    //         // 対子
-    //         if (block.min_tile == round.self_wind && block.min_tile == round.wind)
-    //             fu_detail.emplace_back(
-    //                 fmt::format("雀頭: {} 連風牌", block.to_string()), 4);
-    //         else if (block.min_tile == round.self_wind ||
-    //                  block.min_tile == round.wind || block.min_tile >= Tile::White)
-    //             fu_detail.emplace_back(fmt::format("雀頭: {} 役牌", block.to_string()),
-    //                                    2);
-    //     }
-    // }
-
-    // return fu_detail;
-}
-
 std::vector<int> ScoreCalculator::get_scores_for_exp(const Result &result,
                                                      const Round &round)
 {
     if (result.score_title >= ScoreTitle::CountedYakuman)
         return {result.score.front()};
 
-    int fu = Hu::Keys.at(result.fu);
+    int fu = Fu::Keys.at(result.fu);
 
     std::vector<int> scores;
     for (int han = result.han; han <= 13; ++han) {
@@ -743,7 +671,7 @@ ScoreCalculator::check_pattern_yaku(const Input &input, int shanten_type,
                                     const Round &round)
 {
     if (shanten_type == ShantenFlag::SevenPairs) {
-        return {Yaku::Null, Hu::Hu25, {}, WaitType::PairWait};
+        return {Yaku::Null, Fu::Hu25, {}, WaitType::PairWait};
     }
 
     static const std::vector<YakuList> pattern_yaku = {
@@ -765,7 +693,7 @@ ScoreCalculator::check_pattern_yaku(const Input &input, int shanten_type,
 
     // Find the block composition with the highest score.
     int max_han = 0;
-    int max_fu = Hu::Null;
+    int max_fu = Fu::Null;
     size_t max_idx;
     YakuList max_yaku_list;
     for (size_t i = 0; i < pattern.size(); ++i) {
@@ -1044,30 +972,30 @@ int ScoreCalculator::round_fu(const int fu)
 
     switch (rounded_fu) {
     case 20:
-        return Hu::Hu20;
+        return Fu::Hu20;
     case 25:
-        return Hu::Hu25;
+        return Fu::Hu25;
     case 30:
-        return Hu::Hu30;
+        return Fu::Hu30;
     case 40:
-        return Hu::Hu40;
+        return Fu::Hu40;
     case 50:
-        return Hu::Hu50;
+        return Fu::Hu50;
     case 60:
-        return Hu::Hu60;
+        return Fu::Hu60;
     case 70:
-        return Hu::Hu70;
+        return Fu::Hu70;
     case 80:
-        return Hu::Hu80;
+        return Fu::Hu80;
     case 90:
-        return Hu::Hu90;
+        return Fu::Hu90;
     case 100:
-        return Hu::Hu100;
+        return Fu::Hu100;
     case 110:
-        return Hu::Hu110;
+        return Fu::Hu110;
     }
 
-    return Hu::Null;
+    return Fu::Null;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////

@@ -64,7 +64,7 @@ struct Result
         , win_flag(win_flag)
         , yaku_list(yaku_list)
         , han(0)
-        , fu(Hu::Null)
+        , fu(Fu::Null)
         , score_title(score_title)
         , score(score)
         , wait_type(WaitType::Null)
@@ -88,7 +88,7 @@ struct Result
         , win_flag(win_flag)
         , yaku_list(Yaku::Null)
         , han(0)
-        , fu(Hu::Null)
+        , fu(Fu::Null)
         , score_title(ScoreTitle::Null)
         , wait_type(WaitType::Null)
     {

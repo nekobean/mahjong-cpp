@@ -32,9 +32,6 @@ class ScoreCalculator
     static int calc_fu(const std::vector<Block> &blocks, const int wait_type,
                        const bool is_closed, const bool is_tsumo, const bool is_pinfu,
                        const int round_wind, const int self_wind);
-    static std::vector<std::tuple<std::string, int>>
-    calc_fu_detail(const std::vector<Block> &blocks, int wait_type, bool is_menzen,
-                   bool is_tumo, const Round &round);
     static Result aggregate(const Round &round, const MyPlayer &player,
                             const int win_tile, const int win_flag, YakuList yaku_list);
     static Result aggregate(const Round &round, const MyPlayer &player,
