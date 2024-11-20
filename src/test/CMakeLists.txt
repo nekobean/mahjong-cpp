@@ -9,7 +9,7 @@ else()
   find_package(Catch2 2.13 REQUIRED)
 endif()
 
-file(GLOB_RECURSE SRC_FILES ../mahjong/*.cpp)
+file(GLOB_RECURSE SRC_FILES ../mahjong/*.cpp ../compare/*.cpp)
 file(GLOB ENTRY_FILES ${CMAKE_CURRENT_SOURCE_DIR}/test_*.cpp)
 
 set(CMAKE_TESTCASE_DIR ${CMAKE_SOURCE_DIR}/data/testcase)

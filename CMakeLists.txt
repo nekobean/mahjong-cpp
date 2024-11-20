@@ -73,6 +73,9 @@ endif()
 # mahjong
 include_directories(src)
 
+# Set stack size to 100MB.
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /STACK:104857600")
+
 # サーバー
 option(BUILD_SERVER "build server programs." ON)
 if(BUILD_SERVER)
