@@ -1,6 +1,6 @@
 # mahjong-cpp
 
-## About (概要)
+## About
 
 日本のリーチ麻雀のルールで、点数や期待値計算を行う C++ ライブラリです。
 
@@ -17,7 +17,7 @@ Miscellaneous programs about Japanese Mahjong
 - アプリの紹介: [麻雀 - 期待値計算ツール 何切るシミュレーター](https://pystyle.info/mahjong-nanikiru-simulator/)
 - 期待値計算の詳細: [麻雀における期待値の計算方法](https://pystyle.info/mahjong-expected-value-in-mahjong/)
 
-## Features (機能)
+## Features
 
 🚧This program is under development. Currently the following features have been implemented.🚧
 
@@ -26,22 +26,16 @@ Miscellaneous programs about Japanese Mahjong
 - [x] Required Tile Selection (有効牌列挙)
 - [x] Unnecessary Tile Selection (不要牌列挙)
 - [x] Expected Score Calculation (期待値計算)
-  - [x] 向聴戻し考慮
-  - [x] 手変わり考慮
-  - [x] ダブル立直、一発、海底撈月考慮
-  - [x] 裏ドラ考慮
-  - [x] 副露している手牌に対応
-  - [x] 赤ドラ対応
 
-## Requirements (依存ライブラリ)
+## Requirements
 
 - C++17 (See [C++ compiler support - cppreference.com](https://en.cppreference.com/w/cpp/compiler_support))
-  - e.x. Microsoft Visual Studio Community 2019 Version 16.7.2
-  - e.x. gcc 9.3.0
 - [Boost C++ Libraries](https://www.boost.org/) >= 1.66
-- [CMake](https://cmake.org/) >= 3.1.1
+- [CMake](https://cmake.org/) >= 3.5
 
-## How to build (ビルド方法)
+## How to build
+
+### Linux
 
 Clone repogitory and build program.
 
@@ -55,7 +49,7 @@ make -j$(nproc)
 
 Run sample program.
 
-```
+```bash
 cd build/src/samples
 ./sample_calculate_expexted_value
 ./sample_calculate_score
@@ -64,99 +58,165 @@ cd build/src/samples
 ./sample_unnecessary_tile_selector
 ```
 
-### Build on Docker container (Docker コンテナ上のビルド)
+### Build on Docker container
 
 Build and run container.
 
 ```bash
-$ docker build . --tag mahjong_cpp_build
-$ docker run -it mahjong_cpp_build
+docker build . --tag mahjong_cpp_build
+docker run -it mahjong_cpp_build
 ```
 
 Build program on the created container.
 
 ```bash
-# git clone https://github.com/nekobean/mahjong-cpp.git
-# cd mahjong-cpp
-# mkdir build && cd build
-# cmake ..
-# make -j$(nproc)
+git clone https://github.com/nekobean/mahjong-cpp.git
+cd mahjong-cpp
+mkdir build && cd build
+cmake ..
+make -j$(nproc)
 ```
 
-## Usage (使い方)
+## Usage
 
-- [向聴数計算 (Syanten Number Calculation)](src/samples/sample_calculate_syanten.cpp)
-- [点数計算 (Score Calculation)](src/samples/sample_calculate_score.cpp)
-- [有効牌選択 (Required Tile Selection)](src/samples/sample_required_tile_selector.cpp)
-- [不要牌選択 (Unnecessary Tile Selection)](src/samples/sample_unnecessary_tile_selector.cpp)
-- [期待値計算 (Expected Value Calculation)](src/samples/sample_calculate_expexted_value.cpp)
+- [Syanten Number Calculation (向聴数計算)](src/samples/sample_shanten_number_calculation.cpp)
+- [Score Calculation (点数計算)](src/samples/sample_score_calculation.cpp)
+- [Necessary Tile Calculation (有効牌計算)](src/samples/sample_necessary_tile_calculation.cpp)
+- [Unnecessary Tile Selection (不要牌選択)](src/samples/sample_necessary_tile_calculation.cpp)
 
-### Score Calculation (点数計算の例)
+### Shanten number calculation
 
 ```cpp
+#include <iostream>
+
 #include "mahjong/mahjong.hpp"
 
-using namespace mahjong;
-
-int main(int, char **)
+int main(int argc, char *argv[])
 {
-    ScoreCalculator score;
+    using namespace mahjong;
 
-    // 場やルールの設定
-    score.set_bakaze(Tile::Ton);  // 場風牌
-    score.set_zikaze(Tile::Ton);  // 自風牌
-    score.set_num_tumibo(0);  // 積み棒の数
-    score.set_num_kyotakubo(0);  // 供託棒の数
-    score.set_dora_tiles({Tile::Pe});  // ドラの一覧 (表示牌ではない)
-    score.set_uradora_tiles({Tile::Pinzu9});  // 裏ドラの一覧 (表示牌ではない)
+    // Create hand by mpsz notation or vector of tiles.
+    Hand hand = from_mpsz("222567m34p33667s");
+    // Hand hand = from_array({Tile::Manzu2, Tile::Manzu2, Tile::Manzu2, Tile::Manzu5,
+    //                          Tile::Manzu6, Tile::Manzu7, Tile::Pinzu3, Tile::Pinzu4,
+    //                          Tile::Souzu3, Tile::Souzu3, Tile::Souzu6, Tile::Souzu6,
+    //                          Tile::Souzu7});
+    // number of melds.
+    int num_melds = 0;
+    // Calculate minimum shanten number of regular hand, Seven Pairs and Thirteen Orphans.
+    auto [shanten_type, shanten] =
+        ShantenCalculator::calc(hand, num_melds, ShantenFlag::All);
+    std::cout << "shanten type: " << ShantenFlag::Name.at(shanten_type)
+              << std::endl;
+    std::cout << "shanten: " << shanten << std::endl;
+}
+```
 
-    // 手牌、和了牌、フラグの設定
-    // 手牌
-    Meld block(MeldType::Kakan, {Tile::Ton, Tile::Ton, Tile::Ton, Tile::Ton});
-    Hand hand({Tile::Manzu1, Tile::Manzu2, Tile::Manzu3, Tile::Pinzu3, Tile::Pinzu4,
-                Tile::Pinzu5, Tile::Sozu1, Tile::Sozu2, Tile::Sozu3, Tile::Sozu4, Tile::Sozu4},
-                {block});
-    int win_tile = Tile::Manzu1;  // 和了牌
-    int flag = HandFlag::Tumo | HandFlag::Rinsyankaiho;  // フラグ
+### Neccesary tile calculation
 
-    // 点数計算
-    Result ret = score.calc(hand, win_tile, flag);
-    std::cout << ret.to_string() << std::endl;
+```cpp
+#include <iostream>
+
+#include "mahjong/mahjong.hpp"
+
+int main(int argc, char *argv[])
+{
+    using namespace mahjong;
+
+    // Create hand by mpsz notation or vector of tiles.
+    Hand hand = from_mpsz("222567m34p33667s");
+    // number of melds.
+    int num_melds = 0;
+
+    // Calculate necessary tiles.
+    auto [shanten_type, shanten, tiles] =
+        NecessaryTileCalculator::select(hand, num_melds, ShantenFlag::All);
+
+    std::cout << "shanten: " << shanten << std::endl;
+    for (auto tile : tiles) {
+        std::cout << Tile::Name.at(tile) + " ";
+    }
+    std::cout << std::endl;
+}
+```
+
+### Unnecessary tile calculation
+
+```cpp
+#include <iostream>
+
+#include "mahjong/mahjong.hpp"
+
+int main(int argc, char *argv[])
+{
+    using namespace mahjong;
+
+    // Create hand by mpsz notation or vector of tiles.
+    Hand hand = from_mpsz("222567m34p33667s1z");
+    // number of melds.
+    int num_melds = 0;
+
+    // Calculate unnecessary tiles.
+    auto [shanten_type, shanten, tiles] =
+        UnnecessaryTileCalculator::select(hand, num_melds, ShantenFlag::All);
+
+    std::cout << "shanten: " << shanten << std::endl;
+    for (auto tile : tiles) {
+        std::cout << Tile::Name.at(tile) + " ";
+    }
+    std::cout << std::endl;
+}
+
+```
+
+### Score Calculation
+
+```cpp
+#include <iostream>
+
+#include "mahjong/mahjong.hpp"
+
+int main(int argc, char *argv[])
+{
+    using namespace mahjong;
+
+    // Set round infomation.
+    Round round;
+    round.rules = RuleFlag::RedDora | RuleFlag::OpenTanyao;
+    round.wind = Tile::East;
+    round.kyoku = 1;
+    round.honba = 0;
+    round.kyotaku = 1;
+    round.dora_tiles = {Tile::North};
+    round.uradora_tiles = {Tile::Pinzu9};
+
+    // Set player information
+    Hand hand = from_mpsz("222567345p333s22z");
+    Player player;
+    player.hand = hand;
+    player.melds = {};
+    player.wind = Tile::East;
+    const int win_tile = Tile::South;
+    const int flag = WinFlag::Tsumo | WinFlag::Riichi;
+
+    // Calculate score.
+    const Result result = ScoreCalculator::calc(round, player, win_tile, flag);
+    std::cout << to_string(result) << std::endl;
 }
 ```
 
 ```output
+[入力]
+手牌: 222345567p333s22z
+副露牌:
+自風: 1z
+自摸
 [結果]
-手牌: 123m 345p 12344s [東東東東, 加槓], 和了牌: 一萬, 自摸
-面子構成:
-  [東東東東, 明槓子]
-  [一萬二萬三萬, 暗順子]
-  [三筒四筒五筒, 暗順子]
-  [一索二索三索, 暗順子]
-  [四索四索, 暗対子]
-待ち: 両面待ち
+面子構成: [222p 暗刻子][345p 暗順子][567p 暗順子][333s 暗刻子][22z 暗対子]
+待ち: 単騎待ち
 役:
- 嶺上開花 1翻
- 自風 (東) 1翻
- 場風 (東) 1翻
-40符3翻
-```
-
-### Expected Score Calculation (期待値計算の例)
-
-```
-手牌: 123349m3688p1245s, 向聴数: 2, 巡目: 1
-[打 二索] 有効牌: 17種60枚, 聴牌確率: 71.65%, 和了確率: 23.30%, 期待値: 1509.20  (向聴戻し)
-[打 一索] 有効牌: 20種70枚, 聴牌確率: 70.21%, 和了確率: 22.67%, 期待値: 1475.87  (向聴戻し)
-[打 九萬] 有効牌:  4種15枚, 聴牌確率: 64.34%, 和了確率: 20.50%, 期待値: 1379.59
-[打 三筒] 有効牌:  4種15枚, 聴牌確率: 64.06%, 和了確率: 20.05%, 期待値: 1250.20
-[打 六筒] 有効牌:  4種15枚, 聴牌確率: 62.63%, 和了確率: 19.09%, 期待値: 1294.03
-[打 八筒] 有効牌: 16種50枚, 聴牌確率: 59.84%, 和了確率: 15.47%, 期待値:  939.12  (向聴戻し)
-[打 四索] 有効牌: 18種64枚, 聴牌確率: 59.93%, 和了確率: 15.29%, 期待値: 1049.23  (向聴戻し)
-[打 五索] 有効牌: 19種66枚, 聴牌確率: 58.87%, 和了確率: 14.79%, 期待値: 1047.75  (向聴戻し)
-[打 一萬] 有効牌: 18種62枚, 聴牌確率: 52.48%, 和了確率: 13.61%, 期待値:  873.10  (向聴戻し)
-[打 三萬] 有効牌: 19種66枚, 聴牌確率: 51.87%, 和了確率: 13.13%, 期待値:  908.70  (向聴戻し)
-[打 四萬] 有効牌: 18種62枚, 聴牌確率: 50.94%, 和了確率: 12.80%, 期待値:  931.94  (向聴戻し)
-[打 二萬] 有効牌:  4種15枚, 聴牌確率: 24.66%, 和了確率:  4.25%, 期待値:  278.19  (向聴戻し)
-計算時間: 33542us
+ 門前清自摸和 1翻
+ 立直 1翻
+40符2翻
+和了者の獲得点数: 4900点, 子の支払い点数: 1300点
 ```

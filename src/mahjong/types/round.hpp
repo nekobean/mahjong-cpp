@@ -41,6 +41,8 @@ class Round
     std::vector<int> uradora_tiles;
     /* List of dora indicator tiles */
     std::vector<int> dora_indicators;
+    /* List of uradora indicator tiles */
+    std::vector<int> uradora_indicators;
 
     int self_wind;
 };

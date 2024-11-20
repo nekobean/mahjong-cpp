@@ -59,6 +59,26 @@ inline int to_reddora(int tile)
     }
 }
 
+inline Hand from_array(const std::vector<int> &tiles)
+{
+    Hand hand{0};
+
+    for (int tile : tiles) {
+        if (tile == Tile::RedManzu5) {
+            ++hand[Tile::Manzu5];
+        }
+        else if (tile == Tile::RedPinzu5) {
+            ++hand[Tile::Pinzu5];
+        }
+        else if (tile == Tile::RedSouzu5) {
+            ++hand[Tile::Souzu5];
+        }
+        ++hand[tile];
+    }
+
+    return hand;
+}
+
 /**
  * @brief Convert to no red dora, if tile is red dora, otherwise no change.
  *
