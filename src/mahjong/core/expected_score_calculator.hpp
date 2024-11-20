@@ -16,27 +16,51 @@ class ExpectedScoreCalculator
   public:
     struct Params
     {
-        int t_min = 0; // 計算対象の巡目の最小値
-        int t_max = 0; // 計算対象の巡目の最大値
-        int sum = 0;   // 山の枚数
-        int extra = 0; // 現在の手牌からこの回数分は牌を交換できるものとする
-        int mode = 7;                     // 計算対象の向聴数の種類
-        bool enable_uradora = true;       // 裏ドラを考慮するか
-        bool enable_reddora = true;       // 赤ドラを考慮するか
-        bool enable_shanten_down = true;  // 向聴落としを考慮するか
-        bool enable_tegawari = true;      // 手替わりを考慮するか
-        bool enable_double_riichi = true; // ダブル立直を考慮するか
-        bool enable_ippatsu = true;       // 一発を考慮するか
-        bool enable_under_the_sea = true; // 海底撈月を考慮するか
+        Params()
+            : t_min(0)
+            , t_max(18)
+            , sum(121)
+            , extra(0)
+            , mode(7)
+            , enable_shanten_down(true)
+            , enable_tegawari(true)
+            , enable_reddora(true)
+            , enable_uradora(true)
+        {
+        }
+
+        /* min turn to be calculated */
+        int t_min = 0;
+        /* max turn to be calculated */
+        int t_max = 18;
+        /* number of wall tiles */
+        int sum = 0;
+        /* search the range of possible (shanten number + extra) exchanges */
+        int extra = 0;
+        /* calculation mode */
+        int mode = 7;
+        /* enable red dora */
+        bool enable_reddora = true;
+        /* enable ura dora */
+        bool enable_uradora = true;
+        /* allow shanten down */
+        bool enable_shanten_down = true;
+        /* allow tegawari */
+        bool enable_tegawari = true;
     };
 
     struct Stat
     {
-        const int tile;                        // 打牌
-        const bool is_red;                     // 赤ドラか
-        const std::vector<double> tenpai_prob; // 和了確率
-        const std::vector<double> win_prob;    // 和了確率
-        const std::vector<double> exp_value;   // 和了確率
+        /* tile */
+        int tile;
+        /* tenpai probability */
+        std::vector<double> tenpai_prob;
+        /* win probability */
+        std::vector<double> win_prob;
+        /* expected score */
+        std::vector<double> exp_value;
+        /* list of necessary tiles */
+        std::vector<std::tuple<int, int>> necessary_tiles;
     };
 
   private:

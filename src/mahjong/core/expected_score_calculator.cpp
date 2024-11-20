@@ -11,45 +11,24 @@
 #include "mahjong/core/shanten_calculator.hpp"
 #include "mahjong/core/string.hpp"
 #include "mahjong/core/unnecessary_tile_calculator.hpp"
+#include "mahjong/core/utils.hpp"
 
 namespace mahjong
 {
 
-int64_t calc_disc2(const Hand &hand)
-{
-    int64_t ret = 0LL;
-
-    for (int i = 0; i < 34; ++i) {
-        if (hand[i] > 0) {
-            ret |= 1LL << i;
-        }
-    }
-
-    return ret;
-}
-
-int64_t calc_wait2(const Hand &hand)
-{
-    int64_t ret = 0LL;
-
-    for (int i = 0; i < 34; ++i) {
-        if (hand[i] < 4) {
-            ret |= 1LL << i;
-        }
-    }
-
-    return ret;
-}
-
-Hand create_wall(const Round &round, const Player &player)
+Hand create_wall(const Round &round, const Player &player, bool use_red)
 {
     Hand wall{0};
     std::fill(wall.begin(), wall.begin() + 34, 4);
-    wall[Tile::RedManzu5] = 1;
-    wall[Tile::RedPinzu5] = 1;
-    wall[Tile::RedSouzu5] = 1;
+
+    if (use_red) {
+        wall[Tile::RedManzu5] = 1;
+        wall[Tile::RedPinzu5] = 1;
+        wall[Tile::RedSouzu5] = 1;
+    }
 
     for (auto tile : round.dora_indicators) {
+        tile = use_red ? tile : to_no_reddora(tile);
         if (tile == Tile::RedManzu5) {
             wall[Tile::Manzu5]--;
             wall[Tile::RedManzu5]--;
@@ -70,15 +49,18 @@ Hand create_wall(const Round &round, const Player &player)
     for (int i = 0; i < 34; ++i) {
         if (i == Tile::Manzu5) {
             wall[i] -= player.hand[Tile::Manzu5];
-            wall[Tile::RedManzu5] -= player.hand[Tile::RedManzu5];
+            if (use_red)
+                wall[Tile::RedManzu5] -= player.hand[Tile::RedManzu5];
         }
         else if (i == Tile::Pinzu5) {
             wall[i] -= player.hand[Tile::Pinzu5];
-            wall[Tile::RedPinzu5] -= player.hand[Tile::RedPinzu5];
+            if (use_red)
+                wall[Tile::RedPinzu5] -= player.hand[Tile::RedPinzu5];
         }
         else if (i == Tile::Souzu5) {
             wall[i] -= player.hand[Tile::Souzu5];
-            wall[Tile::RedSouzu5] -= player.hand[Tile::RedSouzu5];
+            if (use_red)
+                wall[Tile::RedSouzu5] -= player.hand[Tile::RedSouzu5];
         }
         else {
             wall[i] -= player.hand[i];
@@ -87,6 +69,7 @@ Hand create_wall(const Round &round, const Player &player)
 
     for (const auto &meld : player.melds) {
         for (auto tile : meld.tiles) {
+            tile = use_red ? tile : to_no_reddora(tile);
             if (tile == Tile::RedManzu5) {
                 wall[tile] -= 1;
                 wall[Tile::Manzu5] -= 1;
@@ -135,11 +118,11 @@ std::vector<int> encode(const Hand &counts)
 }
 
 int ExpectedScoreCalculator::distance(const std::vector<int> &hand,
-                                      const std::vector<int> &origin)
+                                      const std::vector<int> &hand_org)
 {
     int dist = 0;
     for (size_t i = 0; i < hand.size(); ++i) {
-        dist += std::max(hand[i] - origin[i], 0);
+        dist += std::max(hand[i] - hand_org[i], 0);
     }
 
     return dist;
@@ -213,7 +196,8 @@ int ExpectedScoreCalculator::calc_score(const Params &params, const Round &round
 ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::select1(
     const Params &params, const Round &round, Player &player, Graph &graph,
     Desc &cache1, Desc &cache2, std::vector<int> &hand_counts,
-    std::vector<int> &wall_counts, const std::vector<int> &origin, const int sht_org)
+    std::vector<int> &wall_counts, const std::vector<int> &hand_org,
+    const int shanten_org)
 {
     // If vertex exists in the cache, return it.
     CacheKey key(hand_counts);
@@ -225,9 +209,9 @@ ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::select1(
     auto [type, shanten, wait] =
         NecessaryTileCalculator::calc(player.hand, 0, params.mode);
     bool allow_tegawari =
-        distance(hand_counts, origin) + shanten < sht_org + params.extra;
-    int64_t all = allow_tegawari ? calc_wait2(player.hand) : wait;
-    all |= all << 34;
+        params.enable_tegawari &&
+        distance(hand_counts, hand_org) + shanten < shanten_org + params.extra;
+    wait |= wait << 34;
 
     // Add vertex to graph.
     const Vertex vertex =
@@ -235,19 +219,22 @@ ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::select1(
     cache1[key] = vertex;
 
     for (int i = 0; i < 64; ++i) {
-        if (wall_counts[i] && (all & (1LL << i))) {
+        int64_t bit_i = 1LL << i;
+        bool is_wait = wait & bit_i;
+
+        if (wall_counts[i] && (allow_tegawari || is_wait)) {
             const int weight = wall_counts[i];
 
             draw(player, hand_counts, wall_counts, i);
 
-            const auto target = select2(params, round, player, graph, cache1, cache2,
-                                        hand_counts, wall_counts, origin, sht_org);
+            const Vertex target =
+                select2(params, round, player, graph, cache1, cache2, hand_counts,
+                        wall_counts, hand_org, shanten_org);
 
             if (!boost::edge(vertex, target, graph).second) {
-                const int score = (shanten == 0 && (wait & (1LL << i % 34))
-                                       ? calc_score(params, round, player, type, i % 34)
+                const int score = (shanten == 0 && is_wait
+                                       ? calc_score(params, round, player, type, i)
                                        : 0);
-
                 boost::add_edge(vertex, target, {weight, score}, graph);
             }
 
@@ -261,7 +248,8 @@ ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::select1(
 ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::select2(
     const Params &params, const Round &round, Player &player, Graph &graph,
     Desc &cache1, Desc &cache2, std::vector<int> &hand_counts,
-    std::vector<int> &wall_counts, const std::vector<int> &origin, const int sht_org)
+    std::vector<int> &wall_counts, const std::vector<int> &hand_org,
+    const int shanten_org)
 {
     // If vertex exists in the cache, return it.
     CacheKey key(hand_counts);
@@ -273,9 +261,9 @@ ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::select2(
     auto [type, shanten, disc] =
         UnnecessaryTileCalculator::calc(player.hand, 0, params.mode);
     bool allow_shanten_down =
-        distance(hand_counts, origin) + shanten < sht_org + params.extra;
-    int64_t all = allow_shanten_down ? calc_disc2(player.hand) : disc;
-    all |= all << 34;
+        params.enable_shanten_down &&
+        distance(hand_counts, hand_org) + shanten < shanten_org + params.extra;
+    disc |= disc << 34;
 
     // Add vertex to graph.
     std::vector<double> vertex_data((params.t_max + 1) * 3, 0);
@@ -287,20 +275,22 @@ ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::select2(
     cache2[key] = vertex;
 
     for (int i = 0; i < 64; ++i) {
-        if (hand_counts[i] && (all & (1LL << i))) {
+        int64_t bit_i = 1LL << i;
+        bool is_disc = disc & bit_i;
+
+        if (hand_counts[i] && (allow_shanten_down || is_disc)) {
             discard(player, hand_counts, wall_counts, i);
 
             const int weight = wall_counts[i];
-            const auto source = select1(params, round, player, graph, cache1, cache2,
-                                        hand_counts, wall_counts, origin, sht_org);
+            const Vertex source =
+                select1(params, round, player, graph, cache1, cache2, hand_counts,
+                        wall_counts, hand_org, shanten_org);
 
             draw(player, hand_counts, wall_counts, i);
 
             if (!boost::edge(source, vertex, graph).second) {
                 const int score =
-                    (shanten == -1 ? calc_score(params, round, player, type, i % 34)
-                                   : 0);
-
+                    (shanten == -1 ? calc_score(params, round, player, type, i) : 0);
                 boost::add_edge(source, vertex, {weight, score}, graph);
             }
         }
@@ -371,7 +361,7 @@ ExpectedScoreCalculator::calc(const Params &params, const Round &round, Player &
     Graph graph;
     Desc cache1, cache2;
 
-    auto wall = create_wall(round, player);
+    auto wall = create_wall(round, player, params.enable_reddora);
     auto hand_counts = encode(player.hand);
     auto wall_counts = encode(wall);
 
@@ -399,8 +389,18 @@ ExpectedScoreCalculator::calc(const Params &params, const Round &round, Player &
                 std::vector<double> exp_value(value.begin() + (params.t_max + 1) * 2,
                                               value.end());
 
-                stats.emplace_back(
-                    Stat{i % 34, i > 34, tenpai_prob, win_prob, exp_value});
+                int tile = i;
+                if (i == Tile::Manzu5 + 34) {
+                    tile = Tile::RedManzu5;
+                }
+                else if (i == Tile::Pinzu5 + 34) {
+                    tile = Tile::RedPinzu5;
+                }
+                else if (i == Tile::Souzu5 + 34) {
+                    tile = Tile::RedSouzu5;
+                }
+
+                stats.emplace_back(Stat{tile, tenpai_prob, win_prob, exp_value, {}});
             }
             ++hand_counts[i];
         }
