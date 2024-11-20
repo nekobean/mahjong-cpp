@@ -5,9 +5,6 @@
 #include <tuple>
 #include <vector>
 
-#include "compare/player_impl.hpp"
-#include "compare/utils.hpp"
-
 #include <boost/graph/adjacency_list.hpp>
 
 #include "mahjong/types/types.hpp"
@@ -81,30 +78,27 @@ class ExpectedScoreCalculator
     using Desc = std::map<CacheKey, Vertex>;
 
   public:
-    std::tuple<std::vector<Stat>, std::size_t> calc(const Round &round, Player &player,
-                                                    const Params &params);
+    std::tuple<std::vector<Stat>, std::size_t> calc(const Params &params,
+                                                    const Round &round, Player &player);
 
   private:
     void draw(Player &player, std::vector<int> &hand_reds, std::vector<int> &wall_reds,
               const int tile) const;
     void discard(Player &player, std::vector<int> &hand_reds,
                  std::vector<int> &wall_reds, const int tile) const;
-    int calc_score(const Params &params, Player &player, const int mode,
-                   const int tile) const;
+    int calc_score(const Params &params, const Round &round, Player &player,
+                   const int mode, const int tile) const;
 
-    Vertex select1(Graph &graph, Desc &cache1, Desc &cache2,
+    Vertex select1(const Params &params, const Round &round, Player &player,
+                   Graph &graph, Desc &cache1, Desc &cache2,
                    std::vector<int> &hand_reds, std::vector<int> &wall_reds,
-                   Player &player, const std::vector<int> &origin_reds, int sht_org,
-                   const Params &params) const;
-    Vertex select2(Graph &graph, Desc &cache1, Desc &cache2,
+                   const std::vector<int> &origin_reds, int sht_org) const;
+    Vertex select2(const Params &params, const Round &round, Player &player,
+                   Graph &graph, Desc &cache1, Desc &cache2,
                    std::vector<int> &hand_reds, std::vector<int> &wall_reds,
-                   Player &player, const std::vector<int> &origin_reds, int sht_org,
-                   const Params &params) const;
-    void update(Graph &graph, const Desc &cache1, const Desc &cache2,
-                const Params &params) const;
-
-  private:
-    Round round_;
+                   const std::vector<int> &origin_reds, int sht_org) const;
+    void update(const Params &params, Graph &graph, const Desc &cache1,
+                const Desc &cache2) const;
 };
 } // namespace mahjong
 
