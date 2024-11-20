@@ -50,7 +50,7 @@ bool load_testcase(const std::string &filepath, std::vector<TestCase> &cases)
         Hand hand{0};
         for (int i = 0; i < 13; ++i) { // 13枚だけ読み込む
             int tile = std::stoi(tokens[i]);
-            ++hand[red2normal(tile)];
+            ++hand[to_no_reddora(tile)];
         }
         assert(std::accumulate(hand.begin(), hand.begin() + 34, 0) == 13);
 

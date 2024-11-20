@@ -63,7 +63,7 @@ HandSeparator::separate(const Input &input)
             blocks[i].type = BlockType::Kong;
         else // 明槓、加槓
             blocks[i].type = BlockType::Kong | BlockType::Open;
-        blocks[i].min_tile = red2normal(melded_block.tiles.front());
+        blocks[i].min_tile = to_no_reddora(melded_block.tiles.front());
 
         ++i;
     }

@@ -21,13 +21,13 @@ HandSeparator::Input ScoreCalculator::create_input(const MyPlayer &player, int w
 {
     Input input;
     input.hand = player.hand;
-    input.win_tile = red2normal(win_tile);
+    input.win_tile = to_no_reddora(win_tile);
     input.win_flag = win_flag;
     input.melds = player.melds;
 
     input.merged_hand = player.hand;
     for (const auto &block : player.melds) {
-        int min_tile = red2normal(block.tiles.front()); // 赤ドラは通常の牌として扱う
+        int min_tile = to_no_reddora(block.tiles.front()); // 赤ドラは通常の牌として扱う
 
         if (block.type == MeldType::Chow) {
             ++input.merged_hand[min_tile];
@@ -297,7 +297,7 @@ std::tuple<bool, std::string>
 ScoreCalculator::check_arguments(const MyPlayer &player, int win_tile, int win_flag)
 {
     // 和了牌をチェックする。
-    if (!player.hand[red2normal(win_tile)]) {
+    if (!player.hand[to_no_reddora(win_tile)]) {
         std::string err_msg =
             fmt::format("和了牌 {} が手牌 {} に含まれていません。",
                         Tile::Name.at(win_tile), to_mpsz(player.hand));
@@ -932,7 +932,7 @@ int ScoreCalculator::count_dora(const Hand &hand, const std::vector<Meld> &melds
         // Count doras in the melds.
         for (const auto &meld : melds) {
             for (const auto tile : meld.tiles) {
-                num_doras += red2normal(tile) == dora;
+                num_doras += to_no_reddora(tile) == dora;
             }
         }
     }

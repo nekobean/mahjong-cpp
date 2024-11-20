@@ -36,40 +36,49 @@ static constexpr std::array<int, 37> ToDora = {
     Tile::Souzu8, Tile::Souzu9, Tile::Souzu1, Tile::South,  Tile::West,   Tile::North,
     Tile::East,   Tile::Green,  Tile::Red,    Tile::White,  Tile::Manzu6, Tile::Pinzu6,
     Tile::Souzu6};
+
 /**
- * @brief 赤なしの牌を赤牌に変換する。
+ * @brief Convert to red dora, if tile is 5m, 5p or 5s, otherwise no change.
  *
- * @param tile 赤牌
- * @return int 赤なしの牌
+ * @param tile tile
+ * @return red dora if tile is 5m, 5p or 5s
  */
-inline int normal2red(int tile)
+inline int to_reddora(int tile)
 {
-    if (tile == Tile::RedManzu5)
+    if (tile == Tile::RedManzu5) {
         return Tile::Manzu5;
-    else if (tile == Tile::RedPinzu5)
-        return Tile::Pinzu5;
-    else if (tile == Tile::RedSouzu5)
+    }
+    else if (tile == Tile::RedPinzu5) {
+        return Tile::Manzu5;
+    }
+    else if (tile == Tile::RedSouzu5) {
         return Tile::Souzu5;
-    else
+    }
+    else {
         return tile;
+    }
 }
 
 /**
- * @brief 赤牌を赤なしの牌に変換する。
+ * @brief Convert to no red dora, if tile is red dora, otherwise no change.
  *
- * @param tile 赤牌
- * @return int 赤なしの牌
+ * @param tile tile
+ * @return not red dora tile
  */
-inline int red2normal(int tile)
+inline int to_no_reddora(int tile)
 {
-    if (tile <= Tile::Red)
+    if (tile <= Tile::Red) {
         return tile;
-    else if (tile == Tile::RedManzu5)
+    }
+    else if (tile == Tile::RedManzu5) {
         return Tile::Manzu5;
-    else if (tile == Tile::RedPinzu5)
+    }
+    else if (tile == Tile::RedPinzu5) {
         return Tile::Pinzu5;
-    else
+    }
+    else {
         return Tile::Souzu5;
+    }
 }
 
 /**

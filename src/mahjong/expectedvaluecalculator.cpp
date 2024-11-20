@@ -177,7 +177,7 @@ ExpectedValueCalculator::count_left_tiles(const MyPlayer &player,
     // 副露ブロックを除く。
     for (const auto &block : player.melds) {
         for (auto tile : block.tiles) {
-            counts[red2normal(tile)]--;
+            counts[to_no_reddora(tile)]--;
             counts[Tile::RedManzu5] -= tile == Tile::RedManzu5;
             counts[Tile::RedPinzu5] -= tile == Tile::RedPinzu5;
             counts[Tile::RedSouzu5] -= tile == Tile::RedSouzu5;
@@ -186,7 +186,7 @@ ExpectedValueCalculator::count_left_tiles(const MyPlayer &player,
 
     // ドラ表示牌を除く。
     for (auto tile : dora_indicators) {
-        counts[red2normal(tile)]--;
+        counts[to_no_reddora(tile)]--;
         counts[Tile::RedManzu5] -= tile == Tile::RedManzu5;
         counts[Tile::RedPinzu5] -= tile == Tile::RedPinzu5;
         counts[Tile::RedSouzu5] -= tile == Tile::RedSouzu5;
