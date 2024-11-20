@@ -1,3 +1,13 @@
+//
+// Calculation algorithm is based on the following pages
+// - [麻雀アルゴリズム](https://tomohxx.github.io/mahjong-algorithm-book/)
+// - [ネット上の向聴数計算アルゴリズムの知見に勝手に補足する](https://zenn.dev/zurukumo/articles/93ae2c381cbe6d)
+// - [【麻雀】シャンテン数 高速計算アルゴリズム #C++ - Qiita](https://qiita.com/KamichanR/items/de08c48f92834c0d1f74)
+// - [A Fast and Space-Efficient Algorithm for Calculating Deficient Numbers (a.k.a. Shanten Numbers).pdf](https://www.slideshare.net/slideshow/a-fast-and-space-efficient-algorithm-for-calculating-deficient-numbers-a-k-a-shanten-numbers-pdf/269706674)
+//
+// 2024/11/20: 以下のページのアルゴリズムから上記の方法に変更
+// [向聴数を求めるアルゴリズム - あらの（一人）麻雀研究所](https://mahjong.ara.black/etc/shanten/index.htm)
+//
 #include "shanten_calculator.hpp"
 
 #include <algorithm> // min, max, copy, any_of
