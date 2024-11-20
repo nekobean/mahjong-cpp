@@ -15,18 +15,18 @@ namespace mahjong
 /**
  * @brief Player
  */
-class MyPlayer
+class Player
 {
   public:
-    MyPlayer() : MyPlayer(Hand{}, {}, 0)
+    Player() : Player(Hand{}, {}, 0)
     {
     }
 
-    MyPlayer(const Hand &hand, int wind) : MyPlayer(hand, {}, wind)
+    Player(const Hand &hand, int wind) : Player(hand, {}, wind)
     {
     }
 
-    MyPlayer(const Hand &hand, const std::vector<Meld> &melds, int wind)
+    Player(const Hand &hand, const std::vector<Meld> &melds, int wind)
         : hand(hand), melds(melds), wind(wind)
     {
 #ifdef CHECK_ARGUMENT
@@ -34,13 +34,12 @@ class MyPlayer
 #endif
     }
 
-    MyPlayer(const std::vector<int> &tiles, int wind)
-        : MyPlayer(to_hand(tiles), {}, wind)
+    Player(const std::vector<int> &tiles, int wind) : Player(to_hand(tiles), {}, wind)
     {
     }
 
-    MyPlayer(const std::vector<int> &tiles, const std::vector<Meld> &melds, int wind)
-        : MyPlayer(to_hand(tiles), melds, wind)
+    Player(const std::vector<int> &tiles, const std::vector<Meld> &melds, int wind)
+        : Player(to_hand(tiles), melds, wind)
     {
     }
 

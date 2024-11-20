@@ -183,7 +183,7 @@ std::string to_string(const Round &round)
     return s;
 }
 
-std::string to_string(const MyPlayer &player)
+std::string to_string(const Player &player)
 {
     std::string s;
 

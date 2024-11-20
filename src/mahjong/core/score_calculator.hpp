@@ -18,23 +18,23 @@ class ScoreCalculator
     using Input = HandSeparator::Input;
 
   public:
-    static Input create_input(const MyPlayer &player, int win_tile, int win_flag);
+    static Input create_input(const Player &player, int win_tile, int win_flag);
 
-    static Result calc(const Round &round, const MyPlayer &player, int win_tile,
+    static Result calc(const Round &round, const Player &player, int win_tile,
                        int win_flag);
     static std::vector<int> get_scores_for_exp(const Result &result,
                                                const Round &round);
 
   public:
-    static std::tuple<bool, std::string> check_arguments(const MyPlayer &player,
+    static std::tuple<bool, std::string> check_arguments(const Player &player,
                                                          int win_tile, int yaku_list);
 
     static int calc_fu(const std::vector<Block> &blocks, const int wait_type,
                        const bool is_closed, const bool is_tsumo, const bool is_pinfu,
                        const int round_wind, const int self_wind);
-    static Result aggregate(const Round &round, const MyPlayer &player,
+    static Result aggregate(const Round &round, const Player &player,
                             const int win_tile, const int win_flag, YakuList yaku_list);
-    static Result aggregate(const Round &round, const MyPlayer &player,
+    static Result aggregate(const Round &round, const Player &player,
                             const int win_tile, const int win_flag, YakuList yaku_list,
                             int fu, const std::vector<Block> &blocks, int wait_type);
 

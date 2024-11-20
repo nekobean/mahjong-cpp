@@ -81,7 +81,7 @@ RequestData parse_request(const rapidjson::Value &doc)
 
         melds.emplace_back(meld_type, tiles, discarded_tile, from);
     }
-    req.player = MyPlayer(hand_tiles, melds, req.zikaze);
+    req.player = Player(hand_tiles, melds, req.zikaze);
 
     if (doc.HasMember("ip"))
         req.ip = doc["ip"].GetString();

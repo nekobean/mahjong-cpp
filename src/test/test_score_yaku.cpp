@@ -26,7 +26,7 @@ struct TestCase
     std::vector<int> uradora_tiles;
 
     // 入力
-    MyPlayer player;
+    Player player;
     int win_tile;
     int win_flag;
 
@@ -101,7 +101,7 @@ bool load_cases(const std::string &filename, std::vector<TestCase> &cases)
             melded_blocks.push_back(melded_block);
         }
 
-        MyPlayer player(tiles, melded_blocks, v["zikaze"].GetInt());
+        Player player(tiles, melded_blocks, v["zikaze"].GetInt());
         testcase.player = player;
         testcase.win_tile = v["win_tile"].GetInt();
         testcase.win_flag = v["flag"].GetInt();

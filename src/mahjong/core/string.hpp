@@ -15,7 +15,7 @@ Hand from_mpsz(const std::string &tiles);
 std::string to_string(const Block &block);
 std::string to_string(const Meld &meld);
 std::string to_string(const Round &round);
-std::string to_string(const MyPlayer &player);
+std::string to_string(const Player &player);
 std::string to_string(const Result &result);
 
 } // namespace mahjong

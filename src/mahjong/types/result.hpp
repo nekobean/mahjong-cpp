@@ -27,7 +27,7 @@ struct Result
      * @param[in] blocks list of blocks
      * @param[in] wait_type wait type
      */
-    Result(const MyPlayer &player, int win_tile, int win_flag,
+    Result(const Player &player, int win_tile, int win_flag,
            const std::vector<std::tuple<YakuList, int>> &yaku_list, int han, int fu,
            int score_title, const std::vector<int> &score,
            const std::vector<Block> &blocks, int wait_type)
@@ -55,7 +55,7 @@ struct Result
      * @param[in] score_title score tile
      * @param[in] score score
      */
-    Result(const MyPlayer &player, int win_tile, int win_flag,
+    Result(const Player &player, int win_tile, int win_flag,
            const std::vector<std::tuple<YakuList, int>> &yaku_list, int score_title,
            const std::vector<int> &score)
         : success(true)
@@ -64,7 +64,7 @@ struct Result
         , win_flag(win_flag)
         , yaku_list(yaku_list)
         , han(0)
-        , fu(Fu::Null)
+        , fu(0)
         , score_title(score_title)
         , score(score)
         , wait_type(WaitType::Null)
@@ -79,8 +79,7 @@ struct Result
      * @param[in] win_flag win flag
      * @param[in] err_msg error message
      */
-    Result(const MyPlayer &player, int win_tile, int win_flag,
-           const std::string &err_msg)
+    Result(const Player &player, int win_tile, int win_flag, const std::string &err_msg)
         : success(false)
         , err_msg(err_msg)
         , player(player)
@@ -88,7 +87,7 @@ struct Result
         , win_flag(win_flag)
         , yaku_list(Yaku::Null)
         , han(0)
-        , fu(Fu::Null)
+        , fu(0)
         , score_title(ScoreTitle::Null)
         , wait_type(WaitType::Null)
     {
@@ -107,7 +106,7 @@ struct Result
     ////////////////////////
 
     /* Player infomation */
-    MyPlayer player;
+    Player player;
 
     /* Win tile */
     int win_tile;

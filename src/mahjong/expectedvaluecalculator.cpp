@@ -40,7 +40,7 @@ ExpectedValueCalculator::ExpectedValueCalculator()
  * @return 各打牌の情報
  */
 std::tuple<bool, std::vector<Candidate>>
-ExpectedValueCalculator::calc(const MyPlayer &player,
+ExpectedValueCalculator::calc(const Player &player,
                               const std::vector<int> &dora_indicators, int syanten_type,
                               int flag)
 {
@@ -58,7 +58,7 @@ ExpectedValueCalculator::calc(const MyPlayer &player,
  * @return 各打牌の情報
  */
 std::tuple<bool, std::vector<Candidate>>
-ExpectedValueCalculator::calc(const MyPlayer &player,
+ExpectedValueCalculator::calc(const Player &player,
                               const std::vector<int> &dora_indicators, int syanten_type,
                               const std::vector<int> &counts, int flag)
 {
@@ -127,10 +127,10 @@ ExpectedValueCalculator::calc(const MyPlayer &player,
  * @return 有効牌の一覧
  */
 std::vector<std::tuple<int, int>>
-ExpectedValueCalculator::get_required_tiles(const MyPlayer &player, int syanten_type,
+ExpectedValueCalculator::get_required_tiles(const Player &player, int syanten_type,
                                             const std::vector<int> &counts)
 {
-    MyPlayer _player = player;
+    Player _player = player;
 
     // 現在の向聴数を計算する。
     auto [_, syanten] =
@@ -161,7 +161,7 @@ ExpectedValueCalculator::get_required_tiles(const MyPlayer &player, int syanten_
  * @return 各牌の残り枚数
  */
 std::vector<int>
-ExpectedValueCalculator::count_left_tiles(const MyPlayer &player,
+ExpectedValueCalculator::count_left_tiles(const Player &player,
                                           const std::vector<int> &dora_indicators)
 {
     std::vector<int> counts(37, 4);
@@ -280,7 +280,7 @@ void ExpectedValueCalculator::clear_cache()
  * @return 自摸牌候補の一覧。各要素は (牌, 残り枚数, 向聴数の変化) を表す。
  */
 std::vector<std::tuple<int, int, int>>
-ExpectedValueCalculator::get_draw_tiles(MyPlayer &player, int syanten,
+ExpectedValueCalculator::get_draw_tiles(Player &player, int syanten,
                                         const std::vector<int> &counts)
 {
     std::vector<std::tuple<int, int, int>> flags;
@@ -348,7 +348,7 @@ ExpectedValueCalculator::get_draw_tiles(MyPlayer &player, int syanten,
  * @return 打牌一覧 (向聴戻し: 1、向聴数変化なし: 0、手牌に存在しない: inf)
  */
 std::vector<std::tuple<int, int>>
-ExpectedValueCalculator::get_discard_tiles(MyPlayer &player, int syanten)
+ExpectedValueCalculator::get_discard_tiles(Player &player, int syanten)
 {
     std::vector<std::tuple<int, int>> flags;
     flags.reserve(34);
@@ -389,7 +389,7 @@ ExpectedValueCalculator::get_discard_tiles(MyPlayer &player, int syanten)
  * @param[in] counts 各牌の残り枚数
  * @return 点数
  */
-std::vector<double> ExpectedValueCalculator::get_score(const MyPlayer &player,
+std::vector<double> ExpectedValueCalculator::get_score(const Player &player,
                                                        int win_tile,
                                                        const std::vector<int> &counts)
 {
@@ -473,8 +473,7 @@ std::vector<double> ExpectedValueCalculator::get_score(const MyPlayer &player,
  */
 std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
 ExpectedValueCalculator::draw_without_tegawari(int n_extra_tumo, int syanten,
-                                               MyPlayer &player,
-                                               std::vector<int> &counts)
+                                               Player &player, std::vector<int> &counts)
 {
 #ifdef ENABLE_DRAW_CACHE
     auto &table = draw_cache_[syanten];
@@ -584,7 +583,7 @@ ExpectedValueCalculator::draw_without_tegawari(int n_extra_tumo, int syanten,
  */
 std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
 ExpectedValueCalculator::draw_with_tegawari(int n_extra_tumo, int syanten,
-                                            MyPlayer &player, std::vector<int> &counts)
+                                            Player &player, std::vector<int> &counts)
 {
 #ifdef ENABLE_DRAW_CACHE
     auto &table = draw_cache_[syanten];
@@ -713,7 +712,7 @@ ExpectedValueCalculator::draw_with_tegawari(int n_extra_tumo, int syanten,
  * @return (各巡目の聴牌確率, 各巡目の和了確率, 各巡目の期待値)
  */
 std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
-ExpectedValueCalculator::draw(int n_extra_tumo, int syanten, MyPlayer &player,
+ExpectedValueCalculator::draw(int n_extra_tumo, int syanten, Player &player,
                               std::vector<int> &counts)
 {
     if (calc_tegawari_ && n_extra_tumo == 0)
@@ -732,7 +731,7 @@ ExpectedValueCalculator::draw(int n_extra_tumo, int syanten, MyPlayer &player,
  * @return (各巡目の聴牌確率, 各巡目の和了確率, 各巡目の期待値)
  */
 std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
-ExpectedValueCalculator::discard(int n_extra_tumo, int syanten, MyPlayer &player,
+ExpectedValueCalculator::discard(int n_extra_tumo, int syanten, Player &player,
                                  std::vector<int> &counts)
 {
     assert(syanten > -1); // 和了形からの向聴戻しは行わない
@@ -818,7 +817,7 @@ ExpectedValueCalculator::discard(int n_extra_tumo, int syanten, MyPlayer &player
  */
 std::vector<Candidate> ExpectedValueCalculator::analyze_discard(int n_extra_tumo,
                                                                 int syanten,
-                                                                MyPlayer player,
+                                                                Player player,
                                                                 std::vector<int> counts)
 {
     std::vector<Candidate> candidates;
@@ -881,7 +880,7 @@ std::vector<Candidate> ExpectedValueCalculator::analyze_discard(int n_extra_tumo
  * @return std::vector<Candidate> 打牌候補の一覧
  */
 std::vector<Candidate> ExpectedValueCalculator::analyze_discard(int syanten,
-                                                                MyPlayer player,
+                                                                Player player,
                                                                 std::vector<int> counts)
 {
     std::vector<Candidate> candidates;
@@ -907,8 +906,7 @@ std::vector<Candidate> ExpectedValueCalculator::analyze_discard(int syanten,
  * @return std::vector<Candidate> 打牌候補の一覧
  */
 std::vector<Candidate> ExpectedValueCalculator::analyze_draw(int n_extra_tumo,
-                                                             int syanten,
-                                                             MyPlayer player,
+                                                             int syanten, Player player,
                                                              std::vector<int> counts)
 {
     std::vector<Candidate> candidates;
@@ -933,8 +931,7 @@ std::vector<Candidate> ExpectedValueCalculator::analyze_draw(int n_extra_tumo,
  * @param [in]_player 手牌
  * @return std::vector<Candidate> 打牌候補の一覧
  */
-std::vector<Candidate> ExpectedValueCalculator::analyze_draw(int syanten,
-                                                             MyPlayer player,
+std::vector<Candidate> ExpectedValueCalculator::analyze_draw(int syanten, Player player,
                                                              std::vector<int> counts)
 {
     std::vector<Candidate> candidates;

@@ -51,7 +51,7 @@ bool load_yakuman_cases(const std::string &filename, std::vector<TestCase> &case
         int win_tile = std::stoi(tokens[14]);
         bool is_valid = tokens[15] == "1";
 
-        MyPlayer player(tiles, Tile::East);
+        Player player(tiles, Tile::East);
         HandSeparator::Input input =
             ScoreCalculator::create_input(player, win_tile, WinFlag::Null);
 
@@ -311,7 +311,7 @@ TEST_CASE("Four Kongs")
         std::vector<Meld> melds = {block1, block2, block3, block4};
         std::vector<int> tiles = {Tile::White, Tile::White};
 
-        MyPlayer player(tiles, melds, Tile::East);
+        Player player(tiles, melds, Tile::East);
         HandSeparator::Input input =
             ScoreCalculator::create_input(player, Tile::White, WinFlag::Null);
 
@@ -342,7 +342,7 @@ TEST_CASE("Four Kongs")
                      PlayerType::Player1});
         std::vector<Meld> melds = {block1, block2, block3, block4};
         std::vector<int> tiles = {Tile::White, Tile::White};
-        MyPlayer player(tiles, melds, Tile::East);
+        Player player(tiles, melds, Tile::East);
 
         HandSeparator::Input input =
             ScoreCalculator::create_input(player, Tile::White, WinFlag::Null);
@@ -371,7 +371,7 @@ TEST_CASE("Four Kongs")
                      PlayerType::Player1});
         std::vector<Meld> melds = {block1, block2, block3};
         std::vector<int> tiles = {Tile::White, Tile::White};
-        MyPlayer player(tiles, melds, Tile::East);
+        Player player(tiles, melds, Tile::East);
 
         HandSeparator::Input input =
             ScoreCalculator::create_input(player, Tile::White, WinFlag::Null);

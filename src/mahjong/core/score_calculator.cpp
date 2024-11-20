@@ -16,7 +16,7 @@
 namespace mahjong
 {
 
-HandSeparator::Input ScoreCalculator::create_input(const MyPlayer &player, int win_tile,
+HandSeparator::Input ScoreCalculator::create_input(const Player &player, int win_tile,
                                                    int win_flag)
 {
     Input input;
@@ -73,7 +73,7 @@ HandSeparator::Input ScoreCalculator::create_input(const MyPlayer &player, int w
  * @param[in] win_flag win flag
  * @return result
  */
-Result ScoreCalculator::calc(const Round &round, const MyPlayer &player, int win_tile,
+Result ScoreCalculator::calc(const Round &round, const Player &player, int win_tile,
                              int win_flag)
 {
     Input input = create_input(player, win_tile, win_flag);
@@ -127,7 +127,7 @@ Result ScoreCalculator::calc(const Round &round, const MyPlayer &player, int win
  * @param[in] yaku_list list of yaku
  * @return result
  */
-Result ScoreCalculator::aggregate(const Round &round, const MyPlayer &player,
+Result ScoreCalculator::aggregate(const Round &round, const Player &player,
                                   const int win_tile, const int win_flag,
                                   YakuList yaku_list)
 {
@@ -195,7 +195,7 @@ Result ScoreCalculator::aggregate(const Round &round, const MyPlayer &player,
  * @param[in] wait_type wait type
  * @return result
  */
-Result ScoreCalculator::aggregate(const Round &round, const MyPlayer &player,
+Result ScoreCalculator::aggregate(const Round &round, const Player &player,
                                   const int win_tile, const int win_flag,
                                   YakuList yaku_list, int fu,
                                   const std::vector<Block> &blocks, int wait_type)
@@ -294,7 +294,7 @@ Result ScoreCalculator::aggregate(const Round &round, const MyPlayer &player,
  * @return (is valid, error message)
  */
 std::tuple<bool, std::string>
-ScoreCalculator::check_arguments(const MyPlayer &player, int win_tile, int win_flag)
+ScoreCalculator::check_arguments(const Player &player, int win_tile, int win_flag)
 {
     // 和了牌をチェックする。
     if (!player.hand[to_no_reddora(win_tile)]) {

@@ -160,7 +160,7 @@ TEST_CASE("to_string(Player)")
                                 {Tile::Manzu1, Tile::Manzu1, Tile::Manzu1},
                                 Tile::Manzu1,
                                 PlayerType::Player0}};
-    MyPlayer player(hand, melds, Tile::East);
+    Player player(hand, melds, Tile::East);
 
     std::cout << to_string(player) << std::endl;
 }
@@ -175,7 +175,7 @@ TEST_CASE("to_string(Result)")
     round.kyotaku = 2;
     round.dora_indicators = {Tile::Manzu1};
 
-    MyPlayer player(from_mpsz(u8"222345m345p345s11z"), Tile::East);
+    Player player(from_mpsz(u8"222345m345p345s11z"), Tile::East);
     Result result = ScoreCalculator::calc(round, player, Tile::East, WinFlag::Tsumo);
 
     std::cout << to_string(result) << std::endl;

@@ -81,19 +81,24 @@ class ExpectedScoreCalculator
     using Desc = std::map<CacheKey, Vertex>;
 
   public:
-    std::tuple<std::vector<Stat>, std::size_t>
-    calc(const Round &round, MyPlayer &player, const Params &params);
+    std::tuple<std::vector<Stat>, std::size_t> calc(const Round &round, Player &player,
+                                                    const Params &params);
 
   private:
-    int calc_score(MyPlayer &player, const int mode, const int tile,
-                   const Params &params) const;
+    void draw(Player &player, std::vector<int> &hand_reds, std::vector<int> &wall_reds,
+              const int tile) const;
+    void discard(Player &player, std::vector<int> &hand_reds,
+                 std::vector<int> &wall_reds, const int tile) const;
+    int calc_score(const Params &params, Player &player, const int mode,
+                   const int tile) const;
+
     Vertex select1(Graph &graph, Desc &cache1, Desc &cache2,
                    std::vector<int> &hand_reds, std::vector<int> &wall_reds,
-                   MyPlayer &player, const std::vector<int> &origin_reds, int sht_org,
+                   Player &player, const std::vector<int> &origin_reds, int sht_org,
                    const Params &params) const;
     Vertex select2(Graph &graph, Desc &cache1, Desc &cache2,
                    std::vector<int> &hand_reds, std::vector<int> &wall_reds,
-                   MyPlayer &player, const std::vector<int> &origin_reds, int sht_org,
+                   Player &player, const std::vector<int> &origin_reds, int sht_org,
                    const Params &params) const;
     void update(Graph &graph, const Desc &cache1, const Desc &cache2,
                 const Params &params) const;
