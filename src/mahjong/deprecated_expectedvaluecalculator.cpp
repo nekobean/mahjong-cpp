@@ -1,4 +1,4 @@
-#include "expectedvaluecalculator.hpp"
+#include "deprecated_expectedvaluecalculator.hpp"
 
 #undef NDEBUG
 #include <algorithm>

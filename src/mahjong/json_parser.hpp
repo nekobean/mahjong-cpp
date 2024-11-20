@@ -4,6 +4,7 @@
 #include <rapidjson/document.h>
 
 #include "mahjong.hpp"
+#include "mahjong/deprecated_expectedvaluecalculator.hpp"
 
 struct RequestData
 {

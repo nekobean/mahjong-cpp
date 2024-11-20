@@ -8,6 +8,5 @@
 #include "mahjong/core/string.hpp"
 #include "mahjong/core/unnecessary_tile_calculator.hpp"
 #include "mahjong/core/utils.hpp"
-#include "mahjong/expectedvaluecalculator.hpp"
 
 #endif /* MAHJONG_CPP_MAHJONG */
