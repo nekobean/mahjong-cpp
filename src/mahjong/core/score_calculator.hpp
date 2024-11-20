@@ -28,10 +28,9 @@ class ScoreCalculator
   public:
     static std::tuple<bool, std::string> check_arguments(const Player &player,
                                                          int win_tile, int yaku_list);
-
     static int calc_fu(const std::vector<Block> &blocks, const int wait_type,
                        const bool is_closed, const bool is_tsumo, const bool is_pinfu,
-                       const int round_wind, const int self_wind);
+                       const int round_wind, const int seat_wind);
     static Result aggregate(const Round &round, const Player &player,
                             const int win_tile, const int win_flag, YakuList yaku_list);
     static Result aggregate(const Round &round, const Player &player,
@@ -39,8 +38,8 @@ class ScoreCalculator
                             int fu, const std::vector<Block> &blocks, int wait_type);
 
     static YakuList check_yakuman(const Input &input, const int shanten_type);
-    static YakuList check_not_pattern_yaku(const Input &input, const int shanten_type,
-                                           const Round &round);
+    static YakuList check_not_pattern_yaku(const Round &round, const Input &input,
+                                           const int shanten_type);
     static std::tuple<YakuList, int, std::vector<Block>, int>
     check_pattern_yaku(const Input &input, int shanten_type, const Round &round);
     static std::vector<int> calc_score(const bool is_dealer, const bool is_tsumo,
@@ -58,7 +57,7 @@ class ScoreCalculator
     // Functions to check yaku
     static bool check_tanyao(const bool rule_open_tanyao, const Input &input);
     static bool check_pinfu(const std::vector<Block> &blocks, const int wait_type,
-                            const int round_wind, const int self_wind);
+                            const int round_wind, const int seat_wind);
     static int check_pure_double_sequence(const std::vector<Block> &blocks);
     static bool check_all_triplets(const std::vector<Block> &blocks);
     static bool check_three_concealed_triplets(const std::vector<Block> &blocks);

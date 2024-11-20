@@ -79,7 +79,7 @@ Result ScoreCalculator::calc(const Round &round, const Player &player, int win_t
     Input input = create_input(player, win_tile, win_flag);
 
     if (auto [ok, err_msg] = check_arguments(player, win_tile, win_flag); !ok) {
-        return Result(player, win_tile, win_flag, err_msg); // 異常終了
+        return Result(player, win_tile, win_flag, err_msg);
     }
 
     if (win_flag & WinFlag::NagashiMangan) {
@@ -102,7 +102,7 @@ Result ScoreCalculator::calc(const Round &round, const Player &player, int win_t
     }
 
     // 面子構成に関係ない役を調べる。
-    yaku_list |= check_not_pattern_yaku(input, shanten_type, round);
+    yaku_list |= check_not_pattern_yaku(round, input, shanten_type);
 
     // 面子構成に関係ある役を調べる。
     const auto [pattern_yaku_list, fu, blocks, wait_type] =
@@ -357,7 +357,7 @@ ScoreCalculator::check_arguments(const Player &player, int win_tile, int win_fla
 }
 
 /**
- * @brief 符を計算する。
+ * @brief Calculate fu.
  *
  * @param[in] blocks list of blocks
  * @param[in] wait_type wait type
@@ -449,8 +449,8 @@ std::vector<int> ScoreCalculator::get_scores_for_exp(const Result &result,
 
         // 点数を計算する。
         const bool is_dealer = round.self_wind == Tile::East;
-        auto score =
-            calc_score(is_dealer, true, score_title, round.honba, round.kyoku, han, fu);
+        auto score = calc_score(is_dealer, true, round.honba, round.kyotaku,
+                                score_title, han, fu);
 
         scores.push_back(score.front());
     }
@@ -551,9 +551,8 @@ YakuList ScoreCalculator::check_yakuman(const Input &input, const int shanten_ty
  * @param[in] shanten_type type of winning hand
  * @return list of established yaku
  */
-YakuList ScoreCalculator::check_not_pattern_yaku(const Input &input,
-                                                 const int shanten_type,
-                                                 const Round &round)
+YakuList ScoreCalculator::check_not_pattern_yaku(const Round &round, const Input &input,
+                                                 const int shanten_type)
 {
     YakuList yaku_list = Yaku::Null;
 
