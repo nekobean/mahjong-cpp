@@ -43,7 +43,7 @@ int64_t calc_wait2(const Hand &hand)
 
 std::vector<int> encode(const std::vector<int> &hand, const std::vector<int> &reds)
 {
-    std::vector<int> ret(2 * 34);
+    std::vector<int> ret(68);
 
     for (int i = 0; i < 34; ++i) {
         ret[i] = hand[i] - reds[i];
@@ -154,7 +154,7 @@ int distance(const std::vector<int> &hand, const std::vector<int> &origin)
 }
 
 void ExpectedScoreCalculator::draw(Player &player, std::vector<int> &hand_reds,
-                                   std::vector<int> &wall_reds, const int tile) const
+                                   std::vector<int> &wall_reds, const int tile)
 {
     ++hand_reds[tile];
     --wall_reds[tile];
@@ -173,7 +173,7 @@ void ExpectedScoreCalculator::draw(Player &player, std::vector<int> &hand_reds,
 }
 
 void ExpectedScoreCalculator::discard(Player &player, std::vector<int> &hand_reds,
-                                      std::vector<int> &wall_reds, const int tile) const
+                                      std::vector<int> &wall_reds, const int tile)
 {
     --hand_reds[tile];
     ++wall_reds[tile];
@@ -192,8 +192,7 @@ void ExpectedScoreCalculator::discard(Player &player, std::vector<int> &hand_red
 }
 
 int ExpectedScoreCalculator::calc_score(const Params &params, const Round &round,
-                                        Player &player, const int mode,
-                                        const int tile) const
+                                        Player &player, const int mode, const int tile)
 {
     int win_tile = tile;
     if (tile == Tile::Manzu5 + 34) {
@@ -219,8 +218,7 @@ int ExpectedScoreCalculator::calc_score(const Params &params, const Round &round
 ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::select1(
     const Params &params, const Round &round, Player &player, Graph &graph,
     Desc &cache1, Desc &cache2, std::vector<int> &hand_reds,
-    std::vector<int> &wall_reds, const std::vector<int> &origin,
-    const int sht_org) const
+    std::vector<int> &wall_reds, const std::vector<int> &origin, const int sht_org)
 {
     // If vertex exists in the cache, return it.
     CacheKey key(hand_reds);
@@ -268,8 +266,7 @@ ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::select1(
 ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::select2(
     const Params &params, const Round &round, Player &player, Graph &graph,
     Desc &cache1, Desc &cache2, std::vector<int> &hand_reds,
-    std::vector<int> &wall_reds, const std::vector<int> &origin,
-    const int sht_org) const
+    std::vector<int> &wall_reds, const std::vector<int> &origin, const int sht_org)
 {
     // If vertex exists in the cache, return it.
     CacheKey key(hand_reds);
@@ -317,8 +314,8 @@ ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::select2(
     return vertex;
 }
 
-void ExpectedScoreCalculator::update(const Params &params, Graph &graph,
-                                     const Desc &cache1, const Desc &cache2) const
+void ExpectedScoreCalculator::calc_values(const Params &params, Graph &graph,
+                                          const Desc &cache1, const Desc &cache2)
 {
     for (int t = params.t_max - 1; t >= params.t_min; --t) {
         for (auto &[_, vertex] : cache1) {
@@ -373,29 +370,25 @@ void ExpectedScoreCalculator::update(const Params &params, Graph &graph,
     }
 }
 
-std::tuple<std::vector<ExpectedScoreCalculator::Stat>, std::size_t>
+std::tuple<std::vector<ExpectedScoreCalculator::Stat>, int>
 ExpectedScoreCalculator::calc(const Params &params, const Round &round, Player &player)
 {
     Graph graph;
     Desc cache1, cache2;
 
-    assert(params.t_min >= 0);
-    assert(params.t_min < params.t_max);
-    assert(player.num_tiles() % 3 == 2);
+    auto wall = create_wall(round, player);
+    auto hand_reds = encode(player.hand);
+    auto wall_reds = encode(wall);
 
     // Calculate shanten number of specified hand.
     auto [type, shanten] = ShantenCalculator::calc(player.hand, 0, params.mode);
-
-    auto hand_reds = encode(player.hand);
-    auto wall2 = create_wall(round, player);
-    auto wall_reds = encode(wall2);
 
     // Build hand transition graph.
     select2(params, round, player, graph, cache1, cache2, hand_reds, wall_reds,
             std::vector<int>{hand_reds}, shanten);
 
     // Calculate expected values and probabilities.
-    update(params, graph, cache1, cache2);
+    calc_values(params, graph, cache1, cache2);
 
     // 結果を取得する。
     std::vector<Stat> stats;
@@ -418,8 +411,9 @@ ExpectedScoreCalculator::calc(const Params &params, const Round &round, Player &
         }
     }
 
-    const auto searched = boost::num_vertices(graph);
+    const int searched = static_cast<int>(boost::num_vertices(graph));
 
     return {stats, searched};
 }
+
 } // namespace mahjong

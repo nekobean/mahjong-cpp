@@ -78,27 +78,26 @@ class ExpectedScoreCalculator
     using Desc = std::map<CacheKey, Vertex>;
 
   public:
-    std::tuple<std::vector<Stat>, std::size_t> calc(const Params &params,
-                                                    const Round &round, Player &player);
+    static std::tuple<std::vector<Stat>, int> calc(const Params &params,
+                                                   const Round &round, Player &player);
 
   private:
-    void draw(Player &player, std::vector<int> &hand_reds, std::vector<int> &wall_reds,
-              const int tile) const;
-    void discard(Player &player, std::vector<int> &hand_reds,
-                 std::vector<int> &wall_reds, const int tile) const;
-    int calc_score(const Params &params, const Round &round, Player &player,
-                   const int mode, const int tile) const;
-
-    Vertex select1(const Params &params, const Round &round, Player &player,
-                   Graph &graph, Desc &cache1, Desc &cache2,
-                   std::vector<int> &hand_reds, std::vector<int> &wall_reds,
-                   const std::vector<int> &origin_reds, int sht_org) const;
-    Vertex select2(const Params &params, const Round &round, Player &player,
-                   Graph &graph, Desc &cache1, Desc &cache2,
-                   std::vector<int> &hand_reds, std::vector<int> &wall_reds,
-                   const std::vector<int> &origin_reds, int sht_org) const;
-    void update(const Params &params, Graph &graph, const Desc &cache1,
-                const Desc &cache2) const;
+    static void draw(Player &player, std::vector<int> &hand_reds,
+                     std::vector<int> &wall_reds, const int tile);
+    static void discard(Player &player, std::vector<int> &hand_reds,
+                        std::vector<int> &wall_reds, const int tile);
+    static int calc_score(const Params &params, const Round &round, Player &player,
+                          const int mode, const int tile);
+    static Vertex select1(const Params &params, const Round &round, Player &player,
+                          Graph &graph, Desc &cache1, Desc &cache2,
+                          std::vector<int> &hand_reds, std::vector<int> &wall_reds,
+                          const std::vector<int> &origin_reds, int sht_org);
+    static Vertex select2(const Params &params, const Round &round, Player &player,
+                          Graph &graph, Desc &cache1, Desc &cache2,
+                          std::vector<int> &hand_reds, std::vector<int> &wall_reds,
+                          const std::vector<int> &origin_reds, int sht_org);
+    static void calc_values(const Params &params, Graph &graph, const Desc &cache1,
+                            const Desc &cache2);
 };
 } // namespace mahjong
 
