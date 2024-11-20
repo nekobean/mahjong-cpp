@@ -14,9 +14,9 @@ namespace mahjong
 class ExpectedScoreCalculator
 {
   public:
-    struct Params
+    struct Config
     {
-        Params()
+        Config()
             : t_min(0)
             , t_max(18)
             , sum(121)
@@ -94,7 +94,7 @@ class ExpectedScoreCalculator
     };
 
     using VertexData = std::vector<double>;
-    using EdgeData = std::pair<int, int>;
+    using EdgeData = std::tuple<int, int>;
     using Graph = boost::adjacency_list<boost::listS, boost::vecS,
                                         boost::bidirectionalS, VertexData, EdgeData>;
     using Vertex = Graph::vertex_descriptor;
@@ -102,7 +102,7 @@ class ExpectedScoreCalculator
     using Desc = std::map<CacheKey, Vertex>;
 
   public:
-    static std::tuple<std::vector<Stat>, int> calc(const Params &params,
+    static std::tuple<std::vector<Stat>, int> calc(const Config &params,
                                                    const Round &round, Player &player);
 
   private:
@@ -111,17 +111,17 @@ class ExpectedScoreCalculator
                      std::vector<int> &wall_reds, const int tile);
     static void discard(Player &player, std::vector<int> &hand_reds,
                         std::vector<int> &wall_reds, const int tile);
-    static int calc_score(const Params &params, const Round &round, Player &player,
+    static int calc_score(const Config &params, const Round &round, Player &player,
                           const int mode, const int tile);
-    static Vertex select1(const Params &params, const Round &round, Player &player,
+    static Vertex select1(const Config &params, const Round &round, Player &player,
                           Graph &graph, Desc &cache1, Desc &cache2,
                           std::vector<int> &hand_reds, std::vector<int> &wall_reds,
                           const std::vector<int> &origin_reds, int sht_org);
-    static Vertex select2(const Params &params, const Round &round, Player &player,
+    static Vertex select2(const Config &params, const Round &round, Player &player,
                           Graph &graph, Desc &cache1, Desc &cache2,
                           std::vector<int> &hand_reds, std::vector<int> &wall_reds,
                           const std::vector<int> &origin_reds, int sht_org);
-    static void calc_values(const Params &params, Graph &graph, const Desc &cache1,
+    static void calc_values(const Config &params, Graph &graph, const Desc &cache1,
                             const Desc &cache2);
 };
 } // namespace mahjong

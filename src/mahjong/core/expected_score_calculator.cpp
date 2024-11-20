@@ -166,7 +166,7 @@ void ExpectedScoreCalculator::discard(Player &player, std::vector<int> &hand_cou
     }
 }
 
-int ExpectedScoreCalculator::calc_score(const Params &params, const Round &round,
+int ExpectedScoreCalculator::calc_score(const Config &params, const Round &round,
                                         Player &player, const int shanten_type,
                                         const int tile)
 {
@@ -194,7 +194,7 @@ int ExpectedScoreCalculator::calc_score(const Params &params, const Round &round
 }
 
 ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::select1(
-    const Params &params, const Round &round, Player &player, Graph &graph,
+    const Config &params, const Round &round, Player &player, Graph &graph,
     Desc &cache1, Desc &cache2, std::vector<int> &hand_counts,
     std::vector<int> &wall_counts, const std::vector<int> &hand_org,
     const int shanten_org)
@@ -246,7 +246,7 @@ ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::select1(
 }
 
 ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::select2(
-    const Params &params, const Round &round, Player &player, Graph &graph,
+    const Config &params, const Round &round, Player &player, Graph &graph,
     Desc &cache1, Desc &cache2, std::vector<int> &hand_counts,
     std::vector<int> &wall_counts, const std::vector<int> &hand_org,
     const int shanten_org)
@@ -299,7 +299,7 @@ ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::select2(
     return vertex;
 }
 
-void ExpectedScoreCalculator::calc_values(const Params &params, Graph &graph,
+void ExpectedScoreCalculator::calc_values(const Config &params, Graph &graph,
                                           const Desc &cache1, const Desc &cache2)
 {
     for (int t = params.t_max - 1; t >= params.t_min; --t) {
@@ -356,12 +356,12 @@ void ExpectedScoreCalculator::calc_values(const Params &params, Graph &graph,
 }
 
 std::tuple<std::vector<ExpectedScoreCalculator::Stat>, int>
-ExpectedScoreCalculator::calc(const Params &params, const Round &round, Player &player)
+ExpectedScoreCalculator::calc(const Config &params, const Round &round, Player &player)
 {
     Graph graph;
     Desc cache1, cache2;
 
-    auto wall = create_wall(round, player, params.enable_reddora);
+    Hand wall = create_wall(round, player, params.enable_reddora);
     auto hand_counts = encode(player.hand);
     auto wall_counts = encode(wall);
 
@@ -400,7 +400,16 @@ ExpectedScoreCalculator::calc(const Params &params, const Round &round, Player &
                     tile = Tile::RedSouzu5;
                 }
 
-                stats.emplace_back(Stat{tile, tenpai_prob, win_prob, exp_value, {}});
+                auto [shanten_type, shanten, tiles] =
+                    NecessaryTileCalculator::select(player.hand, 0, params.mode);
+
+                std::vector<std::tuple<int, int>> necessary_tiles;
+                for (const auto tile : tiles) {
+                    necessary_tiles.emplace_back(tile, wall[tile]);
+                }
+
+                stats.emplace_back(
+                    Stat{tile, tenpai_prob, win_prob, exp_value, necessary_tiles});
             }
             ++hand_counts[i];
         }
