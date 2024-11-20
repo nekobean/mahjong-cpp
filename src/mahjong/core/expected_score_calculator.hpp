@@ -82,6 +82,7 @@ class ExpectedScoreCalculator
                                                    const Round &round, Player &player);
 
   private:
+    static int distance(const std::vector<int> &hand, const std::vector<int> &origin);
     static void draw(Player &player, std::vector<int> &hand_reds,
                      std::vector<int> &wall_reds, const int tile);
     static void discard(Player &player, std::vector<int> &hand_reds,

@@ -76,14 +76,8 @@ HandSeparator::Input ScoreCalculator::create_input(const Player &player, int win
 Result ScoreCalculator::calc(const Round &round, const Player &player, int win_tile,
                              int win_flag)
 {
-    Input input = create_input(player, win_tile, win_flag);
-
     if (auto [ok, err_msg] = check_arguments(player, win_tile, win_flag); !ok) {
         return Result(player, win_tile, win_flag, err_msg);
-    }
-
-    if (win_flag & WinFlag::NagashiMangan) {
-        return aggregate(round, player, win_tile, win_flag, Yaku::NagasiMangan);
     }
 
     // 向聴数を計算する。
@@ -91,6 +85,29 @@ Result ScoreCalculator::calc(const Round &round, const Player &player, int win_t
         player.hand, int(player.melds.size()), ShantenFlag::All);
     if (syanten != -1) {
         return Result(player, win_tile, win_flag, u8"The hand is not winning form.");
+    }
+
+    return calc_fast(round, player, win_tile, win_flag, shanten_type);
+}
+
+/**
+ * @brief Calculate score.
+ *
+ * @param[in] round round
+ * @param[in] player player
+ * @param[in] win_tile win tile
+ * @param[in] win_flag win flag
+ * @param[in] shanten_type shanten number type
+ * @param[in] shanten shanten number
+ * @return result
+ */
+Result ScoreCalculator::calc_fast(const Round &round, const Player &player,
+                                  int win_tile, int win_flag, int shanten_type)
+{
+    Input input = create_input(player, win_tile, win_flag);
+
+    if (win_flag & WinFlag::NagashiMangan) {
+        return aggregate(round, player, win_tile, win_flag, Yaku::NagasiMangan);
     }
 
     YakuList yaku_list = Yaku::Null;

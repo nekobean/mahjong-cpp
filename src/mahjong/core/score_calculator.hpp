@@ -22,6 +22,8 @@ class ScoreCalculator
 
     static Result calc(const Round &round, const Player &player, int win_tile,
                        int win_flag);
+    static Result calc_fast(const Round &round, const Player &player, int win_tile,
+                            int win_flag, int shanten_type);
     static std::vector<int> get_scores_for_exp(const Result &result,
                                                const Round &round);
 
