@@ -210,7 +210,7 @@ DrawResponseData create_draw_response(const RequestData &req)
 
     // 点数計算の設定
     Round params;
-    params.self_wind = req.zikaze;
+    // params.self_wind = req.zikaze;
     params.wind = req.bakaze;
     params.honba = 0;
     params.kyotaku = 0;
@@ -270,7 +270,7 @@ DiscardResponseData create_discard_response(const RequestData &req)
 
     // 点数計算の設定
     Round params;
-    params.self_wind = req.zikaze;
+    // params.self_wind = req.zikaze;
     params.wind = req.bakaze;
     params.honba = 0;
     params.kyotaku = 0;

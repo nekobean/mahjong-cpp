@@ -24,8 +24,8 @@ class ScoreCalculator
                        int win_flag);
     static Result calc_fast(const Round &round, const Player &player, int win_tile,
                             int win_flag, int shanten_type);
-    static std::vector<int> get_scores_for_exp(const Result &result,
-                                               const Round &round);
+    static std::vector<int> get_scores_for_exp(const Result &result, const Round &round,
+                                               int wind);
 
   public:
     static std::tuple<bool, std::string> check_arguments(const Player &player,
@@ -40,10 +40,11 @@ class ScoreCalculator
                             int fu, const std::vector<Block> &blocks, int wait_type);
 
     static YakuList check_yakuman(const Input &input, const int shanten_type);
-    static YakuList check_not_pattern_yaku(const Round &round, const Input &input,
-                                           const int shanten_type);
+    static YakuList check_not_pattern_yaku(const Round &round, const Player &player,
+                                           const Input &input, const int shanten_type);
     static std::tuple<YakuList, int, std::vector<Block>, int>
-    check_pattern_yaku(const Input &input, int shanten_type, const Round &round);
+    check_pattern_yaku(const Round &round, const Player &player, Input &input,
+                       int shanten_type);
     static std::vector<int> calc_score(const bool is_dealer, const bool is_tsumo,
                                        const int honba, const int kyotaku,
                                        const int score_title, const int han = 0,

@@ -409,7 +409,7 @@ std::vector<double> ExpectedValueCalculator::get_score(const Player &player,
     if (result.success) {
         // 役ありの場合
         std::vector<int> up_scores =
-            ScoreCalculator::get_scores_for_exp(result, params);
+            ScoreCalculator::get_scores_for_exp(result, params, player.wind);
 
         if (calc_uradora_ && n_dora == 1) {
             // 裏ドラ考慮ありかつ表ドラが1枚以上の場合は、厳密に計算する。

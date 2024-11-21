@@ -119,11 +119,11 @@ Result ScoreCalculator::calc_fast(const Round &round, const Player &player,
     }
 
     // 面子構成に関係ない役を調べる。
-    yaku_list |= check_not_pattern_yaku(round, input, shanten_type);
+    yaku_list |= check_not_pattern_yaku(round, player, input, shanten_type);
 
     // 面子構成に関係ある役を調べる。
     const auto [pattern_yaku_list, fu, blocks, wait_type] =
-        check_pattern_yaku(input, shanten_type, round);
+        check_pattern_yaku(round, player, input, shanten_type);
     yaku_list |= pattern_yaku_list;
 
     if (!yaku_list) {
@@ -171,7 +171,7 @@ Result ScoreCalculator::aggregate(const Round &round, const Player &player,
     std::vector<std::tuple<YakuList, int>> yaku_han_list;
     std::vector<int> score;
 
-    const bool is_dealer = round.self_wind == Tile::East;
+    const bool is_dealer = player.wind == Tile::East;
 
     if (yaku_list & Yaku::NagasiMangan) {
         // Nagashi Mangan
@@ -290,7 +290,7 @@ Result ScoreCalculator::aggregate(const Round &round, const Player &player,
     }
 
     const int score_title = get_score_title(fu, han);
-    const bool is_dealer = round.self_wind == Tile::East;
+    const bool is_dealer = player.wind == Tile::East;
     const std::vector<int> score =
         calc_score(is_dealer, win_flag & WinFlag::Tsumo, round.honba, round.kyotaku,
                    score_title, han, fu);
@@ -453,7 +453,7 @@ int ScoreCalculator::calc_fu(const std::vector<Block> &blocks, const int wait_ty
 }
 
 std::vector<int> ScoreCalculator::get_scores_for_exp(const Result &result,
-                                                     const Round &round)
+                                                     const Round &round, int seat_wind)
 {
     if (result.score_title >= ScoreTitle::CountedYakuman)
         return {result.score.front()};
@@ -466,7 +466,7 @@ std::vector<int> ScoreCalculator::get_scores_for_exp(const Result &result,
         int score_title = get_score_title(fu, han);
 
         // 点数を計算する。
-        const bool is_dealer = round.self_wind == Tile::East;
+        const bool is_dealer = seat_wind == Tile::East;
         auto score = calc_score(is_dealer, true, round.honba, round.kyotaku,
                                 score_title, han, fu);
 
@@ -569,7 +569,9 @@ YakuList ScoreCalculator::check_yakuman(const Input &input, const int shanten_ty
  * @param[in] shanten_type type of winning hand
  * @return list of established yaku
  */
-YakuList ScoreCalculator::check_not_pattern_yaku(const Round &round, const Input &input,
+YakuList ScoreCalculator::check_not_pattern_yaku(const Round &round,
+                                                 const Player &player,
+                                                 const Input &input,
                                                  const int shanten_type)
 {
     YakuList yaku_list = Yaku::Null;
@@ -639,17 +641,17 @@ YakuList ScoreCalculator::check_not_pattern_yaku(const Round &round, const Input
             yaku_list |= Yaku::RedDragon;
         }
 
-        if (input.merged_hand[round.self_wind] == 3) {
-            if (round.self_wind == Tile::East) {
+        if (input.merged_hand[player.wind] == 3) {
+            if (player.wind == Tile::East) {
                 yaku_list |= Yaku::SelfWindEast;
             }
-            else if (round.self_wind == Tile::South) {
+            else if (player.wind == Tile::South) {
                 yaku_list |= Yaku::SelfWindSouth;
             }
-            else if (round.self_wind == Tile::West) {
+            else if (player.wind == Tile::West) {
                 yaku_list |= Yaku::SelfWindWest;
             }
-            else if (round.self_wind == Tile::North) {
+            else if (player.wind == Tile::North) {
                 yaku_list |= Yaku::SelfWindNorth;
             }
         }
@@ -684,8 +686,8 @@ YakuList ScoreCalculator::check_not_pattern_yaku(const Round &round, const Input
  * @return (yaku, fu, list of blocks, wait type)
  */
 std::tuple<YakuList, int, std::vector<Block>, int>
-ScoreCalculator::check_pattern_yaku(const Input &input, int shanten_type,
-                                    const Round &round)
+ScoreCalculator::check_pattern_yaku(const Round &round, const Player &player,
+                                    Input &input, int shanten_type)
 {
     if (shanten_type == ShantenFlag::SevenPairs) {
         return {Yaku::Null, Fu::Hu25, {}, WaitType::PairWait};
@@ -720,8 +722,7 @@ ScoreCalculator::check_pattern_yaku(const Input &input, int shanten_type,
         int wait_type = std::get<1>(pattern[i]);
 
         // Check if Pinfu is established.
-        const bool is_pinfu =
-            check_pinfu(blocks, wait_type, round.wind, round.self_wind);
+        const bool is_pinfu = check_pinfu(blocks, wait_type, round.wind, player.wind);
 
         if (input.is_closed()) {
             if (is_pinfu) {
@@ -772,9 +773,9 @@ ScoreCalculator::check_pattern_yaku(const Input &input, int shanten_type,
         }
 
         // Calculate fu.
-        fu = calc_fu(blocks, wait_type, input.is_closed(),
-                     input.win_flag & WinFlag::Tsumo, is_pinfu, round.wind,
-                     round.self_wind);
+        fu =
+            calc_fu(blocks, wait_type, input.is_closed(),
+                    input.win_flag & WinFlag::Tsumo, is_pinfu, round.wind, player.wind);
 
         if (max_han < han || (max_han == han && max_fu < fu)) {
             max_han = han;

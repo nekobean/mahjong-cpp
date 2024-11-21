@@ -20,7 +20,6 @@ class Round
         , kyoku(1)
         , honba(0)
         , kyotaku(0)
-        , self_wind(Tile::East)
     {
     }
 
@@ -53,8 +52,6 @@ class Round
     std::vector<int> dora_indicators;
     /* List of uradora indicator tiles (裏ドラ表示牌) */
     std::vector<int> uradora_indicators;
-
-    int self_wind;
 };
 
 } // namespace mahjong

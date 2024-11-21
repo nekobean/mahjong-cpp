@@ -166,7 +166,6 @@ TEST_CASE("Score Calculator")
             round.kyotaku = testcase.kyotaku;
             round.set_dora(testcase.dora_tiles);
             round.set_uradora(testcase.uradora_tiles);
-            round.self_wind = testcase.player.wind;
 
             // 計算
             Result ret = ScoreCalculator::calc(round, testcase.player,
