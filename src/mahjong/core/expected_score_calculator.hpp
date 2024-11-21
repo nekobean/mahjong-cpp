@@ -13,8 +13,6 @@ namespace mahjong
 {
 class ExpectedScoreCalculator
 {
-    using Count68 = Count;
-
   public:
     struct Config
     {
@@ -23,7 +21,7 @@ class ExpectedScoreCalculator
             , t_max(18)
             , sum(121)
             , extra(0)
-            , mode(7)
+            , mode(ShantenFlag::All)
             , enable_shanten_down(true)
             , enable_tegawari(true)
             , enable_reddora(true)
@@ -49,8 +47,6 @@ class ExpectedScoreCalculator
         bool enable_shanten_down;
         /* allow tegawari */
         bool enable_tegawari;
-
-        /* not implemented */
     };
 
     struct Stat
@@ -70,7 +66,7 @@ class ExpectedScoreCalculator
   private:
     struct CacheKey
     {
-        CacheKey(const Count68 &hand) : manzu(0), pinzu(0), souzu(0), honors(0)
+        CacheKey(const Count &hand) : manzu(0), pinzu(0), souzu(0), honors(0)
         {
             manzu = std::accumulate(hand.begin(), hand.begin() + 9, 0,
                                     [](int x, int y) { return x * 8 + y; });
@@ -103,7 +99,7 @@ class ExpectedScoreCalculator
                                         boost::bidirectionalS, VertexData, EdgeData>;
     using Vertex = Graph::vertex_descriptor;
     using Edge = Graph::edge_descriptor;
-    using Desc = std::map<CacheKey, Vertex>;
+    using Cache = std::map<CacheKey, Vertex>;
 
   public:
     static std::tuple<std::vector<Stat>, int> calc(const Config &config,
@@ -112,22 +108,22 @@ class ExpectedScoreCalculator
                              bool enable_reddora);
 
   private:
-    static Count68 encode(const Count &counts, const bool enable_reddora);
-    static int distance(const Count68 &hand, const Count68 &origin);
-    static void draw(Player &player, Count68 &hand_reds, Count68 &wall_reds,
+    static Count encode(const Count &counts, const bool enable_reddora);
+    static int distance(const Count &hand, const Count &origin);
+    static void draw(Player &player, Count &hand_reds, Count &wall_reds,
                      const int tile);
-    static void discard(Player &player, Count68 &hand_reds, Count68 &wall_reds,
+    static void discard(Player &player, Count &hand_reds, Count &wall_reds,
                         const int tile);
     static int calc_score(const Config &config, const Round &round, Player &player,
                           const int mode, const int tile);
     static Vertex select1(const Config &config, const Round &round, Player &player,
-                          Graph &graph, Desc &cache1, Desc &cache2, Count68 &hand_reds,
-                          Count68 &wall_reds, const Count68 &origin_reds, int sht_org);
+                          Graph &graph, Cache &cache1, Cache &cache2, Count &hand_reds,
+                          Count &wall_reds, const Count &origin_reds, int sht_org);
     static Vertex select2(const Config &config, const Round &round, Player &player,
-                          Graph &graph, Desc &cache1, Desc &cache2, Count68 &hand_reds,
-                          Count68 &wall_reds, const Count68 &origin_reds, int sht_org);
-    static void calc_values(const Config &config, Graph &graph, const Desc &cache1,
-                            const Desc &cache2);
+                          Graph &graph, Cache &cache1, Cache &cache2, Count &hand_reds,
+                          Count &wall_reds, const Count &origin_reds, int sht_org);
+    static void calc_values(const Config &config, Graph &graph, const Cache &cache1,
+                            const Cache &cache2);
 };
 } // namespace mahjong
 

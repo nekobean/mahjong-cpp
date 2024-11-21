@@ -60,10 +60,9 @@ Count ExpectedScoreCalculator::create_wall(const Round &round, const Player &pla
     return wall;
 }
 
-ExpectedScoreCalculator::Count68
-ExpectedScoreCalculator::encode(const Count &counts, const bool enable_reddora)
+Count ExpectedScoreCalculator::encode(const Count &counts, const bool enable_reddora)
 {
-    Count68 ret{0};
+    Count ret{0};
     for (int i = 0; i < 34; ++i) {
         ret[i] = counts[i];
     }
@@ -86,7 +85,7 @@ ExpectedScoreCalculator::encode(const Count &counts, const bool enable_reddora)
     return ret;
 }
 
-int ExpectedScoreCalculator::distance(const Count68 &hand, const Count68 &hand_org)
+int ExpectedScoreCalculator::distance(const Count &hand, const Count &hand_org)
 {
     int dist = 0;
     for (int i = 0; i < hand.size(); ++i) {
@@ -96,8 +95,8 @@ int ExpectedScoreCalculator::distance(const Count68 &hand, const Count68 &hand_o
     return dist;
 }
 
-void ExpectedScoreCalculator::draw(Player &player, Count68 &hand_counts,
-                                   Count68 &wall_counts, const int tile)
+void ExpectedScoreCalculator::draw(Player &player, Count &hand_counts,
+                                   Count &wall_counts, const int tile)
 {
     ++hand_counts[tile];
     --wall_counts[tile];
@@ -115,8 +114,8 @@ void ExpectedScoreCalculator::draw(Player &player, Count68 &hand_counts,
     }
 }
 
-void ExpectedScoreCalculator::discard(Player &player, Count68 &hand_counts,
-                                      Count68 &wall_counts, const int tile)
+void ExpectedScoreCalculator::discard(Player &player, Count &hand_counts,
+                                      Count &wall_counts, const int tile)
 {
     --hand_counts[tile];
     ++wall_counts[tile];
@@ -148,10 +147,11 @@ int ExpectedScoreCalculator::calc_score(const Config &config, const Round &round
     return score;
 }
 
-ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::select1(
-    const Config &config, const Round &round, Player &player, Graph &graph,
-    Desc &cache1, Desc &cache2, Count68 &hand_counts, Count68 &wall_counts,
-    const Count68 &hand_org, const int shanten_org)
+ExpectedScoreCalculator::Vertex
+ExpectedScoreCalculator::select1(const Config &config, const Round &round,
+                                 Player &player, Graph &graph, Cache &cache1,
+                                 Cache &cache2, Count &hand_counts, Count &wall_counts,
+                                 const Count &hand_org, const int shanten_org)
 {
     // If vertex exists in the cache, return it.
     CacheKey key(hand_counts);
@@ -200,10 +200,11 @@ ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::select1(
     return vertex;
 }
 
-ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::select2(
-    const Config &config, const Round &round, Player &player, Graph &graph,
-    Desc &cache1, Desc &cache2, Count68 &hand_counts, Count68 &wall_counts,
-    const Count68 &hand_org, const int shanten_org)
+ExpectedScoreCalculator::Vertex
+ExpectedScoreCalculator::select2(const Config &config, const Round &round,
+                                 Player &player, Graph &graph, Cache &cache1,
+                                 Cache &cache2, Count &hand_counts, Count &wall_counts,
+                                 const Count &hand_org, const int shanten_org)
 {
     // If vertex exists in the cache, return it.
     CacheKey key(hand_counts);
@@ -255,7 +256,7 @@ ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::select2(
 }
 
 void ExpectedScoreCalculator::calc_values(const Config &config, Graph &graph,
-                                          const Desc &cache1, const Desc &cache2)
+                                          const Cache &cache1, const Cache &cache2)
 {
     for (int t = config.t_max - 1; t >= config.t_min; --t) {
         for (auto &[_, vertex] : cache1) {
@@ -314,12 +315,12 @@ std::tuple<std::vector<ExpectedScoreCalculator::Stat>, int>
 ExpectedScoreCalculator::calc(const Config &config, const Round &round, Player &player)
 {
     Graph graph;
-    Desc cache1, cache2;
+    Cache cache1, cache2;
 
     const Count wall = create_wall(round, player, config.enable_reddora);
-    Count68 hand_counts = encode(player.hand, config.enable_reddora);
-    Count68 wall_counts = encode(wall, config.enable_reddora);
-    Count68 hand_org = hand_counts;
+    Count hand_counts = encode(player.hand, config.enable_reddora);
+    Count wall_counts = encode(wall, config.enable_reddora);
+    Count hand_org = hand_counts;
 
     // Calculate shanten number of specified hand.
     const auto [type, shanten] = ShantenCalculator::calc(player.hand, 0, config.mode);
