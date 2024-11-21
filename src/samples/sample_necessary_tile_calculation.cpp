@@ -16,7 +16,7 @@ int main(int argc, char *argv[])
     int num_melds = 0;
 
     // Calculate necessary tiles.
-    auto [shanten_type, shanten, tiles] =
+    const auto [shanten_type, shanten, tiles] =
         NecessaryTileCalculator::select(hand, num_melds, ShantenFlag::All);
 
     std::cout << "shanten: " << shanten << std::endl;

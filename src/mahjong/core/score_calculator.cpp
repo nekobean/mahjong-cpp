@@ -467,8 +467,8 @@ std::vector<int> ScoreCalculator::get_scores_for_exp(const Result &result,
 
         // 点数を計算する。
         const bool is_dealer = seat_wind == Tile::East;
-        auto score = calc_score(is_dealer, true, round.honba, round.kyotaku,
-                                score_title, han, fu);
+        const auto score = calc_score(is_dealer, true, round.honba, round.kyotaku,
+                                      score_title, han, fu);
 
         scores.push_back(score.front());
     }

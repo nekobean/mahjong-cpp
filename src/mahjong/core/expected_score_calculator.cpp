@@ -312,21 +312,23 @@ void ExpectedScoreCalculator::calc_values(const Config &config, Graph &graph,
 }
 
 std::tuple<std::vector<ExpectedScoreCalculator::Stat>, int>
-ExpectedScoreCalculator::calc(const Config &config, const Round &round, Player &player)
+ExpectedScoreCalculator::calc(const Config &config, const Round &round,
+                              const Player &player)
 {
     Graph graph;
     Cache cache1, cache2;
 
+    Player player_copy = player;
     const Count wall = create_wall(round, player, config.enable_reddora);
     Count hand_counts = encode(player.hand, config.enable_reddora);
     Count wall_counts = encode(wall, config.enable_reddora);
-    Count hand_org = hand_counts;
+    const Count hand_org = hand_counts;
 
     // Calculate shanten number of specified hand.
     const auto [type, shanten] = ShantenCalculator::calc(player.hand, 0, config.mode);
 
     // Build hand transition graph.
-    select2(config, round, player, graph, cache1, cache2, hand_counts, wall_counts,
+    select2(config, round, player_copy, graph, cache1, cache2, hand_counts, wall_counts,
             hand_org, shanten);
 
     // Calculate expected values and probabilities.
@@ -346,7 +348,7 @@ ExpectedScoreCalculator::calc(const Config &config, const Round &round, Player &
                 std::vector<double> exp_value(value.begin() + (config.t_max + 1) * 2,
                                               value.end());
 
-                auto [shanten_type, shanten, tiles] =
+                const auto [shanten_type, shanten, tiles] =
                     NecessaryTileCalculator::select(player.hand, 0, config.mode);
 
                 std::vector<std::tuple<int, int>> necessary_tiles;

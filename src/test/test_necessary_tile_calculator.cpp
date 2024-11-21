@@ -91,7 +91,7 @@ TEST_CASE("Necessary tile calculator for regular hand")
                 hand[tile]--;
             }
 
-            auto [_, shanten2, tiles2] =
+            const auto [_, shanten2, tiles2] =
                 NecessaryTileCalculator::select(hand, 0, ShantenFlag::Regular);
             avg_tiles += tiles.size();
 
@@ -140,7 +140,7 @@ TEST_CASE("Necessary tile calculator for Seven Pairs")
                 hand[tile]--;
             }
 
-            auto [_, shanten2, tiles2] =
+            const auto [_, shanten2, tiles2] =
                 NecessaryTileCalculator::select(hand, 0, ShantenFlag::SevenPairs);
             avg_tiles += tiles.size();
 
@@ -192,7 +192,7 @@ TEST_CASE("Necessary tile calculator for Thirteen Orphans")
                 hand[tile]--;
             }
 
-            auto [_, shanten2, tiles2] =
+            const auto [_, shanten2, tiles2] =
                 NecessaryTileCalculator::select(hand, 0, ShantenFlag::ThirteenOrphans);
             avg_tiles += tiles.size();
 
@@ -225,7 +225,8 @@ TEST_CASE("Necessary tile calculator")
     SECTION("Necessary tile calculator")
     {
         for (auto &hand : cases) {
-            auto [type, shanten] = ShantenCalculator::calc(hand, 0, ShantenFlag::All);
+            const auto [type, shanten] =
+                ShantenCalculator::calc(hand, 0, ShantenFlag::All);
 
             std::vector<int> tiles;
             for (int tile = 0; tile < 34; ++tile) {
@@ -234,7 +235,7 @@ TEST_CASE("Necessary tile calculator")
                 }
 
                 hand[tile]++;
-                auto [type_after, shanten_after] =
+                const auto [type_after, shanten_after] =
                     ShantenCalculator::calc(hand, 0, ShantenFlag::All);
                 if (shanten_after < shanten) {
                     tiles.push_back(tile);
@@ -242,7 +243,7 @@ TEST_CASE("Necessary tile calculator")
                 hand[tile]--;
             }
 
-            auto [type2, shanten2, tiles2] =
+            const auto [type2, shanten2, tiles2] =
                 NecessaryTileCalculator::select(hand, 0, ShantenFlag::All);
 
             INFO(fmt::format("手牌: {}", to_mpsz(hand)));

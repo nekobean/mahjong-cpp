@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
 
     // Calculation
     //////////////////////////////////////////
-    auto [type, shanten] =
+    const auto [type, shanten] =
         ShantenCalculator::calc(player.hand, player.num_melds(), config.mode);
 
     // Calculate tenpai probability, win probability, and expected score.

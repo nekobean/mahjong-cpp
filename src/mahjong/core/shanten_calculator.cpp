@@ -94,10 +94,10 @@ int ShantenCalculator::calc_regular(const Hand &hand, const int num_melds)
         Table::suits_hash(hand.begin() + 18, hand.begin() + 27);
     Table::HashType honors_hash =
         Table::honors_hash(hand.begin() + 27, hand.begin() + 34);
-    auto &manzu = Table::suits_table_[manzu_hash];
-    auto &pinzu = Table::suits_table_[pinzu_hash];
-    auto &souzu = Table::suits_table_[souzu_hash];
-    auto &honors = Table::honors_table_[honors_hash];
+    const auto &manzu = Table::suits_table_[manzu_hash];
+    const auto &pinzu = Table::suits_table_[pinzu_hash];
+    const auto &souzu = Table::suits_table_[souzu_hash];
+    const auto &honors = Table::honors_table_[honors_hash];
     int m = 4 - num_melds;
 
     ResultType ret;

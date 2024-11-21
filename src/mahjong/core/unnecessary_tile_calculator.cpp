@@ -32,7 +32,7 @@ namespace mahjong
 std::tuple<int, int, std::vector<int>>
 UnnecessaryTileCalculator::select(const Hand &hand, const int num_melds, const int type)
 {
-    auto ret = calc(hand, num_melds, type);
+    const auto ret = calc(hand, num_melds, type);
 
     std::vector<int> tiles;
     tiles.reserve(34);
@@ -78,7 +78,7 @@ UnnecessaryTileCalculator::calc(const Hand &hand, const int num_melds, const int
                                          std::numeric_limits<int>::max(), 0};
 
     if (type & ShantenFlag::Regular) {
-        auto [shanten, disc] = calc_regular(hand, num_melds);
+        const auto [shanten, disc] = calc_regular(hand, num_melds);
         if (shanten < std::get<1>(ret)) {
             ret = {ShantenFlag::Regular, shanten, disc};
         }
@@ -89,7 +89,7 @@ UnnecessaryTileCalculator::calc(const Hand &hand, const int num_melds, const int
     }
 
     if ((type & ShantenFlag::SevenPairs) && num_melds == 0) {
-        auto [shanten, disc] = calc_seven_pairs(hand);
+        const auto [shanten, disc] = calc_seven_pairs(hand);
         if (shanten < std::get<1>(ret)) {
             ret = {ShantenFlag::SevenPairs, shanten, disc};
         }
@@ -100,7 +100,7 @@ UnnecessaryTileCalculator::calc(const Hand &hand, const int num_melds, const int
     }
 
     if ((type & ShantenFlag::ThirteenOrphans) && num_melds == 0) {
-        auto [shanten, disc] = calc_thirteen_orphans(hand);
+        const auto [shanten, disc] = calc_thirteen_orphans(hand);
         if (shanten < std::get<1>(ret)) {
             ret = {ShantenFlag::ThirteenOrphans, shanten, disc};
         }
@@ -129,10 +129,10 @@ std::tuple<int, int64_t> UnnecessaryTileCalculator::calc_regular(const Hand &han
         Table::suits_hash(hand.begin() + 18, hand.begin() + 27);
     Table::HashType honors_hash =
         Table::honors_hash(hand.begin() + 27, hand.begin() + 34);
-    auto &manzu = Table::suits_table_[manzu_hash];
-    auto &pinzu = Table::suits_table_[pinzu_hash];
-    auto &souzu = Table::suits_table_[souzu_hash];
-    auto &honors = Table::honors_table_[honors_hash];
+    const auto &manzu = Table::suits_table_[manzu_hash];
+    const auto &pinzu = Table::suits_table_[pinzu_hash];
+    const auto &souzu = Table::suits_table_[souzu_hash];
+    const auto &honors = Table::honors_table_[honors_hash];
 
     int m = 4 - num_melds;
 

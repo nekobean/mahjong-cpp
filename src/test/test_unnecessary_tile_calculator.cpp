@@ -88,7 +88,7 @@ TEST_CASE("Unnecessary tile calculator for regular hand")
                 }
             }
 
-            auto [_, shanten2, tiles2] =
+            const auto [_, shanten2, tiles2] =
                 UnnecessaryTileCalculator::select(hand, 0, ShantenFlag::Regular);
 
             INFO(fmt::format("手牌: {}", to_mpsz(hand)));
@@ -131,7 +131,7 @@ TEST_CASE("Unnecessary tile calculator for Seven Pairs")
                 }
             }
 
-            auto [_, shanten2, tiles2] =
+            const auto [_, shanten2, tiles2] =
                 UnnecessaryTileCalculator::select(hand, 0, ShantenFlag::SevenPairs);
 
             INFO(fmt::format("手牌: {}", to_mpsz(hand)));
@@ -174,7 +174,7 @@ TEST_CASE("Unnecessary tile calculator for Thirteen Orphans")
                 }
             }
 
-            auto [_, shanten2, tiles2] = UnnecessaryTileCalculator::select(
+            const auto [_, shanten2, tiles2] = UnnecessaryTileCalculator::select(
                 hand, 0, ShantenFlag::ThirteenOrphans);
 
             INFO(fmt::format("手牌: {}", to_mpsz(hand)));
@@ -204,13 +204,14 @@ TEST_CASE("Unnecessary tile selection")
     SECTION("Unnecessary tile selection")
     {
         for (auto &hand : cases) {
-            auto [type, shanten] = ShantenCalculator::calc(hand, 0, ShantenFlag::All);
+            const auto [type, shanten] =
+                ShantenCalculator::calc(hand, 0, ShantenFlag::All);
 
             std::vector<int> tiles;
             for (int tile = 0; tile < 34; ++tile) {
                 if (hand[tile] > 0) {
                     hand[tile]--;
-                    auto [type_after, shanten_after] =
+                    const auto [type_after, shanten_after] =
                         ShantenCalculator::calc(hand, 0, ShantenFlag::All);
                     if (shanten == shanten_after) {
                         tiles.push_back(tile);
@@ -219,7 +220,7 @@ TEST_CASE("Unnecessary tile selection")
                 }
             }
 
-            auto [type2, shanten2, tiles2] =
+            const auto [type2, shanten2, tiles2] =
                 UnnecessaryTileCalculator::select(hand, 0, ShantenFlag::All);
 
             INFO(fmt::format("手牌: {}", to_mpsz(hand)));

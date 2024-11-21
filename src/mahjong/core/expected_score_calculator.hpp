@@ -102,8 +102,8 @@ class ExpectedScoreCalculator
     using Cache = std::map<CacheKey, Vertex>;
 
   public:
-    static std::tuple<std::vector<Stat>, int> calc(const Config &config,
-                                                   const Round &round, Player &player);
+    static std::tuple<std::vector<Stat>, int>
+    calc(const Config &config, const Round &round, const Player &player);
     static Count create_wall(const Round &round, const Player &player,
                              bool enable_reddora);
 
