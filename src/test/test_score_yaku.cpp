@@ -21,12 +21,7 @@ struct TestCase
     std::string url;
 
     // Round
-    int rules;
-    int wind;
-    int honba;
-    int kyotaku;
-    std::vector<int> dora_tiles;
-    std::vector<int> uradora_tiles;
+    Round round;
 
     // Player
     Player player;
@@ -81,18 +76,24 @@ bool load_cases(const std::string &filename, std::vector<TestCase> &cases)
 
         // Round
         /////////////////////////////////
-        testcase.rules = 0;
-        testcase.rules |= v["akadora"].GetBool() ? RuleFlag::RedDora : 0;
-        testcase.rules |= v["kuitan"].GetBool() ? RuleFlag::OpenTanyao : 0;
-        testcase.wind = v["bakaze"].GetInt();
-        testcase.honba = v["num_tumibo"].GetInt();
-        testcase.kyotaku = v["num_kyotakubo"].GetInt();
+        Round round;
+        round.rules = 0;
+        round.rules |= v["akadora"].GetBool() ? RuleFlag::RedDora : 0;
+        round.rules |= v["kuitan"].GetBool() ? RuleFlag::OpenTanyao : 0;
+        round.wind = v["bakaze"].GetInt();
+        round.honba = v["num_tumibo"].GetInt();
+        round.kyotaku = v["num_kyotakubo"].GetInt();
+        std::vector<int> dora_tiles;
         for (auto &x : v["dora_tiles"].GetArray()) {
-            testcase.dora_tiles.push_back(x.GetInt());
+            dora_tiles.push_back(x.GetInt());
         }
+        round.set_dora(dora_tiles);
+        std::vector<int> uradora_tiles;
         for (auto &x : v["uradora_tiles"].GetArray()) {
-            testcase.uradora_tiles.push_back(x.GetInt());
+            uradora_tiles.push_back(x.GetInt());
         }
+        round.set_uradora(uradora_tiles);
+        testcase.round = round;
 
         // Player
         /////////////////////////////////
@@ -158,17 +159,8 @@ TEST_CASE("Score Calculator")
     SECTION("Score Calculator")
     {
         for (const auto &testcase : cases) {
-            // 設定
-            Round round;
-            round.rules = testcase.rules;
-            round.wind = testcase.wind;
-            round.honba = testcase.honba;
-            round.kyotaku = testcase.kyotaku;
-            round.set_dora(testcase.dora_tiles);
-            round.set_uradora(testcase.uradora_tiles);
-
             // 計算
-            Result ret = ScoreCalculator::calc(round, testcase.player,
+            Result ret = ScoreCalculator::calc(testcase.round, testcase.player,
                                                testcase.win_tile, testcase.win_flag);
 
             // 照合
@@ -200,18 +192,8 @@ TEST_CASE("Score Calculator")
     BENCHMARK("Score Calculator")
     {
         for (const auto &testcase : cases) {
-            // 設定
-            Round round;
-            round.rules = testcase.rules;
-            round.wind = testcase.wind;
-            round.honba = testcase.honba;
-            round.kyotaku = testcase.kyotaku;
-            round.set_dora(testcase.dora_tiles);
-            round.set_uradora(testcase.uradora_tiles);
-            round.self_wind = testcase.player.wind;
-
             // 計算
-            Result ret = ScoreCalculator::calc(round, testcase.player,
+            Result ret = ScoreCalculator::calc(testcase.round, testcase.player,
                                                testcase.win_tile, testcase.win_flag);
         }
     };
