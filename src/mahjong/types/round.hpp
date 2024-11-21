@@ -24,6 +24,20 @@ class Round
     {
     }
 
+    void set_dora(const std::vector<int> &tiles)
+    {
+        for (const auto tile : tiles) {
+            dora_indicators.push_back(ToIndicator[tile]);
+        }
+    }
+
+    void set_uradora(const std::vector<int> &tiles)
+    {
+        for (const auto tile : tiles) {
+            uradora_indicators.push_back(ToIndicator[tile]);
+        }
+    }
+
   public:
     /* Game rule */
     int rules;
@@ -35,13 +49,9 @@ class Round
     int honba;
     /* Kyotaku (供託棒の数) */
     int kyotaku;
-    /* List of dora tiles */
-    std::vector<int> dora_tiles;
-    /* List of uradora tiles */
-    std::vector<int> uradora_tiles;
-    /* List of dora indicator tiles */
+    /* List of dora indicator tiles (表ドラ表示牌) */
     std::vector<int> dora_indicators;
-    /* List of uradora indicator tiles */
+    /* List of uradora indicator tiles (裏ドラ表示牌) */
     std::vector<int> uradora_indicators;
 
     int self_wind;

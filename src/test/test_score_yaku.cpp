@@ -17,7 +17,10 @@ using namespace mahjong;
 
 struct TestCase
 {
-    // 場況
+    // Meta
+    std::string url;
+
+    // Round
     int rules;
     int wind;
     int honba;
@@ -25,23 +28,19 @@ struct TestCase
     std::vector<int> dora_tiles;
     std::vector<int> uradora_tiles;
 
-    // 入力
+    // Player
     Player player;
     int win_tile;
     int win_flag;
 
-    // 結果
+    // Score
     int han;
     int hu;
     int score_title;
     std::vector<std::tuple<YakuList, int>> yaku_list;
-
-    // 点数
     int win_player;
     int lose_player;
     std::vector<int> score;
-
-    std::string url;
 };
 
 /**
@@ -76,27 +75,41 @@ bool load_cases(const std::string &filename, std::vector<TestCase> &cases)
     for (auto &v : doc.GetArray()) {
         TestCase testcase;
 
+        // Meta
+        /////////////////////////////////
+        testcase.url = v["url"].GetString();
+
+        // Round
+        /////////////////////////////////
+        testcase.rules = 0;
+        testcase.rules |= v["akadora"].GetBool() ? RuleFlag::RedDora : 0;
+        testcase.rules |= v["kuitan"].GetBool() ? RuleFlag::OpenTanyao : 0;
         testcase.wind = v["bakaze"].GetInt();
         testcase.honba = v["num_tumibo"].GetInt();
         testcase.kyotaku = v["num_kyotakubo"].GetInt();
-        for (auto &x : v["dora_tiles"].GetArray())
+        for (auto &x : v["dora_tiles"].GetArray()) {
             testcase.dora_tiles.push_back(x.GetInt());
-        for (auto &x : v["uradora_tiles"].GetArray())
+        }
+        for (auto &x : v["uradora_tiles"].GetArray()) {
             testcase.uradora_tiles.push_back(x.GetInt());
+        }
 
+        // Player
+        /////////////////////////////////
         std::vector<int> tiles;
-        std::vector<Meld> melded_blocks;
-        for (auto &x : v["hand_tiles"].GetArray())
+        for (auto &x : v["hand_tiles"].GetArray()) {
             tiles.push_back(x.GetInt());
+        }
 
+        std::vector<Meld> melded_blocks;
         for (auto &x : v["melded_blocks"].GetArray()) {
             Meld melded_block;
             melded_block.type = x["type"].GetInt();
+            for (auto &y : x["tiles"].GetArray()) {
+                melded_block.tiles.push_back(y.GetInt());
+            }
             melded_block.discarded_tile = x["discarded_tile"].GetInt();
             melded_block.from = x["from"].GetInt();
-
-            for (auto &y : x["tiles"].GetArray())
-                melded_block.tiles.push_back(y.GetInt());
 
             melded_blocks.push_back(melded_block);
         }
@@ -106,6 +119,8 @@ bool load_cases(const std::string &filename, std::vector<TestCase> &cases)
         testcase.win_tile = v["win_tile"].GetInt();
         testcase.win_flag = v["flag"].GetInt();
 
+        // Score
+        /////////////////////////////////
         testcase.han = v["han"].GetInt();
         testcase.hu = v["hu"].GetInt();
         testcase.score_title = v["score_title"].GetInt();
@@ -113,21 +128,15 @@ bool load_cases(const std::string &filename, std::vector<TestCase> &cases)
         for (auto &x : v["yaku_list"].GetArray()) {
             YakuList yaku = x.GetArray()[0].GetInt64();
             int han = x.GetArray()[1].GetInt();
-
             testcase.yaku_list.emplace_back(yaku, han);
         }
 
         testcase.win_player = v["win_player"].GetInt();
         testcase.lose_player = v["lose_player"].GetInt();
 
-        for (auto &x : v["score"].GetArray())
+        for (auto &x : v["score"].GetArray()) {
             testcase.score.push_back(x.GetInt());
-
-        testcase.url = v["url"].GetString();
-
-        testcase.rules = 0;
-        testcase.rules |= v["akadora"].GetBool() ? RuleFlag::RedDora : 0;
-        testcase.rules |= v["kuitan"].GetBool() ? RuleFlag::OpenTanyao : 0;
+        }
 
         cases.push_back(testcase);
     }
@@ -150,17 +159,17 @@ TEST_CASE("Score Calculator")
     {
         for (const auto &testcase : cases) {
             // 設定
-            Round params;
-            params.wind = testcase.wind;
-            params.self_wind = testcase.player.wind;
-            params.honba = testcase.honba;
-            params.kyotaku = testcase.kyotaku;
-            params.dora_tiles = testcase.dora_tiles;
-            params.uradora_tiles = testcase.uradora_tiles;
-            params.rules = testcase.rules;
+            Round round;
+            round.rules = testcase.rules;
+            round.wind = testcase.wind;
+            round.honba = testcase.honba;
+            round.kyotaku = testcase.kyotaku;
+            round.set_dora(testcase.dora_tiles);
+            round.set_uradora(testcase.uradora_tiles);
+            round.self_wind = testcase.player.wind;
 
             // 計算
-            Result ret = ScoreCalculator::calc(params, testcase.player,
+            Result ret = ScoreCalculator::calc(round, testcase.player,
                                                testcase.win_tile, testcase.win_flag);
 
             // 照合
@@ -193,17 +202,17 @@ TEST_CASE("Score Calculator")
     {
         for (const auto &testcase : cases) {
             // 設定
-            Round params;
-            params.wind = testcase.wind;
-            params.self_wind = testcase.player.wind;
-            params.honba = testcase.honba;
-            params.kyotaku = testcase.kyotaku;
-            params.dora_tiles = testcase.dora_tiles;
-            params.uradora_tiles = testcase.uradora_tiles;
-            params.rules = testcase.rules;
+            Round round;
+            round.rules = testcase.rules;
+            round.wind = testcase.wind;
+            round.honba = testcase.honba;
+            round.kyotaku = testcase.kyotaku;
+            round.set_dora(testcase.dora_tiles);
+            round.set_uradora(testcase.uradora_tiles);
+            round.self_wind = testcase.player.wind;
 
             // 計算
-            Result ret = ScoreCalculator::calc(params, testcase.player,
+            Result ret = ScoreCalculator::calc(round, testcase.player,
                                                testcase.win_tile, testcase.win_flag);
         }
     };

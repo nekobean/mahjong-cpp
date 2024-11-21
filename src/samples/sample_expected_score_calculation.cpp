@@ -35,8 +35,8 @@ int main(int argc, char *argv[])
     round.kyoku = 1;
     round.honba = 0;
     round.kyotaku = 0;
-    round.dora_tiles = {};
-    round.uradora_tiles = {};
+    round.dora_indicators = {};
+    round.uradora_indicators = {};
     round.self_wind = player.wind;
 
     // Calculation Settings

@@ -214,10 +214,10 @@ DrawResponseData create_draw_response(const RequestData &req)
     params.wind = req.bakaze;
     params.honba = 0;
     params.kyotaku = 0;
-    std::vector<int> dora_tiles;
-    for (auto x : req.dora_indicators)
-        dora_tiles.push_back(ToDora.at(x));
-    params.dora_tiles = dora_tiles;
+    // std::vector<int> dora_tiles;
+    // for (auto x : req.dora_indicators)
+    //     dora_tiles.push_back(ToDora.at(x));
+    params.dora_indicators = req.dora_indicators;
     exp_value_calc.set_params(params);
 
     // 各打牌を分析する。
@@ -274,10 +274,10 @@ DiscardResponseData create_discard_response(const RequestData &req)
     params.wind = req.bakaze;
     params.honba = 0;
     params.kyotaku = 0;
-    std::vector<int> dora_tiles;
-    for (auto x : req.dora_indicators)
-        dora_tiles.push_back(ToDora.at(x));
-    params.dora_tiles = dora_tiles;
+    // std::vector<int> dora_tiles;
+    // for (auto x : req.dora_indicators)
+    //     dora_tiles.push_back(ToDora.at(x));
+    params.dora_indicators = req.dora_indicators;
     exp_value_calc.set_params(params);
 
     // 各打牌を分析する。

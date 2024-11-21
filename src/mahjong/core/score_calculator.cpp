@@ -269,13 +269,14 @@ Result ScoreCalculator::aggregate(const Round &round, const Player &player,
     }
 
     // Count number of doras, uradoras and red doras.
-    const int num_doras = count_dora(player.hand, player.melds, round.dora_tiles);
+    const int num_doras = count_dora(player.hand, player.melds, round.dora_indicators);
     if (num_doras) {
         yaku_han_list.emplace_back(Yaku::Dora, num_doras);
         han += num_doras;
     }
 
-    const int num_uradoras = count_dora(player.hand, player.melds, round.uradora_tiles);
+    const int num_uradoras =
+        count_dora(player.hand, player.melds, round.uradora_indicators);
     if (num_uradoras) {
         yaku_han_list.emplace_back(Yaku::UraDora, num_uradoras);
         han += num_uradoras;
@@ -862,14 +863,15 @@ std::vector<int> ScoreCalculator::calc_score(const bool is_dealer, const bool is
  *
  * @param hand hand
  * @param melds list of melds
- * @param dora_tiles list of dora tiles (normalized)
+ * @param indicators list of dora indicators
  * @return number of dora tiles
  */
 int ScoreCalculator::count_dora(const Hand &hand, const std::vector<Meld> &melds,
-                                const std::vector<int> &dora_tiles)
+                                const std::vector<int> &indicators)
 {
     int num_doras = 0;
-    for (const auto dora : dora_tiles) {
+    for (const auto tile : indicators) {
+        const int dora = ToDora[tile];
         // Count doras in the hand.
         num_doras += hand[dora];
 
