@@ -13,6 +13,8 @@ namespace mahjong
 {
 class ExpectedScoreCalculator
 {
+    using Count68 = Count;
+
   public:
     struct Config
     {
@@ -68,7 +70,7 @@ class ExpectedScoreCalculator
   private:
     struct CacheKey
     {
-        CacheKey(const std::vector<int> &hand) : manzu(0), pinzu(0), souzu(0), honors(0)
+        CacheKey(const Count68 &hand) : manzu(0), pinzu(0), souzu(0), honors(0)
         {
             manzu = std::accumulate(hand.begin(), hand.begin() + 9, 0,
                                     [](int x, int y) { return x * 8 + y; });
@@ -78,9 +80,9 @@ class ExpectedScoreCalculator
                                     [](int x, int y) { return x * 8 + y; });
             honors = std::accumulate(hand.begin() + 27, hand.begin() + 34, 0,
                                      [](int x, int y) { return x * 8 + y; });
-            honors |= hand[Tile::Manzu5 + 34] << 21;
-            honors |= hand[Tile::Pinzu5 + 34] << 22;
-            honors |= hand[Tile::Souzu5 + 34] << 23;
+            honors |= hand[Tile::RedManzu5] << 21;
+            honors |= hand[Tile::RedPinzu5] << 22;
+            honors |= hand[Tile::RedSouzu5] << 23;
         }
 
         bool operator<(const CacheKey &other) const
@@ -104,29 +106,27 @@ class ExpectedScoreCalculator
     using Desc = std::map<CacheKey, Vertex>;
 
   public:
-    static std::tuple<std::vector<Stat>, int> calc(const Config &params,
+    static std::tuple<std::vector<Stat>, int> calc(const Config &config,
                                                    const Round &round, Player &player);
     static Count create_wall(const Round &round, const Player &player,
                              bool enable_reddora);
 
   private:
-    static std::vector<int> encode(const Count &counts);
-    static int distance(const std::vector<int> &hand, const std::vector<int> &origin);
-    static void draw(Player &player, std::vector<int> &hand_reds,
-                     std::vector<int> &wall_reds, const int tile);
-    static void discard(Player &player, std::vector<int> &hand_reds,
-                        std::vector<int> &wall_reds, const int tile);
-    static int calc_score(const Config &params, const Round &round, Player &player,
+    static Count68 encode(const Count &counts, const bool enable_reddora);
+    static int distance(const Count68 &hand, const Count68 &origin);
+    static void draw(Player &player, Count68 &hand_reds, Count68 &wall_reds,
+                     const int tile);
+    static void discard(Player &player, Count68 &hand_reds, Count68 &wall_reds,
+                        const int tile);
+    static int calc_score(const Config &config, const Round &round, Player &player,
                           const int mode, const int tile);
-    static Vertex select1(const Config &params, const Round &round, Player &player,
-                          Graph &graph, Desc &cache1, Desc &cache2,
-                          std::vector<int> &hand_reds, std::vector<int> &wall_reds,
-                          const std::vector<int> &origin_reds, int sht_org);
-    static Vertex select2(const Config &params, const Round &round, Player &player,
-                          Graph &graph, Desc &cache1, Desc &cache2,
-                          std::vector<int> &hand_reds, std::vector<int> &wall_reds,
-                          const std::vector<int> &origin_reds, int sht_org);
-    static void calc_values(const Config &params, Graph &graph, const Desc &cache1,
+    static Vertex select1(const Config &config, const Round &round, Player &player,
+                          Graph &graph, Desc &cache1, Desc &cache2, Count68 &hand_reds,
+                          Count68 &wall_reds, const Count68 &origin_reds, int sht_org);
+    static Vertex select2(const Config &config, const Round &round, Player &player,
+                          Graph &graph, Desc &cache1, Desc &cache2, Count68 &hand_reds,
+                          Count68 &wall_reds, const Count68 &origin_reds, int sht_org);
+    static void calc_values(const Config &config, Graph &graph, const Desc &cache1,
                             const Desc &cache2);
 };
 } // namespace mahjong
