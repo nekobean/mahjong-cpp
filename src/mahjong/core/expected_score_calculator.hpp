@@ -21,7 +21,7 @@ class ExpectedScoreCalculator
             , t_max(18)
             , sum(121)
             , extra(0)
-            , mode(ShantenFlag::All)
+            , shanten_type(ShantenFlag::All)
             , enable_shanten_down(true)
             , enable_tegawari(true)
             , enable_reddora(true)
@@ -37,8 +37,8 @@ class ExpectedScoreCalculator
         int sum;
         /* search the range of possible (shanten number + extra) exchanges */
         int extra;
-        /* calculation mode */
-        int mode;
+        /* calculation shanten type */
+        int shanten_type;
         /* enable red dora */
         bool enable_reddora;
         /* enable ura dora */
@@ -115,7 +115,7 @@ class ExpectedScoreCalculator
     static void discard(Player &player, Count &hand_reds, Count &wall_reds,
                         const int tile);
     static int calc_score(const Config &config, const Round &round, Player &player,
-                          const int mode, const int tile);
+                          const int shanten_type, const int tile);
     static Vertex select1(const Config &config, const Round &round, Player &player,
                           Graph &graph, Cache &cache1, Cache &cache2, Count &hand_reds,
                           Count &wall_reds, const Count &origin_reds, int sht_org);

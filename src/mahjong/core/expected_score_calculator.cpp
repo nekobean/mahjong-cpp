@@ -160,8 +160,8 @@ ExpectedScoreCalculator::select1(const Config &config, const Round &round,
     }
 
     // Calculate necessary tiles.
-    auto [type, shanten, wait] =
-        NecessaryTileCalculator::calc(player.hand, 0, config.mode);
+    auto [type, shanten, wait] = NecessaryTileCalculator::calc(
+        player.hand, player.num_melds(), config.shanten_type);
     bool allow_tegawari =
         config.enable_tegawari &&
         distance(hand_counts, hand_org) + shanten < shanten_org + config.extra;
@@ -213,8 +213,8 @@ ExpectedScoreCalculator::select2(const Config &config, const Round &round,
     }
 
     // Calculate unnecessary tiles.
-    auto [type, shanten, disc] =
-        UnnecessaryTileCalculator::calc(player.hand, 0, config.mode);
+    auto [type, shanten, disc] = UnnecessaryTileCalculator::calc(
+        player.hand, player.num_melds(), config.shanten_type);
     bool allow_shanten_down =
         config.enable_shanten_down &&
         distance(hand_counts, hand_org) + shanten < shanten_org + config.extra;
@@ -318,24 +318,26 @@ ExpectedScoreCalculator::calc(const Config &config, const Round &round,
     Graph graph;
     Cache cache1, cache2;
 
-    Player player_copy = player;
     const Count wall = create_wall(round, player, config.enable_reddora);
+
+    Player player_copy = player;
     Count hand_counts = encode(player.hand, config.enable_reddora);
     Count wall_counts = encode(wall, config.enable_reddora);
-    const Count hand_org = hand_counts;
 
     // Calculate shanten number of specified hand.
-    const auto [type, shanten] = ShantenCalculator::calc(player.hand, 0, config.mode);
+    const Count hand_org = hand_counts;
+    const int shanten_org = std::get<1>(
+        ShantenCalculator::calc(player.hand, player.num_melds(), config.shanten_type));
 
+    std::vector<Stat> stats;
     // Build hand transition graph.
     select2(config, round, player_copy, graph, cache1, cache2, hand_counts, wall_counts,
-            hand_org, shanten);
+            hand_org, shanten_org);
 
     // Calculate expected values and probabilities.
     calc_values(config, graph, cache1, cache2);
 
     // 結果を取得する。
-    std::vector<Stat> stats;
     for (int i = 0; i < 37; ++i) {
         if (hand_counts[i] > 0) {
             --hand_counts[i];
@@ -349,8 +351,8 @@ ExpectedScoreCalculator::calc(const Config &config, const Round &round,
                                               value.end());
 
                 const auto [shanten_type, shanten, tiles] =
-                    NecessaryTileCalculator::select(player.hand, 0, config.mode);
-
+                    NecessaryTileCalculator::select(player.hand, player.num_melds(),
+                                                    config.shanten_type);
                 std::vector<std::tuple<int, int>> necessary_tiles;
                 for (const auto tile : tiles) {
                     necessary_tiles.emplace_back(tile, wall[tile]);
