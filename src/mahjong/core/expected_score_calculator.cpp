@@ -256,7 +256,8 @@ ExpectedScoreCalculator::select2(const Config &config, const Round &round,
 }
 
 void ExpectedScoreCalculator::calc_values(const Config &config, Graph &graph,
-                                          const Cache &cache1, const Cache &cache2)
+                                          const Cache &cache1, const Cache &cache2,
+                                          const int sum)
 {
     for (int t = config.t_max - 1; t >= config.t_min; --t) {
         for (auto &[_, vertex] : cache1) {
@@ -281,12 +282,12 @@ void ExpectedScoreCalculator::calc_values(const Config &config, Graph &graph,
                               exp_value[t + 1]);
             }
 
-            // tenpai_prob[t] = tenpai_prob[t + 1] + tenpai_prob[t] / (config.sum - t);
-            // win_prob[t] = win_prob[t + 1] + win_prob[t] / (config.sum - t);
-            // exp_value[t] = exp_value[t + 1] + exp_value[t] / (config.sum - t);
-            tenpai_prob[t] = tenpai_prob[t + 1] + tenpai_prob[t] / config.sum;
-            win_prob[t] = win_prob[t + 1] + win_prob[t] / config.sum;
-            exp_value[t] = exp_value[t + 1] + exp_value[t] / config.sum;
+            // tenpai_prob[t] = tenpai_prob[t + 1] + tenpai_prob[t] / (sum - t);
+            // win_prob[t] = win_prob[t + 1] + win_prob[t] / (sum - t);
+            // exp_value[t] = exp_value[t + 1] + exp_value[t] / (sum - t);
+            tenpai_prob[t] = tenpai_prob[t + 1] + tenpai_prob[t] / sum;
+            win_prob[t] = win_prob[t + 1] + win_prob[t] / sum;
+            exp_value[t] = exp_value[t + 1] + exp_value[t] / sum;
         }
 
         for (auto &[_, vertex] : cache2) {
@@ -315,14 +316,23 @@ std::tuple<std::vector<ExpectedScoreCalculator::Stat>, int>
 ExpectedScoreCalculator::calc(const Config &config, const Round &round,
                               const Player &player)
 {
+    const Count wall = create_wall(round, player, config.enable_reddora);
+
+    return calc(config, round, player, wall);
+}
+
+std::tuple<std::vector<ExpectedScoreCalculator::Stat>, int>
+ExpectedScoreCalculator::calc(const Config &config, const Round &round,
+                              const Player &player, const Count &wall)
+{
     Graph graph;
     Cache cache1, cache2;
-
-    const Count wall = create_wall(round, player, config.enable_reddora);
 
     Player player_copy = player;
     Count hand_counts = encode(player.hand, config.enable_reddora);
     Count wall_counts = encode(wall, config.enable_reddora);
+
+    const int sum = config.sum;
 
     // Calculate shanten number of specified hand.
     const Count hand_org = hand_counts;
@@ -330,38 +340,71 @@ ExpectedScoreCalculator::calc(const Config &config, const Round &round,
         ShantenCalculator::calc(player.hand, player.num_melds(), config.shanten_type));
 
     std::vector<Stat> stats;
-    // Build hand transition graph.
-    select2(config, round, player_copy, graph, cache1, cache2, hand_counts, wall_counts,
-            hand_org, shanten_org);
+    const int num_tiles = player.num_tiles() + player.num_melds() * 3;
+    if (num_tiles == 13) {
+        // Build hand transition graph.
+        select1(config, round, player_copy, graph, cache1, cache2, hand_counts,
+                wall_counts, hand_org, shanten_org);
 
-    // Calculate expected values and probabilities.
-    calc_values(config, graph, cache1, cache2);
+        // Calculate expected values and probabilities.
+        calc_values(config, graph, cache1, cache2, sum);
 
-    // 結果を取得する。
-    for (int i = 0; i < 37; ++i) {
-        if (hand_counts[i] > 0) {
-            --hand_counts[i];
-            if (const auto itr = cache1.find(hand_counts); itr != cache1.end()) {
-                const VertexData &value = graph[itr->second];
-                std::vector<double> tenpai_prob(value.begin(),
-                                                value.begin() + (config.t_max + 1));
-                std::vector<double> win_prob(value.begin() + (config.t_max + 1),
-                                             value.begin() + (config.t_max + 1) * 2);
-                std::vector<double> exp_value(value.begin() + (config.t_max + 1) * 2,
-                                              value.end());
+        // 結果を取得する。
+        if (const auto itr = cache1.find(hand_counts); itr != cache1.end()) {
+            const VertexData &value = graph[itr->second];
+            std::vector<double> tenpai_prob(value.begin(),
+                                            value.begin() + (config.t_max + 1));
+            std::vector<double> win_prob(value.begin() + (config.t_max + 1),
+                                         value.begin() + (config.t_max + 1) * 2);
+            std::vector<double> exp_value(value.begin() + (config.t_max + 1) * 2,
+                                          value.end());
 
-                const auto [shanten_type, shanten, tiles] =
-                    NecessaryTileCalculator::select(player.hand, player.num_melds(),
-                                                    config.shanten_type);
-                std::vector<std::tuple<int, int>> necessary_tiles;
-                for (const auto tile : tiles) {
-                    necessary_tiles.emplace_back(tile, wall[tile]);
-                }
-
-                stats.emplace_back(
-                    Stat{i, tenpai_prob, win_prob, exp_value, necessary_tiles});
+            const auto [shanten_type, shanten, tiles] = NecessaryTileCalculator::select(
+                player.hand, player.num_melds(), config.shanten_type);
+            std::vector<std::tuple<int, int>> necessary_tiles;
+            for (const auto tile : tiles) {
+                necessary_tiles.emplace_back(tile, wall[tile]);
             }
-            ++hand_counts[i];
+
+            stats.emplace_back(
+                Stat{Tile::Null, tenpai_prob, win_prob, exp_value, necessary_tiles});
+        }
+    }
+    else {
+        // Build hand transition graph.
+        select2(config, round, player_copy, graph, cache1, cache2, hand_counts,
+                wall_counts, hand_org, shanten_org);
+
+        // Calculate expected values and probabilities.
+        calc_values(config, graph, cache1, cache2, sum);
+
+        // 結果を取得する。
+        for (int i = 0; i < 37; ++i) {
+            if (hand_counts[i] > 0) {
+                --hand_counts[i];
+                if (const auto itr = cache1.find(hand_counts); itr != cache1.end()) {
+                    const VertexData &value = graph[itr->second];
+                    std::vector<double> tenpai_prob(value.begin(),
+                                                    value.begin() + (config.t_max + 1));
+                    std::vector<double> win_prob(value.begin() + (config.t_max + 1),
+                                                 value.begin() +
+                                                     (config.t_max + 1) * 2);
+                    std::vector<double> exp_value(
+                        value.begin() + (config.t_max + 1) * 2, value.end());
+
+                    const auto [shanten_type, shanten, tiles] =
+                        NecessaryTileCalculator::select(player.hand, player.num_melds(),
+                                                        config.shanten_type);
+                    std::vector<std::tuple<int, int>> necessary_tiles;
+                    for (const auto tile : tiles) {
+                        necessary_tiles.emplace_back(tile, wall[tile]);
+                    }
+
+                    stats.emplace_back(
+                        Stat{i, tenpai_prob, win_prob, exp_value, necessary_tiles});
+                }
+                ++hand_counts[i];
+            }
         }
     }
 
