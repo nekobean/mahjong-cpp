@@ -16,82 +16,52 @@
 namespace mahjong
 {
 
-Hand create_wall(const Round &round, const Player &player, bool use_red)
+Count ExpectedScoreCalculator::create_wall(const Round &round, const Player &player,
+                                           bool enable_reddora)
 {
-    Hand wall{0};
-    std::fill(wall.begin(), wall.begin() + 34, 4);
-
-    if (use_red) {
-        wall[Tile::RedManzu5] = 1;
-        wall[Tile::RedPinzu5] = 1;
-        wall[Tile::RedSouzu5] = 1;
-    }
+    Count wall{0}, melds{0}, indicators{0};
 
     for (auto tile : round.dora_indicators) {
-        tile = use_red ? tile : to_no_reddora(tile);
-        if (tile == Tile::RedManzu5) {
-            wall[Tile::Manzu5]--;
-            wall[Tile::RedManzu5]--;
-        }
-        else if (tile == Tile::RedPinzu5) {
-            wall[Tile::Pinzu5]--;
-            wall[Tile::RedPinzu5]--;
-        }
-        else if (tile == Tile::RedSouzu5) {
-            wall[Tile::Souzu5]--;
-            wall[Tile::RedSouzu5]--;
-        }
-        else {
-            wall[tile]--;
-        }
-    }
-
-    for (int i = 0; i < 34; ++i) {
-        if (i == Tile::Manzu5) {
-            wall[i] -= player.hand[Tile::Manzu5];
-            if (use_red)
-                wall[Tile::RedManzu5] -= player.hand[Tile::RedManzu5];
-        }
-        else if (i == Tile::Pinzu5) {
-            wall[i] -= player.hand[Tile::Pinzu5];
-            if (use_red)
-                wall[Tile::RedPinzu5] -= player.hand[Tile::RedPinzu5];
-        }
-        else if (i == Tile::Souzu5) {
-            wall[i] -= player.hand[Tile::Souzu5];
-            if (use_red)
-                wall[Tile::RedSouzu5] -= player.hand[Tile::RedSouzu5];
-        }
-        else {
-            wall[i] -= player.hand[i];
+        ++indicators[to_no_reddora(tile)];
+        if (is_reddora(tile)) {
+            ++indicators[tile];
         }
     }
 
     for (const auto &meld : player.melds) {
         for (auto tile : meld.tiles) {
-            tile = use_red ? tile : to_no_reddora(tile);
-            if (tile == Tile::RedManzu5) {
-                wall[tile] -= 1;
-                wall[Tile::Manzu5] -= 1;
+            ++melds[to_no_reddora(tile)];
+            if (is_reddora(tile)) {
+                ++melds[tile];
             }
-            else if (tile == Tile::RedPinzu5) {
-                wall[tile] -= 1;
-                wall[Tile::Pinzu5] -= 1;
-            }
-            else if (tile == Tile::RedSouzu5) {
-                wall[tile] -= 1;
-                wall[Tile::Souzu5] -= 1;
-            }
-            else {
-                wall[tile] -= 1;
-            }
+        }
+    }
+
+    for (int i = 0; i < 34; ++i) {
+        wall[i] = 4 - (player.hand[i] + melds[i] + indicators[i]);
+    }
+    if (enable_reddora) {
+        for (int i = 34; i < 37; ++i) {
+            wall[i] = 1 - (player.hand[i] + melds[i] + indicators[i]);
+        }
+    }
+
+    for (int i = 0; i < 34; ++i) {
+        assert(wall[i] >= 0 && wall[i] <= 4);
+    }
+    for (int i = 34; i < 37; ++i) {
+        if (enable_reddora) {
+            assert(wall[i] >= 0 && wall[i] <= 1);
+        }
+        else {
+            assert(wall[i] == 0);
         }
     }
 
     return wall;
 }
 
-std::vector<int> encode(const Hand &counts)
+std::vector<int> ExpectedScoreCalculator::encode(const Count &counts)
 {
     std::vector<int> ret(2 * 34, 0);
 
@@ -219,8 +189,7 @@ ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::select1(
     cache1[key] = vertex;
 
     for (int i = 0; i < 64; ++i) {
-        int64_t bit_i = 1LL << i;
-        bool is_wait = wait & bit_i;
+        bool is_wait = wait & (1LL << i);
 
         if (wall_counts[i] && (allow_tegawari || is_wait)) {
             const int weight = wall_counts[i];
@@ -275,8 +244,7 @@ ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::select2(
     cache2[key] = vertex;
 
     for (int i = 0; i < 64; ++i) {
-        int64_t bit_i = 1LL << i;
-        bool is_disc = disc & bit_i;
+        bool is_disc = disc & (1LL << i);
 
         if (hand_counts[i] && (allow_shanten_down || is_disc)) {
             discard(player, hand_counts, wall_counts, i);
@@ -361,12 +329,12 @@ ExpectedScoreCalculator::calc(const Config &params, const Round &round, Player &
     Graph graph;
     Desc cache1, cache2;
 
-    Hand wall = create_wall(round, player, params.enable_reddora);
+    const Count wall = create_wall(round, player, params.enable_reddora);
     auto hand_counts = encode(player.hand);
     auto wall_counts = encode(wall);
 
     // Calculate shanten number of specified hand.
-    auto [type, shanten] = ShantenCalculator::calc(player.hand, 0, params.mode);
+    const auto [type, shanten] = ShantenCalculator::calc(player.hand, 0, params.mode);
 
     // Build hand transition graph.
     select2(params, round, player, graph, cache1, cache2, hand_counts, wall_counts,

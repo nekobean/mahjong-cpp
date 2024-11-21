@@ -30,23 +30,25 @@ class ExpectedScoreCalculator
         }
 
         /* min turn to be calculated */
-        int t_min = 0;
+        int t_min;
         /* max turn to be calculated */
-        int t_max = 18;
+        int t_max;
         /* number of wall tiles */
-        int sum = 0;
+        int sum;
         /* search the range of possible (shanten number + extra) exchanges */
-        int extra = 0;
+        int extra;
         /* calculation mode */
-        int mode = 7;
+        int mode;
         /* enable red dora */
-        bool enable_reddora = true;
+        bool enable_reddora;
         /* enable ura dora */
-        bool enable_uradora = true;
+        bool enable_uradora;
         /* allow shanten down */
-        bool enable_shanten_down = true;
+        bool enable_shanten_down;
         /* allow tegawari */
-        bool enable_tegawari = true;
+        bool enable_tegawari;
+
+        /* not implemented */
     };
 
     struct Stat
@@ -104,8 +106,11 @@ class ExpectedScoreCalculator
   public:
     static std::tuple<std::vector<Stat>, int> calc(const Config &params,
                                                    const Round &round, Player &player);
+    static Count create_wall(const Round &round, const Player &player,
+                             bool enable_reddora);
 
   private:
+    static std::vector<int> encode(const Count &counts);
     static int distance(const std::vector<int> &hand, const std::vector<int> &origin);
     static void draw(Player &player, std::vector<int> &hand_reds,
                      std::vector<int> &wall_reds, const int tile);

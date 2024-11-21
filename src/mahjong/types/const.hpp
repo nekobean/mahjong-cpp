@@ -1,5 +1,5 @@
-#ifndef MAHJONG_CPP_CONST_HPP
-#define MAHJONG_CPP_CONST_HPP
+#ifndef MAHJONG_CPP_CONST
+#define MAHJONG_CPP_CONST
 
 #include <array>
 #include <map>
@@ -16,6 +16,7 @@ namespace mahjong
 {
 
 using Hand = std::array<int, 37>;
+using Count = std::array<int, 37>;
 
 /**
  * @brief Tile types
@@ -604,4 +605,4 @@ static constexpr std::array<int, 37> ToDora = {
 
 } // namespace mahjong
 
-#endif /* MAHJONG_CPP_CONST_HPP */
+#endif /* MAHJONG_CPP_CONST */
