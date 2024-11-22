@@ -348,6 +348,21 @@ ExpectedScoreCalculator::calc(const Config &config, const Round &round,
     return calc(config, round, player, wall);
 }
 
+std::vector<std::tuple<int, int>>
+ExpectedScoreCalculator::get_necessary_tiles(const Config &config, const Player &player,
+                                             const Count &wall)
+{
+    const auto [shanten_type, shanten, tiles] = NecessaryTileCalculator::select(
+        player.hand, player.num_melds(), config.shanten_type);
+
+    std::vector<std::tuple<int, int>> necessary_tiles;
+    for (const auto tile : tiles) {
+        necessary_tiles.emplace_back(tile, wall[tile]);
+    }
+
+    return necessary_tiles;
+}
+
 std::tuple<std::vector<ExpectedScoreCalculator::Stat>, int>
 ExpectedScoreCalculator::calc(const Config &config, const Round &round,
                               const Player &player, const Count &wall)
@@ -386,12 +401,8 @@ ExpectedScoreCalculator::calc(const Config &config, const Round &round,
             std::vector<double> exp_value(value.begin() + (config.t_max + 1) * 2,
                                           value.end());
 
-            const auto [shanten_type, shanten, tiles] = NecessaryTileCalculator::select(
-                player.hand, player.num_melds(), config.shanten_type);
-            std::vector<std::tuple<int, int>> necessary_tiles;
-            for (const auto tile : tiles) {
-                necessary_tiles.emplace_back(tile, wall[tile]);
-            }
+            std::vector<std::tuple<int, int>> necessary_tiles =
+                get_necessary_tiles(config, player, wall);
 
             stats.emplace_back(
                 Stat{Tile::Null, tenpai_prob, win_prob, exp_value, necessary_tiles});
@@ -408,7 +419,7 @@ ExpectedScoreCalculator::calc(const Config &config, const Round &round,
         // 結果を取得する。
         for (int i = 0; i < 37; ++i) {
             if (hand_counts[i] > 0) {
-                --hand_counts[i];
+                discard(player_copy, hand_counts, wall_counts, i);
                 if (const auto itr = cache1.find(hand_counts); itr != cache1.end()) {
                     const VertexData &value = graph[itr->second];
                     std::vector<double> tenpai_prob(value.begin(),
@@ -419,18 +430,13 @@ ExpectedScoreCalculator::calc(const Config &config, const Round &round,
                     std::vector<double> exp_value(
                         value.begin() + (config.t_max + 1) * 2, value.end());
 
-                    const auto [shanten_type, shanten, tiles] =
-                        NecessaryTileCalculator::select(player.hand, player.num_melds(),
-                                                        config.shanten_type);
-                    std::vector<std::tuple<int, int>> necessary_tiles;
-                    for (const auto tile : tiles) {
-                        necessary_tiles.emplace_back(tile, wall[tile]);
-                    }
+                    std::vector<std::tuple<int, int>> necessary_tiles =
+                        get_necessary_tiles(config, player, wall);
 
                     stats.emplace_back(
                         Stat{i, tenpai_prob, win_prob, exp_value, necessary_tiles});
                 }
-                ++hand_counts[i];
+                draw(player_copy, hand_counts, wall_counts, i);
             }
         }
     }

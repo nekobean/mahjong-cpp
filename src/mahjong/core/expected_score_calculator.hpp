@@ -17,7 +17,7 @@ class ExpectedScoreCalculator
     struct Config
     {
         Config()
-            : t_min(0)
+            : t_min(1)
             , t_max(18)
             , sum(121)
             , extra(0)
@@ -26,6 +26,7 @@ class ExpectedScoreCalculator
             , enable_tegawari(true)
             , enable_reddora(true)
             , enable_uradora(true)
+            , calc_stats(true)
         {
         }
 
@@ -47,6 +48,8 @@ class ExpectedScoreCalculator
         bool enable_shanten_down;
         /* allow tegawari */
         bool enable_tegawari;
+        /* calculate value */
+        bool calc_stats;
     };
 
     struct Stat
@@ -128,6 +131,8 @@ class ExpectedScoreCalculator
                           Count &wall_reds, const Count &origin_reds, int sht_org);
     static void calc_values(const Config &config, Graph &graph, const Cache &cache1,
                             const Cache &cache2, const int sum);
+    static std::vector<std::tuple<int, int>>
+    get_necessary_tiles(const Config &config, const Player &player, const Count &wall);
 };
 } // namespace mahjong
 
