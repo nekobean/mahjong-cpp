@@ -43,18 +43,18 @@ bool HandSeparator::initialize()
  *
  * @param[in] hand 手牌
  * @param[in] win_tile 和了牌
- * @param[in] tumo 自摸かどうか
+ * @param[in] tsumo 自摸かどうか
  * @return std::vector<std::vector<Block>> 面子構成の一覧
  */
 std::vector<std::tuple<std::vector<Block>, int>>
-HandSeparator::separate(const Input &input)
+HandSeparator::separate(const Player &player, const int win_tile, const int win_flag)
 {
     std::vector<std::tuple<std::vector<Block>, int>> pattern;
     std::vector<Block> blocks(5);
     int i = 0;
 
     // 副露ブロックをブロック一覧に追加する。
-    for (const auto &melded_block : input.melds) {
+    for (const auto &melded_block : player.melds) {
         if (melded_block.type == MeldType::Pong)
             blocks[i].type = BlockType::Triplet | BlockType::Open;
         else if (melded_block.type == MeldType::Chow)
@@ -68,16 +68,16 @@ HandSeparator::separate(const Input &input)
         ++i;
     }
 
-    const int manzu_hash = std::accumulate(input.hand.begin(), input.hand.begin() + 9,
+    const int manzu_hash = std::accumulate(player.hand.begin(), player.hand.begin() + 9,
                                            0, [](int x, int y) { return x * 8 + y; });
     const int pinzu_hash =
-        std::accumulate(input.hand.begin() + 9, input.hand.begin() + 18, 0,
+        std::accumulate(player.hand.begin() + 9, player.hand.begin() + 18, 0,
                         [](int x, int y) { return x * 8 + y; });
     const int souzu_hash =
-        std::accumulate(input.hand.begin() + 18, input.hand.begin() + 27, 0,
+        std::accumulate(player.hand.begin() + 18, player.hand.begin() + 27, 0,
                         [](int x, int y) { return x * 8 + y; });
     const int honors_hash =
-        std::accumulate(input.hand.begin() + 27, input.hand.begin() + 34, 0,
+        std::accumulate(player.hand.begin() + 27, player.hand.begin() + 34, 0,
                         [](int x, int y) { return x * 8 + y; });
 
     const std::vector<std::vector<Block>> &manzu = s_tbl_[manzu_hash];
@@ -86,7 +86,9 @@ HandSeparator::separate(const Input &input)
     const std::vector<std::vector<Block>> &honors = z_tbl_[honors_hash];
 
     // 手牌の切り分けパターンを列挙する。
-    create_block_patterns(input, pattern, blocks, i, 0, manzu, pinzu, souzu, honors);
+    const int nored_win_tile = to_no_reddora(win_tile);
+    create_block_patterns(nored_win_tile, win_flag & WinFlag::Tsumo, pattern, blocks, i,
+                          0, manzu, pinzu, souzu, honors);
 
     return pattern;
 }
@@ -165,16 +167,14 @@ std::vector<Block> HandSeparator::get_blocks(const std::string &s)
  * @return YakuList 成立した役一覧
  */
 void HandSeparator::create_block_patterns(
-    const Input &input, std::vector<std::tuple<std::vector<Block>, int>> &pattern,
+    const int win_tile, const bool tsumo,
+    std::vector<std::tuple<std::vector<Block>, int>> &pattern,
     std::vector<Block> &blocks, size_t i, int d,
     const std::vector<std::vector<Block>> &manzu,
     const std::vector<std::vector<Block>> &pinzu,
     const std::vector<std::vector<Block>> &souzu,
     const std::vector<std::vector<Block>> &honors)
 {
-    int win_tile = input.win_tile;
-    bool tumo = input.win_flag & WinFlag::Tsumo;
-
     if (d == 4) {
         for (auto &block : blocks) {
             if (block.type & BlockType::Open)
@@ -182,7 +182,7 @@ void HandSeparator::create_block_patterns(
 
             if ((block.type & BlockType::Triplet) && block.min_tile == win_tile) {
                 // 双ポン待ち
-                if (tumo) {
+                if (tsumo) {
                     pattern.emplace_back(blocks, WaitType::TripletWait);
                 }
                 else {
@@ -194,7 +194,7 @@ void HandSeparator::create_block_patterns(
             else if (block.type == BlockType::Sequence &&
                      block.min_tile + 1 == win_tile) {
                 // 嵌張待ち
-                if (tumo) {
+                if (tsumo) {
                     pattern.emplace_back(blocks, WaitType::ClosedWait);
                 }
                 else {
@@ -209,7 +209,7 @@ void HandSeparator::create_block_patterns(
                       block.min_tile == Tile::Pinzu1 ||
                       block.min_tile == Tile::Souzu1)) {
                 // 辺張待ち 123
-                if (tumo) {
+                if (tsumo) {
                     pattern.emplace_back(blocks, WaitType::EdgeWait);
                 }
                 else {
@@ -223,7 +223,7 @@ void HandSeparator::create_block_patterns(
                       block.min_tile == Tile::Pinzu7 ||
                       block.min_tile == Tile::Souzu7)) {
                 // 辺張待ち 789
-                if (tumo) {
+                if (tsumo) {
                     pattern.emplace_back(blocks, WaitType::EdgeWait);
                 }
                 else {
@@ -235,7 +235,7 @@ void HandSeparator::create_block_patterns(
             else if (block.type == BlockType::Sequence &&
                      (block.min_tile == win_tile || block.min_tile + 2 == win_tile)) {
                 // 両面待ち
-                if (tumo) {
+                if (tsumo) {
                     pattern.emplace_back(blocks, WaitType::DoubleEdgeWait);
                 }
                 else {
@@ -246,7 +246,7 @@ void HandSeparator::create_block_patterns(
             }
             else if (block.type == BlockType::Pair && block.min_tile == win_tile) {
                 // 双ポン待ち
-                if (tumo) {
+                if (tsumo) {
                     pattern.emplace_back(blocks, WaitType::PairWait);
                 }
                 else {
@@ -263,57 +263,57 @@ void HandSeparator::create_block_patterns(
     if (d == 0) {
         // 萬子の面子構成
         if (manzu.empty())
-            create_block_patterns(input, pattern, blocks, i, d + 1, manzu, pinzu, souzu,
-                                  honors);
+            create_block_patterns(win_tile, tsumo, pattern, blocks, i, d + 1, manzu,
+                                  pinzu, souzu, honors);
 
         for (const auto &manzu_pattern : manzu) {
             for (const auto &block : manzu_pattern)
                 blocks[i++] = block;
-            create_block_patterns(input, pattern, blocks, i, d + 1, manzu, pinzu, souzu,
-                                  honors);
+            create_block_patterns(win_tile, tsumo, pattern, blocks, i, d + 1, manzu,
+                                  pinzu, souzu, honors);
             i -= manzu_pattern.size();
         }
     }
     else if (d == 1) {
         // 筒子の面子構成
         if (pinzu.empty())
-            create_block_patterns(input, pattern, blocks, i, d + 1, manzu, pinzu, souzu,
-                                  honors);
+            create_block_patterns(win_tile, tsumo, pattern, blocks, i, d + 1, manzu,
+                                  pinzu, souzu, honors);
 
         for (const auto &pinzu_pattern : pinzu) {
             for (const auto &block : pinzu_pattern)
                 blocks[i++] = {block.type, block.min_tile + 9};
 
-            create_block_patterns(input, pattern, blocks, i, d + 1, manzu, pinzu, souzu,
-                                  honors);
+            create_block_patterns(win_tile, tsumo, pattern, blocks, i, d + 1, manzu,
+                                  pinzu, souzu, honors);
             i -= pinzu_pattern.size();
         }
     }
     else if (d == 2) {
         // 索子の面子構成
         if (souzu.empty())
-            create_block_patterns(input, pattern, blocks, i, d + 1, manzu, pinzu, souzu,
-                                  honors);
+            create_block_patterns(win_tile, tsumo, pattern, blocks, i, d + 1, manzu,
+                                  pinzu, souzu, honors);
 
         for (const auto &sozu_pattern : souzu) {
             for (const auto &block : sozu_pattern)
                 blocks[i++] = {block.type, block.min_tile + 18};
-            create_block_patterns(input, pattern, blocks, i, d + 1, manzu, pinzu, souzu,
-                                  honors);
+            create_block_patterns(win_tile, tsumo, pattern, blocks, i, d + 1, manzu,
+                                  pinzu, souzu, honors);
             i -= sozu_pattern.size();
         }
     }
     else if (d == 3) {
         // 字牌の面子構成
         if (honors.empty())
-            create_block_patterns(input, pattern, blocks, i, d + 1, manzu, pinzu, souzu,
-                                  honors);
+            create_block_patterns(win_tile, tsumo, pattern, blocks, i, d + 1, manzu,
+                                  pinzu, souzu, honors);
 
         for (const auto &zihai_pattern : honors) {
             for (const auto &block : zihai_pattern)
                 blocks[i++] = {block.type, block.min_tile + 27};
-            create_block_patterns(input, pattern, blocks, i, d + 1, manzu, pinzu, souzu,
-                                  honors);
+            create_block_patterns(win_tile, tsumo, pattern, blocks, i, d + 1, manzu,
+                                  pinzu, souzu, honors);
             i -= zihai_pattern.size();
         }
     }

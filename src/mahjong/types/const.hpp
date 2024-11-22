@@ -352,7 +352,7 @@ enum : YakuList
     HalfFlush = 1LL << 35,                       /* Half Flush (混一色) */
     FullyOutsideHand = 1LL << 36,                /* Fully Outside Hand (純全帯幺九) */
     TwicePureDoubleSequence = 1LL << 37,         /* Twice Pure Double Sequence (二盃口) */
-    NagasiMangan = 1LL << 38,                    /* Mangan at Draw (流し満貫) */
+    NagashiMangan = 1LL << 38,                    /* Mangan at Draw (流し満貫) */
     FullFlush = 1LL << 39,                       /* Full Flush (清一色) */
     BlessingOfHeaven = 1LL << 40,                /* Blessing of Heaven (天和) */
     BlessingOfEarth = 1LL << 41,                 /* Blessing of Earth (地和) */
@@ -414,7 +414,7 @@ static inline std::map<YakuList, std::string> Name = {
     ENTRY(HalfFlush, u8"Half Flush", u8"混一色"),
     ENTRY(FullyOutsideHand, u8"Fully Outside Hand", u8"純全帯幺九"),
     ENTRY(TwicePureDoubleSequence, u8"Twice Pure Double Sequence", u8"二盃口"),
-    ENTRY(NagasiMangan, u8"Mangan at Draw", u8"流し満貫"),
+    ENTRY(NagashiMangan, u8"Mangan at Draw", u8"流し満貫"),
     ENTRY(FullFlush, u8"Full Flush", u8"清一色"),
     ENTRY(BlessingOfHeaven, u8"Blessing of Heaven", u8"天和"),
     ENTRY(BlessingOfEarth, u8"Blessing of Earth", u8"地和"),
@@ -477,7 +477,7 @@ static inline std::map<YakuList, std::array<int, 2>> Han = {
     {HalfFlush,                      {3, 2}},  // 喰い下がり
     {FullyOutsideHand,               {3, 2}},  // 喰い下がり
     {TwicePureDoubleSequence,        {3, 0}},  // 門前限定
-    {NagasiMangan,                   {0, 0}},  // 満貫扱い
+    {NagashiMangan,                  {0, 0}},  // 満貫扱い
     {FullFlush,                      {6, 5}},  // 喰い下がり
     {BlessingOfHeaven,               {1, 0}},  // 役満
     {BlessingOfEarth,                {1, 0}},  // 役満
@@ -497,6 +497,22 @@ static inline std::map<YakuList, std::array<int, 2>> Han = {
     {ThirteenWaitThirteenOrphans,    {2, 0}},  // ダブル役満
 };
 // clang-format on
+
+static constexpr YakuList NormalYaku =
+    Tsumo | Riichi | Ippatsu | Tanyao | Pinfu | PureDoubleSequence | RobbingAKong |
+    AfterAKong | UnderTheSea | UnderTheRiver | Dora | UraDora | RedDora | WhiteDragon |
+    GreenDragon | RedDragon | SelfWindEast | SelfWindSouth | SelfWindWest |
+    SelfWindNorth | RoundWindEast | RoundWindSouth | RoundWindWest | RoundWindNorth |
+    DoubleRiichi | SevenPairs | AllTriplets | ThreeConcealedTriplets | TripleTriplets |
+    MixedTripleSequence | AllTerminalsAndHonors | PureStraight | HalfOutsideHand |
+    LittleThreeDragons | ThreeKongs | HalfFlush | FullyOutsideHand |
+    TwicePureDoubleSequence | FullFlush;
+
+static constexpr YakuList Yakuman =
+    BlessingOfHeaven | BlessingOfEarth | HandOfMan | AllGreen | BigThreeDragons |
+    LittleFourWinds | AllHonors | ThirteenOrphans | NineGates | FourConcealedTriplets |
+    AllTerminals | FourKongs | SingleWaitFourConcealedTriplets | BigFourWinds |
+    TrueNineGates | ThirteenWaitThirteenOrphans;
 
 }; // namespace Yaku
 

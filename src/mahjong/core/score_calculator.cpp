@@ -16,45 +16,6 @@
 namespace mahjong
 {
 
-HandSeparator::Input ScoreCalculator::create_input(const Player &player, int win_tile,
-                                                   int win_flag)
-{
-    Input input;
-    input.hand = player.hand;
-    input.win_tile = to_no_reddora(win_tile);
-    input.win_flag = win_flag;
-    input.melds = player.melds;
-
-    input.merged_hand = player.hand;
-    for (const auto &block : player.melds) {
-        int min_tile = to_no_reddora(block.tiles.front()); // 赤ドラは通常の牌として扱う
-
-        if (block.type == MeldType::Chow) {
-            ++input.merged_hand[min_tile];
-            ++input.merged_hand[min_tile + 1];
-            ++input.merged_hand[min_tile + 2];
-        }
-        else {
-            input.merged_hand[min_tile] += 3;
-        }
-    }
-
-    input.merged_manzu =
-        std::accumulate(input.merged_hand.begin(), input.merged_hand.begin() + 9, 0,
-                        [](int x, int y) { return x * 8 + y; });
-    input.merged_pinzu =
-        std::accumulate(input.merged_hand.begin() + 9, input.merged_hand.begin() + 18,
-                        0, [](int x, int y) { return x * 8 + y; });
-    input.merged_souzu =
-        std::accumulate(input.merged_hand.begin() + 18, input.merged_hand.begin() + 27,
-                        0, [](int x, int y) { return x * 8 + y; });
-    input.merged_honors =
-        std::accumulate(input.merged_hand.begin() + 27, input.merged_hand.begin() + 34,
-                        0, [](int x, int y) { return x * 8 + y; });
-
-    return input;
-}
-
 /**
  * @brief Calculate score.
  *
@@ -95,26 +56,20 @@ Result ScoreCalculator::calc(const Round &round, const Player &player, int win_t
 Result ScoreCalculator::calc_fast(const Round &round, const Player &player,
                                   int win_tile, int win_flag, int shanten_type)
 {
-    Input input = create_input(player, win_tile, win_flag);
-
-    if (win_flag & WinFlag::NagashiMangan) {
-        return aggregate(round, player, win_tile, win_flag, Yaku::NagasiMangan);
-    }
-
     YakuList yaku_list = Yaku::Null;
+    yaku_list |=
+        check_not_pattern_yaku(round, player, win_tile, win_flag, shanten_type);
 
-    // 役満をチェックする。
-    yaku_list |= check_yakuman(input, shanten_type);
-    if (yaku_list) {
-        return aggregate(round, player, win_tile, win_flag, yaku_list);
+    if (yaku_list & Yaku::NagashiMangan) {
+        return aggregate(round, player, win_tile, win_flag, Yaku::NagashiMangan);
     }
-
-    // 面子構成に関係ない役を調べる。
-    yaku_list |= check_not_pattern_yaku(round, player, input, shanten_type);
+    else if (yaku_list & Yaku::Yakuman) {
+        return aggregate(round, player, win_tile, win_flag, yaku_list & Yaku::Yakuman);
+    }
 
     // 面子構成に関係ある役を調べる。
     const auto [pattern_yaku_list, fu, blocks, wait_type] =
-        check_pattern_yaku(round, player, input, shanten_type);
+        check_pattern_yaku(round, player, win_tile, win_flag, shanten_type);
     yaku_list |= pattern_yaku_list;
 
     if (!yaku_list) {
@@ -139,34 +94,15 @@ Result ScoreCalculator::aggregate(const Round &round, const Player &player,
                                   const int win_tile, const int win_flag,
                                   YakuList yaku_list)
 {
-    static const std::vector<YakuList> yakuman = {
-        Yaku::BlessingOfHeaven,
-        Yaku::BlessingOfEarth,
-        Yaku::HandOfMan,
-        Yaku::AllGreen,
-        Yaku::BigThreeDragons,
-        Yaku::LittleFourWinds,
-        Yaku::AllHonors,
-        Yaku::ThirteenOrphans,
-        Yaku::NineGates,
-        Yaku::FourConcealedTriplets,
-        Yaku::AllTerminals,
-        Yaku::FourKongs,
-        Yaku::SingleWaitFourConcealedTriplets,
-        Yaku::BigFourWinds,
-        Yaku::TrueNineGates,
-        Yaku::ThirteenWaitThirteenOrphans,
-    };
-
     int score_title;
     std::vector<std::tuple<YakuList, int>> yaku_han_list;
     std::vector<int> score;
 
     const bool is_dealer = player.wind == Tile::East;
 
-    if (yaku_list & Yaku::NagasiMangan) {
+    if (yaku_list & Yaku::NagashiMangan) {
         // Nagashi Mangan
-        yaku_han_list.emplace_back(Yaku::NagasiMangan, 0);
+        yaku_han_list.emplace_back(Yaku::NagashiMangan, 0);
         score_title = ScoreTitle::Mangan;
 
         // Nagashi Mangan is treated as Tsumo.
@@ -175,10 +111,12 @@ Result ScoreCalculator::aggregate(const Round &round, const Player &player,
     else {
         // Count yakuman multiplier.
         int n = 0;
-        for (auto yaku : yakuman) {
-            if (yaku_list & yaku) {
-                yaku_han_list.emplace_back(yaku, Yaku::Han[yaku][0]);
+
+        for (YakuList yaku = 1LL << 40; yaku <= 1LL << 55; yaku <<= 1) {
+            // yakuman: 1LL << 40 ~ 1LL << 55
+            if ((yaku & Yaku::Yakuman) && (yaku_list & yaku)) {
                 n += Yaku::Han[yaku][0];
+                yaku_han_list.emplace_back(yaku, Yaku::Han[yaku][0]);
             }
         }
 
@@ -208,51 +146,12 @@ Result ScoreCalculator::aggregate(const Round &round, const Player &player,
                                   YakuList yaku_list, int fu,
                                   const std::vector<Block> &blocks, int wait_type)
 {
-    /*! List of normal yaku */
-    static const std::vector<YakuList> normal_yaku = {
-        Yaku::Tsumo,
-        Yaku::Riichi,
-        Yaku::Ippatsu,
-        Yaku::Tanyao,
-        Yaku::Pinfu,
-        Yaku::PureDoubleSequence,
-        Yaku::RobbingAKong,
-        Yaku::AfterAKong,
-        Yaku::UnderTheSea,
-        Yaku::UnderTheRiver,
-        Yaku::WhiteDragon,
-        Yaku::GreenDragon,
-        Yaku::RedDragon,
-        Yaku::SelfWindEast,
-        Yaku::SelfWindSouth,
-        Yaku::SelfWindWest,
-        Yaku::SelfWindNorth,
-        Yaku::RoundWindEast,
-        Yaku::RoundWindSouth,
-        Yaku::RoundWindWest,
-        Yaku::RoundWindNorth,
-        Yaku::DoubleRiichi,
-        Yaku::SevenPairs,
-        Yaku::AllTriplets,
-        Yaku::ThreeConcealedTriplets,
-        Yaku::TripleTriplets,
-        Yaku::MixedTripleSequence,
-        Yaku::AllTerminalsAndHonors,
-        Yaku::PureStraight,
-        Yaku::HalfOutsideHand,
-        Yaku::LittleThreeDragons,
-        Yaku::ThreeKongs,
-        Yaku::HalfFlush,
-        Yaku::FullyOutsideHand,
-        Yaku::TwicePureDoubleSequence,
-        Yaku::FullFlush,
-    };
-
     // Count total number of han.
     int han = 0;
     std::vector<std::tuple<YakuList, int>> yaku_han_list;
-    for (auto &yaku : normal_yaku) {
-        if (yaku_list & yaku) {
+    for (YakuList yaku = 1LL; yaku <= 1LL << 39; yaku <<= 1) {
+        // normal: 1LL << 0 ~ 1LL << 39
+        if ((yaku & Yaku::NormalYaku) && (yaku_list & yaku)) {
             int yaku_han = player.is_closed() ? Yaku::Han[yaku][0] : Yaku::Han[yaku][1];
             yaku_han_list.emplace_back(yaku, yaku_han);
             han += yaku_han;
@@ -324,7 +223,7 @@ ScoreCalculator::check_arguments(const Player &player, int win_tile, int win_fla
     if (!check_exclusive(win_flag & (WinFlag::RobbingAKong | WinFlag::AfterAKong |
                                      WinFlag::UnderTheSea | WinFlag::UnderTheRiver))) {
         std::string err_msg =
-            fmt::format("{}、{}、{}、{}はいずれか1つのみ指定できます。",
+            fmt::format(u8"Only one of {}, {}, {}, or {} may be specified.",
                         Yaku::Name[Yaku::RobbingAKong], Yaku::Name[Yaku::AfterAKong],
                         Yaku::Name[Yaku::UnderTheSea], Yaku::Name[Yaku::UnderTheRiver]);
         return {false, err_msg};
@@ -333,7 +232,7 @@ ScoreCalculator::check_arguments(const Player &player, int win_tile, int win_fla
     if (!check_exclusive(win_flag & (WinFlag::BlessingOfHeaven |
                                      WinFlag::BlessingOfEarth | WinFlag::HandOfMan))) {
         std::string err_msg =
-            fmt::format("{}、{}、{}はいずれか1つのみ指定できます。",
+            fmt::format(u8"Only one of {}, {}, or {} may be specified.",
                         Yaku::Name[Yaku::BlessingOfHeaven],
                         Yaku::Name[Yaku::BlessingOfEarth], Yaku::Name[Yaku::HandOfMan]);
         return {false, err_msg};
@@ -342,7 +241,7 @@ ScoreCalculator::check_arguments(const Player &player, int win_tile, int win_fla
     // 条件が必要なフラグをチェックする。
     if ((win_flag & (WinFlag::Riichi | WinFlag::DoubleRiichi)) && !player.is_closed()) {
         std::string err_msg =
-            fmt::format("{}、{}は門前の場合のみ指定できます。",
+            fmt::format(u8"{}、{}は門前の場合のみ指定できます。",
                         Yaku::Name[Yaku::Riichi], Yaku::Name[Yaku::DoubleRiichi]);
         return {false, err_msg};
     }
@@ -453,10 +352,7 @@ std::vector<int> ScoreCalculator::get_scores_for_exp(const Result &result,
 
     std::vector<int> scores;
     for (int han = result.han; han <= 13; ++han) {
-        // 点数のタイトルを計算する。
         int score_title = get_score_title(fu, han);
-
-        // 点数を計算する。
         const bool is_dealer = seat_wind == Tile::East;
         const auto score = calc_score(is_dealer, true, round.honba, round.kyotaku,
                                       score_title, han, fu);
@@ -472,88 +368,6 @@ std::vector<int> ScoreCalculator::get_scores_for_exp(const Result &result,
 ////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * @brief Check if yakuman is established.
- *
- * @param[in] input input data
- * @param[in] shanten_type type of winning hand
- * @return list of established yaku
- */
-YakuList ScoreCalculator::check_yakuman(const Input &input, const int shanten_type)
-{
-    YakuList yaku_list = Yaku::Null;
-
-    if (input.win_flag & WinFlag::BlessingOfHeaven) {
-        yaku_list |= Yaku::BlessingOfHeaven;
-    }
-    else if (input.win_flag & WinFlag::BlessingOfEarth) {
-        yaku_list |= Yaku::BlessingOfEarth;
-    }
-    else if (input.win_flag & WinFlag::HandOfMan) {
-        yaku_list |= Yaku::HandOfMan;
-    }
-
-    // If both regular hand and seven pairs are established, prioritize the regular hand.
-    if (shanten_type & ShantenFlag::Regular) {
-        if (check_all_green(input)) {
-            yaku_list |= Yaku::AllGreen;
-        }
-
-        if (check_big_three_dragons(input)) {
-            yaku_list |= Yaku::BigThreeDragons;
-        }
-
-        if (check_big_four_winds(input)) {
-            yaku_list |= Yaku::BigFourWinds;
-        }
-        else if (check_little_four_winds(input)) {
-            yaku_list |= Yaku::LittleFourWinds;
-        }
-
-        if (check_all_honors(input)) {
-            yaku_list |= Yaku::AllHonors;
-        }
-
-        if (check_true_nine_gates(input)) {
-            yaku_list |= Yaku::TrueNineGates;
-        }
-        else if (check_nine_gates(input)) {
-            yaku_list |= Yaku::NineGates;
-        }
-
-        int suuankou = check_four_concealed_triplets(input);
-        if (suuankou == 2) {
-            yaku_list |= Yaku::SingleWaitFourConcealedTriplets;
-        }
-        else if (suuankou == 1) {
-            yaku_list |= Yaku::FourConcealedTriplets;
-        }
-
-        if (check_all_terminals(input)) {
-            yaku_list |= Yaku::AllTerminals;
-        }
-
-        if (check_four_kongs(input)) {
-            yaku_list |= Yaku::FourKongs;
-        }
-    }
-    else if (shanten_type & ShantenFlag::SevenPairs) {
-        if (check_all_honors(input)) {
-            yaku_list |= Yaku::AllHonors;
-        }
-    }
-    else {
-        if (check_thirteen_wait_thirteen_orphans(input)) {
-            yaku_list |= Yaku::ThirteenWaitThirteenOrphans;
-        }
-        else {
-            yaku_list |= Yaku::ThirteenOrphans;
-        }
-    }
-
-    return yaku_list;
-}
-
-/**
  * @brief Check if yaku is established. (not dependent on how the melds are formed)
  *
  * @param[in] input input data
@@ -562,108 +376,58 @@ YakuList ScoreCalculator::check_yakuman(const Input &input, const int shanten_ty
  */
 YakuList ScoreCalculator::check_not_pattern_yaku(const Round &round,
                                                  const Player &player,
-                                                 const Input &input,
+                                                 const int win_tile, const int win_flag,
                                                  const int shanten_type)
 {
     YakuList yaku_list = Yaku::Null;
 
-    if (input.win_flag & WinFlag::DoubleRiichi) {
-        yaku_list |= Yaku::DoubleRiichi;
-    }
-    else if (input.win_flag & WinFlag::Riichi) {
-        yaku_list |= Yaku::Riichi;
-    }
+    yaku_list |=
+        (win_flag & WinFlag::Tsumo) && player.is_closed() ? Yaku::Tsumo : Yaku::Null;
+    yaku_list |= win_flag & WinFlag::Riichi ? Yaku::Riichi : Yaku::Null;
+    yaku_list |= win_flag & WinFlag::Ippatsu ? Yaku::Ippatsu : Yaku::Null;
+    yaku_list |= win_flag & WinFlag::RobbingAKong ? Yaku::RobbingAKong : Yaku::Null;
+    yaku_list |= win_flag & WinFlag::AfterAKong ? Yaku::AfterAKong : Yaku::Null;
+    yaku_list |= win_flag & WinFlag::UnderTheSea ? Yaku::UnderTheSea : Yaku::Null;
+    yaku_list |= win_flag & WinFlag::UnderTheRiver ? Yaku::UnderTheRiver : Yaku::Null;
+    yaku_list |= win_flag & WinFlag::DoubleRiichi ? Yaku::DoubleRiichi : Yaku::Null;
+    yaku_list |= win_flag & WinFlag::NagashiMangan ? Yaku::NagashiMangan : Yaku::Null;
+    yaku_list |=
+        win_flag & WinFlag::BlessingOfHeaven ? Yaku::BlessingOfHeaven : Yaku::Null;
+    yaku_list |=
+        win_flag & WinFlag::BlessingOfEarth ? Yaku::BlessingOfEarth : Yaku::Null;
+    yaku_list |= win_flag & WinFlag::HandOfMan ? Yaku::HandOfMan : Yaku::Null;
 
-    if (input.win_flag & WinFlag::Ippatsu) {
-        yaku_list |= Yaku::Ippatsu;
-    }
+    const auto marged_hand = merge_hand(player);
+    const int nored_win_tile = to_no_reddora(win_tile);
 
-    if (input.win_flag & WinFlag::RobbingAKong) {
-        yaku_list |= Yaku::RobbingAKong;
-    }
-    else if (input.win_flag & WinFlag::AfterAKong) {
-        yaku_list |= Yaku::AfterAKong;
-    }
-    else if (input.win_flag & WinFlag::UnderTheSea) {
-        yaku_list |= Yaku::UnderTheSea;
-    }
-    else if (input.win_flag & WinFlag::UnderTheRiver) {
-        yaku_list |= Yaku::UnderTheRiver;
-    }
-
-    if ((input.win_flag & WinFlag::Tsumo) && input.is_closed()) {
-        yaku_list |= Yaku::Tsumo;
-    }
-
-    const bool rule_open_tanyao = round.rules & RuleFlag::OpenTanyao;
-    if (check_tanyao(rule_open_tanyao, input)) {
-        yaku_list |= Yaku::Tanyao;
-    }
-
-    if (check_full_flush(input)) {
-        yaku_list |= Yaku::FullFlush;
-    }
-    else if (check_half_flush(input)) {
-        yaku_list |= Yaku::HalfFlush;
-    }
-
-    if (check_all_terminals_and_honors(input)) {
-        yaku_list |= Yaku::AllTerminalsAndHonors;
-    }
-
+    // If both regular hand and seven pairs are established, prioritize the regular hand.
     if (shanten_type & ShantenFlag::Regular) {
-        if (check_little_three_dragons(input)) {
-            yaku_list |= Yaku::LittleThreeDragons;
-        }
-
-        if (check_three_kongs(input)) {
-            yaku_list |= Yaku::ThreeKongs;
-        }
-
-        if (input.merged_hand[Tile::White] == 3) {
-            yaku_list |= Yaku::WhiteDragon;
-        }
-
-        if (input.merged_hand[Tile::Green] == 3) {
-            yaku_list |= Yaku::GreenDragon;
-        }
-
-        if (input.merged_hand[Tile::Red] == 3) {
-            yaku_list |= Yaku::RedDragon;
-        }
-
-        if (input.merged_hand[player.wind] == 3) {
-            if (player.wind == Tile::East) {
-                yaku_list |= Yaku::SelfWindEast;
-            }
-            else if (player.wind == Tile::South) {
-                yaku_list |= Yaku::SelfWindSouth;
-            }
-            else if (player.wind == Tile::West) {
-                yaku_list |= Yaku::SelfWindWest;
-            }
-            else if (player.wind == Tile::North) {
-                yaku_list |= Yaku::SelfWindNorth;
-            }
-        }
-
-        if (input.merged_hand[round.wind] == 3) {
-            if (round.wind == Tile::East) {
-                yaku_list |= Yaku::RoundWindEast;
-            }
-            else if (round.wind == Tile::South) {
-                yaku_list |= Yaku::RoundWindSouth;
-            }
-            else if (round.wind == Tile::West) {
-                yaku_list |= Yaku::RoundWindWest;
-            }
-            else if (round.wind == Tile::North) {
-                yaku_list |= Yaku::RoundWindNorth;
-            }
-        }
+        yaku_list |= check_all_green(marged_hand);
+        yaku_list |= check_three_dragons(marged_hand);
+        yaku_list |= check_four_winds(marged_hand);
+        yaku_list |= check_all_honors(marged_hand);
+        yaku_list |= check_four_concealed_triplets(player, marged_hand, nored_win_tile,
+                                                   win_flag);
+        yaku_list |= check_all_terminals(marged_hand);
+        yaku_list |= check_kongs(player);
+        yaku_list |= check_nine_gates(player, marged_hand, nored_win_tile);
+        yaku_list |=
+            check_tanyao(player, marged_hand, round.rules & RuleFlag::OpenTanyao);
+        yaku_list |= check_flush(marged_hand);
+        yaku_list |= check_value_tile(round, player, marged_hand);
     }
     else if (shanten_type & ShantenFlag::SevenPairs) {
         yaku_list |= Yaku::SevenPairs;
+        yaku_list |= check_all_honors(marged_hand);
+        yaku_list |= check_all_terminals(marged_hand);
+        yaku_list |=
+            check_tanyao(player, marged_hand, round.rules & RuleFlag::OpenTanyao);
+        yaku_list |= check_flush(marged_hand);
+    }
+    else {
+        yaku_list |= check_thirteen_wait_thirteen_orphans(marged_hand, nored_win_tile)
+                         ? Yaku::ThirteenWaitThirteenOrphans
+                         : Yaku::ThirteenOrphans;
     }
 
     return yaku_list;
@@ -678,7 +442,8 @@ YakuList ScoreCalculator::check_not_pattern_yaku(const Round &round,
  */
 std::tuple<YakuList, int, std::vector<Block>, int>
 ScoreCalculator::check_pattern_yaku(const Round &round, const Player &player,
-                                    Input &input, int shanten_type)
+                                    const int win_tile, const int win_flag,
+                                    const int shanten_type)
 {
     if (shanten_type == ShantenFlag::SevenPairs) {
         return {Yaku::Null, Fu::Hu25, {}, WaitType::PairWait};
@@ -699,7 +464,7 @@ ScoreCalculator::check_pattern_yaku(const Round &round, const Player &player,
     };
 
     // Get list of block compositions.
-    const auto pattern = HandSeparator::separate(input);
+    const auto pattern = HandSeparator::separate(player, win_tile, win_flag);
 
     // Find the block composition with the highest score.
     int max_han = 0;
@@ -715,7 +480,7 @@ ScoreCalculator::check_pattern_yaku(const Round &round, const Player &player,
         // Check if Pinfu is established.
         const bool is_pinfu = check_pinfu(blocks, wait_type, round.wind, player.wind);
 
-        if (input.is_closed()) {
+        if (player.is_closed()) {
             if (is_pinfu) {
                 yaku_list |= Yaku::Pinfu; // 平和
             }
@@ -759,14 +524,13 @@ ScoreCalculator::check_pattern_yaku(const Round &round, const Player &player,
         han = 0;
         for (const auto &yaku : pattern_yaku) {
             if (yaku_list & yaku) {
-                han += input.is_closed() ? Yaku::Han[yaku][0] : Yaku::Han[yaku][1];
+                han += player.is_closed() ? Yaku::Han[yaku][0] : Yaku::Han[yaku][1];
             }
         }
 
         // Calculate fu.
-        fu =
-            calc_fu(blocks, wait_type, input.is_closed(),
-                    input.win_flag & WinFlag::Tsumo, is_pinfu, round.wind, player.wind);
+        fu = calc_fu(blocks, wait_type, player.is_closed(), win_flag & WinFlag::Tsumo,
+                     is_pinfu, round.wind, player.wind);
 
         if (max_han < han || (max_han == han && max_fu < fu)) {
             max_han = han;
@@ -1013,22 +777,6 @@ int ScoreCalculator::round_fu(const int fu)
 ////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * @brief Check if All Simples (断幺九) is established.
- */
-bool ScoreCalculator::check_tanyao(const bool rule_open_tanyao, const Input &input)
-{
-    if (!rule_open_tanyao && !input.is_closed()) {
-        return false; // If Open Tanyao is not allowed, closed hand only
-    }
-
-    // Check if there are no terminal or honor tiles.
-    const int32_t terminals_mask = 0b111'000'000'000'000'000'000'000'111;
-    return !((input.merged_manzu & terminals_mask) ||
-             (input.merged_pinzu & terminals_mask) ||
-             (input.merged_souzu & terminals_mask) || input.merged_honors);
-}
-
-/**
  * @brief Check if Pinfu (平和) is established.
  */
 bool ScoreCalculator::check_pinfu(const std::vector<Block> &blocks, const int wait_type,
@@ -1157,18 +905,6 @@ bool ScoreCalculator::check_mixed_triple_sequence(const std::vector<Block> &bloc
 }
 
 /**
- * @brief Check if All Terminals and Honors (混老頭) is established.
- */
-bool ScoreCalculator::check_all_terminals_and_honors(const Input &input)
-{
-    // Check if there are no tiles other than terminal tiles and if there are honor tiles.
-    const int32_t tanyao_mask = 0b000'111'111'111'111'111'111'111'000;
-    return !((input.merged_manzu & tanyao_mask) || (input.merged_pinzu & tanyao_mask) ||
-             (input.merged_souzu & tanyao_mask)) &&
-           input.merged_honors;
-}
-
-/**
  * @brief Check if Pure Straight (一気通貫) is established.
  */
 bool ScoreCalculator::check_pure_straight(const std::vector<Block> &blocks)
@@ -1232,251 +968,203 @@ int ScoreCalculator::check_outside_hand(const std::vector<Block> &blocks)
 }
 
 /**
- * @brief Check if Little Three Dragons (小三元) is established.
- */
-bool ScoreCalculator::check_little_three_dragons(const Input &input)
-{
-    // Check if the total number of dragon tiles is 8.
-    return input.merged_hand[Tile::White] + input.merged_hand[Tile::Green] +
-               input.merged_hand[Tile::Red] ==
-           8;
-}
-
-/**
- * @brief Check if Three Kongs (三槓子) is established.
- */
-bool ScoreCalculator::check_three_kongs(const Input &input)
-{
-    // Check if there are 3 kongs.
-    int num_kongs = 0;
-    for (const auto &block : input.melds) {
-        // enum values of 2 or more are kongs
-        num_kongs += MeldType::ClosedKong <= block.type;
-    }
-
-    return num_kongs == 3;
-}
-
-/**
- * @brief Check if HalfFlush (Half Flush) is established.
- */
-bool ScoreCalculator::check_half_flush(const Input &input)
-{
-    // Check if there is one type of number tile and if there are honor tiles
-    return (input.merged_manzu && !input.merged_pinzu && !input.merged_souzu &&
-            input.merged_honors) ||
-           (!input.merged_manzu && input.merged_pinzu && !input.merged_souzu &&
-            input.merged_honors) ||
-           (!input.merged_manzu && !input.merged_pinzu && input.merged_souzu &&
-            input.merged_honors);
-}
-
-/**
- * @brief Check if Chinitsu (Full Flush) is established.
- */
-bool ScoreCalculator::check_full_flush(const Input &input)
-{
-    // Check if there is only one type of number tile.
-    return (input.merged_manzu && !input.merged_pinzu && !input.merged_souzu &&
-            !input.merged_honors) ||
-           (!input.merged_manzu && input.merged_pinzu && !input.merged_souzu &&
-            !input.merged_honors) ||
-           (!input.merged_manzu && !input.merged_pinzu && input.merged_souzu &&
-            !input.merged_honors);
-}
-
-/**
  * @brief Check if All Green (緑一色) is established.
  */
-bool ScoreCalculator::check_all_green(const Input &input)
+YakuList ScoreCalculator::check_all_green(const MergedHand &merged_hand)
 {
+    const auto &[hand, manzu, pinzu, souzu, honors] = merged_hand;
+
     // Check if there are no tiles other than 2, 3, 4, 6, 8 of souzu and green dragon.
     //                         | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
     const int32_t souzu_mask = 0b111'000'000'000'111'000'111'000'111;
     //                          | 1 | 2 | 3 | 4 | 5 | 6 | 7 |
-    const int32_t honor_mask = 0b111'111'111'111'111'000'111;
+    const int32_t honors_mask = 0b111'111'111'111'111'000'111;
 
-    return !(input.merged_manzu || input.merged_pinzu ||
-             (input.merged_souzu & souzu_mask) || (input.merged_honors & honor_mask));
+    return manzu || pinzu || (souzu & souzu_mask) || (honors & honors_mask)
+               ? Yaku::Null
+               : Yaku::AllGreen;
 }
 
 /**
- * @brief Check if Big Three Dragons (大三元) is established.
+ * @brief Check if Little Three Dragons (小三元) or Big Three Dragons (大三元) is established.
  */
-bool ScoreCalculator::check_big_three_dragons(const Input &input)
+YakuList ScoreCalculator::check_three_dragons(const MergedHand &merged_hand)
 {
-    // Check if number of each of the three dragon tiles is 3.
-    //                            | 1 | 2 | 3 | 4 | 5 | 6 | 7 |
-    const int32_t dragons_mask = 0b000'000'000'000'111'111'111;
-    //                    | 1 | 2 | 3 | 4 | 5 | 6 | 7 |
-    const int32_t mask = 0b000'000'000'000'011'011'011;
+    const auto &[hand, manzu, pinzu, souzu, honors] = merged_hand;
 
-    return (input.merged_honors & dragons_mask) == mask;
-}
-
-/**
- * @brief Check if Little Four Winds (小四喜) is established.
- */
-bool ScoreCalculator::check_little_four_winds(const Input &input)
-{
-    // Check if the total number of wind tiles is 11.
-    int sum = 0;
-    for (int i = Tile::East; i <= Tile::North; ++i) {
-        sum += input.merged_hand[i];
+    int sum = hand[Tile::White] + hand[Tile::Green] + hand[Tile::Red];
+    if (sum == 8) {
+        return Yaku::LittleThreeDragons;
+    }
+    else if (sum == 9) {
+        return Yaku::BigThreeDragons;
     }
 
-    return sum == 11;
+    return Yaku::Null;
+}
+
+/**
+ * @brief Check if Little Four Winds (小四喜) or Big Four Winds (大四喜) is established.
+ */
+YakuList ScoreCalculator::check_four_winds(const MergedHand &merged_hand)
+{
+    const auto &[hand, manzu, pinzu, souzu, honors] = merged_hand;
+    int sum =
+        hand[Tile::East] + hand[Tile::South] + hand[Tile::West] + hand[Tile::North];
+    if (sum == 11) {
+        return Yaku::LittleFourWinds;
+    }
+    else if (sum == 12) {
+        return Yaku::BigFourWinds;
+    }
+
+    return Yaku::Null;
 }
 
 /**
  * @brief Check if All Honors (字一色) is established.
  */
-bool ScoreCalculator::check_all_honors(const Input &input)
+YakuList ScoreCalculator::check_all_honors(const MergedHand &merged_hand)
 {
-    // Check if there are no tiles other than honor tiles.
-    return !(input.merged_manzu || input.merged_pinzu || input.merged_souzu);
-}
-
-/**
- * @brief Check if Nine Gates (九連宝燈) is established.
- */
-bool ScoreCalculator::check_nine_gates(const Input &input)
-{
-    if (!input.melds.empty()) {
-        return 0; // Closed hand only
-    }
-
-    // Check if number of each terminal tile is 3 or more and number of each chunchan tile is 1 or more.
-    const Hand &h = input.merged_hand;
-    if (input.win_tile <= Tile::Manzu9) {
-        return h[Tile::Manzu1] >= 3 && h[Tile::Manzu2] && h[Tile::Manzu3] &&
-               h[Tile::Manzu4] && h[Tile::Manzu5] && h[Tile::Manzu6] &&
-               h[Tile::Manzu7] && h[Tile::Manzu8] && h[Tile::Manzu9] >= 3;
-    }
-    else if (input.win_tile <= Tile::Pinzu9) {
-        return h[Tile::Pinzu1] >= 3 && h[Tile::Pinzu2] && h[Tile::Pinzu3] &&
-               h[Tile::Pinzu4] && h[Tile::Pinzu5] && h[Tile::Pinzu6] &&
-               h[Tile::Pinzu7] && h[Tile::Pinzu8] && h[Tile::Pinzu9] >= 3;
-    }
-    else if (input.win_tile <= Tile::Souzu9) {
-        return h[Tile::Souzu1] >= 3 && h[Tile::Souzu2] && h[Tile::Souzu3] &&
-               h[Tile::Souzu4] && h[Tile::Souzu5] && h[Tile::Souzu6] &&
-               h[Tile::Souzu7] && h[Tile::Souzu8] && h[Tile::Souzu9] >= 3;
-    }
-
-    return false;
+    const auto &[hand, manzu, pinzu, souzu, honors] = merged_hand;
+    return manzu || pinzu || souzu ? Yaku::Null : Yaku::AllHonors;
 }
 
 /**
  * @brief Check if Four Concealed Triplets (四暗刻) is established.
  */
-int ScoreCalculator::check_four_concealed_triplets(const Input &input)
+YakuList ScoreCalculator::check_four_concealed_triplets(const Player &player,
+                                                        const MergedHand &merged_hand,
+                                                        int win_tile, int win_flag)
 {
-    if (!(input.win_flag & WinFlag::Tsumo)) {
-        return 0; // Tsumo win only
+    if (!(win_flag & WinFlag::Tsumo)) {
+        return Yaku::Null; // Tsumo win only
     }
 
-    if (!input.is_closed()) {
-        return 0; // Closed hand only, kong is ok
+    if (!player.is_closed()) {
+        return Yaku::Null; // closed hand only
     }
+
+    const auto &[hand, manzu, pinzu, souzu, honors] = merged_hand;
 
     int num_triplets = 0;
-    bool has_head = 0;
+    int num_pairs = 0;
     bool single_wait = 0;
     for (int i = 0; i < 34; ++i) {
-        if (input.merged_hand[i] == 3) {
+        if (hand[i] == 3) {
             ++num_triplets;
         }
-        else if (input.merged_hand[i] == 2) {
-            has_head = true;
-            single_wait = i == input.win_tile;
+        else if (hand[i] == 2) {
+            ++num_pairs;
+            single_wait = i == win_tile;
         }
     }
 
-    if (num_triplets == 4 && has_head) {
-        return single_wait ? 2 : 1;
+    if (num_triplets == 4 && num_pairs == 1) {
+        return single_wait ? Yaku::SingleWaitFourConcealedTriplets
+                           : Yaku::FourConcealedTriplets;
     }
 
-    return 0;
+    return Yaku::Null;
 }
 
 /**
  * @brief Check if All Terminals (清老頭) is established.
  */
-bool ScoreCalculator::check_all_terminals(const Input &input)
+YakuList ScoreCalculator::check_all_terminals(const MergedHand &merged_hand)
 {
+    const auto &[hand, manzu, pinzu, souzu, honors] = merged_hand;
+
     // Check if there are no tiles other than terminal tiles.
     //                              | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
     const int32_t terminals_mask = 0b000'111'111'111'111'111'111'111'000;
+    if ((manzu | pinzu | souzu) & terminals_mask) {
+        return Yaku::Null;
+    }
 
-    return !((input.merged_manzu & terminals_mask) ||
-             (input.merged_pinzu & terminals_mask) ||
-             (input.merged_souzu & terminals_mask) || input.merged_honors);
+    return honors ? Yaku::AllTerminalsAndHonors : Yaku::AllTerminals;
 }
 
 /**
- * @brief Check if Four Kongs (四槓子) is established.
+ * @brief Check if Three Kongs (三槓子) or Four Kongs (四槓子) is established.
  */
-bool ScoreCalculator::check_four_kongs(const Input &input)
+YakuList ScoreCalculator::check_kongs(const Player &player)
 {
     // Check if there are 4 kongs.
     int num_kongs = 0;
-    for (const auto &block : input.melds) {
+    for (const auto &meld : player.melds) {
         // enum values of 2 or more are kongs
-        num_kongs += MeldType::ClosedKong <= block.type;
+        num_kongs += MeldType::ClosedKong <= meld.type;
     }
 
-    return num_kongs == 4;
+    if (num_kongs == 4) {
+        return Yaku::FourKongs;
+    }
+    else if (num_kongs == 3) {
+        return Yaku::ThreeKongs;
+    }
+
+    return Yaku::Null;
 }
 
 /**
- * @brief Check if Big Four Winds (大四喜) is established.
+ * @brief Check if Nine Gates (九連宝燈) or True Nine Gates (純正九蓮宝燈) is established.
  */
-bool ScoreCalculator::check_big_four_winds(const Input &input)
+YakuList ScoreCalculator::check_nine_gates(const Player &player,
+                                           const MergedHand &merged_hand, int win_tile)
 {
-    // Check if the total number of wind tiles is 12.
-    int sum = 0;
-    for (int i = Tile::East; i <= Tile::North; ++i) {
-        sum += input.hand[i];
+    if (!player.melds.empty()) {
+        return Yaku::Null; // no meld hand only
     }
 
-    return sum == 12;
-}
-
-/**
- * @brief Check if True Nine Gates (純正九蓮宝燈) is established.
- */
-bool ScoreCalculator::check_true_nine_gates(const Input &input)
-{
-    if (!input.melds.empty()) {
-        return 0; // Closed hand only
-    }
+    const auto &[hand, manzu, pinzu, souzu, honors] = merged_hand;
 
     static const std::array<int32_t, 34> tile1 = {
         1 << 24, 1 << 21, 1 << 18, 1 << 15, 1 << 12, 1 << 9, 1 << 6, 1 << 3, 1,
         1 << 24, 1 << 21, 1 << 18, 1 << 15, 1 << 12, 1 << 9, 1 << 6, 1 << 3, 1,
         1 << 24, 1 << 21, 1 << 18, 1 << 15, 1 << 12, 1 << 9, 1 << 6, 1 << 3, 1,
-        1 << 18, 1 << 15, 1 << 12, 1 << 9,  1 << 6,  1 << 3, 1,
     };
 
+    // Check if number of each terminal tile is 3 or more and number of each chunchan tile is 1 or more.
     // Exclude the winning tile and
     // check if the number of each terminal tile is 3 and the number of each chunchan tile is 1.
     //          | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
     const int mask = 0b011'001'001'001'001'001'001'001'011;
-    if (input.win_tile <= Tile::Manzu9)
-        return input.merged_manzu - tile1[input.win_tile] == mask;
-    else if (input.win_tile <= Tile::Pinzu9)
-        return input.merged_pinzu - tile1[input.win_tile] == mask;
-    else if (input.win_tile <= Tile::Souzu9)
-        return input.merged_souzu - tile1[input.win_tile] == mask;
+    bool is_valid = false, is_true = false;
+    if (win_tile <= Tile::Manzu9) {
+        is_valid = hand[Tile::Manzu1] >= 3 && hand[Tile::Manzu2] &&
+                   hand[Tile::Manzu3] && hand[Tile::Manzu4] && hand[Tile::Manzu5] &&
+                   hand[Tile::Manzu6] && hand[Tile::Manzu7] && hand[Tile::Manzu8] &&
+                   hand[Tile::Manzu9] >= 3;
+        is_true = manzu - tile1[win_tile] == mask;
+    }
+    else if (win_tile <= Tile::Pinzu9) {
+        is_valid = hand[Tile::Pinzu1] >= 3 && hand[Tile::Pinzu2] &&
+                   hand[Tile::Pinzu3] && hand[Tile::Pinzu4] && hand[Tile::Pinzu5] &&
+                   hand[Tile::Pinzu6] && hand[Tile::Pinzu7] && hand[Tile::Pinzu8] &&
+                   hand[Tile::Pinzu9] >= 3;
+        is_true = pinzu - tile1[win_tile] == mask;
+    }
+    else if (win_tile <= Tile::Souzu9) {
+        is_valid = hand[Tile::Souzu1] >= 3 && hand[Tile::Souzu2] &&
+                   hand[Tile::Souzu3] && hand[Tile::Souzu4] && hand[Tile::Souzu5] &&
+                   hand[Tile::Souzu6] && hand[Tile::Souzu7] && hand[Tile::Souzu8] &&
+                   hand[Tile::Souzu9] >= 3;
+        is_true = souzu - tile1[win_tile] == mask;
+    }
 
-    return false;
+    if (is_valid) {
+        return is_true ? Yaku::TrueNineGates : Yaku::NineGates;
+    }
+
+    return Yaku::Null;
 }
 
 /**
  * @brief Check if Thirteen-wait Thirteen Orphans (国士無双13面待ち) is established.
  */
-bool ScoreCalculator::check_thirteen_wait_thirteen_orphans(const Input &input)
+bool ScoreCalculator::check_thirteen_wait_thirteen_orphans(
+    const MergedHand &merged_hand, int win_tile)
 {
     static const std::array<int32_t, 34> tile1 = {
         1 << 24, 1 << 21, 1 << 18, 1 << 15, 1 << 12, 1 << 9, 1 << 6, 1 << 3, 1,
@@ -1491,25 +1179,153 @@ bool ScoreCalculator::check_thirteen_wait_thirteen_orphans(const Input &input)
     //                           | 1 | 2 | 3 | 4 | 5 | 6 | 7 |
     const int32_t honors_mask = 0b001'001'001'001'001'001'001;
 
-    int32_t manzu = input.merged_manzu;
-    int32_t pinzu = input.merged_pinzu;
-    int32_t sozu = input.merged_souzu;
-    int32_t zihai = input.merged_honors;
-    if (input.win_tile <= Tile::Manzu9) {
-        manzu -= tile1[input.win_tile];
+    const auto &[hand, manzu, pinzu, souzu, honors] = merged_hand;
+
+    if (win_tile <= Tile::Manzu9) {
+        return (manzu - tile1[win_tile] == terminals_mask) &&
+               (pinzu == terminals_mask) && (souzu == terminals_mask) &&
+               (honors == honors_mask);
     }
-    else if (input.win_tile <= Tile::Pinzu9) {
-        pinzu -= tile1[input.win_tile];
+    else if (win_tile <= Tile::Pinzu9) {
+        return (manzu == terminals_mask) &&
+               (pinzu - tile1[win_tile] == terminals_mask) &&
+               (souzu == terminals_mask) && (honors == honors_mask);
     }
-    else if (input.win_tile <= Tile::Souzu9) {
-        sozu -= tile1[input.win_tile];
+    else if (win_tile <= Tile::Souzu9) {
+        return (manzu == terminals_mask) && (pinzu == terminals_mask) &&
+               (souzu - tile1[win_tile] == terminals_mask) && (honors == honors_mask);
     }
     else {
-        zihai -= tile1[input.win_tile];
+        return (manzu == terminals_mask) && (pinzu == terminals_mask) &&
+               (souzu == terminals_mask) && (honors - tile1[win_tile] == honors_mask);
+    }
+}
+
+/**
+ * @brief Check if All Simples (断幺九) is established.
+ */
+YakuList ScoreCalculator::check_tanyao(const Player &player,
+                                       const MergedHand &merged_hand,
+                                       const bool rule_open_tanyao)
+{
+    const auto &[hand, manzu, pinzu, souzu, honors] = merged_hand;
+
+    if (!rule_open_tanyao && !player.is_closed()) {
+        return Yaku::Null; // If Open Tanyao is not allowed, closed hand only
     }
 
-    return (manzu == terminals_mask) && (pinzu == terminals_mask) &&
-           (sozu == terminals_mask) && (zihai == honors_mask);
+    // Check if there are no terminal or honor tiles.
+    const int32_t terminals_mask = 0b111'000'000'000'000'000'000'000'111;
+    return (manzu & terminals_mask) || (pinzu & terminals_mask) ||
+                   (souzu & terminals_mask) || honors
+               ? Yaku::Null
+               : Yaku::Tanyao;
+}
+
+/**
+ * @brief Check if Half Flush (混一色) or Full Flush (清一色) is established.
+ */
+YakuList ScoreCalculator::check_flush(const MergedHand &merged_hand)
+{
+    const auto &[hand, manzu, pinzu, souzu, honors] = merged_hand;
+
+    // Check if there is only one type of number tile.
+    bool is_flash = (manzu != 0) + (pinzu != 0) + (souzu != 0) == 1;
+
+    if (is_flash) {
+        return honors ? Yaku::HalfFlush : Yaku::FullFlush;
+    }
+
+    return Yaku::Null;
+}
+
+/**
+ * @brief Check if value tile (役牌) is established.
+ *
+ * @param[in] input input data
+ * @param[in] shanten_type type of winning hand
+ * @return list of established yaku
+ */
+YakuList ScoreCalculator::check_value_tile(const Round &round, const Player &player,
+                                           const MergedHand &merged_hand)
+{
+    const auto &[hand, manzu, pinzu, souzu, honors] = merged_hand;
+
+    YakuList yaku_list = Yaku::Null;
+
+    // doragons
+    if (hand[Tile::White] == 3) {
+        yaku_list |= Yaku::WhiteDragon;
+    }
+
+    if (hand[Tile::Green] == 3) {
+        yaku_list |= Yaku::GreenDragon;
+    }
+
+    if (hand[Tile::Red] == 3) {
+        yaku_list |= Yaku::RedDragon;
+    }
+
+    // round wind
+    if (hand[round.wind] == 3) {
+        if (round.wind == Tile::East) {
+            yaku_list |= Yaku::RoundWindEast;
+        }
+        else if (round.wind == Tile::South) {
+            yaku_list |= Yaku::RoundWindSouth;
+        }
+        else if (round.wind == Tile::West) {
+            yaku_list |= Yaku::RoundWindWest;
+        }
+        else if (round.wind == Tile::North) {
+            yaku_list |= Yaku::RoundWindNorth;
+        }
+    }
+
+    // seat wind
+    if (hand[player.wind] == 3) {
+        if (player.wind == Tile::East) {
+            yaku_list |= Yaku::SelfWindEast;
+        }
+        else if (player.wind == Tile::South) {
+            yaku_list |= Yaku::SelfWindSouth;
+        }
+        else if (player.wind == Tile::West) {
+            yaku_list |= Yaku::SelfWindWest;
+        }
+        else if (player.wind == Tile::North) {
+            yaku_list |= Yaku::SelfWindNorth;
+        }
+    }
+
+    return yaku_list;
+}
+
+ScoreCalculator::MergedHand ScoreCalculator::merge_hand(const Player &player)
+{
+    Hand hand = player.hand;
+    for (const auto &block : player.melds) {
+        int min_tile = to_no_reddora(block.tiles.front());
+        if (block.type == MeldType::Chow) {
+            ++hand[min_tile];
+            ++hand[min_tile + 1];
+            ++hand[min_tile + 2];
+        }
+        else {
+            hand[min_tile] += 3;
+        }
+    }
+
+    int32_t manzu = std::accumulate(hand.begin(), hand.begin() + 9, 0,
+                                    [](int x, int y) { return x * 8 + y; });
+    int32_t pinzu = std::accumulate(hand.begin() + 9, hand.begin() + 18, 0,
+                                    [](int x, int y) { return x * 8 + y; });
+    int32_t souzu = std::accumulate(hand.begin() + 18, hand.begin() + 27, 0,
+                                    [](int x, int y) { return x * 8 + y; });
+    int32_t honors = std::accumulate(hand.begin() + 27, hand.begin() + 34, 0,
+                                     [](int x, int y) { return x * 8 + y; });
+
+    return {hand, manzu, pinzu, souzu, honors};
 }
 
 } // namespace mahjong

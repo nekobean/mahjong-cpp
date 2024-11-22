@@ -15,10 +15,14 @@ namespace mahjong
  */
 class ScoreCalculator
 {
-    using Input = HandSeparator::Input;
+    using MergedHand = std::tuple<Hand, int32_t, int32_t, int32_t, int32_t>;
 
   public:
-    static Input create_input(const Player &player, int win_tile, int win_flag);
+    struct Config
+    {
+        int win_tile = 0;
+        int win_flag = 0;
+    };
 
     static Result calc(const Round &round, const Player &player, int win_tile,
                        int win_flag);
@@ -39,12 +43,12 @@ class ScoreCalculator
                             const int win_tile, const int win_flag, YakuList yaku_list,
                             int fu, const std::vector<Block> &blocks, int wait_type);
 
-    static YakuList check_yakuman(const Input &input, const int shanten_type);
     static YakuList check_not_pattern_yaku(const Round &round, const Player &player,
-                                           const Input &input, const int shanten_type);
+                                           const int win_tile, const int win_flag,
+                                           const int shanten_type);
     static std::tuple<YakuList, int, std::vector<Block>, int>
-    check_pattern_yaku(const Round &round, const Player &player, Input &input,
-                       int shanten_type);
+    check_pattern_yaku(const Round &round, const Player &player, const int win_tile,
+                       const int win_flag, const int shanten_type);
     static std::vector<int> calc_score(const bool is_dealer, const bool is_tsumo,
                                        const int honba, const int kyotaku,
                                        const int score_title, const int han = 0,
@@ -58,7 +62,26 @@ class ScoreCalculator
     static int round_fu(const int fu);
 
     // Functions to check yaku
-    static bool check_tanyao(const bool rule_open_tanyao, const Input &input);
+    static MergedHand merge_hand(const Player &player);
+    static YakuList check_all_green(const MergedHand &merged_hand);
+    static YakuList check_three_dragons(const MergedHand &merged_hand);
+    static YakuList check_four_winds(const MergedHand &merged_hand);
+    static YakuList check_all_honors(const MergedHand &merged_hand);
+    static YakuList check_four_concealed_triplets(const Player &player,
+                                                  const MergedHand &merged_hand,
+                                                  int win_tile, int win_flag);
+    static YakuList check_all_terminals(const MergedHand &merged_hand);
+    static YakuList check_kongs(const Player &player);
+    static YakuList check_nine_gates(const Player &player,
+                                     const MergedHand &merged_hand, int win_tile);
+    static bool check_thirteen_wait_thirteen_orphans(const MergedHand &merged_hand,
+                                                     int win_tile);
+    static YakuList check_tanyao(const Player &player, const MergedHand &merged_hand,
+                                 const bool rule_open_tanyao);
+    static YakuList check_flush(const MergedHand &merged_hand);
+    static YakuList check_value_tile(const Round &round, const Player &player,
+                                     const MergedHand &merged_hand);
+
     static bool check_pinfu(const std::vector<Block> &blocks, const int wait_type,
                             const int round_wind, const int seat_wind);
     static int check_pure_double_sequence(const std::vector<Block> &blocks);
@@ -66,24 +89,8 @@ class ScoreCalculator
     static bool check_three_concealed_triplets(const std::vector<Block> &blocks);
     static bool check_triple_triplets(const std::vector<Block> &blocks);
     static bool check_mixed_triple_sequence(const std::vector<Block> &blocks);
-    static bool check_all_terminals_and_honors(const Input &input);
     static bool check_pure_straight(const std::vector<Block> &blocks);
     static int check_outside_hand(const std::vector<Block> &blocks);
-    static bool check_little_three_dragons(const Input &input);
-    static bool check_three_kongs(const Input &input);
-    static bool check_half_flush(const Input &input);
-    static bool check_full_flush(const Input &input);
-    static bool check_all_green(const Input &input);
-    static bool check_big_three_dragons(const Input &input);
-    static bool check_little_four_winds(const Input &input);
-    static bool check_all_honors(const Input &input);
-    static bool check_nine_gates(const Input &input);
-    static int check_four_concealed_triplets(const Input &input);
-    static bool check_all_terminals(const Input &input);
-    static bool check_four_kongs(const Input &input);
-    static bool check_big_four_winds(const Input &input);
-    static bool check_true_nine_gates(const Input &input);
-    static bool check_thirteen_wait_thirteen_orphans(const Input &input);
 };
 
 } // namespace mahjong

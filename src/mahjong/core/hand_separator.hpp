@@ -12,42 +12,17 @@ namespace mahjong
 class HandSeparator
 {
   public:
-    struct Input
-    {
-        Hand merged_hand;
-        Hand hand;
-        std::vector<Meld> melds;
-        int win_tile;
-        int win_flag;
-
-        bool is_closed() const
-        {
-            for (const auto &meld : melds) {
-                if (meld.type != MeldType::ClosedKong) {
-                    return false; // contains open meld (not a closed kong)
-                }
-            }
-
-            return true;
-        }
-
-        int merged_manzu;
-        int merged_pinzu;
-        int merged_souzu;
-        int merged_honors;
-    };
-
     HandSeparator();
     static bool initialize();
     static std::vector<std::tuple<std::vector<Block>, int>>
-    separate(const Input &input);
+    separate(const Player &player, const int win_tile, const int win_flag);
 
   private:
     static bool make_table(const std::string &path,
                            std::map<int, std::vector<std::vector<Block>>> &table);
     static std::vector<Block> get_blocks(const std::string &s);
     static void
-    create_block_patterns(const Input &input,
+    create_block_patterns(const int win_tile, const bool tsumo,
                           std::vector<std::tuple<std::vector<Block>, int>> &patterns,
                           std::vector<Block> &blocks, size_t i, int d,
                           const std::vector<std::vector<Block>> &manzu,
