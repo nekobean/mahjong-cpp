@@ -452,8 +452,7 @@ ExpectedScoreCalculator::calc(const Config &config, const Round &round,
                     discard(player_copy, hand_counts, wall_counts, i);
                     const auto [shanten2, necessary_tiles] =
                         get_necessary_tiles(config, player_copy, wall);
-                    stats.emplace_back(
-                        Stat{Tile::Null, {}, {}, {}, necessary_tiles, shanten2});
+                    stats.emplace_back(Stat{i, {}, {}, {}, necessary_tiles, shanten2});
                     draw(player_copy, hand_counts, wall_counts, i);
                 }
             }
