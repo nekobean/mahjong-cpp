@@ -274,20 +274,24 @@ const auto [stats, searched] = ExpectedScoreCalculator::calc(config, round, play
 ```
 
 ```txt
+=== Player ===
+手牌: 026m1358p1345579s
+副露牌:
+自風: 1z
 === Necessary Tiles ===
-2m type: 14, sum: 48, tiles: 2m(3) 4m(4) 7m(4) 1p(3) 2p(4) 4p(4) 5p(3) 8p(3) 1s(3) 2s(4) 5s(2) 6s(4) 8s(4) 9s(3)
-6m type: 14, sum: 48, tiles: 2m(3) 4m(4) 7m(4) 1p(3) 2p(4) 4p(4) 5p(3) 8p(3) 1s(3) 2s(4) 5s(2) 6s(4) 8s(4) 9s(3)
-1p type: 14, sum: 48, tiles: 2m(3) 4m(4) 7m(4) 1p(3) 2p(4) 4p(4) 5p(3) 8p(3) 1s(3) 2s(4) 5s(2) 6s(4) 8s(4) 9s(3)
-3p type: 14, sum: 48, tiles: 2m(3) 4m(4) 7m(4) 1p(3) 2p(4) 4p(4) 5p(3) 8p(3) 1s(3) 2s(4) 5s(2) 6s(4) 8s(4) 9s(3)
-5p type: 14, sum: 48, tiles: 2m(3) 4m(4) 7m(4) 1p(3) 2p(4) 4p(4) 5p(3) 8p(3) 1s(3) 2s(4) 5s(2) 6s(4) 8s(4) 9s(3)
-8p type: 14, sum: 48, tiles: 2m(3) 4m(4) 7m(4) 1p(3) 2p(4) 4p(4) 5p(3) 8p(3) 1s(3) 2s(4) 5s(2) 6s(4) 8s(4) 9s(3)
-1s type: 14, sum: 48, tiles: 2m(3) 4m(4) 7m(4) 1p(3) 2p(4) 4p(4) 5p(3) 8p(3) 1s(3) 2s(4) 5s(2) 6s(4) 8s(4) 9s(3)
-3s type: 14, sum: 48, tiles: 2m(3) 4m(4) 7m(4) 1p(3) 2p(4) 4p(4) 5p(3) 8p(3) 1s(3) 2s(4) 5s(2) 6s(4) 8s(4) 9s(3)
-4s type: 14, sum: 48, tiles: 2m(3) 4m(4) 7m(4) 1p(3) 2p(4) 4p(4) 5p(3) 8p(3) 1s(3) 2s(4) 5s(2) 6s(4) 8s(4) 9s(3)
-5s type: 14, sum: 48, tiles: 2m(3) 4m(4) 7m(4) 1p(3) 2p(4) 4p(4) 5p(3) 8p(3) 1s(3) 2s(4) 5s(2) 6s(4) 8s(4) 9s(3)
-7s type: 14, sum: 48, tiles: 2m(3) 4m(4) 7m(4) 1p(3) 2p(4) 4p(4) 5p(3) 8p(3) 1s(3) 2s(4) 5s(2) 6s(4) 8s(4) 9s(3)
-9s type: 14, sum: 48, tiles: 2m(3) 4m(4) 7m(4) 1p(3) 2p(4) 4p(4) 5p(3) 8p(3) 1s(3) 2s(4) 5s(2) 6s(4) 8s(4) 9s(3)
-0m type: 14, sum: 48, tiles: 2m(3) 4m(4) 7m(4) 1p(3) 2p(4) 4p(4) 5p(3) 8p(3) 1s(3) 2s(4) 5s(2) 6s(4) 8s(4) 9s(3)
+2m type: 13, sum: 45, shanten: 3->3 tiles: 4m(4) 7m(4) 1p(3) 2p(4) 4p(4) 5p(3) 8p(3) 1s(3) 2s(4) 5s(2) 6s(4) 8s(4) 9s(3)
+6m type: 25, sum: 86, shanten: 3->4 tiles: 1m(4) 2m(3) 3m(4) 4m(4) 5m(3) 6m(3) 7m(4) 1p(3) 2p(4) 3p(3) 4p(4) 5p(3) 6p(4) 7p(4) 8p(3) 9p(4) 1s(3) 2s(4) 3s(3) 4s(3) 5s(2) 6s(4) 7s(3) 8s(4) 9s(3)
+1p type: 11, sum: 38, shanten: 3->3 tiles: 2m(3) 4m(4) 7m(4) 4p(4) 8p(3) 1s(3) 2s(4) 5s(2) 6s(4) 8s(4) 9s(3)
+3p type: 23, sum: 80, shanten: 3->4 tiles: 1m(4) 2m(3) 3m(4) 4m(4) 7m(4) 1p(3) 2p(4) 3p(3) 4p(4) 5p(3) 6p(4) 7p(4) 8p(3) 9p(4) 1s(3) 2s(4) 3s(3) 4s(3) 5s(2) 6s(4) 7s(3) 8s(4) 9s(3)
+5p type: 11, sum: 38, shanten: 3->3 tiles: 2m(3) 4m(4) 7m(4) 2p(4) 8p(3) 1s(3) 2s(4) 5s(2) 6s(4) 8s(4) 9s(3)
+8p type: 13, sum: 45, shanten: 3->3 tiles: 2m(3) 4m(4) 7m(4) 1p(3) 2p(4) 4p(4) 5p(3) 1s(3) 2s(4) 5s(2) 6s(4) 8s(4) 9s(3)
+1s type: 13, sum: 45, shanten: 3->3 tiles: 2m(3) 4m(4) 7m(4) 1p(3) 2p(4) 4p(4) 5p(3) 8p(3) 2s(4) 5s(2) 6s(4) 8s(4) 9s(3)
+3s type: 22, sum: 77, shanten: 3->4 tiles: 1m(4) 2m(3) 3m(4) 4m(4) 7m(4) 1p(3) 2p(4) 3p(3) 4p(4) 5p(3) 6p(4) 7p(4) 8p(3) 9p(4) 1s(3) 2s(4) 3s(3) 4s(3) 5s(2) 6s(4) 8s(4) 9s(3)
+4s type: 6, sum: 24, shanten: 3->3 tiles: 4m(4) 7m(4) 2p(4) 4p(4) 2s(4) 8s(4)
+5s type: 10, sum: 35, shanten: 3->3 tiles: 2m(3) 4m(4) 7m(4) 1p(3) 2p(4) 4p(4) 5p(3) 8p(3) 1s(3) 8s(4)
+7s type: 23, sum: 80, shanten: 3->4 tiles: 1m(4) 2m(3) 3m(4) 4m(4) 7m(4) 1p(3) 2p(4) 3p(3) 4p(4) 5p(3) 6p(4) 7p(4) 8p(3) 9p(4) 1s(3) 2s(4) 3s(3) 4s(3) 5s(2) 6s(4) 7s(3) 8s(4) 9s(3)
+9s type: 10, sum: 35, shanten: 3->3 tiles: 2m(3) 4m(4) 7m(4) 1p(3) 2p(4) 4p(4) 5p(3) 8p(3) 1s(3) 6s(4)
+0m type: 26, sum: 90, shanten: 3->4 tiles: 1m(4) 2m(3) 3m(4) 4m(4) 5m(3) 6m(3) 7m(4) 8m(4) 1p(3) 2p(4) 3p(3) 4p(4) 5p(3) 6p(4) 7p(4) 8p(3) 9p(4) 1s(3) 2s(4) 3s(3) 4s(3) 5s(2) 6s(4) 7s(3) 8s(4) 9s(3)
 
 === Tenpai Probability ===
 turn      2m      6m      1p      3p      5p      8p      1s      3s      4s      5s      7s      9s      0m

@@ -83,10 +83,10 @@ int main(int argc, char *argv[])
               << std::endl;
 
     std::cout << "=== Round ===" << std::endl;
-    std::cout << fmt::format("{:>15}{}", "hand: ", to_string(round)) << std::endl;
+    std::cout << to_string(round) << std::endl;
 
     std::cout << "=== Player ===" << std::endl;
-    std::cout << fmt::format("{:>15}{}", "hand: ", to_string(player)) << std::endl;
+    std::cout << to_string(player) << std::endl;
 
     std::cout << "=== Info ===" << std::endl;
     std::cout << fmt::format("{:>15}{}", "shanten: ", shanten) << std::endl;
@@ -100,8 +100,9 @@ int main(int argc, char *argv[])
         int sum =
             std::accumulate(stat.necessary_tiles.begin(), stat.necessary_tiles.end(), 0,
                             [](int s, const auto &x) { return s + std::get<1>(x); });
-        std::cout << fmt::format(
-            "type: {:2<}, sum: {:3<}, tiles: ", stat.necessary_tiles.size(), sum);
+        std::cout << fmt::format("type: {:2<}, sum: {:3<}, shanten: {}->{} tiles: ",
+                                 stat.necessary_tiles.size(), sum, shanten,
+                                 stat.shanten);
 
         for (const auto [tile, count] : stat.necessary_tiles) {
             std::cout << fmt::format("{}({}) ", Tile::Name.at(tile), count);
