@@ -15,8 +15,7 @@
 
 #include "mahjong/mahjong.hpp"
 
-namespace mahjong
-{
+using namespace mahjong;
 
 /**
  * @brief Convert JSON value to string.
@@ -29,6 +28,7 @@ std::string to_json_str(rapidjson::Value &value)
     std::stringstream ss;
     rapidjson::OStreamWrapper osw(ss);
     rapidjson::PrettyWriter<rapidjson::OStreamWrapper> writer(osw);
+    writer.SetMaxDecimalPlaces(4);
     value.Accept(writer);
 
     return ss.str();
@@ -44,31 +44,36 @@ std::string to_json_str(rapidjson::Document &doc)
 {
     rapidjson::StringBuffer buffer;
     rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+    writer.SetMaxDecimalPlaces(4);
     doc.Accept(writer);
 
     return buffer.GetString();
 }
 
-Request parse_json_str(const std::string &json, rapidjson::Document &doc)
+void parse_json(const std::string &json, rapidjson::Document &doc)
 {
-    rapidjson::Document req_doc;
-    Request req;
-
-    // Parse JSON string.
-    req_doc.Parse(json.c_str());
-    if (req_doc.HasParseError()) {
-        throw std::runtime_error("Failed to parse request json.");
+    if (doc.Parse(json.c_str()).HasParseError()) {
+        throw std::runtime_error(
+            "Failed to parse json string. (reason invalid json format)");
     }
+}
 
-    // Load JSON schema.
+Request parse_request_doc(const rapidjson::Document &doc)
+{
     boost::filesystem::path schema_path =
         boost::dll::program_location().parent_path() / "request_schema.json";
-    rapidjson::Document schema_doc;
 
+    // Open JSON schema.
     std::ifstream ifs(schema_path.string());
+    if (!ifs.is_open()) {
+        throw std::runtime_error(fmt::format("Failed to open json schema. (path: {})",
+                                             schema_path.string()));
+    }
+
+    // Parse JSON schema.
+    rapidjson::Document schema_doc;
     rapidjson::IStreamWrapper isw(ifs);
-    schema_doc.ParseStream(isw);
-    if (schema_doc.HasParseError()) {
+    if (schema_doc.ParseStream(isw).HasParseError()) {
         throw std::runtime_error(fmt::format("Failed to parse json schema. (path: {})",
                                              schema_path.string()));
     }
@@ -76,7 +81,7 @@ Request parse_json_str(const std::string &json, rapidjson::Document &doc)
 
     // Validate JSON schema.
     rapidjson::SchemaValidator validator(schema);
-    if (!req_doc.Accept(validator)) {
+    if (!doc.Accept(validator)) {
         rapidjson::StringBuffer sb;
         validator.GetInvalidSchemaPointer().StringifyUriFragment(sb);
         const std::string invalid_schema = sb.GetString();
@@ -91,25 +96,21 @@ Request parse_json_str(const std::string &json, rapidjson::Document &doc)
     }
 
     // Check version.
-    if (strcmp(req_doc["version"].GetString(), PROJECT_VERSION) != 0) {
+    if (strcmp(doc["version"].GetString(), PROJECT_VERSION) != 0) {
         throw std::runtime_error(
             fmt::format("Version mismatch detected. (software: {}, json: {})",
-                        PROJECT_VERSION, req_doc["version"].GetString()));
+                        PROJECT_VERSION, doc["version"].GetString()));
     }
 
     // Parse request.
-    req = create_request(req_doc);
+    Request req = create_request(doc);
+
+    // Check request.
     validate_request(req);
 
     return req;
 }
 
-/**
- * @brief Create request from JSON document.
- *
- * @param[in] doc document
- * @return Request
- */
 Request create_request(const rapidjson::Value &doc)
 {
     Request req;
@@ -160,13 +161,33 @@ Request create_request(const rapidjson::Value &doc)
     return req;
 }
 
-/**
- * @brief Create value from necessary tiles.
- *
- * @param[in] tiles list of (tile, count)
- * @param[in] doc document
- * @return value
- */
+void validate_request(const Request &req)
+{
+    Count wall = ExpectedScoreCalculator::create_wall(req.round, req.player,
+                                                      req.config.enable_reddora);
+
+    for (int i = 0; i < 37; ++i) {
+        if (wall[i] < 0) {
+            throw std::runtime_error(
+                fmt::format("More than 5 tiles are used. (tile: {}, count: {}) ",
+                            Tile::Name.at(i), 4 - wall[i]));
+        }
+    }
+
+    for (int i = 0; i < 37; ++i) {
+        if (req.wall[i] > wall[i]) {
+            throw std::runtime_error(fmt::format(
+                "More tiles than wall are used. (tile: {}, wall: {}, used: {}",
+                Tile::Name.at(i), req.wall[i], 4 - wall[i]));
+        }
+    }
+
+    int total_count = req.player.num_tiles() + req.player.num_melds() * 3;
+    if (total_count % 3 == 0 || total_count > 14) {
+        throw std::runtime_error("Invalid number of tiles.");
+    }
+}
+
 rapidjson::Value dump_necessary_tiles(const std::vector<std::tuple<int, int>> &tiles,
                                       rapidjson::Document &doc)
 {
@@ -181,13 +202,6 @@ rapidjson::Value dump_necessary_tiles(const std::vector<std::tuple<int, int>> &t
     return value;
 }
 
-/**
- * @brief Create value from expected scores.
- *
- * @param[in] tiles list of stats
- * @param[in] doc document
- * @return value
- */
 rapidjson::Value
 dump_expected_score(const std::vector<ExpectedScoreCalculator::Stat> &stats,
                     rapidjson::Document &doc)
@@ -227,33 +241,6 @@ dump_expected_score(const std::vector<ExpectedScoreCalculator::Stat> &stats,
     return value;
 }
 
-void validate_request(const Request &req)
-{
-    Count wall = ExpectedScoreCalculator::create_wall(req.round, req.player,
-                                                      req.config.enable_reddora);
-
-    for (int i = 0; i < 37; ++i) {
-        if (wall[i] < 0) {
-            throw std::runtime_error(
-                fmt::format("More than 5 tiles are used. (tile: {}, count: {}) ",
-                            Tile::Name.at(i), 4 - wall[i]));
-        }
-    }
-
-    for (int i = 0; i < 37; ++i) {
-        if (req.wall[i] > wall[i]) {
-            throw std::runtime_error(fmt::format(
-                "More tiles than wall are used. (tile: {}, wall: {}, used: {}",
-                Tile::Name.at(i), req.wall[i], 4 - wall[i]));
-        }
-    }
-
-    int total_count = req.player.num_tiles() + req.player.num_melds() * 3;
-    if (total_count % 3 == 0 || total_count > 14) {
-        throw std::runtime_error("Invalid number of tiles.");
-    }
-}
-
 rapidjson::Value dump_string(const std::string &str, rapidjson::Document &doc)
 {
     rapidjson::Value value;
@@ -263,15 +250,12 @@ rapidjson::Value dump_string(const std::string &str, rapidjson::Document &doc)
     return value;
 }
 
-/**
- * @brief Create value from expected scores.
- *
- * @param[in] tiles list of stats
- * @param[in] doc document
- * @return value
- */
-void create_response(const Request &req, rapidjson::Document &doc)
+rapidjson::Value create_response(const Request &req, rapidjson::Document &doc)
 {
+    using namespace mahjong;
+
+    rapidjson::Value res_val(rapidjson::kObjectType);
+
     // shanten number
     ///////////////////////////////
     const int shanten = std::get<1>(ShantenCalculator::calc(
@@ -289,7 +273,7 @@ void create_response(const Request &req, rapidjson::Document &doc)
     shanten_val.AddMember("seven_pairs", seven_pairs_shanten, doc.GetAllocator());
     shanten_val.AddMember("thirteen_orphans", thirteen_orphans_shanten,
                           doc.GetAllocator());
-    doc.AddMember("shanten", shanten_val, doc.GetAllocator());
+    res_val.AddMember("shanten", shanten_val, doc.GetAllocator());
 
     // expected score
     ///////////////////////////////
@@ -311,14 +295,9 @@ void create_response(const Request &req, rapidjson::Document &doc)
     const auto elapsed_ms =
         std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
 
-    doc.AddMember("stats", dump_expected_score(stats, doc), doc.GetAllocator());
-    doc.AddMember("searched", searched, doc.GetAllocator());
-    doc.AddMember("time", elapsed_ms, doc.GetAllocator());
+    res_val.AddMember("stats", dump_expected_score(stats, doc), doc.GetAllocator());
+    res_val.AddMember("searched", searched, doc.GetAllocator());
+    res_val.AddMember("time", elapsed_ms, doc.GetAllocator());
 
-    doc.AddMember("success", true, doc.GetAllocator());
-
-    spdlog::info("ip: {}, hand: {}, shanten: {}", req.ip, to_mpsz(req.player.hand),
-                 shanten);
+    return res_val;
 }
-
-} // namespace mahjong

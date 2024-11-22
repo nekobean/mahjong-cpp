@@ -1,29 +1,28 @@
 #include "server.hpp"
 
-#include "rapidjson/istreamwrapper.h"
-#include "rapidjson/schema.h"
-#include "spdlog/sinks/basic_file_sink.h"
-#include "spdlog/sinks/stdout_color_sinks.h"
-#include "spdlog/spdlog.h"
-#include <boost/dll.hpp>
-
-#include <chrono>
 #include <fstream>
 #include <iostream>
 
-#include "mahjong/core/string.hpp"
+#include <boost/asio/ip/tcp.hpp>
+#include <boost/beast/core.hpp>
+#include <boost/beast/http.hpp>
+#include <boost/beast/version.hpp>
+#include <boost/dll.hpp>
+#include <rapidjson/document.h>
+#include <rapidjson/istreamwrapper.h>
+#include <rapidjson/ostreamwrapper.h>
+#include <rapidjson/prettywriter.h>
+#include <rapidjson/schema.h>
+#include <rapidjson/stringbuffer.h>
+#include <spdlog/sinks/basic_file_sink.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
+#include <spdlog/spdlog.h>
 
 //#define OUTPUT_DETAIL_LOG
-#ifdef OUTPUT_DETAIL_LOG
-#include <filesystem>
-#endif
-
 namespace beast = boost::beast;   // from <boost/beast.hpp>
 namespace http = beast::http;     // from <boost/beast/http.hpp>
 namespace net = boost::asio;      // from <boost/asio.hpp>
 using tcp = boost::asio::ip::tcp; // from <boost/asio/ip/tcp.hpp>
-
-using namespace mahjong;
 
 Server server;
 
@@ -31,141 +30,24 @@ Server::Server() : pool_(3)
 {
 }
 
-bool Server::validate_request(const RequestData &req)
+void Server::log_request(const Request &req)
 {
-    std::vector<int> max_counts =
-        ExpectedValueCalculator::count_left_tiles(req.hand, req.dora_indicators);
+    // std::string dora_indicators = "";
+    // for (const auto &tile : req.dora_indicators)
+    //     dora_indicators +=
+    //         Tile::Name.at(tile) + (&tile != &req.dora_indicators.back() ? " " : "");
 
-    if (max_counts.size() != 37 || req.counts.size() != 37)
-        return false;
+    // std::string counts = "";
+    // for (const auto &count : req.counts)
+    //     counts += std::to_string(count);
 
-    for (size_t i = 0; i < max_counts.size(); ++i) {
-        if (max_counts[i] < 0)
-            return false;
-    }
-
-    for (size_t i = 0; i < max_counts.size(); ++i) {
-        if (req.counts[i] < 0 || req.counts[i] > max_counts[i])
-            return false;
-    }
-
-    return true;
-}
-
-void Server::log_request(const RequestData &req)
-{
-    std::string dora_indicators = "";
-    for (const auto &tile : req.dora_indicators)
-        dora_indicators +=
-            Tile::Name.at(tile) + (&tile != &req.dora_indicators.back() ? " " : "");
-
-    std::string counts = "";
-    for (const auto &count : req.counts)
-        counts += std::to_string(count);
-
-    spdlog::get("logger")->info("IP: {}, バージョン: {}, 場風牌: {}, 自風牌: {}, 巡目: "
-                                "{}, 手牌の種類: {}, 手牌: "
-                                "{}, フラグ: {}, ドラ表示牌: {}, 残り枚数: {}",
-                                req.ip, req.version, Tile::Name.at(req.bakaze),
-                                Tile::Name.at(req.zikaze), req.turn, req.syanten_type,
-                                to_mpsz(req.hand.counts), req.flag, dora_indicators,
-                                counts);
-}
-
-std::string Server::process_request(const std::string &json)
-{
-    rapidjson::Document doc(rapidjson::kObjectType);
-
-    // リクエストデータを読み込む。
-    rapidjson::Document req_doc;
-    req_doc.Parse(json.c_str());
-    if (req_doc.HasParseError()) {
-        doc.AddMember("success", false, doc.GetAllocator());
-        doc.AddMember("err_msg", "Failed to parse request data (invalid json format).",
-                      doc.GetAllocator());
-        return to_json_str(doc);
-    }
-
-    std::string schema_path =
-        (boost::dll::program_location().parent_path() / "request_schema.json").string();
-    std::ifstream ifs(schema_path);
-    rapidjson::IStreamWrapper isw(ifs);
-    rapidjson::Document sd;
-    sd.ParseStream(isw);
-    rapidjson::SchemaDocument schema(sd);
-    rapidjson::SchemaValidator validator(schema);
-
-    std::string req_ip;
-    if (req_doc.HasMember("ip"))
-        req_ip = req_doc["ip"].GetString();
-
-    std::string req_version;
-    if (req_doc.HasMember("version"))
-        req_version = req_doc["version"].GetString();
-
-    if (req_version != PROJECT_VERSION) {
-        spdlog::get("logger")->error("ip: {}, reason: バージョンが不一致 {} vs {}",
-                                     req_ip, req_version, PROJECT_VERSION);
-        doc.AddMember("success", false, doc.GetAllocator());
-        doc.AddMember("request", req_doc.GetObject(), doc.GetAllocator());
-        doc.AddMember("err_msg",
-                      "アプリのバージョンが古いです。"
-                      "キャッシュの影響だと思われるので、ブラウザでページを再読み込みし"
-                      "てください。",
-                      doc.GetAllocator());
-        return to_json_str(doc);
-    }
-
-    // JSON データをチェックする。
-    if (!req_doc.Accept(validator)) {
-        // rapidjson::StringBuffer sb;
-        // validator.GetInvalidSchemaPointer().StringifyUriFragment(sb);
-        // printf("Invalid schema: %s\n", sb.GetString());
-        // printf("Invalid keyword: %s\n", validator.GetInvalidSchemaKeyword());
-        spdlog::get("logger")->error(
-            "ip: {}, reason: JSON スキーマのバリデーション失敗", req_ip);
-        doc.AddMember("success", false, doc.GetAllocator());
-        doc.AddMember("request", req_doc.GetObject(), doc.GetAllocator());
-        doc.AddMember("err_msg",
-                      "リクエストデータの形式が不正です。"
-                      "アプリケーション側の不具合の可能性があります。",
-                      doc.GetAllocator());
-        return to_json_str(doc);
-    }
-
-    // JSON を解析する。
-    RequestData req = parse_request(req_doc);
-
-    // リクエストデータをチェックする。
-    if (!validate_request(req)) {
-        spdlog::get("logger")->error("ip: {}, reason: 牌の枚数不一致", req_ip);
-        doc.AddMember("success", false, doc.GetAllocator());
-        doc.AddMember("request", req_doc.GetObject(), doc.GetAllocator());
-        doc.AddMember("err_msg",
-                      "リクエストデータの形式が不正です。(牌の枚数不一致)"
-                      "アプリケーション側の不具合の可能性があります。",
-                      doc.GetAllocator());
-        return to_json_str(doc);
-    }
-
-    log_request(req);
-
-    // 向聴数を計算する。
-    auto [syanten_type, syanten] = ShantenCalculator::calc(req.hand, req.syanten_type);
-    if (syanten == -1) {
-        doc.AddMember("success", false, doc.GetAllocator());
-        doc.AddMember("request", req_doc.GetObject(), doc.GetAllocator());
-        doc.AddMember("err_msg", "和了形です。", doc.GetAllocator());
-        return to_json_str(doc);
-    }
-
-    // 計算する。
-    rapidjson::Value res_doc = create_response(req, doc);
-
-    // 出力用 JSON を作成する。
-    doc.AddMember("success", true, doc.GetAllocator());
-    doc.AddMember("request", req_doc.GetObject(), doc.GetAllocator());
-    doc.AddMember("response", res_doc, doc.GetAllocator());
+    // spdlog::get("logger")->info("IP: {}, バージョン: {}, 場風牌: {}, 自風牌: {}, "
+    //                             "巡目: {}, 手牌の種類: {}, 手牌: {}, "
+    //                             "フラグ: {}, ドラ表示牌: {}, 残り枚数: {}",
+    //                             req.ip, req.version, Tile::Name.at(req.bakaze),
+    //                             Tile::Name.at(req.zikaze), req.turn, req.syanten_type,
+    //                             to_mpsz(req.hand.counts), req.flag, dora_indicators,
+    //                             counts);
 
 #ifdef OUTPUT_DETAIL_LOG
     {
@@ -199,8 +81,43 @@ std::string Server::process_request(const std::string &json)
         ofs.close();
     }
 #endif
+}
 
-    return to_json_str(doc);
+std::string Server::process_request(const std::string &json)
+{
+    rapidjson::Document req_doc;
+    rapidjson::Document res_doc;
+    res_doc.SetObject();
+
+    // Parse request JSON.
+    try {
+        parse_json(json, req_doc);
+    }
+    catch (const std::exception &e) {
+        rapidjson::Document res_doc;
+        res_doc.AddMember("success", false, res_doc.GetAllocator());
+        res_doc.AddMember("request", req_doc, res_doc.GetAllocator());
+        res_doc.AddMember("err_msg", dump_string(e.what(), res_doc),
+                          res_doc.GetAllocator());
+    }
+
+    // Create request object.
+    try {
+        Request req = parse_request_doc(req_doc);
+        rapidjson::Value res_val = create_response(req, res_doc);
+        res_doc.AddMember("success", true, res_doc.GetAllocator());
+        res_doc.AddMember("request", req_doc, res_doc.GetAllocator());
+        res_doc.AddMember("response", res_val, res_doc.GetAllocator());
+    }
+    catch (const std::exception &e) {
+        rapidjson::Document res_doc;
+        res_doc.AddMember("success", false, res_doc.GetAllocator());
+        res_doc.AddMember("request", req_doc, res_doc.GetAllocator());
+        res_doc.AddMember("err_msg", dump_string(e.what(), res_doc),
+                          res_doc.GetAllocator());
+    }
+
+    return to_json_str(res_doc);
 }
 
 // This function produces an HTTP response for the given

@@ -6,12 +6,12 @@
 #include <catch2/catch.hpp>
 #include <spdlog/spdlog.h>
 
-#include "mahjong/json_parser.hpp"
 #include "mahjong/mahjong.hpp"
+#include "server/json_parser.hpp"
 
 using namespace mahjong;
 
-TEST_CASE("create_request()")
+TEST_CASE("parse_json()")
 {
     const std::string json = R"(
         {
@@ -33,30 +33,191 @@ TEST_CASE("create_request()")
     )";
 
     rapidjson::Document doc;
-    doc.Parse(json.c_str());
-    if (doc.HasParseError()) {
-        spdlog::error("Error parsing JSON");
-        return;
+    parse_json(json, doc);
+}
+
+TEST_CASE("parse_request_doc()")
+{
+    SECTION("success (json to Request)")
+    {
+        const std::string json = R"(
+        {
+            "enable_reddora": true,
+            "enable_uradora": true,
+            "enable_shanten_down": true,
+            "enable_tegawari": true,
+            "round_wind": 27,
+            "dora_indicators": [27],
+            "hand": [11, 12, 20, 20, 23, 23, 24, 30],
+            "melds": [{"type": 1, "tiles": [1, 1, 1]}, {"type": 2, "tiles": [4, 5, 6]}],
+            "seat_wind": 27,
+            "wall": [4, 1, 4, 4, 3, 3, 3, 4, 4, 4,
+                       4, 3, 3, 4, 4, 4, 4, 4, 4, 4,
+                       2, 4, 4, 2, 3, 4, 4, 3, 4, 4,
+                       3, 4, 4, 4, 1, 1, 1],
+            "version": "0.9.1"
+            }
+        )";
+
+        rapidjson::Document doc;
+        parse_json(json, doc);
+        Request req = parse_request_doc(doc);
+
+        REQUIRE(req.config.enable_reddora == true);
+        REQUIRE(req.config.enable_uradora == true);
+        REQUIRE(req.config.enable_shanten_down == true);
+        REQUIRE(req.config.enable_tegawari == true);
+        REQUIRE(req.round.wind == 27);
+        REQUIRE(req.round.dora_indicators.size() == 1);
+        REQUIRE(req.round.dora_indicators[0] == 27);
+        REQUIRE(req.player.hand == from_array({11, 12, 20, 20, 23, 23, 24, 30}));
+        REQUIRE(req.player.melds.size() == 2);
+        REQUIRE(req.player.melds[0].type == 1);
+        REQUIRE(req.player.melds[0].tiles == std::vector<int>({1, 1, 1}));
+        REQUIRE(req.player.melds[1].type == 2);
+        REQUIRE(req.player.melds[1].tiles == std::vector<int>({4, 5, 6}));
+        REQUIRE(req.player.wind == 27);
+        REQUIRE(req.wall == Hand{4, 1, 4, 4, 3, 3, 3, 4, 4, 4, 4, 3, 3,
+                                 4, 4, 4, 4, 4, 4, 4, 2, 4, 4, 2, 3, 4,
+                                 4, 3, 4, 4, 3, 4, 4, 4, 1, 1, 1});
+        REQUIRE(req.version == "0.9.1");
     }
 
-    Request req = create_request(doc);
-    REQUIRE(req.config.enable_reddora == true);
-    REQUIRE(req.config.enable_uradora == true);
-    REQUIRE(req.config.enable_shanten_down == true);
-    REQUIRE(req.config.enable_tegawari == true);
-    REQUIRE(req.round.wind == 27);
-    REQUIRE(req.round.dora_indicators.size() == 1);
-    REQUIRE(req.round.dora_indicators[0] == 27);
-    REQUIRE(req.player.hand == from_array({11, 12, 20, 20, 23, 23, 24, 30}));
-    REQUIRE(req.player.melds.size() == 2);
-    REQUIRE(req.player.melds[0].type == 1);
-    REQUIRE(req.player.melds[0].tiles == std::vector<int>({1, 1, 1}));
-    REQUIRE(req.player.melds[1].type == 2);
-    REQUIRE(req.player.melds[1].tiles == std::vector<int>({4, 5, 6}));
-    REQUIRE(req.player.wind == 27);
-    REQUIRE(req.wall == Hand{4, 1, 4, 4, 3, 3, 3, 4, 4, 4, 4, 3, 3, 4, 4, 4, 4, 4, 4,
-                             4, 2, 4, 4, 2, 3, 4, 4, 3, 4, 4, 3, 4, 4, 4, 1, 1, 1});
-    REQUIRE(req.version == "0.9.1");
+    SECTION("error (version mismatch)")
+    {
+        const std::string json = R"(
+            {
+                "enable_reddora": true,
+                "enable_uradora": true,
+                "enable_shanten_down": true,
+                "enable_tegawari": true,
+                "round_wind": 27,
+                "dora_indicators": [27],
+                "hand": [1, 1, 20, 20, 23, 23, 24, 30],
+                "melds": [{"type": 1, "tiles": [1, 1, 1]}, {"type": 2, "tiles": [4, 5, 6]}],
+                "seat_wind": 27,
+                "version": "0.9.0"
+            }
+        )";
+
+        rapidjson::Document doc;
+        parse_json(json, doc);
+        REQUIRE_THROWS(parse_request_doc(doc));
+    }
+
+    SECTION("error (Failed to validate json schema)")
+    {
+        // seat_wind is missing
+        const std::string json = R"(
+            {
+                "enable_reddora": true,
+                "enable_uradora": true,
+                "enable_shanten_down": true,
+                "enable_tegawari": true,
+                "round_wind": 27,
+                "dora_indicators": [27],
+                "hand": [1, 1, 20, 20, 23, 23, 24, 30],
+                "melds": [{"type": 1, "tiles": [1, 1, 1]}, {"type": 2, "tiles": [4, 5, 6]}],
+                "version": "0.9.1"
+            }
+        )";
+
+        rapidjson::Document doc;
+        parse_json(json, doc);
+        REQUIRE_THROWS(parse_request_doc(doc));
+    }
+
+    SECTION("error (More than 5 tiles are used)")
+    {
+        const std::string json = R"(
+            {
+                "enable_reddora": true,
+                "enable_uradora": true,
+                "enable_shanten_down": true,
+                "enable_tegawari": true,
+                "round_wind": 27,
+                "dora_indicators": [27],
+                "hand": [1, 1, 20, 20, 23, 23, 24, 30],
+                "melds": [{"type": 1, "tiles": [1, 1, 1]}, {"type": 2, "tiles": [4, 5, 6]}],
+                "seat_wind": 27,
+                "version": "0.9.1"
+            }
+        )";
+
+        rapidjson::Document doc;
+        parse_json(json, doc);
+        REQUIRE_THROWS(parse_request_doc(doc));
+    }
+
+    SECTION("error (More tiles than wall are used)")
+    {
+        const std::string json = R"(
+            {
+                "enable_reddora": true,
+                "enable_uradora": true,
+                "enable_shanten_down": true,
+                "enable_tegawari": true,
+                "round_wind": 27,
+                "dora_indicators": [27],
+                "hand": [11, 12, 20, 20, 23, 23, 24, 30],
+                "melds": [{"type": 1, "tiles": [1, 1, 1]}, {"type": 2, "tiles": [4, 5, 6]}],
+                "seat_wind": 27,
+                "wall": [4, 1, 4, 4, 4, 3, 3, 4, 4, 4,
+                        4, 3, 3, 4, 4, 4, 4, 4, 4, 4,
+                        2, 4, 4, 2, 3, 4, 4, 3, 4, 4,
+                        3, 4, 4, 4, 1, 1, 1],
+                "version": "0.9.1"
+            }
+        )";
+
+        rapidjson::Document doc;
+        parse_json(json, doc);
+        REQUIRE_THROWS(parse_request_doc(doc));
+    }
+
+    SECTION("error (Invalid number of tiles)")
+    {
+        const std::string json = R"(
+            {
+                "enable_reddora": true,
+                "enable_uradora": true,
+                "enable_shanten_down": true,
+                "enable_tegawari": true,
+                "round_wind": 27,
+                "dora_indicators": [27],
+                "hand": [11, 12, 20],
+                "melds": [{"type": 1, "tiles": [1, 1, 1]}, {"type": 2, "tiles": [4, 5, 6]}],
+                "seat_wind": 27,
+                "version": "0.9.1"
+            }
+        )";
+
+        rapidjson::Document doc;
+        parse_json(json, doc);
+        REQUIRE_THROWS(parse_request_doc(doc));
+    }
+
+    SECTION("success (wall not specified)")
+    {
+        const std::string json = R"(
+            {
+                "enable_reddora": true,
+                "enable_uradora": true,
+                "enable_shanten_down": true,
+                "enable_tegawari": true,
+                "round_wind": 27,
+                "dora_indicators": [27],
+                "hand": [11, 12, 20, 20, 23, 23, 24, 30],
+                "melds": [{"type": 1, "tiles": [1, 1, 1]}, {"type": 2, "tiles": [4, 5, 6]}],
+                "seat_wind": 27,
+                "version": "0.9.1"
+            }
+        )";
+
+        rapidjson::Document doc;
+        parse_json(json, doc);
+        REQUIRE_NOTHROW(parse_request_doc(doc));
+    }
 }
 
 TEST_CASE("dump_necessary_tiles()")
@@ -91,10 +252,6 @@ TEST_CASE("dump_expected_score()")
     player.hand = from_mpsz("056m3458p1345579s");
     player.melds = {};
     player.wind = Tile::East;
-    if (player.num_tiles() + player.num_melds() * 3 != 14) {
-        spdlog::error("Number of tiles should be 14.");
-        return;
-    }
 
     // Round information
     //////////////////////////////////////////
@@ -130,201 +287,132 @@ TEST_CASE("dump_expected_score()")
 
     rapidjson::Document doc;
     rapidjson::Value value = dump_expected_score(stats, doc);
-
     std::cout << to_json_str(value) << std::endl;
 }
 
-void create_string(const std::string &json)
+TEST_CASE("create_response() (number of tiles = 14, shanten > 3)")
+{
+    const std::string json = R"(
+        {
+            "enable_reddora": true,
+            "enable_uradora": true,
+            "enable_shanten_down": true,
+            "enable_tegawari": true,
+            "round_wind": 27,
+            "dora_indicators": [27],
+            "hand": [0, 1, 4, 7, 9, 12, 15, 17, 25, 28, 31, 32, 33, 34],
+            "melds": [],
+            "seat_wind": 27,
+            "version": "0.9.1"
+        }
+    )";
+
+    rapidjson::Document doc;
+    parse_json(json, doc);
+    Request req = parse_request_doc(doc);
+    rapidjson::Value res_val = create_response(req, doc);
+    std::cout << to_json_str(res_val) << std::endl;
+}
+
+TEST_CASE("create_response() (number of tiles = 13, shanten > 3)")
+{
+    const std::string json = R"(
+        {
+            "enable_reddora": true,
+            "enable_uradora": true,
+            "enable_shanten_down": true,
+            "enable_tegawari": true,
+            "round_wind": 27,
+            "dora_indicators": [27],
+            "hand": [0, 1, 7, 9, 12, 15, 17, 25, 28, 31, 32, 33, 34],
+            "melds": [],
+            "seat_wind": 27,
+            "version": "0.9.1"
+        }
+    )";
+
+    rapidjson::Document doc;
+    parse_json(json, doc);
+    Request req = parse_request_doc(doc);
+    rapidjson::Value res_val = create_response(req, doc);
+    std::cout << to_json_str(res_val) << std::endl;
+}
+
+TEST_CASE("create_response() (number of tiles = 13, shanten <= 3)")
+{
+    const std::string json = R"(
+        {
+            "enable_reddora": true,
+            "enable_uradora": true,
+            "enable_shanten_down": true,
+            "enable_tegawari": true,
+            "round_wind": 27,
+            "dora_indicators": [27],
+            "hand": [0, 0, 0, 1, 1, 1, 2, 3, 5, 7, 8, 9, 9],
+            "melds": [],
+            "seat_wind": 27,
+            "version": "0.9.1"
+        }
+    )";
+
+    rapidjson::Document doc;
+    parse_json(json, doc);
+    Request req = parse_request_doc(doc);
+    rapidjson::Value res_val = create_response(req, doc);
+    std::cout << to_json_str(res_val) << std::endl;
+}
+
+std::string process_request(const std::string &json)
 {
     rapidjson::Document req_doc;
     rapidjson::Document res_doc;
     res_doc.SetObject();
 
-    Request req;
+    // Parse request JSON.
     try {
-        req = parse_json_str(json, req_doc);
-        create_response(req, res_doc);
+        parse_json(json, req_doc);
     }
     catch (const std::exception &e) {
+        rapidjson::Document res_doc;
         res_doc.AddMember("success", false, res_doc.GetAllocator());
         res_doc.AddMember("err_msg", dump_string(e.what(), res_doc),
                           res_doc.GetAllocator());
     }
 
-    std::cout << to_json_str(res_doc) << std::endl;
+    // Create request object.
+    try {
+        Request req = create_request(req_doc);
+        rapidjson::Value res_val = create_response(req, res_doc);
+        res_doc.AddMember("success", true, res_doc.GetAllocator());
+        res_doc.AddMember("request", req_doc.GetObject(), res_doc.GetAllocator());
+        res_doc.AddMember("response", res_val, res_doc.GetAllocator());
+    }
+    catch (const std::exception &e) {
+        rapidjson::Document res_doc;
+        res_doc.AddMember("success", false, res_doc.GetAllocator());
+        res_doc.AddMember("err_msg", dump_string(e.what(), res_doc),
+                          res_doc.GetAllocator());
+    }
+
+    return to_json_str(res_doc);
 }
 
-TEST_CASE("create_response()")
+TEST_CASE("process_request()")
 {
-    SECTION("error (Failed to parse json schema)")
-    {
-        const std::string json = R"(
-            {
-                "enable_reddora": true,
-                "enable_uradora": true,
-                "enable_shanten_down": true,
-                "enable_tegawari": true,
-                "round_wind": 27,
-                "dora_indicators": [27],
-                "hand": [1, 1, 20, 20, 23, 23, 24, 30],
-                "melds": [{"type": 1, "tiles": [1, 1, 1]}, {"type": 2, "tiles": [4, 5, 6]}],
-                "seat_wind": 27,
-                "version": "0.9.1,
-            }
-        )";
-        create_string(json);
-    }
+    const std::string json = R"(
+        {
+            "enable_reddora": true,
+            "enable_uradora": true,
+            "enable_shanten_down": true,
+            "enable_tegawari": true,
+            "round_wind": 27,
+            "dora_indicators": [27],
+            "hand": [0, 0, 0, 1, 1, 1, 2, 3, 5, 7, 8, 9, 9, 11],
+            "melds": [],
+            "seat_wind": 27,
+            "version": "0.9.1"
+        }
+    )";
 
-    SECTION("error (Failed to validate json schema)")
-    {
-        // seat_wind is missing
-        const std::string json = R"(
-            {
-                "enable_reddora": true,
-                "enable_uradora": true,
-                "enable_shanten_down": true,
-                "enable_tegawari": true,
-                "round_wind": 27,
-                "dora_indicators": [27],
-                "hand": [1, 1, 20, 20, 23, 23, 24, 30],
-                "melds": [{"type": 1, "tiles": [1, 1, 1]}, {"type": 2, "tiles": [4, 5, 6]}],
-                "wall": [4, 1, 4, 4, 3, 3, 3, 4, 4, 4,
-                        4, 3, 3, 4, 4, 4, 4, 4, 4, 4,
-                        2, 4, 4, 2, 3, 4, 4, 3, 4, 4,
-                        3, 4, 4, 4, 1, 1, 1],
-                "version": "0.9.1"
-            }
-        )";
-        create_string(json);
-    }
-
-    SECTION("error (Version mismatch detected)")
-    {
-        const std::string json = R"(
-            {
-                "enable_reddora": true,
-                "enable_uradora": true,
-                "enable_shanten_down": true,
-                "enable_tegawari": true,
-                "round_wind": 27,
-                "dora_indicators": [27],
-                "hand": [1, 1, 20, 20, 23, 23, 24, 30],
-                "melds": [{"type": 1, "tiles": [1, 1, 1]}, {"type": 2, "tiles": [4, 5, 6]}],
-                "seat_wind": 27,
-                "wall": [4, 1, 4, 4, 3, 3, 3, 4, 4, 4,
-                        4, 3, 3, 4, 4, 4, 4, 4, 4, 4,
-                        2, 4, 4, 2, 3, 4, 4, 3, 4, 4,
-                        3, 4, 4, 4, 1, 1, 1],
-                "version": "0.9.0"
-            }
-        )";
-        create_string(json);
-    }
-
-    SECTION("error (More than 5 tiles are used)")
-    {
-        const std::string json = R"(
-            {
-                "enable_reddora": true,
-                "enable_uradora": true,
-                "enable_shanten_down": true,
-                "enable_tegawari": true,
-                "round_wind": 27,
-                "dora_indicators": [27],
-                "hand": [1, 1, 20, 20, 23, 23, 24, 30],
-                "melds": [{"type": 1, "tiles": [1, 1, 1]}, {"type": 2, "tiles": [4, 5, 6]}],
-                "seat_wind": 27,
-                "wall": [4, 1, 4, 4, 3, 3, 3, 4, 4, 4,
-                        4, 3, 3, 4, 4, 4, 4, 4, 4, 4,
-                        2, 4, 4, 2, 3, 4, 4, 3, 4, 4,
-                        3, 4, 4, 4, 1, 1, 1],
-                "version": "0.9.1"
-            }
-        )";
-        create_string(json);
-    }
-
-    SECTION("error (More tiles than wall are used)")
-    {
-        const std::string json = R"(
-            {
-                "enable_reddora": true,
-                "enable_uradora": true,
-                "enable_shanten_down": true,
-                "enable_tegawari": true,
-                "round_wind": 27,
-                "dora_indicators": [27],
-                "hand": [11, 12, 20, 20, 23, 23, 24, 30],
-                "melds": [{"type": 1, "tiles": [1, 1, 1]}, {"type": 2, "tiles": [4, 5, 6]}],
-                "seat_wind": 27,
-                "wall": [4, 1, 4, 4, 4, 3, 3, 4, 4, 4,
-                        4, 3, 3, 4, 4, 4, 4, 4, 4, 4,
-                        2, 4, 4, 2, 3, 4, 4, 3, 4, 4,
-                        3, 4, 4, 4, 1, 1, 1],
-                "version": "0.9.1"
-            }
-        )";
-        create_string(json);
-    }
-
-    SECTION("success (wall not specified)")
-    {
-        const std::string json = R"(
-            {
-                "enable_reddora": true,
-                "enable_uradora": true,
-                "enable_shanten_down": true,
-                "enable_tegawari": true,
-                "round_wind": 27,
-                "dora_indicators": [27],
-                "hand": [11, 12, 20, 20, 23, 23, 24, 30],
-                "melds": [{"type": 1, "tiles": [1, 1, 1]}, {"type": 2, "tiles": [4, 5, 6]}],
-                "seat_wind": 27,
-                "version": "0.9.1"
-            }
-        )";
-        create_string(json);
-    }
-
-    SECTION("success")
-    {
-        const std::string json = R"(
-            {
-                "enable_reddora": true,
-                "enable_uradora": true,
-                "enable_shanten_down": true,
-                "enable_tegawari": true,
-                "round_wind": 27,
-                "dora_indicators": [27],
-                "hand": [11, 12, 20, 20, 23, 23, 24, 30],
-                "melds": [{"type": 1, "tiles": [1, 1, 1]}, {"type": 2, "tiles": [4, 5, 6]}],
-                "seat_wind": 27,
-                "wall": [4, 1, 4, 4, 3, 3, 3, 4, 4, 4,
-                        4, 3, 3, 4, 4, 4, 4, 4, 4, 4,
-                        2, 4, 4, 2, 3, 4, 4, 3, 4, 4,
-                        3, 4, 4, 4, 1, 1, 1],
-                "version": "0.9.1"
-            }
-        )";
-        create_string(json);
-    }
-
-    SECTION("4 shanten")
-    {
-        const std::string json = R"(
-            {
-                "enable_reddora": true,
-                "enable_uradora": true,
-                "enable_shanten_down": true,
-                "enable_tegawari": true,
-                "round_wind": 27,
-                "dora_indicators": [27],
-                "hand": [0, 9, 11, 15, 18, 19, 23, 25, 27, 29, 31, 31, 32, 33],
-                "melds": [],
-                "seat_wind": 27,
-                "version": "0.9.1"
-            }
-        )";
-        create_string(json);
-    }
+    std::cout << process_request(json) << std::endl;
 }

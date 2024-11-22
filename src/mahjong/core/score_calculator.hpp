@@ -18,12 +18,6 @@ class ScoreCalculator
     using MergedHand = std::tuple<Hand, int32_t, int32_t, int32_t, int32_t>;
 
   public:
-    struct Config
-    {
-        int win_tile = 0;
-        int win_flag = 0;
-    };
-
     static Result calc(const Round &round, const Player &player, int win_tile,
                        int win_flag);
     static Result calc_fast(const Round &round, const Player &player, int win_tile,
@@ -42,7 +36,6 @@ class ScoreCalculator
     static Result aggregate(const Round &round, const Player &player,
                             const int win_tile, const int win_flag, YakuList yaku_list,
                             int fu, const std::vector<Block> &blocks, int wait_type);
-
     static YakuList check_not_pattern_yaku(const Round &round, const Player &player,
                                            const int win_tile, const int win_flag,
                                            const int shanten_type);
@@ -81,7 +74,6 @@ class ScoreCalculator
     static YakuList check_flush(const MergedHand &merged_hand);
     static YakuList check_value_tile(const Round &round, const Player &player,
                                      const MergedHand &merged_hand);
-
     static bool check_pinfu(const std::vector<Block> &blocks, const int wait_type,
                             const int round_wind, const int seat_wind);
     static int check_pure_double_sequence(const std::vector<Block> &blocks);
