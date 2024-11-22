@@ -227,14 +227,17 @@ int main(int argc, char *argv[])
     using namespace mahjong;
 
     // Set round infomation.
+    /////////////////////////////////////////////////////
     Round round;
     round.rules = RuleFlag::RedDora | RuleFlag::OpenTanyao;
     round.wind = Tile::East;
     round.kyoku = 1;
     round.honba = 0;
     round.kyotaku = 1;
-    round.dora_tiles = {Tile::North};
-    round.uradora_tiles = {Tile::Pinzu9};
+    round.dora_indicators = {Tile::North};
+    round.uradora_indicators = {Tile::Pinzu9};
+    // If specifying dora, use set_dora().
+    // round.set_dora({Tile::East}), round.set_uradora({Tile::Pinzu1});
 
     // Set player information
     Hand hand = from_mpsz("222567345p333s22z");
