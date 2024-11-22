@@ -157,8 +157,14 @@ int main(int argc, char *argv[])
     // Calculate minimum shanten number of regular hand, Seven Pairs and Thirteen Orphans.
     auto [shanten_type, shanten] =
         ShantenCalculator::calc(hand, num_melds, ShantenFlag::All);
-    std::cout << "shanten type: " << ShantenFlag::Name.at(shanten_type)
-              << std::endl;
+    std::cout << "shanten type: ";
+    for (int type : {ShantenFlag::Regular, ShantenFlag::SevenPairs,
+                        ShantenFlag::ThirteenOrphans}) {
+        if (shanten_type & type) {
+            std::cout << ShantenFlag::Name.at(type) << " ";
+        }
+    }
+    std::cout << std::endl;
     std::cout << "shanten: " << shanten << std::endl;
 }
 ```
