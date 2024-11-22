@@ -45,17 +45,44 @@ Count ExpectedScoreCalculator::create_wall(const Round &round, const Player &pla
         }
     }
 
-    for (int i = 0; i < 34; ++i) {
-        assert(wall[i] >= 0 && wall[i] <= 4);
-    }
-    for (int i = 34; i < 37; ++i) {
-        if (enable_reddora) {
-            assert(wall[i] >= 0 && wall[i] <= 1);
-        }
-        else {
+    // assert
+    if (!enable_reddora) {
+        for (int i = 34; i < 37; ++i) {
             assert(wall[i] == 0);
         }
     }
+    else {
+        if (wall[Tile::RedManzu5]) {
+            assert(wall[Tile::Manzu5] >= 1);
+        }
+        if (wall[Tile::RedPinzu5]) {
+            assert(wall[Tile::Pinzu5] >= 1);
+        }
+        if (wall[Tile::RedSouzu5]) {
+            assert(wall[Tile::Souzu5] >= 1);
+        }
+        if (wall[Tile::Manzu5] == 4) {
+            assert(wall[Tile::RedManzu5] == 1);
+        }
+        if (wall[Tile::Pinzu5] == 4) {
+            assert(wall[Tile::RedPinzu5] == 1);
+        }
+        if (wall[Tile::Souzu5] == 4) {
+            assert(wall[Tile::RedSouzu5] == 1);
+        }
+    }
+
+    // for (int i = 0; i < 34; ++i) {
+    //     assert(wall[i] >= 0 && wall[i] <= 4);
+    // }
+    // for (int i = 34; i < 37; ++i) {
+    //     if (enable_reddora) {
+    //         assert(wall[i] >= 0 && wall[i] <= 1);
+    //     }
+    //     else {
+    //         assert(wall[i] == 0);
+    //     }
+    // }
 
     return wall;
 }

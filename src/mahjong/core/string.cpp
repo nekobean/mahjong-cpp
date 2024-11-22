@@ -2,6 +2,8 @@
 
 #include <spdlog/spdlog.h>
 
+#include <mahjong/core/utils.hpp>
+
 namespace mahjong
 {
 
@@ -122,6 +124,8 @@ Hand from_mpsz(const std::string &tiles)
             }
         }
     }
+
+    check_hand(hand);
 
     return hand;
 }
@@ -256,51 +260,5 @@ std::string to_string(const Result &result)
 
     return s;
 }
-
-// /**
-//  * @brief 設定を文字列にして返す。
-//  *
-//  * @return std::string 文字列
-//  */
-//  std::string print_round_info(const ScoreCalculator &score)
-// {
-//     // std::string s;
-
-//     if (han > 0) {
-//         if (!blocks.empty()) {
-//             s += "面子構成:\n";
-//             for (const auto &block : blocks)
-//                 s += fmt::format("  {}\n", block.to_string());
-//         }
-//         s += fmt::format("待ち: {}\n", WaitType::Name.at(wait_type));
-
-//         // 役
-//         s += "役:\n";
-//         for (auto &[yaku, n] : yaku_list)
-//             s += fmt::format(" {} {}翻\n", Yaku::Name[yaku], n);
-
-//         // 飜、符
-//         s += fmt::format("{}符{}翻{}\n", fu, han,
-//                          score_title != ScoreTitle::Null
-//                              ? " " + ScoreTitle::Name.at(score_title)
-//                              : "");
-//     }
-//     else {
-//         // 流し満貫、役満
-//         s += "役:\n";
-//         for (auto &[yaku, n] : yaku_list)
-//             s += fmt::format(" {}\n", Yaku::Name[yaku]);
-//         s += ScoreTitle::Name[score_title] + "\n";
-//     }
-
-//     if (score.size() == 3)
-//         s += fmt::format(
-//             "和了者の獲得点数: {}点, 親の支払い点数: {}, 子の支払い点数: {}\n",
-//             score[0], score[1], score[2]);
-//     else
-//         s += fmt::format("和了者の獲得点数: {}点, 放銃者の支払い点数: {}\n", score[0],
-//                          score[1]);
-
-//     return s;
 
 } // namespace mahjong

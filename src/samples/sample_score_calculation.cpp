@@ -21,10 +21,14 @@ int main(int argc, char *argv[])
     // ダブロン、トリロン有りのルールの場合、積み棒、供託棒を受け取らない和了者の
     // 計算時には0に設定してください。
     round.kyotaku = 1;
-    // Set dora tiles. (表ドラ、表示牌ではない)
-    round.dora_tiles = {Tile::North};
-    // Set uradora tiles. (裏ドラ、表示牌ではない)
-    round.uradora_tiles = {Tile::Pinzu9};
+    // Set dora indicators. (表ドラ表示牌)
+    round.dora_indicators = {Tile::North};
+    // If specifying dora, use set_dora().
+    // round.set_dora(Tile::East);
+    // Set uradora indicators. (裏ドラ表示牌)
+    round.uradora_indicators = {Tile::Pinzu9};
+    // If specifying dora, use set_dora().
+    // round.set_uradora({Tile::Pinzu1});
 
     // Set player information.
     /////////////////////////////////////////////////////

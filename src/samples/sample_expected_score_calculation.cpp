@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
     config.t_max = 18;
     config.sum = 121; // 136 - 14 - 1
     config.extra = 1;
-    config.mode = ShantenFlag::All;
+    config.shanten_type = ShantenFlag::All;
     config.enable_reddora = true;
     config.enable_shanten_down = true;
     config.enable_tegawari = true;
@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
     // Calculation
     //////////////////////////////////////////
     const auto [type, shanten] =
-        ShantenCalculator::calc(player.hand, player.num_melds(), config.mode);
+        ShantenCalculator::calc(player.hand, player.num_melds(), config.shanten_type);
 
     // Calculate tenpai probability, win probability, and expected score.
     const auto start = std::chrono::system_clock::now();
@@ -71,7 +71,8 @@ int main(int argc, char *argv[])
     std::cout << fmt::format("{:>15}{}", "max turn: ", config.t_max) << std::endl;
     std::cout << fmt::format("{:>15}{}", "wall tiles: ", config.sum) << std::endl;
     std::cout << fmt::format("{:>15}{}", "extra: ", config.extra) << std::endl;
-    std::cout << fmt::format("{:>15}{}", "shanten type: ", config.mode) << std::endl;
+    std::cout << fmt::format("{:>15}{}", "shanten type: ", config.shanten_type)
+              << std::endl;
     std::cout << fmt::format("{:>15}{}", "shanten down: ", config.enable_shanten_down)
               << std::endl;
     std::cout << fmt::format("{:>15}{}", "tegawari: ", config.enable_tegawari)

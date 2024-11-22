@@ -1,82 +1,64 @@
 {
     "type": "object",
     "required": [
-        "zikaze",
-        "bakaze",
-        "turn",
-        "syanten_type",
+        "enable_reddora",
+        "enable_uradora",
+        "enable_shanten_down",
+        "enable_tegawari",
+        "round_wind",
         "dora_indicators",
-        "flag",
-        "hand_tiles",
-        "melded_blocks",
-        "version",
-        "counts"
+        "hand",
+        "melds",
+        "seat_wind",
+        "version"
     ],
     "additionalProperties": false,
+    "definitions": {
+        "tile": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 36
+        }
+    },
     "properties": {
-        "version": {
-            "type": "string"
+        "enable_reddora": {
+            "type": "boolean"
         },
-        "ip": {
-            "type": "string"
+        "enable_uradora": {
+            "type": "boolean"
         },
-        "zikaze": {
+        "enable_shanten_down": {
+            "type": "boolean"
+        },
+        "enable_tegawari": {
+            "type": "boolean"
+        },
+        "round_wind": {
             "type": "integer",
             "enum": [
                 27,
                 28,
                 29,
                 30
-            ]
-        },
-        "bakaze": {
-            "type": "integer",
-            "enum": [
-                27,
-                28,
-                29,
-                30
-            ]
-        },
-        "turn": {
-            "type": "integer",
-            "minimum": 1,
-            "maximum": 17
-        },
-        "syanten_type": {
-            "type": "integer",
-            "enum": [
-                1,
-                2,
-                4
             ]
         },
         "dora_indicators": {
             "type": "array",
             "items": {
-                "type": "integer",
-                "minimum": 0,
-                "maximum": 36
+                "$ref": "#/definitions/tile"
             },
             "minItems": 0,
             "maxItems": 5
         },
-        "flag": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 255
-        },
         "hand_tiles": {
             "type": "array",
             "items": {
-                "type": "integer",
-                "minimum": 0,
-                "maximum": 36
+                "$ref": "#/definitions/tile"
             },
             "minItems": 1,
             "maxItems": 14
         },
-        "melded_blocks": {
+        "melds": {
             "type": "array",
             "items": {
                 "type": "object",
@@ -89,27 +71,15 @@
                     "tiles": {
                         "type": "array",
                         "items": {
-                            "type": "integer",
-                            "minimum": 0,
-                            "maximum": 36
+                            "$ref": "#/definitions/tile"
                         }
-                    },
-                    "discarded_tile": {
-                        "type": "integer",
-                        "minimum": 0,
-                        "maximum": 36
-                    },
-                    "from": {
-                        "type": "integer",
-                        "minimum": 0,
-                        "maximum": 3
                     }
                 }
             },
             "minItems": 0,
             "maxItems": 4
         },
-        "counts": {
+        "wall": {
             "type": "array",
             "items": {
                 "type": "integer",
@@ -118,6 +88,12 @@
             },
             "minItems": 37,
             "maxItems": 37
+        },
+        "version": {
+            "type": "string"
+        },
+        "ip": {
+            "type": "string"
         }
     }
 }
