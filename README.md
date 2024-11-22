@@ -21,11 +21,11 @@ Miscellaneous programs about Japanese Mahjong
 
 🚧This program is under development. Currently the following features have been implemented.🚧
 
-- [x] Syanten Number Calculation (向聴数計算)
+- [x] Shanten Number Calculation (向聴数計算)
+- [x] Necessary Tile Calculation (有効牌計算)
+- [x] Unnecessary Tile Calculation (不要牌計算)
 - [x] Score Calculation (点数計算)
-- [x] Required Tile Selection (有効牌列挙)
-- [x] Unnecessary Tile Selection (不要牌列挙)
-- [x] Expected Score Calculation (期待値計算)
+- [x] Expected Score Calculation (聴牌確率/和了確率/期待値計算)
 
 ## Requirements
 
@@ -34,6 +34,11 @@ Miscellaneous programs about Japanese Mahjong
 - [CMake](https://cmake.org/) >= 3.5
 
 ## How to build
+
+### Windows
+
+- [CMake](https://cmake.org/download/)
+- Visual Studio 2019 or 2022
 
 ### Linux
 
@@ -51,11 +56,11 @@ Run sample program.
 
 ```bash
 cd build/src/samples
-./sample_calculate_expexted_value
-./sample_calculate_score
-./sample_calculate_syanten
-./sample_required_tile_selector
-./sample_unnecessary_tile_selector
+./sample_shanten_number_calculation
+./sample_necessary_tile_calculation
+./sample_unnecessary_tile_calculation
+./sample_score_calculation
+./sample_expected_score_calculation
 ```
 
 ### Build on Docker container
