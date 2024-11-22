@@ -49,7 +49,7 @@ std::tuple<int, int> ShantenCalculator::calc(const Hand &hand, const int num_mel
     }
 #endif // CHECK_ARGUMENTS
 
-    std::tuple<int, int> ret = {ShantenFlag::Null, std::numeric_limits<int>::max()};
+    std::tuple<int, int> ret = {ShantenFlag::Null, 100};
 
     if (type & ShantenFlag::Regular) {
         int shanten = calc_regular(hand, num_melds);

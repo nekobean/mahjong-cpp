@@ -64,6 +64,8 @@ class ExpectedScoreCalculator
         std::vector<double> exp_value;
         /* list of necessary tiles */
         std::vector<std::tuple<int, int>> necessary_tiles;
+        /* shanten */
+        int shanten;
     };
 
   private:
@@ -130,8 +132,8 @@ class ExpectedScoreCalculator
                           Graph &graph, Cache &cache1, Cache &cache2, Count &hand_reds,
                           Count &wall_reds, const Count &origin_reds, int sht_org);
     static void calc_values(const Config &config, Graph &graph, const Cache &cache1,
-                            const Cache &cache2, const int sum);
-    static std::vector<std::tuple<int, int>>
+                            const Cache &cache2);
+    static std::tuple<int, std::vector<std::tuple<int, int>>>
     get_necessary_tiles(const Config &config, const Player &player, const Count &wall);
 };
 } // namespace mahjong

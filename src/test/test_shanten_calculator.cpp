@@ -12,8 +12,7 @@
 #include <catch2/catch.hpp>
 #include <spdlog/spdlog.h>
 
-#include "mahjong/core/shanten_calculator.hpp"
-#include "mahjong/core/string.hpp"
+#include "mahjong/mahjong.hpp"
 
 using namespace mahjong;
 

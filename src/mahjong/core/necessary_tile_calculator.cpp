@@ -74,8 +74,7 @@ NecessaryTileCalculator::calc(const Hand &hand, const int num_melds, const int t
     }
 #endif // CHECK_ARGUMENTS
 
-    std::tuple<int, int, int64_t> ret = {ShantenFlag::Null,
-                                         std::numeric_limits<int>::max(), 0};
+    std::tuple<int, int, int64_t> ret = {ShantenFlag::Null, 100, 0LL};
 
     if (type & ShantenFlag::Regular) {
         const auto [shanten, wait] = calc_regular(hand, num_melds);

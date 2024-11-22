@@ -308,4 +308,23 @@ TEST_CASE("create_response()")
         )";
         create_string(json);
     }
+
+    SECTION("4 shanten")
+    {
+        const std::string json = R"(
+            {
+                "enable_reddora": true,
+                "enable_uradora": true,
+                "enable_shanten_down": true,
+                "enable_tegawari": true,
+                "round_wind": 27,
+                "dora_indicators": [27],
+                "hand": [0, 9, 11, 15, 18, 19, 23, 25, 27, 29, 31, 31, 32, 33],
+                "melds": [],
+                "seat_wind": 27,
+                "version": "0.9.1"
+            }
+        )";
+        create_string(json);
+    }
 }

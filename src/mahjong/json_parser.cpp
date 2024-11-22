@@ -1,6 +1,7 @@
 #include "json_parser.hpp"
 
 #include <algorithm>
+#include <chrono>
 #include <sstream>
 #include <string>
 
@@ -215,9 +216,10 @@ dump_expected_score(const std::vector<ExpectedScoreCalculator::Stat> &stats,
         }
         x.AddMember("exp_value", exp_value, doc.GetAllocator());
 
-        rapidjson::Value necessary_tiles =
-            dump_necessary_tiles(stat.necessary_tiles, doc);
-        x.AddMember("necessary_tiles", necessary_tiles, doc.GetAllocator());
+        x.AddMember("necessary_tiles", dump_necessary_tiles(stat.necessary_tiles, doc),
+                    doc.GetAllocator());
+
+        x.AddMember("shanten", stat.shanten, doc.GetAllocator());
 
         value.PushBack(x, doc.GetAllocator());
     }
@@ -272,35 +274,51 @@ void create_response(const Request &req, rapidjson::Document &doc)
 {
     // shanten number
     ///////////////////////////////
+    const int shanten = std::get<1>(ShantenCalculator::calc(
+        req.player.hand, req.player.num_melds(), ShantenFlag::All));
     const int regular_shanten = std::get<1>(ShantenCalculator::calc(
-        req.player.hand, req.player.num_tiles(), ShantenFlag::Regular));
-    const int seven_pairs_shanten =
-        req.player.num_melds() == 0
-            ? std::get<1>(ShantenCalculator::calc(
-                  req.player.hand, req.player.num_tiles(), ShantenFlag::SevenPairs))
-            : -2;
-    const int thirteen_orphans_shanten =
-        req.player.num_melds() == 0
-            ? std::get<1>(ShantenCalculator::calc(req.player.hand,
-                                                  req.player.num_tiles(),
-                                                  ShantenFlag::ThirteenOrphans))
-            : -2;
-    ;
+        req.player.hand, req.player.num_melds(), ShantenFlag::Regular));
+    const int seven_pairs_shanten = std::get<1>(ShantenCalculator::calc(
+        req.player.hand, req.player.num_melds(), ShantenFlag::SevenPairs));
+    const int thirteen_orphans_shanten = std::get<1>(ShantenCalculator::calc(
+        req.player.hand, req.player.num_melds(), ShantenFlag::ThirteenOrphans));
 
-    rapidjson::Value shanten(rapidjson::kObjectType);
-    shanten.AddMember("regular", regular_shanten, doc.GetAllocator());
-    shanten.AddMember("seven_pairs", seven_pairs_shanten, doc.GetAllocator());
-    shanten.AddMember("thirteen_orphans", thirteen_orphans_shanten, doc.GetAllocator());
-    doc.AddMember("shanten", shanten, doc.GetAllocator());
+    rapidjson::Value shanten_val(rapidjson::kObjectType);
+    shanten_val.AddMember("all", shanten, doc.GetAllocator());
+    shanten_val.AddMember("regular", regular_shanten, doc.GetAllocator());
+    shanten_val.AddMember("seven_pairs", seven_pairs_shanten, doc.GetAllocator());
+    shanten_val.AddMember("thirteen_orphans", thirteen_orphans_shanten,
+                          doc.GetAllocator());
+    doc.AddMember("shanten", shanten_val, doc.GetAllocator());
 
     // expected score
     ///////////////////////////////
+    ExpectedScoreCalculator::Config config;
+    config.t_min = 1;
+    config.t_max = req.player.num_tiles() + req.player.num_melds() * 3 == 14 ? 17 : 18;
+    config.sum = std::accumulate(req.wall.begin(), req.wall.begin() + 34, 0);
+    config.extra = 1;
+    config.shanten_type = ShantenFlag::All;
+
+    if (shanten > 3) {
+        config.calc_stats = false;
+    }
+
+    const auto start = std::chrono::system_clock::now();
     const auto [stats, searched] =
-        ExpectedScoreCalculator::calc(req.config, req.round, req.player);
-    doc.AddMember("searched", searched, doc.GetAllocator());
+        ExpectedScoreCalculator::calc(config, req.round, req.player);
+    const auto end = std::chrono::system_clock::now();
+    const auto elapsed_ms =
+        std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+
     doc.AddMember("stats", dump_expected_score(stats, doc), doc.GetAllocator());
+    doc.AddMember("searched", searched, doc.GetAllocator());
+    doc.AddMember("time", elapsed_ms, doc.GetAllocator());
 
     doc.AddMember("success", true, doc.GetAllocator());
+
+    spdlog::info("ip: {}, hand: {}, shanten: {}", req.ip, to_mpsz(req.player.hand),
+                 shanten);
 }
 
 } // namespace mahjong
