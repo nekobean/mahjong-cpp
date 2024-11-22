@@ -17,6 +17,8 @@ class HandSeparator
         Hand merged_hand;
         Hand hand;
         std::vector<Meld> melds;
+        int win_tile;
+        int win_flag;
 
         bool is_closed() const
         {
@@ -28,14 +30,6 @@ class HandSeparator
 
             return true;
         }
-
-        int manzu;
-        int pinzu;
-        int souzu;
-        int honors;
-
-        int win_tile;
-        int win_flag;
 
         int merged_manzu;
         int merged_pinzu;
@@ -55,7 +49,11 @@ class HandSeparator
     static void
     create_block_patterns(const Input &input,
                           std::vector<std::tuple<std::vector<Block>, int>> &patterns,
-                          std::vector<Block> &blocks, size_t i, int d = 0);
+                          std::vector<Block> &blocks, size_t i, int d,
+                          const std::vector<std::vector<Block>> &manzu,
+                          const std::vector<std::vector<Block>> &pinzu,
+                          const std::vector<std::vector<Block>> &souzu,
+                          const std::vector<std::vector<Block>> &honors);
 
   private:
     static std::map<int, std::vector<std::vector<Block>>> s_tbl_;

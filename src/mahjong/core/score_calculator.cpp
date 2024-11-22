@@ -39,15 +39,6 @@ HandSeparator::Input ScoreCalculator::create_input(const Player &player, int win
         }
     }
 
-    input.manzu = std::accumulate(input.hand.begin(), input.hand.begin() + 9, 0,
-                                  [](int x, int y) { return x * 8 + y; });
-    input.pinzu = std::accumulate(input.hand.begin() + 9, input.hand.begin() + 18, 0,
-                                  [](int x, int y) { return x * 8 + y; });
-    input.souzu = std::accumulate(input.hand.begin() + 18, input.hand.begin() + 27, 0,
-                                  [](int x, int y) { return x * 8 + y; });
-    input.honors = std::accumulate(input.hand.begin() + 27, input.hand.begin() + 34, 0,
-                                   [](int x, int y) { return x * 8 + y; });
-
     input.merged_manzu =
         std::accumulate(input.merged_hand.begin(), input.merged_hand.begin() + 9, 0,
                         [](int x, int y) { return x * 8 + y; });
