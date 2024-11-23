@@ -48,6 +48,7 @@ Clone repogitory and build program.
 git clone https://github.com/nekobean/mahjong-cpp.git
 cd mahjong-cpp
 mkdir build && cd build
+# If you want the output to be in English, add the -DLANG_EN option (cmake .. -DLANG_EN)
 cmake ..
 make -j$(nproc)
 make install
