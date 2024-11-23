@@ -50,20 +50,20 @@ void Server::log_request(const Request &req)
     for (const auto &meld : req.player.melds) {
         melds += to_string(meld);
     }
-    std::string dora_indicators;
-    for (const auto &tile : req.round.dora_indicators) {
-        dora_indicators += Tile::Name.at(tile);
+    std::string dora_indicators = to_mpsz(req.round.dora_indicators);
+    std::string wall;
+    for (const auto c : req.wall) {
+        wall += std::to_string(c);
     }
-    std::string wall = req.wall_specified ? to_array(req.wall) : "";
 
-    // spdlog::get("logger")->info(
-    //     "ip: {}, version: {}, "
-    //     "round: {}, seat: {}, dora indicators: {}, "
-    //     "hand: {}, melds: {}, wall: {}"
-    //     "red dora: {}, uradora: {}, shanten_down: {}, tegawari: {}",
-    //     req.ip, req.version, round_wind, seat_wind, dora_indicators, hand, melds,
-    //     req.wall, req.config.enable_reddora, req.config.enable_uradora,
-    //     req.config.enable_shanten_down, req.config.enable_tegawari);
+    spdlog::get("logger")->info(
+        "ip: {}, version: {}, "
+        "round: {}, seat: {}, indicators: {}, "
+        "hand: {}, melds: {}, wall: {}, "
+        "reddora: {}, uradora: {}, shantendown: {}, tegawari: {}",
+        req.ip, req.version, round_wind, seat_wind, dora_indicators, hand, melds, wall,
+        req.config.enable_reddora, req.config.enable_uradora,
+        req.config.enable_shanten_down, req.config.enable_tegawari);
 
 #ifdef OUTPUT_DETAIL_LOG
     {

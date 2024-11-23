@@ -56,10 +56,7 @@ void parse_json(const std::string &json, rapidjson::Document &doc)
         throw std::runtime_error(
             "Failed to parse json string. (reason invalid json format)");
     }
-}
 
-Request parse_request_doc(const rapidjson::Document &doc)
-{
     boost::filesystem::path schema_path =
         boost::dll::program_location().parent_path() / "request_schema.json";
 
@@ -101,7 +98,10 @@ Request parse_request_doc(const rapidjson::Document &doc)
             fmt::format("Version mismatch detected. (software: {}, json: {})",
                         PROJECT_VERSION, doc["version"].GetString()));
     }
+}
 
+Request parse_request_doc(const rapidjson::Document &doc)
+{
     // Parse request.
     Request req = create_request(doc);
 
@@ -228,9 +228,9 @@ dump_expected_score(const std::vector<ExpectedScoreCalculator::Stat> &stats,
         for (const auto prob : stat.exp_value) {
             exp_value.PushBack(prob, doc.GetAllocator());
         }
-        x.AddMember("exp_value", exp_value, doc.GetAllocator());
+        x.AddMember("exp_score", exp_value, doc.GetAllocator());
 
-        x.AddMember("necessary_tiles", dump_necessary_tiles(stat.necessary_tiles, doc),
+        x.AddMember("necessary", dump_necessary_tiles(stat.necessary_tiles, doc),
                     doc.GetAllocator());
 
         x.AddMember("shanten", stat.shanten, doc.GetAllocator());
@@ -283,21 +283,27 @@ rapidjson::Value create_response(const Request &req, rapidjson::Document &doc)
     config.sum = std::accumulate(req.wall.begin(), req.wall.begin() + 34, 0);
     config.extra = 1;
     config.shanten_type = ShantenFlag::All;
-
-    if (shanten > 3) {
-        config.calc_stats = false;
-    }
+    config.calc_stats = shanten <= 3;
 
     const auto start = std::chrono::system_clock::now();
     const auto [stats, searched] =
         ExpectedScoreCalculator::calc(config, req.round, req.player);
     const auto end = std::chrono::system_clock::now();
     const auto elapsed_ms =
-        std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+        std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
 
     res_val.AddMember("stats", dump_expected_score(stats, doc), doc.GetAllocator());
     res_val.AddMember("searched", searched, doc.GetAllocator());
     res_val.AddMember("time", elapsed_ms, doc.GetAllocator());
+
+    rapidjson::Value config_val(rapidjson::kObjectType);
+    config_val.AddMember("t_min", config.t_min, doc.GetAllocator());
+    config_val.AddMember("t_max", config.t_max, doc.GetAllocator());
+    config_val.AddMember("sum", config.sum, doc.GetAllocator());
+    config_val.AddMember("extra", config.extra, doc.GetAllocator());
+    config_val.AddMember("shanten_type", config.shanten_type, doc.GetAllocator());
+    config_val.AddMember("calc_stats", config.calc_stats, doc.GetAllocator());
+    res_val.AddMember("config", config_val, doc.GetAllocator());
 
     return res_val;
 }
