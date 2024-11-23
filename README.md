@@ -26,6 +26,7 @@ Miscellaneous programs about Japanese Mahjong
 - [x] Unnecessary Tile Calculation (不要牌計算)
 - [x] Score Calculation (点数計算)
 - [x] Expected Score Calculation (聴牌確率/和了確率/期待値計算)
+- [x] English support
 
 ## Requirements
 
