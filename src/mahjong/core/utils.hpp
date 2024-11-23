@@ -42,7 +42,7 @@ inline void check_hand(const Hand &hand)
     for (int i = 0; i < 34; ++i) {
         if (hand[i] < 0 || hand[i] > 4) {
             throw std::invalid_argument(
-                fmt::format("Invalid tile count found. (tile: {}, count: {})",
+                fmt::format(u8"Invalid tile count found. (tile: {}, count: {})",
                             Tile::Name.at(i), hand[i]));
         }
     }
@@ -50,30 +50,30 @@ inline void check_hand(const Hand &hand)
     for (int i = 34; i < 37; ++i) {
         if (hand[i] < 0 || hand[i] > 1) {
             throw std::invalid_argument(
-                fmt::format("Invalid red flag found. (tile: {}, count: {})",
+                fmt::format(u8"Invalid red flag found. (tile: {}, count: {})",
                             Tile::Name.at(i), hand[i]));
         }
     }
 
     if (hand[Tile::RedManzu5] > hand[Tile::Manzu5]) {
-        throw std::invalid_argument("0m flag specified but 5m is not included.");
+        throw std::invalid_argument(u8"0m flag specified but 5m is not included.");
     }
 
     if (hand[Tile::RedPinzu5] > hand[Tile::Pinzu5]) {
-        throw std::invalid_argument("0p flag specified but 5p is not included.");
+        throw std::invalid_argument(u8"0p flag specified but 5p is not included.");
     }
 
     if (hand[Tile::RedSouzu5] > hand[Tile::Souzu5]) {
-        throw std::invalid_argument("0s flag specified but 5s is not included.");
+        throw std::invalid_argument(u8"0s flag specified but 5s is not included.");
     }
 
     int total = std::accumulate(hand.begin(), hand.begin() + 34, 0);
     if (total > 14) {
-        throw std::invalid_argument("More than 14 tiles are used.");
+        throw std::invalid_argument(u8"More than 14 tiles are used.");
     }
 
     if (total % 3 == 0) {
-        throw std::invalid_argument("The number of tiles divisible by 3.");
+        throw std::invalid_argument(u8"The number of tiles divisible by 3.");
     }
 }
 
@@ -84,7 +84,7 @@ inline Hand from_array(const std::vector<int> &tiles)
     for (int tile : tiles) {
         if (tile < 0 || tile > 37) {
             throw std::invalid_argument(
-                fmt::format("Invalid tile number found. (value: {})", tile));
+                fmt::format(u8"Invalid tile number found. (value: {})", tile));
         }
 
         if (tile == Tile::RedManzu5) {

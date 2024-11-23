@@ -9,7 +9,7 @@ int main(int argc, char *argv[])
     // Set round infomation.
     /////////////////////////////////////////////////////
     Round round;
-    // Set game rule. (ルール)
+    // Set game rule.
     round.rules = RuleFlag::RedDora | RuleFlag::OpenTanyao;
     // Set round wind from Tile::East, Tile::South, Tile::West, Tile::North. (場風)
     round.wind = Tile::East; // round wind

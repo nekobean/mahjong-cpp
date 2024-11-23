@@ -113,7 +113,7 @@ inline void check_arguments(const std::vector<int> &tiles,
     // Check if the total number of tiles is 13 or 14.
     int num_tiles = std::accumulate(tiles.begin(), tiles.end(), int(melds.size()) * 3);
     if (num_tiles != 13 && num_tiles != 14) {
-        throw std::invalid_argument("The total number of tiles must be 13 or 14.");
+        throw std::invalid_argument(u8"The total number of tiles must be 13 or 14.");
     }
 
     // Check if the number of each tile is 4 or less.
@@ -125,7 +125,7 @@ inline void check_arguments(const std::vector<int> &tiles,
     std::vector<int> tile_counts(37);
     for (int tile : merged_tiles) {
         if (tile < 0 || tile >= Tile::Length) {
-            throw std::invalid_argument("Invalid tile number found.");
+            throw std::invalid_argument(u8"Invalid tile number found.");
         }
 
         if (tile == Tile::RedManzu5) {
@@ -143,12 +143,12 @@ inline void check_arguments(const std::vector<int> &tiles,
 
     if (std::any_of(tile_counts.begin(), tile_counts.end(),
                     [](int count) { return count > 4; })) {
-        throw std::invalid_argument("The number of each tile must be 4 or less.");
+        throw std::invalid_argument(u8"The number of each tile must be 4 or less.");
     }
 
     if (tile_counts[Tile::RedManzu5] > 1 || tile_counts[Tile::RedPinzu5] > 1 ||
         tile_counts[Tile::RedSouzu5] > 1) {
-        throw std::invalid_argument("The number of red fives must be 1 or less.");
+        throw std::invalid_argument(u8"The number of red fives must be 1 or less.");
     }
 }
 

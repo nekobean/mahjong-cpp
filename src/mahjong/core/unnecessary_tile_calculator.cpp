@@ -61,16 +61,16 @@ UnnecessaryTileCalculator::calc(const Hand &hand, const int num_melds, const int
         std::any_of(hand.begin(), hand.end(), [](int x) { return x < 0 || x > 4; });
     if (num_tiles % 3 == 0 || num_tiles > 14 || is_valid_count) {
         throw std::invalid_argument(
-            fmt::format("Invalid hand {} passed.", to_mpsz(hand)));
+            fmt::format(u8"Invalid hand {} passed.", to_mpsz(hand)));
     }
 
     if (num_melds < 0 || num_melds > 4) {
         throw std::invalid_argument(
-            fmt::format("Invalid num_melds {} passed.", num_melds));
+            fmt::format(u8"Invalid num_melds {} passed.", num_melds));
     }
 
     if (type < 0 || type > 7) {
-        throw std::invalid_argument(fmt::format("Invalid type {} passed.", type));
+        throw std::invalid_argument(fmt::format(u8"Invalid type {} passed.", type));
     }
 #endif // CHECK_ARGUMENTS
 

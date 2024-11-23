@@ -159,7 +159,31 @@ std::string to_string(const Meld &meld)
 std::string to_string(const Round &round)
 {
     std::string s;
+#ifdef LANG_EN
+    s += u8"[Rule]\n";
+    for (auto rule : {RuleFlag::RedDora, RuleFlag::OpenTanyao}) {
+        s += fmt::format(u8"  {}: {}\n", RuleFlag::Name.at(rule),
+                         (round.rules & rule) ? u8"On" : u8"Off");
+    }
 
+    std::string round_wind;
+    if (round.wind == Tile::East) {
+        round_wind = u8"East";
+    }
+    else if (round.wind == Tile::South) {
+        round_wind = u8"South";
+    }
+    else if (round.wind == Tile::West) {
+        round_wind = u8"West";
+    }
+    else if (round.wind == Tile::North) {
+        round_wind = u8"North";
+    }
+    s += u8"[Round]\n";
+    s += fmt::format(u8"{} {}Kyoku {}Honba\n", round_wind, round.kyoku, round.honba);
+    s += fmt::format(u8"Kyotaku: {}\n", round.kyotaku);
+    s += fmt::format(u8"Dora Indicators: {}\n", to_mpsz(round.dora_indicators));
+#else
     s += u8"[ルール]\n";
     for (auto rule : {RuleFlag::RedDora, RuleFlag::OpenTanyao}) {
         s += fmt::format(u8"  {}: {}\n", RuleFlag::Name.at(rule),
@@ -183,6 +207,7 @@ std::string to_string(const Round &round)
     s += fmt::format(u8"{}{}局{}本場\n", round_wind, round.kyoku, round.honba);
     s += fmt::format(u8"供託棒: {}本\n", round.kyotaku);
     s += fmt::format(u8"ドラ表示牌: {}\n", to_mpsz(round.dora_indicators));
+#endif
 
     return s;
 }
@@ -191,6 +216,15 @@ std::string to_string(const Player &player)
 {
     std::string s;
 
+#ifdef LANG_EN
+    s += fmt::format(u8"Hand: {}\n", to_mpsz(player.hand));
+    s += u8"Melds: ";
+    for (const auto &meld : player.melds) {
+        s += to_string(meld);
+    }
+    s += u8"\n";
+    s += fmt::format(u8"Seat wind: {}\n", Tile::Name.at(player.wind));
+#else
     s += fmt::format(u8"手牌: {}\n", to_mpsz(player.hand));
     s += u8"副露牌: ";
     for (const auto &meld : player.melds) {
@@ -198,6 +232,7 @@ std::string to_string(const Player &player)
     }
     s += u8"\n";
     s += fmt::format(u8"自風: {}\n", Tile::Name.at(player.wind));
+#endif
 
     return s;
 }
@@ -206,6 +241,58 @@ std::string to_string(const Result &result)
 {
     std::string s;
 
+#ifdef LANG_EN
+    if (!result.success) {
+        s += fmt::format(u8"Error: {}\n", result.err_msg);
+        return s;
+    }
+
+    s += u8"[Input]\n";
+    s += to_string(result.player);
+    s += ((result.win_flag & WinFlag::Tsumo) ? u8"Tsumo\n" : u8"Ron\n");
+    s += u8"[Result]\n";
+
+    if (result.han > 0) {
+        s += u8"Blocks: ";
+        for (const auto &block : result.blocks) {
+            s += to_string(block);
+        }
+        s += u8"\n";
+        s += fmt::format(u8"Wait: {}\n", WaitType::Name.at(result.wait_type));
+
+        // 役
+        s += u8"Yaku:\n";
+        for (auto &[yaku, han] : result.yaku_list) {
+            s += fmt::format(u8" {} {}fan\n", Yaku::Name[yaku], han);
+        }
+
+        // 飜、符
+        s += fmt::format("{}fu{}han {}\n", result.fu, result.han,
+                         result.score_title != ScoreTitle::Null
+                             ? ScoreTitle::Name.at(result.score_title)
+                             : "");
+    }
+    else {
+        // 流し満貫、役満
+        s += "Yaku:\n";
+        for (auto &[yaku, _] : result.yaku_list)
+            s += fmt::format(" {}\n", Yaku::Name[yaku]);
+        s += ScoreTitle::Name[result.score_title] + "\n";
+    }
+
+    if (result.score.size() == 3) {
+        s += fmt::format(u8"Winner socre: {}, Dealer payment: {}, player payment: {}\n",
+                         result.score[0], result.score[1], result.score[2]);
+    }
+    else if ((result.win_flag & WinFlag::Tsumo) && result.score.size() == 2) {
+        s += fmt::format(u8"Winner socre: {}, player payment: {}\n", result.score[0],
+                         result.score[1]);
+    }
+    else {
+        s += fmt::format(u8"Winner socre: {}, Discarder payment: {}\n", result.score[0],
+                         result.score[1]);
+    }
+#else
     if (!result.success) {
         s += fmt::format(u8"エラー: {}\n", result.err_msg);
         return s;
@@ -257,6 +344,7 @@ std::string to_string(const Result &result)
         s += fmt::format(u8"和了者の獲得点数: {}点, 放銃者の支払い点数: {}点\n",
                          result.score[0], result.score[1]);
     }
+#endif
 
     return s;
 }

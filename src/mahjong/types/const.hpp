@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-#ifdef USE_ENGLISH
+#ifdef LANG_EN
 #define ENTRY(id, eng, jp) {id, eng}
 #else
 #define ENTRY(id, eng, jp) {id, jp}

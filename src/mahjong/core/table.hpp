@@ -3,9 +3,9 @@
 
 #include <array>
 #include <cstdint>
+#include <fstream> // ifstream
+#include <numeric> // accumulate
 #include <string>
-#include <fstream>  // ifstream
-#include <numeric>  // accumulate
 
 #include <spdlog/spdlog.h>
 
@@ -120,7 +120,7 @@ bool Table::load_table(const std::string &filepath,
 {
     std::ifstream file(filepath, std::ios::binary);
     if (!file) {
-        spdlog::error("Failed to open table file. (path: {})", filepath);
+        spdlog::error(u8"Failed to open table file. (path: {})", filepath);
         return false;
     }
 
@@ -136,7 +136,7 @@ bool Table::load_table(const std::string &filepath,
         }
     } while (!file.eof());
 
-    spdlog::info("Table file loaded. (path: {}, size: {})", filepath, table.size());
+    spdlog::info(u8"Table file loaded. (path: {}, size: {})", filepath, table.size());
 
     return true;
 }

@@ -207,7 +207,7 @@ ScoreCalculator::check_arguments(const Player &player, int win_tile, int win_fla
     // 和了牌をチェックする。
     if (!player.hand[to_no_reddora(win_tile)]) {
         std::string err_msg =
-            fmt::format("和了牌 {} が手牌 {} に含まれていません。",
+            fmt::format(u8"和了牌 {} が手牌 {} に含まれていません。",
                         Tile::Name.at(win_tile), to_mpsz(player.hand));
         return {false, err_msg};
     }
@@ -215,7 +215,7 @@ ScoreCalculator::check_arguments(const Player &player, int win_tile, int win_fla
     // 同時に指定できないフラグをチェックする。
     if (!check_exclusive(win_flag & (WinFlag::Riichi | WinFlag::DoubleRiichi))) {
         std::string err_msg =
-            fmt::format("{}、{}はいずれか1つのみ指定できます。",
+            fmt::format(u8"{}、{}はいずれか1つのみ指定できます。",
                         Yaku::Name[Yaku::Riichi], Yaku::Name[Yaku::DoubleRiichi]);
         return {false, err_msg};
     }
@@ -248,15 +248,15 @@ ScoreCalculator::check_arguments(const Player &player, int win_tile, int win_fla
 
     if ((win_flag & WinFlag::Ippatsu) &&
         !(win_flag & (WinFlag::Riichi | WinFlag::DoubleRiichi))) {
-        std::string err_msg =
-            fmt::format("{}は立直の場合のみ指定できます。", Yaku::Name[Yaku::Ippatsu]);
+        std::string err_msg = fmt::format(u8"{}は立直の場合のみ指定できます。",
+                                          Yaku::Name[Yaku::Ippatsu]);
         return {false, err_msg};
     }
 
     if ((win_flag & (WinFlag::UnderTheSea | WinFlag::AfterAKong)) &&
         !(win_flag & WinFlag::Tsumo)) {
         std::string err_msg =
-            fmt::format("{}、{}は自摸和了の場合のみ指定できます。",
+            fmt::format(u8"{}、{}は自摸和了の場合のみ指定できます。",
                         Yaku::Name[Yaku::UnderTheSea], Yaku::Name[Yaku::AfterAKong]);
         return {false, err_msg};
     }

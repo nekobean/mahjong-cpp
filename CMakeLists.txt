@@ -8,6 +8,12 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 add_definitions("-DPROJECT_NAME=\"${PROJECT_NAME}\"")
 add_definitions("-DPROJECT_VERSION=\"${${PROJECT_NAME}_VERSION}\"")
 
+option(LANG_EN "Enable English language support" OFF)
+if(LANG_EN)
+  add_definitions(-DLANG_EN)
+  message(STATUS "Enable English language support")
+endif()
+
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release")
 endif()
@@ -40,14 +46,13 @@ else()
   )
   FetchContent_Populate(rapidjson)
   include_directories(${rapidjson_SOURCE_DIR}/include)
-  message(STATUS "Use fetched RapidJSON")
-  message(STATUS "RapidJSON: ${rapidjson_VERSION} ${rapidjson_SOURCE_DIR}")
 endif()
 
 # spdlog
 find_package(spdlog QUIET)
 if(spdlog_FOUND)
   message(STATUS "Use system provided spdlog")
+  message(STATUS "spdlog: ${spdlog_VERSION}")
 else()
   FetchContent_Declare(
     spdlog
@@ -57,7 +62,6 @@ else()
   FetchContent_MakeAvailable(spdlog)
   message(STATUS "Use fetched spdlog")
 endif()
-message(STATUS "spdlog: ${spdlog_VERSION}")
 
 option(BUILD_SERVER "build server programs." ON)
 option(BUILD_TEST "build test programs." OFF)

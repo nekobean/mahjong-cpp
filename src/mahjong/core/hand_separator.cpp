@@ -107,7 +107,7 @@ bool HandSeparator::make_table(const std::string &path,
 
     std::FILE *fp = std::fopen(path.c_str(), "rb");
     if (!fp) {
-        spdlog::error("Failed to open {}.", path);
+        spdlog::error(u8"Failed to open {}.", path);
         return false;
     }
 
@@ -116,7 +116,7 @@ bool HandSeparator::make_table(const std::string &path,
     rapidjson::Document doc;
     doc.ParseStream(is);
     if (doc.HasParseError()) {
-        spdlog::error("Failed to parse {}.", path);
+        spdlog::error(u8"Failed to parse {}.", path);
         return false;
     }
 

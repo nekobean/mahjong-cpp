@@ -9,7 +9,7 @@ foreach(ENTRY_FILE ${ENTRY_FILES})
     target_link_libraries(${BASE_NAME} ${LIB_NAME} ${CMAKE_DL_LIBS} ${Boost_LIBRARIES} spdlog::spdlog -static-libgcc -static-libstdc++)
   endif()
   add_dependencies(${BASE_NAME} ${LIB_NAME})
-  add_custom_command(TARGET ${BASE_NAME} PRE_BUILD
+  add_custom_command(TARGET ${BASE_NAME} POST_BUILD
                      COMMAND ${CMAKE_COMMAND} -E copy_directory
                      ${CMAKE_SOURCE_DIR}/data/config/ $<TARGET_FILE_DIR:${BASE_NAME}>)
   install(TARGETS ${BASE_NAME})
