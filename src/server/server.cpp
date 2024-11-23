@@ -41,13 +41,29 @@ void Server::log_request(const Request &req)
     // for (const auto &count : req.counts)
     //     counts += std::to_string(count);
 
-    // spdlog::get("logger")->info("IP: {}, バージョン: {}, 場風牌: {}, 自風牌: {}, "
-    //                             "巡目: {}, 手牌の種類: {}, 手牌: {}, "
-    //                             "フラグ: {}, ドラ表示牌: {}, 残り枚数: {}",
-    //                             req.ip, req.version, Tile::Name.at(req.bakaze),
-    //                             Tile::Name.at(req.zikaze), req.turn, req.syanten_type,
-    //                             to_mpsz(req.hand.counts), req.flag, dora_indicators,
-    //                             counts);
+    using namespace mahjong;
+
+    const std::string round_wind = Tile::Name.at(req.round.wind);
+    const std::string seat_wind = Tile::Name.at(req.player.wind);
+    const std::string hand = to_mpsz(req.player.hand);
+    std::string melds;
+    for (const auto &meld : req.player.melds) {
+        melds += to_string(meld);
+    }
+    std::string dora_indicators;
+    for (const auto &tile : req.round.dora_indicators) {
+        dora_indicators += Tile::Name.at(tile);
+    }
+    std::string wall = req.wall_specified ? to_array(req.wall) : "";
+
+    // spdlog::get("logger")->info(
+    //     "ip: {}, version: {}, "
+    //     "round: {}, seat: {}, dora indicators: {}, "
+    //     "hand: {}, melds: {}, wall: {}"
+    //     "red dora: {}, uradora: {}, shanten_down: {}, tegawari: {}",
+    //     req.ip, req.version, round_wind, seat_wind, dora_indicators, hand, melds,
+    //     req.wall, req.config.enable_reddora, req.config.enable_uradora,
+    //     req.config.enable_shanten_down, req.config.enable_tegawari);
 
 #ifdef OUTPUT_DETAIL_LOG
     {
@@ -99,7 +115,10 @@ std::string Server::process_request(const std::string &json)
         res_doc.AddMember("request", req_doc, res_doc.GetAllocator());
         res_doc.AddMember("err_msg", dump_string(e.what(), res_doc),
                           res_doc.GetAllocator());
+        spdlog::get("logger")->error("Failed to parse json. ({})", e.what());
     }
+
+    const std::string ip = req_doc.HasMember("ip") ? req_doc["ip"].GetString() : "";
 
     // Create request object.
     try {
@@ -108,13 +127,14 @@ std::string Server::process_request(const std::string &json)
         res_doc.AddMember("success", true, res_doc.GetAllocator());
         res_doc.AddMember("request", req_doc, res_doc.GetAllocator());
         res_doc.AddMember("response", res_val, res_doc.GetAllocator());
+        log_request(req);
     }
     catch (const std::exception &e) {
-        rapidjson::Document res_doc;
         res_doc.AddMember("success", false, res_doc.GetAllocator());
         res_doc.AddMember("request", req_doc, res_doc.GetAllocator());
         res_doc.AddMember("err_msg", dump_string(e.what(), res_doc),
                           res_doc.GetAllocator());
+        spdlog::get("logger")->error("ip: {}, error: {}", ip, e.what());
     }
 
     return to_json_str(res_doc);
