@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.25)
+cmake_minimum_required(VERSION 3.16)
 project(mahjong-cpp VERSION 0.9.1)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -23,72 +23,81 @@ endif()
 set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF)
-find_package(Boost REQUIRED COMPONENTS system filesystem)
+find_package(Boost REQUIRED COMPONENTS filesystem system)
 include_directories(${Boost_INCLUDE_DIRS})
 
-option(USE_SYSTEM_LIBS "use all available system-provided libraries." OFF)
-option(USE_SYSTEM_RAPIDJSON "use system-provided RapidJSON." OFF)
-option(USE_SYSTEM_SPDLOG "use system-provided spdlog." OFF)
-option(USE_SYSTEM_CATCH2 "use system-provided Catch2." OFF)
-if (USE_SYSTEM_LIBS)
-  set(USE_SYSTEM_RAPIDJSON ON)
-  set(USE_SYSTEM_SPDLOG ON)
-  set(USE_SYSTEM_CATCH2 ON)
+# RapidJSON
+include(FetchContent)
+find_package(RapidJSON)
+if(RapidJSON_FOUND)
+  message(STATUS "Use system provided RapidJSON")
 else()
-  include(FetchContent)
-endif()
-
-if (NOT USE_SYSTEM_RAPIDJSON)
-  # Fetch rapidjson
   FetchContent_Declare(
-    rapidjson
+    RapidJSON
     GIT_REPOSITORY https://github.com/Tencent/rapidjson.git
-    GIT_TAG v1.1.0)
-  FetchContent_GetProperties(rapidjson)
-  if(NOT rapidjson_POPULATED)
-    FetchContent_Populate(rapidjson)
-  endif()
-  include_directories(${rapidjson_SOURCE_DIR}/include)
-else()
-  find_package(RapidJSON REQUIRED)
+    GIT_TAG v1.1.0
+  )
+  FetchContent_Populate(RapidJSON)
 endif()
+message(STATUS "RapidJSON: ${RapidJSON_VERSION}")
 
-if (NOT USE_SYSTEM_SPDLOG)
-  # Fetch spdlog
+# spdlog
+find_package(spdlog)
+if(spdlog_FOUND)
+  message(STATUS "Use system provided spdlog")
+else()
   FetchContent_Declare(
     spdlog
     GIT_REPOSITORY https://github.com/gabime/spdlog.git
-    GIT_TAG v1.x)
-  FetchContent_GetProperties(spdlog)
-  if(NOT spdlog_POPULATED)
-    FetchContent_Populate(spdlog)
-    add_subdirectory(${spdlog_SOURCE_DIR} ${spdlog_BINARY_DIR})
-  endif()
-else()
-  find_package(spdlog REQUIRED)
-  link_libraries(spdlog::spdlog)
+    GIT_TAG v1.x
+  )
+  FetchContent_Populate(spdlog)
+endif()
+message(STATUS "spdlog: ${spdlog_VERSION}")
+
+option(BUILD_SERVER "build server programs." ON)
+option(BUILD_TEST "build test programs." OFF)
+option(BUILD_SAMPLES "build sample programs." ON)
+
+# Build mahjong-cpp
+
+# Set stack size to 100MB.
+if (MSVC)
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /STACK:104857600")
+elseif(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+  #set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--stack,104857600")
 endif()
 
 include_directories(src)
 
-# Set stack size to 100MB.
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /STACK:104857600")
+# Define variables
+set(LIB_NAME mahjong-cpp)
+
+file(GLOB_RECURSE SRC_FILES src/mahjong/*.cpp)
+add_library(${LIB_NAME} ${SRC_FILES})
+if (MSVC)
+  target_link_libraries(${LIB_NAME} ${CMAKE_DL_LIBS} ${Boost_LIBRARIES} spdlog::spdlog)
+else()
+  target_link_libraries(${LIB_NAME} ${CMAKE_DL_LIBS} ${Boost_LIBRARIES} spdlog::spdlog -static-libgcc -static-libstdc++)
+endif()
+
+if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install" CACHE PATH "default install path" FORCE)
+endif()
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/data/config/ DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
 
 # server program
-option(BUILD_SERVER "build server programs." ON)
 if(BUILD_SERVER)
   add_subdirectory(src/server)
 endif()
 
 # test programs
-option(BUILD_TEST "build test programs." ON)
 if(BUILD_TEST)
   add_subdirectory(src/test)
   add_subdirectory(src/misc/shanten_table)
 endif()
 
 # sample programs
-option(BUILD_SAMPLES "build sample programs." ON)
 if(BUILD_SAMPLES)
   add_subdirectory(src/samples)
 endif()

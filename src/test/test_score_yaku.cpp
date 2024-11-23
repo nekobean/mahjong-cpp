@@ -1,5 +1,7 @@
 #include <fstream>
 #include <iostream>
+#include <tuple>
+#include <vector>
 
 #include <rapidjson/document.h>
 #include <rapidjson/filereadstream.h>

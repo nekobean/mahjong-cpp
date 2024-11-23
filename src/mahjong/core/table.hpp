@@ -4,6 +4,8 @@
 #include <array>
 #include <cstdint>
 #include <string>
+#include <fstream>  // ifstream
+#include <numeric>  // accumulate
 
 #include <spdlog/spdlog.h>
 

@@ -10,7 +10,7 @@ int main(int argc, char *argv[])
     using namespace mahjong;
 
     // Create hand by mpsz notation or vector of tiles.
-    Hand hand = from_mpsz("026m1358p1345579s");
+    Hand hand = from_mpsz("036m1358p1345579s");
     // Hand hand = from_array({Tile::Manzu2, Tile::Manzu2, Tile::Manzu2, Tile::Manzu5,
     //                         Tile::Manzu6, Tile::Manzu7, Tile::Pinzu3, Tile::Pinzu4,
     //                         Tile::Souzu3, Tile::Souzu3, Tile::Souzu6, Tile::Souzu6,

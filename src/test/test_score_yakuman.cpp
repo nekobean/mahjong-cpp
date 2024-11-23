@@ -1,5 +1,7 @@
 #include <fstream>
 #include <iostream>
+#include <tuple>
+#include <vector>
 
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
