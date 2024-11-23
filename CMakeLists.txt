@@ -28,21 +28,24 @@ include_directories(${Boost_INCLUDE_DIRS})
 
 # RapidJSON
 include(FetchContent)
-find_package(RapidJSON)
+find_package(RapidJSON QUIET)
 if(RapidJSON_FOUND)
   message(STATUS "Use system provided RapidJSON")
+  message(STATUS "RapidJSON: ${RapidJSON_VERSION}")
 else()
   FetchContent_Declare(
-    RapidJSON
+    rapidjson
     GIT_REPOSITORY https://github.com/Tencent/rapidjson.git
     GIT_TAG v1.1.0
   )
-  FetchContent_Populate(RapidJSON)
+  FetchContent_Populate(rapidjson)
+  include_directories(${rapidjson_SOURCE_DIR}/include)
+  message(STATUS "Use fetched RapidJSON")
+  message(STATUS "RapidJSON: ${rapidjson_VERSION} ${rapidjson_SOURCE_DIR}")
 endif()
-message(STATUS "RapidJSON: ${RapidJSON_VERSION}")
 
 # spdlog
-find_package(spdlog)
+find_package(spdlog QUIET)
 if(spdlog_FOUND)
   message(STATUS "Use system provided spdlog")
 else()
@@ -51,7 +54,8 @@ else()
     GIT_REPOSITORY https://github.com/gabime/spdlog.git
     GIT_TAG v1.x
   )
-  FetchContent_Populate(spdlog)
+  FetchContent_MakeAvailable(spdlog)
+  message(STATUS "Use fetched spdlog")
 endif()
 message(STATUS "spdlog: ${spdlog_VERSION}")
 
@@ -76,7 +80,7 @@ set(LIB_NAME mahjong-cpp)
 file(GLOB_RECURSE SRC_FILES src/mahjong/*.cpp)
 add_library(${LIB_NAME} ${SRC_FILES})
 if (MSVC)
-  target_link_libraries(${LIB_NAME} ${CMAKE_DL_LIBS} ${Boost_LIBRARIES} spdlog::spdlog)
+  target_link_libraries(${LIB_NAME} ${CMAKE_DL_LIBS} ${Boost_LIBRARIES} spdlog)
 else()
   target_link_libraries(${LIB_NAME} ${CMAKE_DL_LIBS} ${Boost_LIBRARIES} spdlog::spdlog -static-libgcc -static-libstdc++)
 endif()

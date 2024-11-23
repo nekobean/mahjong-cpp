@@ -1,9 +1,10 @@
 set(EXE_NAME server)
 file(GLOB_RECURSE SRC_FILES *.cpp)
 add_executable(${EXE_NAME} ${SRC_FILES})
+add_dependencies(${EXE_NAME} ${LIB_NAME})
 
 if (MSVC)
-    target_link_libraries(${EXE_NAME} ${LIB_NAME} ${CMAKE_DL_LIBS} ${Boost_LIBRARIES} spdlog::spdlog)
+    target_link_libraries(${EXE_NAME} ${LIB_NAME} ${CMAKE_DL_LIBS} ${Boost_LIBRARIES} spdlog)
 else()
     target_link_libraries(${EXE_NAME} ${LIB_NAME} ${CMAKE_DL_LIBS} ${Boost_LIBRARIES} spdlog::spdlog -static-libgcc -static-libstdc++)
 endif()

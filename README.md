@@ -50,17 +50,19 @@ cd mahjong-cpp
 mkdir build && cd build
 cmake ..
 make -j$(nproc)
+make install
 ```
 
 Run sample program.
 
 ```bash
-cd build/src/samples
-./sample_shanten_number_calculation
-./sample_necessary_tile_calculation
-./sample_unnecessary_tile_calculation
-./sample_score_calculation
-./sample_expected_score_calculation
+cd install/bin
+sample_create_hand
+sample_expected_score_calculation
+sample_necessary_tile_calculation
+sample_score_calculation
+sample_shanten_number_calculation
+sample_unnecessary_tile_calculation
 ```
 
 ### Build on Docker container
@@ -68,8 +70,8 @@ cd build/src/samples
 Build and run container.
 
 ```bash
-docker build . --tag mahjong_cpp_build
-docker run -it mahjong_cpp_build
+docker build . --tag mahjong-cpp
+docker run -itP --name mahjong-cpp mahjong-cpp
 ```
 
 Build program on the created container.
@@ -80,6 +82,7 @@ cd mahjong-cpp
 mkdir build && cd build
 cmake ..
 make -j$(nproc)
+make install
 ```
 
 ## Usage
