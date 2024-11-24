@@ -206,6 +206,8 @@ rapidjson::Value
 dump_expected_score(const std::vector<ExpectedScoreCalculator::Stat> &stats,
                     rapidjson::Document &doc)
 {
+    // 確率値が100%を1%程度超えることがあるので、100%を超えないようにする
+    // 原因については要調査
     rapidjson::Value value(rapidjson::kArrayType);
     for (const auto &stat : stats) {
         rapidjson::Value x(rapidjson::kObjectType);
@@ -214,23 +216,23 @@ dump_expected_score(const std::vector<ExpectedScoreCalculator::Stat> &stats,
 
         rapidjson::Value tenpai_prob(rapidjson::kArrayType);
         for (const auto prob : stat.tenpai_prob) {
-            tenpai_prob.PushBack(prob, doc.GetAllocator());
+            tenpai_prob.PushBack(std::min(prob, 1.), doc.GetAllocator());
         }
         x.AddMember("tenpai_prob", tenpai_prob, doc.GetAllocator());
 
         rapidjson::Value win_prob(rapidjson::kArrayType);
         for (const auto prob : stat.win_prob) {
-            win_prob.PushBack(prob, doc.GetAllocator());
+            win_prob.PushBack(std::min(prob, 1.), doc.GetAllocator());
         }
         x.AddMember("win_prob", win_prob, doc.GetAllocator());
 
         rapidjson::Value exp_value(rapidjson::kArrayType);
-        for (const auto prob : stat.exp_value) {
-            exp_value.PushBack(prob, doc.GetAllocator());
+        for (const auto value : stat.exp_value) {
+            exp_value.PushBack(value, doc.GetAllocator());
         }
         x.AddMember("exp_score", exp_value, doc.GetAllocator());
 
-        x.AddMember("necessary", dump_necessary_tiles(stat.necessary_tiles, doc),
+        x.AddMember("necessary_tiles", dump_necessary_tiles(stat.necessary_tiles, doc),
                     doc.GetAllocator());
 
         x.AddMember("shanten", stat.shanten, doc.GetAllocator());
@@ -267,6 +269,10 @@ rapidjson::Value create_response(const Request &req, rapidjson::Document &doc)
     const int thirteen_orphans_shanten = std::get<1>(ShantenCalculator::calc(
         req.player.hand, req.player.num_melds(), ShantenFlag::ThirteenOrphans));
 
+    if (shanten == -1) {
+        throw std::runtime_error(u8"手牌はすでに和了形です。");
+    }
+
     rapidjson::Value shanten_val(rapidjson::kObjectType);
     shanten_val.AddMember("all", shanten, doc.GetAllocator());
     shanten_val.AddMember("regular", regular_shanten, doc.GetAllocator());
@@ -278,12 +284,17 @@ rapidjson::Value create_response(const Request &req, rapidjson::Document &doc)
     // expected score
     ///////////////////////////////
     ExpectedScoreCalculator::Config config;
+    const int num_tiles = req.player.num_tiles() + req.player.num_melds() * 3;
     config.t_min = 1;
-    config.t_max = req.player.num_tiles() + req.player.num_melds() * 3 == 14 ? 17 : 18;
+    config.t_max = num_tiles == 14 ? 17 : 18;
     config.sum = std::accumulate(req.wall.begin(), req.wall.begin() + 34, 0);
     config.extra = 1;
     config.shanten_type = ShantenFlag::All;
     config.calc_stats = shanten <= 3;
+    config.enable_reddora = req.config.enable_reddora;
+    config.enable_uradora = req.config.enable_uradora;
+    config.enable_shanten_down = req.config.enable_shanten_down;
+    config.enable_tegawari = req.config.enable_tegawari;
 
     const auto start = std::chrono::system_clock::now();
     const auto [stats, searched] =
@@ -303,6 +314,7 @@ rapidjson::Value create_response(const Request &req, rapidjson::Document &doc)
     config_val.AddMember("extra", config.extra, doc.GetAllocator());
     config_val.AddMember("shanten_type", config.shanten_type, doc.GetAllocator());
     config_val.AddMember("calc_stats", config.calc_stats, doc.GetAllocator());
+    config_val.AddMember("num_tiles", num_tiles, doc.GetAllocator());
     res_val.AddMember("config", config_val, doc.GetAllocator());
 
     return res_val;

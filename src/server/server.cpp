@@ -110,12 +110,13 @@ std::string Server::process_request(const std::string &json)
         parse_json(json, req_doc);
     }
     catch (const std::exception &e) {
-        rapidjson::Document res_doc;
         res_doc.AddMember("success", false, res_doc.GetAllocator());
         res_doc.AddMember("request", req_doc, res_doc.GetAllocator());
         res_doc.AddMember("err_msg", dump_string(e.what(), res_doc),
                           res_doc.GetAllocator());
         spdlog::get("logger")->error("Failed to parse json. ({})", e.what());
+        std::cout << to_json_str(res_doc) << std::endl;
+        return to_json_str(res_doc);
     }
 
     const std::string ip = req_doc.HasMember("ip") ? req_doc["ip"].GetString() : "";
@@ -135,6 +136,7 @@ std::string Server::process_request(const std::string &json)
         res_doc.AddMember("err_msg", dump_string(e.what(), res_doc),
                           res_doc.GetAllocator());
         spdlog::get("logger")->error("ip: {}, error: {}", ip, e.what());
+        return to_json_str(res_doc);
     }
 
     return to_json_str(res_doc);
