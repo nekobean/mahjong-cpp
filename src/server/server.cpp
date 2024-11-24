@@ -125,18 +125,23 @@ std::string Server::process_request(const std::string &json)
     // Create request object.
     try {
         Request req = parse_request_doc(req_doc);
+        log_request(req);
         rapidjson::Value res_val = create_response(req, res_doc);
         res_doc.AddMember("success", true, res_doc.GetAllocator());
         res_doc.AddMember("request", req_doc, res_doc.GetAllocator());
         res_doc.AddMember("response", res_val, res_doc.GetAllocator());
-        log_request(req);
     }
     catch (const std::exception &e) {
         res_doc.AddMember("success", false, res_doc.GetAllocator());
         res_doc.AddMember("request", req_doc, res_doc.GetAllocator());
         res_doc.AddMember("err_msg", dump_string(e.what(), res_doc),
                           res_doc.GetAllocator());
-        spdlog::get("logger")->error("ip: {}, error: {}", ip, e.what());
+        if (std::string(u8"手牌はすでに和了形です。") == e.what()) {
+            spdlog::get("logger")->info("ip: {}, error: {}", ip, e.what());
+        }
+        else {
+            spdlog::get("logger")->error("ip: {}, error: {}", ip, e.what());
+        }
         return to_json_str(res_doc);
     }
 
