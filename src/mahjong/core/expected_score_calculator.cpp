@@ -165,11 +165,9 @@ void ExpectedScoreCalculator::discard(Player &player, CountRed &hand_counts,
 int ExpectedScoreCalculator::calc_score(const Config &config, const Round &round,
                                         Player &player, CountRed &hand_counts,
                                         CountRed &wall_counts, const int shanten_type,
-                                        const int win_tile)
+                                        const int win_tile, const bool riichi)
 {
-    // Riichi is not possible if the hand is not closed.
-    int win_flag =
-        player.is_closed() ? (WinFlag::Tsumo | WinFlag::Riichi) : WinFlag::Tsumo;
+    int win_flag = riichi ? (WinFlag::Tsumo | WinFlag::Riichi) : WinFlag::Tsumo;
 
     Result result =
         ScoreCalculator::calc_fast(round, player, win_tile, win_flag, shanten_type);
@@ -180,7 +178,7 @@ int ExpectedScoreCalculator::calc_score(const Config &config, const Round &round
 
     if (!config.enable_uradora || !(win_flag & WinFlag::Riichi) ||
         round.dora_indicators.empty()) {
-        // No dora indicators is set, no riich or uradora is disabled.
+        // No dora indicators is set, no riichi or uradora is disabled.
         return result.score[0];
     }
 
@@ -239,7 +237,7 @@ int ExpectedScoreCalculator::calc_score(const Config &config, const Round &round
 ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::select1(
     const Config &config, const Round &round, Player &player, Graph &graph,
     Cache &cache1, Cache &cache2, CountRed &hand_counts, CountRed &wall_counts,
-    const CountRed &hand_org, const int shanten_org)
+    const CountRed &hand_org, const int shanten_org, const bool riichi)
 {
     // If vertex exists in the cache, return it.
     CacheKey key(hand_counts);
@@ -251,7 +249,7 @@ ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::select1(
     auto [type, shanten, wait] = NecessaryTileCalculator::calc(
         player.hand, player.num_melds(), config.shanten_type);
     bool allow_tegawari =
-        config.enable_tegawari &&
+        config.enable_tegawari && !riichi &&
         distance(hand_counts, hand_org) + shanten < shanten_org + config.extra;
     wait |= (wait & (1LL << Tile::Manzu5)) ? (1LL << Tile::RedManzu5) : 0;
     wait |= (wait & (1LL << Tile::Pinzu5)) ? (1LL << Tile::RedPinzu5) : 0;
@@ -270,14 +268,20 @@ ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::select1(
 
             draw(player, hand_counts, wall_counts, i);
 
+            // 1向聴で有効牌を自摸した場合、聴牌なので立直する
+            bool call_riichi =
+                config.enable_riichi && player.is_closed() && shanten == 1 && is_wait
+                    ? true
+                    : riichi;
+
             const Vertex target =
                 select2(config, round, player, graph, cache1, cache2, hand_counts,
-                        wall_counts, hand_org, shanten_org);
+                        wall_counts, hand_org, shanten_org, call_riichi);
 
             if (!boost::edge(vertex, target, graph).second) {
                 const int score = (shanten == 0 && is_wait
                                        ? calc_score(config, round, player, hand_counts,
-                                                    wall_counts, type, i)
+                                                    wall_counts, type, i, riichi)
                                        : 0);
                 boost::add_edge(vertex, target, {weight, score}, graph);
             }
@@ -292,7 +296,7 @@ ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::select1(
 ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::select2(
     const Config &config, const Round &round, Player &player, Graph &graph,
     Cache &cache1, Cache &cache2, CountRed &hand_counts, CountRed &wall_counts,
-    const CountRed &hand_org, const int shanten_org)
+    const CountRed &hand_org, const int shanten_org, const bool riichi)
 {
     // If vertex exists in the cache, return it.
     CacheKey key(hand_counts);
@@ -304,7 +308,7 @@ ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::select2(
     auto [type, shanten, disc] = UnnecessaryTileCalculator::calc(
         player.hand, player.num_melds(), config.shanten_type);
     bool allow_shanten_down =
-        config.enable_shanten_down &&
+        config.enable_shanten_down && !riichi &&
         distance(hand_counts, hand_org) + shanten < shanten_org + config.extra;
     disc |= (disc & (1LL << Tile::Manzu5)) ? (1LL << Tile::RedManzu5) : 0;
     disc |= (disc & (1LL << Tile::Pinzu5)) ? (1LL << Tile::RedPinzu5) : 0;
@@ -328,14 +332,14 @@ ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::select2(
             const int weight = wall_counts[i];
             const Vertex source =
                 select1(config, round, player, graph, cache1, cache2, hand_counts,
-                        wall_counts, hand_org, shanten_org);
+                        wall_counts, hand_org, shanten_org, riichi);
 
             draw(player, hand_counts, wall_counts, i);
 
             if (!boost::edge(source, vertex, graph).second) {
                 const int score =
                     (shanten == -1 ? calc_score(config, round, player, hand_counts,
-                                                wall_counts, type, i)
+                                                wall_counts, type, i, riichi)
                                    : 0);
                 boost::add_edge(source, vertex, {weight, score}, graph);
             }
@@ -448,14 +452,15 @@ ExpectedScoreCalculator::calc(const Config &_config, const Round &round,
     const CountRed hand_org = hand_counts;
     const int shanten_org = std::get<1>(
         ShantenCalculator::calc(player.hand, player.num_melds(), config.shanten_type));
-
     std::vector<Stat> stats;
     const int num_tiles = player.num_tiles() + player.num_melds() * 3;
+    const bool riichi = config.enable_riichi && player.is_closed() && shanten_org <= 0;
+
     if (num_tiles == 13) {
         if (config.calc_stats) {
             // Build hand transition graph.
             select1(config, round, player, graph, cache1, cache2, hand_counts,
-                    wall_counts, hand_org, shanten_org);
+                    wall_counts, hand_org, shanten_org, riichi);
 
             // Calculate expected values and probabilities.
             calc_values(config, graph, cache1, cache2);
@@ -487,7 +492,7 @@ ExpectedScoreCalculator::calc(const Config &_config, const Round &round,
         if (config.calc_stats) {
             // Build hand transition graph.
             select2(config, round, player, graph, cache1, cache2, hand_counts,
-                    wall_counts, hand_org, shanten_org);
+                    wall_counts, hand_org, shanten_org, riichi);
 
             // Calculate expected values and probabilities.
             calc_values(config, graph, cache1, cache2);

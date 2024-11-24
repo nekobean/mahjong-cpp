@@ -9,18 +9,19 @@ int main(int argc, char *argv[])
 {
     using namespace mahjong;
 
+    // Player information
+    //////////////////////////////////////////
+    Player player;
     // Create hand by mpsz notation or vector of tiles.
-    Hand hand = from_mpsz("036m1358p1345579s");
+    player.hand = from_mpsz("036m1358p1345579s");
     // Hand hand = from_array({Tile::Manzu2, Tile::Manzu2, Tile::Manzu2, Tile::Manzu5,
     //                         Tile::Manzu6, Tile::Manzu7, Tile::Pinzu3, Tile::Pinzu4,
     //                         Tile::Souzu3, Tile::Souzu3, Tile::Souzu6, Tile::Souzu6,
     //                         Tile::Souzu7, Tile::Souzu7});
 
-    // Player information
-    //////////////////////////////////////////
-    Player player;
-    player.hand = hand;
-    player.melds = {};
+    // player.hand = from_mpsz("1238p1345579s");
+    // player.melds = {
+    //     {MeldType::OpenKong, {Tile::Manzu2, Tile::Manzu2, Tile::Manzu2, Tile::Manzu2}}};
     player.wind = Tile::East;
     if (player.num_tiles() + player.num_melds() * 3 != 14) {
         spdlog::error("Number of tiles should be 14.");
@@ -43,13 +44,13 @@ int main(int argc, char *argv[])
     ExpectedScoreCalculator::Config config;
     config.t_min = 1;
     config.t_max = 18;
-    config.sum = 121; // 136 - 14 - 1
     config.extra = 1;
     config.shanten_type = ShantenFlag::All;
-    config.enable_reddora = true;
     config.enable_shanten_down = true;
     config.enable_tegawari = true;
+    config.enable_reddora = true;
     config.enable_uradora = true;
+    config.enable_riichi = true;
 
     // Calculation
     //////////////////////////////////////////
@@ -126,6 +127,7 @@ int main(int argc, char *argv[])
         }
         std::cout << std::endl;
     }
+    std::cout << std::endl;
 
     std::cout << "=== Win Probability ===" << std::endl;
     std::cout << fmt::format("{:>4}", "turn");
@@ -142,6 +144,7 @@ int main(int argc, char *argv[])
         }
         std::cout << std::endl;
     }
+    std::cout << std::endl;
 
     std::cout << "=== Expected Score ===" << std::endl;
     std::cout << fmt::format("{:>4}", "turn");

@@ -28,6 +28,7 @@ class ExpectedScoreCalculator
             , enable_tegawari(true)
             , enable_reddora(true)
             , enable_uradora(true)
+            , enable_riichi(false)
             , calc_stats(true)
         {
         }
@@ -50,6 +51,8 @@ class ExpectedScoreCalculator
         bool enable_shanten_down;
         /* allow tegawari */
         bool enable_tegawari;
+        /* call riichi when tenpai */
+        bool enable_riichi;
         /* calculate value */
         bool calc_stats;
     };
@@ -113,8 +116,10 @@ class ExpectedScoreCalculator
 
   public:
     ExpectedScoreCalculator();
+
     static std::tuple<std::vector<Stat>, int>
     calc(const Config &config, const Round &round, const Player &player);
+
     static std::tuple<std::vector<Stat>, int> calc(const Config &config,
                                                    const Round &round,
                                                    const Player &player,
@@ -131,15 +136,15 @@ class ExpectedScoreCalculator
                         const int tile);
     static int calc_score(const Config &config, const Round &round, Player &player,
                           CountRed &hand_counts, CountRed &wall_counts,
-                          const int shanten_type, const int tile);
+                          const int shanten_type, const int tile, const bool riichi);
     static Vertex select1(const Config &config, const Round &round, Player &player,
                           Graph &graph, Cache &cache1, Cache &cache2,
                           CountRed &hand_reds, CountRed &wall_reds,
-                          const CountRed &origin_reds, int sht_org);
+                          const CountRed &origin_reds, int sht_org, const bool riichi);
     static Vertex select2(const Config &config, const Round &round, Player &player,
                           Graph &graph, Cache &cache1, Cache &cache2,
                           CountRed &hand_reds, CountRed &wall_reds,
-                          const CountRed &origin_reds, int sht_org);
+                          const CountRed &origin_reds, int sht_org, const bool riichi);
     static void calc_values(const Config &config, Graph &graph, const Cache &cache1,
                             const Cache &cache2);
     static std::tuple<int, std::vector<std::tuple<int, int>>>
