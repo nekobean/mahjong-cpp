@@ -94,9 +94,10 @@ void parse_json(const std::string &json, rapidjson::Document &doc)
 
     // Check version.
     if (strcmp(doc["version"].GetString(), PROJECT_VERSION) != 0) {
-        throw std::runtime_error(
-            fmt::format("Version mismatch detected. (software: {}, json: {})",
-                        PROJECT_VERSION, doc["version"].GetString()));
+        throw std::runtime_error(fmt::format(
+            u8"リクエストのバージョンの不一致です。"
+            u8"ブラウザのキャッシュの影響と思われるので、ページを更新してください。",
+            PROJECT_VERSION, doc["version"].GetString()));
     }
 }
 

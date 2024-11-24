@@ -1,4 +1,4 @@
-set(EXE_NAME server)
+set(EXE_NAME nanikiru)
 file(GLOB_RECURSE SRC_FILES *.cpp)
 add_executable(${EXE_NAME} ${SRC_FILES})
 add_dependencies(${EXE_NAME} ${LIB_NAME})
@@ -11,6 +11,6 @@ endif()
 
 add_custom_command(TARGET ${EXE_NAME} PRE_BUILD
                     COMMAND ${CMAKE_COMMAND} -E copy_directory
-                    ${CMAKE_SOURCE_DIR}/data/config/ $<TARGET_FILE_DIR:server>)
+                    ${CMAKE_SOURCE_DIR}/data/config/ $<TARGET_FILE_DIR:nanikiru>)
 
 install(TARGETS ${EXE_NAME})
