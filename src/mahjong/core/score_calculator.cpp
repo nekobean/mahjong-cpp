@@ -33,9 +33,9 @@ Result ScoreCalculator::calc(const Round &round, const Player &player, int win_t
     }
 
     // 向聴数を計算する。
-    const auto [shanten_type, syanten] = ShantenCalculator::calc(
+    const auto [shanten_type, shanten] = ShantenCalculator::calc(
         player.hand, int(player.melds.size()), ShantenFlag::All);
-    if (syanten != -1) {
+    if (shanten != -1) {
         return Result(player, win_tile, win_flag, u8"The hand is not winning form.");
     }
 

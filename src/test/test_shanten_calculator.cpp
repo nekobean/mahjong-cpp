@@ -157,11 +157,11 @@ TEST_CASE("Shanten number")
                 (true_shanten == regular ? ShantenFlag::Regular : 0) |
                 (true_shanten == thirteen_orphans ? ShantenFlag::ThirteenOrphans : 0) |
                 (true_shanten == seven_pairs ? ShantenFlag::SevenPairs : 0);
-            const auto [type, syanten] =
+            const auto [type, shanten] =
                 ShantenCalculator::calc(hand, 0, ShantenFlag::All);
 
             INFO(fmt::format("手牌: {}", to_mpsz(hand)));
-            REQUIRE(syanten == true_shanten);
+            REQUIRE(shanten == true_shanten);
             REQUIRE(type == true_type);
         }
     };
