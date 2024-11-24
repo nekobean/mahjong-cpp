@@ -22,3 +22,10 @@ target_link_libraries(create_distance_table ${Boost_LIBRARIES} spdlog ${CMAKE_DL
 add_custom_command(TARGET create_distance_table PRE_BUILD
                     COMMAND ${CMAKE_COMMAND} -E copy_directory
                     ${CMAKE_SOURCE_DIR}/data/config/ $<TARGET_FILE_DIR:create_distance_table>)
+
+# create_uradora_table
+add_executable(create_uradora_table ${SRC_FILES} create_uradora_table.cpp)
+target_link_libraries(create_uradora_table ${Boost_LIBRARIES} spdlog ${CMAKE_DL_LIBS})
+add_custom_command(TARGET create_uradora_table PRE_BUILD
+                    COMMAND ${CMAKE_COMMAND} -E copy_directory
+                    ${CMAKE_SOURCE_DIR}/data/config/ $<TARGET_FILE_DIR:create_uradora_table>)

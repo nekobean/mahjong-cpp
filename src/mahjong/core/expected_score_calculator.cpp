@@ -4,6 +4,7 @@
 #include <algorithm> // max, fill
 #include <cassert>
 
+#include <boost/dll.hpp>
 #include <boost/graph/graph_utility.hpp>
 
 #include "mahjong/core/necessary_tile_calculator.hpp"
@@ -183,7 +184,13 @@ int ExpectedScoreCalculator::calc_score(const Config &config, const Round &round
         return result.score[0];
     }
 
-    if (round.dora_indicators.size() == 1) {
+    if (result.score_title >= ScoreTitle::CountedYakuman) {
+        return result.score[0]; // yakuman
+    }
+
+    const int num_indicators = round.dora_indicators.size();
+
+    if (num_indicators == 1) {
         Count wall = wall_counts;
         wall[Tile::Manzu5] += wall[Tile::RedManzu5];
         wall[Tile::Pinzu5] += wall[Tile::RedPinzu5];
@@ -215,8 +222,18 @@ int ExpectedScoreCalculator::calc_score(const Config &config, const Round &round
 
         return score;
     }
+    else {
+        // 裏ドラ考慮ありかつ表ドラが2枚以上の場合、統計データを利用する。
+        std::vector<int> up_scores =
+            ScoreCalculator::get_up_scores(round, player, result, win_flag, 12);
 
-    return result.score[0];
+        double score = 0;
+        for (int i = 0; i <= 12; ++i) {
+            score += up_scores[i] * uradora_table_[num_indicators][i];
+        }
+
+        return score;
+    }
 }
 
 ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::select1(
@@ -517,5 +534,26 @@ ExpectedScoreCalculator::calc(const Config &_config, const Round &round,
 
     return {stats, searched};
 }
+
+bool ExpectedScoreCalculator::load_uradora_table()
+{
+    boost::filesystem::path path =
+        boost::dll::program_location().parent_path() / "uradora.bin";
+    std::ifstream ifs(path.string(), std::ios::binary);
+    ifs.read(reinterpret_cast<char *>(&uradora_table_), sizeof(uradora_table_));
+
+    spdlog::info(u8"Uradora table file loaded. (path: {})", path.string());
+
+    return true;
+}
+
+ExpectedScoreCalculator::ExpectedScoreCalculator()
+{
+    load_uradora_table();
+}
+
+std::array<std::array<double, 13>, 6> ExpectedScoreCalculator::uradora_table_;
+
+static ExpectedScoreCalculator inst;
 
 } // namespace mahjong

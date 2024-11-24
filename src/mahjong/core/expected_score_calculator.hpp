@@ -108,7 +108,11 @@ class ExpectedScoreCalculator
     using Edge = Graph::edge_descriptor;
     using Cache = std::map<CacheKey, Vertex>;
 
+    // uradora_table[num_indicators][num_doras]
+    static std::array<std::array<double, 13>, 6> uradora_table_;
+
   public:
+    ExpectedScoreCalculator();
     static std::tuple<std::vector<Stat>, int>
     calc(const Config &config, const Round &round, const Player &player);
     static std::tuple<std::vector<Stat>, int> calc(const Config &config,
@@ -140,6 +144,7 @@ class ExpectedScoreCalculator
                             const Cache &cache2);
     static std::tuple<int, std::vector<std::tuple<int, int>>>
     get_necessary_tiles(const Config &config, const Player &player, const Count &wall);
+    static bool load_uradora_table();
 };
 } // namespace mahjong
 
