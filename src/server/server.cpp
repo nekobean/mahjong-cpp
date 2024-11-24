@@ -60,10 +60,11 @@ void Server::log_request(const Request &req)
         "ip: {}, version: {}, "
         "round: {}, seat: {}, indicators: {}, "
         "hand: {}, melds: {}, wall: {}, "
-        "reddora: {}, uradora: {}, shantendown: {}, tegawari: {}",
+        "reddora: {}, uradora: {}, shantendown: {}, tegawari: {}, riichi: {}",
         req.ip, req.version, round_wind, seat_wind, dora_indicators, hand, melds, wall,
         req.config.enable_reddora, req.config.enable_uradora,
-        req.config.enable_shanten_down, req.config.enable_tegawari);
+        req.config.enable_shanten_down, req.config.enable_tegawari,
+        req.config.enable_riichi);
 
 #ifdef OUTPUT_DETAIL_LOG
     {

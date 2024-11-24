@@ -1,8 +1,8 @@
 import json
 
 import requests
-
 from const import *
+
 from mahjong import from_mpsz
 
 
@@ -16,6 +16,7 @@ def main():
         "enable_uradora": True,
         "enable_shanten_down": True,
         "enable_tegawari": True,
+        "enable_riichi": True,
         "round_wind": Tile.East,
         "dora_indicators": [Tile.North],
         "hand": hand,

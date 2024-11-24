@@ -5,6 +5,7 @@
         "enable_uradora",
         "enable_shanten_down",
         "enable_tegawari",
+        "enable_riichi",
         "round_wind",
         "dora_indicators",
         "hand",
@@ -31,6 +32,9 @@
             "type": "boolean"
         },
         "enable_tegawari": {
+            "type": "boolean"
+        },
+        "enable_riichi": {
             "type": "boolean"
         },
         "round_wind": {

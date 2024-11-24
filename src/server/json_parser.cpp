@@ -118,6 +118,7 @@ Request create_request(const rapidjson::Value &doc)
     req.config.enable_uradora = doc["enable_uradora"].GetBool();
     req.config.enable_shanten_down = doc["enable_shanten_down"].GetBool();
     req.config.enable_tegawari = doc["enable_tegawari"].GetBool();
+    req.config.enable_riichi = doc["enable_riichi"].GetBool();
 
     req.round.wind = doc["round_wind"].GetInt();
     for (const auto &x : doc["dora_indicators"].GetArray()) {
@@ -295,6 +296,7 @@ rapidjson::Value create_response(const Request &req, rapidjson::Document &doc)
     config.enable_uradora = req.config.enable_uradora;
     config.enable_shanten_down = req.config.enable_shanten_down;
     config.enable_tegawari = req.config.enable_tegawari;
+    config.enable_riichi = req.config.enable_riichi;
 
     const auto start = std::chrono::system_clock::now();
     const auto [stats, searched] =

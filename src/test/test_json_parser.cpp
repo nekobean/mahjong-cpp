@@ -19,6 +19,7 @@ TEST_CASE("parse_json()")
             "enable_uradora": true,
             "enable_shanten_down": true,
             "enable_tegawari": true,
+            "enable_riichi": false,
             "round_wind": 27,
             "dora_indicators": [27],
             "hand": [11, 12, 20, 20, 23, 23, 24, 30],
@@ -46,6 +47,7 @@ TEST_CASE("parse_request_doc()")
             "enable_uradora": true,
             "enable_shanten_down": true,
             "enable_tegawari": true,
+            "enable_riichi": false,
             "round_wind": 27,
             "dora_indicators": [27],
             "hand": [11, 12, 20, 20, 23, 23, 24, 30],
@@ -67,6 +69,7 @@ TEST_CASE("parse_request_doc()")
         REQUIRE(req.config.enable_uradora == true);
         REQUIRE(req.config.enable_shanten_down == true);
         REQUIRE(req.config.enable_tegawari == true);
+        REQUIRE(req.config.enable_riichi == false);
         REQUIRE(req.round.wind == 27);
         REQUIRE(req.round.dora_indicators.size() == 1);
         REQUIRE(req.round.dora_indicators[0] == 27);
@@ -91,6 +94,7 @@ TEST_CASE("parse_request_doc()")
                 "enable_uradora": true,
                 "enable_shanten_down": true,
                 "enable_tegawari": true,
+                "enable_riichi": false,
                 "round_wind": 27,
                 "dora_indicators": [27],
                 "hand": [1, 1, 20, 20, 23, 23, 24, 30],
@@ -101,8 +105,7 @@ TEST_CASE("parse_request_doc()")
         )";
 
         rapidjson::Document doc;
-        parse_json(json, doc);
-        REQUIRE_THROWS(parse_request_doc(doc));
+        REQUIRE_THROWS(parse_json(json, doc));
     }
 
     SECTION("error (Failed to validate json schema)")
@@ -114,6 +117,7 @@ TEST_CASE("parse_request_doc()")
                 "enable_uradora": true,
                 "enable_shanten_down": true,
                 "enable_tegawari": true,
+                "enable_riichi": false,
                 "round_wind": 27,
                 "dora_indicators": [27],
                 "hand": [1, 1, 20, 20, 23, 23, 24, 30],
@@ -123,8 +127,7 @@ TEST_CASE("parse_request_doc()")
         )";
 
         rapidjson::Document doc;
-        parse_json(json, doc);
-        REQUIRE_THROWS(parse_request_doc(doc));
+        REQUIRE_THROWS(parse_json(json, doc));
     }
 
     SECTION("error (More than 5 tiles are used)")
@@ -135,6 +138,7 @@ TEST_CASE("parse_request_doc()")
                 "enable_uradora": true,
                 "enable_shanten_down": true,
                 "enable_tegawari": true,
+                "enable_riichi": false,
                 "round_wind": 27,
                 "dora_indicators": [27],
                 "hand": [1, 1, 20, 20, 23, 23, 24, 30],
@@ -157,6 +161,7 @@ TEST_CASE("parse_request_doc()")
                 "enable_uradora": true,
                 "enable_shanten_down": true,
                 "enable_tegawari": true,
+                "enable_riichi": false,
                 "round_wind": 27,
                 "dora_indicators": [27],
                 "hand": [11, 12, 20, 20, 23, 23, 24, 30],
@@ -183,6 +188,7 @@ TEST_CASE("parse_request_doc()")
                 "enable_uradora": true,
                 "enable_shanten_down": true,
                 "enable_tegawari": true,
+                "enable_riichi": false,
                 "round_wind": 27,
                 "dora_indicators": [27],
                 "hand": [11, 12, 20],
@@ -205,6 +211,7 @@ TEST_CASE("parse_request_doc()")
                 "enable_uradora": true,
                 "enable_shanten_down": true,
                 "enable_tegawari": true,
+                "enable_riichi": false,
                 "round_wind": 27,
                 "dora_indicators": [27],
                 "hand": [11, 12, 20, 20, 23, 23, 24, 30],
@@ -241,7 +248,7 @@ TEST_CASE("dump_necessary_tiles()")
     rapidjson::Document doc;
     rapidjson::Value value = dump_necessary_tiles(neccessary_tiles, doc);
 
-    std::cout << to_json_str(value) << std::endl;
+    //std::cout << to_json_str(value) << std::endl;
 }
 
 TEST_CASE("dump_expected_score()")
@@ -276,6 +283,7 @@ TEST_CASE("dump_expected_score()")
     config.enable_shanten_down = true;
     config.enable_tegawari = true;
     config.enable_uradora = true;
+    config.enable_riichi = false;
 
     // Calculation
     //////////////////////////////////////////
@@ -287,7 +295,7 @@ TEST_CASE("dump_expected_score()")
 
     rapidjson::Document doc;
     rapidjson::Value value = dump_expected_score(stats, doc);
-    std::cout << to_json_str(value) << std::endl;
+    //std::cout << to_json_str(value) << std::endl;
 }
 
 TEST_CASE("create_response() (number of tiles = 14, shanten > 3)")
@@ -298,6 +306,7 @@ TEST_CASE("create_response() (number of tiles = 14, shanten > 3)")
             "enable_uradora": true,
             "enable_shanten_down": true,
             "enable_tegawari": true,
+            "enable_riichi": false,
             "round_wind": 27,
             "dora_indicators": [27],
             "hand": [0, 1, 4, 7, 9, 12, 15, 17, 25, 28, 31, 32, 33, 34],
@@ -311,7 +320,7 @@ TEST_CASE("create_response() (number of tiles = 14, shanten > 3)")
     parse_json(json, doc);
     Request req = parse_request_doc(doc);
     rapidjson::Value res_val = create_response(req, doc);
-    std::cout << to_json_str(res_val) << std::endl;
+    //std::cout << to_json_str(res_val) << std::endl;
 }
 
 TEST_CASE("create_response() (number of tiles = 13, shanten > 3)")
@@ -322,6 +331,7 @@ TEST_CASE("create_response() (number of tiles = 13, shanten > 3)")
             "enable_uradora": true,
             "enable_shanten_down": true,
             "enable_tegawari": true,
+            "enable_riichi": false,
             "round_wind": 27,
             "dora_indicators": [27],
             "hand": [0, 1, 7, 9, 12, 15, 17, 25, 28, 31, 32, 33, 34],
@@ -335,7 +345,7 @@ TEST_CASE("create_response() (number of tiles = 13, shanten > 3)")
     parse_json(json, doc);
     Request req = parse_request_doc(doc);
     rapidjson::Value res_val = create_response(req, doc);
-    std::cout << to_json_str(res_val) << std::endl;
+    //std::cout << to_json_str(res_val) << std::endl;
 }
 
 TEST_CASE("create_response() (number of tiles = 13, shanten <= 3)")
@@ -346,6 +356,7 @@ TEST_CASE("create_response() (number of tiles = 13, shanten <= 3)")
             "enable_uradora": true,
             "enable_shanten_down": true,
             "enable_tegawari": true,
+            "enable_riichi": false,
             "round_wind": 27,
             "dora_indicators": [27],
             "hand": [0, 0, 0, 1, 1, 1, 2, 3, 5, 7, 8, 9, 9],
@@ -359,7 +370,7 @@ TEST_CASE("create_response() (number of tiles = 13, shanten <= 3)")
     parse_json(json, doc);
     Request req = parse_request_doc(doc);
     rapidjson::Value res_val = create_response(req, doc);
-    std::cout << to_json_str(res_val) << std::endl;
+    //std::cout << to_json_str(res_val) << std::endl;
 }
 
 std::string process_request(const std::string &json)
@@ -405,6 +416,7 @@ TEST_CASE("process_request()")
             "enable_uradora": true,
             "enable_shanten_down": true,
             "enable_tegawari": true,
+            "enable_riichi": false,
             "round_wind": 27,
             "dora_indicators": [27],
             "hand": [0, 0, 0, 1, 1, 1, 2, 3, 5, 7, 8, 9, 9, 11],
@@ -414,5 +426,5 @@ TEST_CASE("process_request()")
         }
     )";
 
-    std::cout << process_request(json) << std::endl;
+    //std::cout << process_request(json) << std::endl;
 }
