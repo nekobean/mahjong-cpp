@@ -22,8 +22,9 @@ class ScoreCalculator
                        int win_flag);
     static Result calc_fast(const Round &round, const Player &player, int win_tile,
                             int win_flag, int shanten_type);
-    static std::vector<int> get_scores_for_exp(const Result &result, const Round &round,
-                                               int wind);
+    static std::vector<int> get_up_scores(const Round &round, const Player &player,
+                                          const Result &result, const int win_flag,
+                                          const int n);
 
   public:
     static std::tuple<bool, std::string> check_arguments(const Player &player,

@@ -342,22 +342,30 @@ int ScoreCalculator::calc_fu(const std::vector<Block> &blocks, const int wait_ty
     return round_fu(fu);
 }
 
-std::vector<int> ScoreCalculator::get_scores_for_exp(const Result &result,
-                                                     const Round &round, int seat_wind)
+std::vector<int> ScoreCalculator::get_up_scores(const Round &round,
+                                                const Player &player,
+                                                const Result &result,
+                                                const int win_flag, const int n)
 {
-    if (result.score_title >= ScoreTitle::CountedYakuman)
-        return {result.score.front()};
+    if (!result.success) {
+        return {};
+    }
 
+    if (result.score_title >= ScoreTitle::CountedYakuman) {
+        return {result.score[0]}; // Over yakuman
+    }
+
+    // Get scores from current han to han + n.
     int fu = Fu::Keys.at(result.fu);
-
-    std::vector<int> scores;
-    for (int han = result.han; han <= 13; ++han) {
+    std::vector<int> scores(n + 1);
+    for (int i = 0; i <= n; ++i) {
+        int han = result.han + i;
         int score_title = get_score_title(fu, han);
-        const bool is_dealer = seat_wind == Tile::East;
-        const auto score = calc_score(is_dealer, true, round.honba, round.kyotaku,
-                                      score_title, han, fu);
-
-        scores.push_back(score.front());
+        const bool is_dealer = player.wind == Tile::East;
+        const bool tsumo = win_flag & WinFlag::Tsumo;
+        const int score = calc_score(is_dealer, tsumo, round.honba, round.kyotaku,
+                                     score_title, han, fu)[0];
+        scores[i] = score;
     }
 
     return scores;

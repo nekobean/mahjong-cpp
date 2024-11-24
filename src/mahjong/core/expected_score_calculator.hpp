@@ -13,13 +13,15 @@ namespace mahjong
 {
 class ExpectedScoreCalculator
 {
+    using CountRed = std::array<int, 37>;
+
   public:
     struct Config
     {
         Config()
             : t_min(1)
             , t_max(18)
-            , sum(121)
+            , sum(0)
             , extra(0)
             , shanten_type(ShantenFlag::All)
             , enable_shanten_down(true)
@@ -117,20 +119,23 @@ class ExpectedScoreCalculator
                              bool enable_reddora);
 
   private:
-    static Count encode(const Count &counts, const bool enable_reddora);
-    static int distance(const Count &hand, const Count &origin);
-    static void draw(Player &player, Count &hand_reds, Count &wall_reds,
+    static CountRed encode(const Count &counts, const bool enable_reddora);
+    static int distance(const CountRed &hand, const CountRed &origin);
+    static void draw(Player &player, CountRed &hand_reds, CountRed &wall_reds,
                      const int tile);
-    static void discard(Player &player, Count &hand_reds, Count &wall_reds,
+    static void discard(Player &player, CountRed &hand_reds, CountRed &wall_reds,
                         const int tile);
     static int calc_score(const Config &config, const Round &round, Player &player,
+                          CountRed &hand_counts, CountRed &wall_counts,
                           const int shanten_type, const int tile);
     static Vertex select1(const Config &config, const Round &round, Player &player,
-                          Graph &graph, Cache &cache1, Cache &cache2, Count &hand_reds,
-                          Count &wall_reds, const Count &origin_reds, int sht_org);
+                          Graph &graph, Cache &cache1, Cache &cache2,
+                          CountRed &hand_reds, CountRed &wall_reds,
+                          const CountRed &origin_reds, int sht_org);
     static Vertex select2(const Config &config, const Round &round, Player &player,
-                          Graph &graph, Cache &cache1, Cache &cache2, Count &hand_reds,
-                          Count &wall_reds, const Count &origin_reds, int sht_org);
+                          Graph &graph, Cache &cache1, Cache &cache2,
+                          CountRed &hand_reds, CountRed &wall_reds,
+                          const CountRed &origin_reds, int sht_org);
     static void calc_values(const Config &config, Graph &graph, const Cache &cache1,
                             const Cache &cache2);
     static std::tuple<int, std::vector<std::tuple<int, int>>>
