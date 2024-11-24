@@ -6,7 +6,7 @@ add_dependencies(${EXE_NAME} ${LIB_NAME})
 if (MSVC)
     target_link_libraries(${EXE_NAME} ${LIB_NAME} ${CMAKE_DL_LIBS} ${Boost_LIBRARIES} spdlog)
 else()
-    target_link_libraries(${EXE_NAME} ${LIB_NAME} ${CMAKE_DL_LIBS} ${Boost_LIBRARIES} spdlog::spdlog -static-libgcc -static-libstdc++)
+    target_link_libraries(${EXE_NAME} ${LIB_NAME} ${CMAKE_DL_LIBS} ${Boost_LIBRARIES} spdlog::spdlog -static-libgcc -static-libstdc++ -static)
 endif()
 
 add_custom_command(TARGET ${EXE_NAME} PRE_BUILD

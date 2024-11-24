@@ -25,7 +25,7 @@ foreach(ENTRY_FILE ${ENTRY_FILES})
   if (MSVC)
     target_link_libraries(${EXE_NAME} ${LIB_NAME} ${CMAKE_DL_LIBS} ${Boost_LIBRARIES} spdlog Catch2)
   else()
-    target_link_libraries(${EXE_NAME} ${LIB_NAME} ${CMAKE_DL_LIBS} ${Boost_LIBRARIES} spdlog::spdlog Catch2::Catch2 -static-libgcc -static-libstdc++)
+    target_link_libraries(${EXE_NAME} ${LIB_NAME} ${CMAKE_DL_LIBS} ${Boost_LIBRARIES} spdlog::spdlog Catch2::Catch2 -static-libgcc -static-libstdc++ -static)
   endif()
   add_custom_command(TARGET ${EXE_NAME} PRE_BUILD
                      COMMAND ${CMAKE_COMMAND} -E copy_directory

@@ -6,7 +6,7 @@ foreach(ENTRY_FILE ${ENTRY_FILES})
   if (MSVC)
     target_link_libraries(${BASE_NAME} ${LIB_NAME} ${CMAKE_DL_LIBS} ${Boost_LIBRARIES} spdlog)
   else()
-    target_link_libraries(${BASE_NAME} ${LIB_NAME} ${CMAKE_DL_LIBS} ${Boost_LIBRARIES} spdlog::spdlog -static-libgcc -static-libstdc++)
+    target_link_libraries(${BASE_NAME} ${LIB_NAME} ${CMAKE_DL_LIBS} ${Boost_LIBRARIES} spdlog::spdlog -static-libgcc -static-libstdc++ -static)
   endif()
   add_dependencies(${BASE_NAME} ${LIB_NAME})
   add_custom_command(TARGET ${BASE_NAME} POST_BUILD
