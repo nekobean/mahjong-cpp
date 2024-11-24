@@ -27,7 +27,7 @@ def main():
 
     # Send request to the server
     res = requests.post(
-        "http://localhost:8888",
+        "http://localhost:50000",
         json.dumps(req_data),
         headers={"Content-Type": "application/json"},
     )
