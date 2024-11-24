@@ -2,6 +2,7 @@
 find_package(Catch2 QUIET)
 if(Catch2_FOUND)
   message(STATUS "Use system provided Catch2")
+  message(STATUS "Catch2: ${Catch2_VERSION}")
 else()
   include(FetchContent)
   FetchContent_Declare(
@@ -11,10 +12,8 @@ else()
     FetchContent_MakeAvailable(Catch2)
   message(STATUS "Use fetched Catch2")
 endif()
-message(STATUS "Catch2: ${spdlog_VERSION}")
 
-#file(GLOB_RECURSE SRC_FILES ../mahjong/*.cpp ../compare/*.cpp ../server/json_parser.cpp)
-file(GLOB_RECURSE SRC_FILES ../server/json_parser.cpp)
+file(GLOB_RECURSE SRC_FILES ../mahjong/*.cpp ../compare/*.cpp ../server/json_parser.cpp)
 set(CMAKE_TESTCASE_DIR ${CMAKE_SOURCE_DIR}/data/testcase)
 add_definitions("-DCMAKE_TESTCASE_DIR=\"${CMAKE_TESTCASE_DIR}\"")
 
