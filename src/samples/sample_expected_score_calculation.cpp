@@ -82,6 +82,7 @@ int main(int argc, char *argv[])
               << std::endl;
     std::cout << fmt::format("{:>15}{}", "uradora: ", config.enable_uradora)
               << std::endl;
+    std::cout << fmt::format("{:>15}{}", "riichi: ", config.enable_riichi) << std::endl;
 
     std::cout << "=== Round ===" << std::endl;
     std::cout << to_string(round) << std::endl;

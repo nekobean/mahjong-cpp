@@ -294,7 +294,7 @@ int Server::run()
 
     try {
         auto const address = net::ip::make_address("0.0.0.0");
-        auto const port = static_cast<unsigned short>(std::atoi("8888"));
+        auto const port = static_cast<unsigned short>(std::atoi("50000"));
         auto const doc_root = std::make_shared<std::string>(".");
 
         // The io_context is required for all I/O
