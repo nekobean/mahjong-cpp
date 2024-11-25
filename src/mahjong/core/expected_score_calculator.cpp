@@ -248,8 +248,11 @@ ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::select1(
     // Calculate necessary tiles.
     auto [type, shanten, wait] = NecessaryTileCalculator::calc(
         player.hand, player.num_melds(), config.shanten_type);
+    // bool allow_tegawari =
+    //     config.enable_tegawari && !riichi &&
+    //     distance(hand_counts, hand_org) + shanten < shanten_org + config.extra;
     bool allow_tegawari =
-        config.enable_tegawari && !riichi &&
+        config.enable_tegawari &&
         distance(hand_counts, hand_org) + shanten < shanten_org + config.extra;
     wait |= (wait & (1LL << Tile::Manzu5)) ? (1LL << Tile::RedManzu5) : 0;
     wait |= (wait & (1LL << Tile::Pinzu5)) ? (1LL << Tile::RedPinzu5) : 0;
@@ -307,8 +310,11 @@ ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::select2(
     // Calculate unnecessary tiles.
     auto [type, shanten, disc] = UnnecessaryTileCalculator::calc(
         player.hand, player.num_melds(), config.shanten_type);
+    // bool allow_shanten_down =
+    //     config.enable_shanten_down && !riichi &&
+    //     distance(hand_counts, hand_org) + shanten < shanten_org + config.extra;
     bool allow_shanten_down =
-        config.enable_shanten_down && !riichi &&
+        config.enable_shanten_down &&
         distance(hand_counts, hand_org) + shanten < shanten_org + config.extra;
     disc |= (disc & (1LL << Tile::Manzu5)) ? (1LL << Tile::RedManzu5) : 0;
     disc |= (disc & (1LL << Tile::Pinzu5)) ? (1LL << Tile::RedPinzu5) : 0;
@@ -375,9 +381,9 @@ void ExpectedScoreCalculator::calc_values(const Config &config, Graph &graph,
                               exp_value[t + 1]);
             }
 
-            // tenpai_prob[t] = tenpai_prob[t + 1] + tenpai_prob[t] / (sum - t);
-            // win_prob[t] = win_prob[t + 1] + win_prob[t] / (sum - t);
-            // exp_value[t] = exp_value[t + 1] + exp_value[t] / (sum - t);
+            // tenpai_prob[t] = tenpai_prob[t + 1] + tenpai_prob[t] / (config.sum - t);
+            // win_prob[t] = win_prob[t + 1] + win_prob[t] / (config.sum - t);
+            // exp_value[t] = exp_value[t + 1] + exp_value[t] / (config.sum - t);
             tenpai_prob[t] = tenpai_prob[t + 1] + tenpai_prob[t] / config.sum;
             win_prob[t] = win_prob[t + 1] + win_prob[t] / config.sum;
             exp_value[t] = exp_value[t + 1] + exp_value[t] / config.sum;
@@ -444,6 +450,9 @@ ExpectedScoreCalculator::calc(const Config &_config, const Round &round,
     if (config.sum == 0) {
         config.sum = std::accumulate(wall.begin(), wall.begin() + 34, 0);
     }
+
+    // 立直を有効にした (2024/11/25)
+    config.enable_riichi = true;
     Player player = _player;
     CountRed hand_counts = encode(player.hand, config.enable_reddora);
     CountRed wall_counts = encode(wall, config.enable_reddora);
