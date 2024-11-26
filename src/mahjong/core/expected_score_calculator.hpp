@@ -24,10 +24,10 @@ class ExpectedScoreCalculator
             , sum(0)
             , extra(0)
             , shanten_type(ShantenFlag::All)
-            , enable_shanten_down(true)
-            , enable_tegawari(true)
             , enable_reddora(true)
             , enable_uradora(true)
+            , enable_shanten_down(true)
+            , enable_tegawari(true)
             , enable_riichi(false)
             , calc_stats(true)
         {

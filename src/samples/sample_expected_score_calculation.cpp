@@ -46,10 +46,10 @@ int main(int argc, char *argv[])
     config.t_max = 18;
     config.extra = 1;
     config.shanten_type = ShantenFlag::All;
-    config.enable_shanten_down = true;
-    config.enable_tegawari = true;
     config.enable_reddora = true;
     config.enable_uradora = true;
+    config.enable_shanten_down = true;
+    config.enable_tegawari = true;
     config.enable_riichi = true;
 
     // Calculation
@@ -74,13 +74,13 @@ int main(int argc, char *argv[])
     std::cout << fmt::format("{:>15}{}", "extra: ", config.extra) << std::endl;
     std::cout << fmt::format("{:>15}{}", "shanten type: ", config.shanten_type)
               << std::endl;
-    std::cout << fmt::format("{:>15}{}", "shanten down: ", config.enable_shanten_down)
-              << std::endl;
-    std::cout << fmt::format("{:>15}{}", "tegawari: ", config.enable_tegawari)
-              << std::endl;
     std::cout << fmt::format("{:>15}{}", "reddora: ", config.enable_reddora)
               << std::endl;
     std::cout << fmt::format("{:>15}{}", "uradora: ", config.enable_uradora)
+              << std::endl;
+    std::cout << fmt::format("{:>15}{}", "shanten down: ", config.enable_shanten_down)
+              << std::endl;
+    std::cout << fmt::format("{:>15}{}", "tegawari: ", config.enable_tegawari)
               << std::endl;
     std::cout << fmt::format("{:>15}{}", "riichi: ", config.enable_riichi) << std::endl;
 

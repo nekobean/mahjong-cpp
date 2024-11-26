@@ -301,7 +301,7 @@ rapidjson::Value create_response(const Request &req, rapidjson::Document &doc)
 
     const auto start = std::chrono::system_clock::now();
     const auto [stats, searched] =
-        ExpectedScoreCalculator::calc(config, req.round, req.player);
+        ExpectedScoreCalculator::calc(config, req.round, req.player, req.wall);
     const auto end = std::chrono::system_clock::now();
     const auto elapsed_ms =
         std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
