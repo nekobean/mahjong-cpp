@@ -288,13 +288,12 @@ void do_session(tcp::socket &socket, std::shared_ptr<std::string const> const &d
     // At this point the connection is closed gracefully
 }
 
-int Server::run()
+int Server::run(unsigned short port)
 {
-    spdlog::get("logger")->info("Launching server...");
+    spdlog::get("logger")->info("Launching server... (port: {})", port);
 
     try {
         auto const address = net::ip::make_address("0.0.0.0");
-        auto const port = static_cast<unsigned short>(std::atoi("50000"));
         auto const doc_root = std::make_shared<std::string>(".");
 
         // The io_context is required for all I/O
@@ -321,8 +320,13 @@ int Server::run()
     return EXIT_SUCCESS;
 }
 
-int main()
+int main(int argc, char *argv[])
 {
+    unsigned short port = 50000;
+    if (argc == 2) {
+        port = static_cast<unsigned short>(std::atoi(argv[1]));
+    }
+
     auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
     auto file_sink =
         std::make_shared<spdlog::sinks::basic_file_sink_mt>("log.txt", false);
@@ -334,5 +338,5 @@ int main()
 
     spdlog::get("logger")->info("{} {}", PROJECT_NAME, PROJECT_VERSION);
 
-    return server.run();
+    return server.run(port);
 }

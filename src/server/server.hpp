@@ -9,7 +9,7 @@ class Server
 {
   public:
     Server();
-    int run();
+    int run(unsigned short port);
     std::string process_request(const std::string &json);
     ThreadPool pool_;
 
