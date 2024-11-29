@@ -13,7 +13,7 @@ int main(int argc, char *argv[])
     //////////////////////////////////////////
     Player player;
     // Create hand by mpsz notation or vector of tiles.
-    player.hand = from_mpsz("036m1358p1345579s");
+    player.hand = from_mpsz("33456789m6p24677s");
     // Hand hand = from_array({Tile::Manzu2, Tile::Manzu2, Tile::Manzu2, Tile::Manzu5,
     //                         Tile::Manzu6, Tile::Manzu7, Tile::Pinzu3, Tile::Pinzu4,
     //                         Tile::Souzu3, Tile::Souzu3, Tile::Souzu6, Tile::Souzu6,
@@ -36,21 +36,21 @@ int main(int argc, char *argv[])
     round.kyoku = 1;
     round.honba = 0;
     round.kyotaku = 0;
-    round.dora_indicators = {};
+    round.dora_indicators = {Tile::East};
     round.uradora_indicators = {};
 
     // Calculation Settings
     //////////////////////////////////////////
     ExpectedScoreCalculator::Config config;
     config.t_min = 1;
-    config.t_max = 18;
+    config.t_max = 17;
     config.extra = 1;
     config.shanten_type = ShantenFlag::All;
     config.enable_reddora = true;
     config.enable_uradora = true;
     config.enable_shanten_down = true;
     config.enable_tegawari = true;
-    config.enable_riichi = true;
+    config.enable_riichi = false;
 
     // Calculation
     //////////////////////////////////////////
