@@ -17,6 +17,15 @@ Miscellaneous programs about Japanese Mahjong
 - アプリの紹介: [麻雀 - 期待値計算ツール 何切るシミュレーター](https://pystyle.info/mahjong-nanikiru-simulator/)
 - 期待値計算の詳細: [麻雀における期待値の計算方法](https://pystyle.info/mahjong-expected-value-in-mahjong/)
 
+## Reference
+
+アルゴリズムについて、以下のページの内容を参考にさせていただいております。
+
+- [麻雀アルゴリズム](https://tomohxx.github.io/mahjong-algorithm-book/)
+- [ネット上の向聴数計算アルゴリズムの知見に勝手に補足する](https://zenn.dev/zurukumo/articles/93ae2c381cbe6d)
+- [【麻雀】シャンテン数 高速計算アルゴリズム #C++ - Qiita](https://qiita.com/KamichanR/items/de08c48f92834c0d1f74)
+- [A Fast and Space-Efficient Algorithm for Calculating Deficient Numbers (a.k.a. Shanten Numbers).pdf](https://www.slideshare.net/slideshow/a-fast-and-space-efficient-algorithm-for-calculating-deficient-numbers-a-k-a-shanten-numbers-pdf/269706674)
+
 ## Features
 
 🚧This program is under development. Currently the following features have been implemented.🚧
