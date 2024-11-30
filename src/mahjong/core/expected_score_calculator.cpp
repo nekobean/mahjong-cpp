@@ -16,6 +16,14 @@
 namespace mahjong
 {
 
+/**
+ * @brief 山の残り枚数を計算する。
+ *
+ * @param round 場の情報
+ * @param player プレイヤーの情報
+ * @param enable_reddora 赤ドラを有効にするか
+ * @return 山の残り枚数
+ */
 Count ExpectedScoreCalculator::create_wall(const Round &round, const Player &player,
                                            const bool enable_reddora)
 {
@@ -88,6 +96,20 @@ Count ExpectedScoreCalculator::create_wall(const Round &round, const Player &pla
     return wall;
 }
 
+/**
+ * @brief 残り枚数で赤ドラの表現を以下のように変更する。
+ *        counts[Tile::Manzu5]: 赤を含む5萬の枚数、counts[Tile::RedManzu5]: 赤5萬があるかどうか
+ *        counts[Tile::Pinzu5]: 赤を含む5筒の枚数、counts[Tile::RedPinzu5]: 赤5筒があるかどうか
+ *        counts[Tile::Souzu5]: 赤を含む5索の枚数、counts[Tile::RedSouzu5]: 赤5索があるかどうか
+ *        ↓
+ *        counts[Tile::Manzu5]: 赤ドラ以外の5萬の枚数、counts[Tile::RedManzu5]: 赤5萬の枚数
+ *        counts[Tile::Pinzu5]: 赤ドラ以外の5筒の枚数、counts[Tile::RedPinzu5]: 赤5筒の枚数
+ *        counts[Tile::Souzu5]: 赤ドラ以外の5索の枚数、counts[Tile::RedSouzu5]: 赤5索の枚数
+ *
+ * @param counts 残り枚数
+ * @param enable_reddora 赤ドラを有効にするか
+ * @return 赤ドラを区別した残り枚数
+ */
 ExpectedScoreCalculator::CountRed
 ExpectedScoreCalculator::encode(const Count &counts, const bool enable_reddora)
 {
@@ -114,6 +136,13 @@ ExpectedScoreCalculator::encode(const Count &counts, const bool enable_reddora)
     return ret;
 }
 
+/**
+ * @brief 手牌 hand から手牌 hand_org に変化するための交換枚数を計算する。
+ *
+ * @param hand
+ * @param hand_org
+ * @return int
+ */
 int ExpectedScoreCalculator::distance(const CountRed &hand, const CountRed &hand_org)
 {
     int dist = 0;
@@ -124,6 +153,14 @@ int ExpectedScoreCalculator::distance(const CountRed &hand, const CountRed &hand
     return dist;
 }
 
+/**
+ * @brief tile を手牌に加え、山から削除する。
+ *
+ * @param player プレイヤー
+ * @param hand_counts 赤ドラを区別する手牌の残り枚数
+ * @param wall_counts 赤ドラを区別する山の残り枚数
+ * @param tile 牌
+ */
 void ExpectedScoreCalculator::draw(Player &player, CountRed &hand_counts,
                                    CountRed &wall_counts, const int tile)
 {
@@ -143,6 +180,14 @@ void ExpectedScoreCalculator::draw(Player &player, CountRed &hand_counts,
     }
 }
 
+/**
+ * @brief tile を手牌から削除し、山に加える。
+ *
+ * @param player プレイヤー
+ * @param hand_counts 赤ドラを区別する手牌の残り枚数
+ * @param wall_counts 赤ドラを区別する山の残り枚数
+ * @param tile 牌
+ */
 void ExpectedScoreCalculator::discard(Player &player, CountRed &hand_counts,
                                       CountRed &wall_counts, const int tile)
 {
@@ -167,28 +212,30 @@ int ExpectedScoreCalculator::calc_score(const Config &config, const Round &round
                                         CountRed &wall_counts, const int shanten_type,
                                         const int win_tile, const bool riichi)
 {
+    // 立直している場合、立直、自摸のフラグを立てる
     int win_flag = riichi ? (WinFlag::Tsumo | WinFlag::Riichi) : WinFlag::Tsumo;
 
     Result result =
         ScoreCalculator::calc_fast(round, player, win_tile, win_flag, shanten_type);
 
     if (!result.success) {
-        return 0; // No yaku
+        return 0; // 役なしの場合は0点
     }
 
     if (!config.enable_uradora || !(win_flag & WinFlag::Riichi) ||
         round.dora_indicators.empty()) {
-        // No dora indicators is set, no riichi or uradora is disabled.
+        // 裏ドラ計算なし、立直していない、表ドラ表示牌なしの場合
         return result.score[0];
     }
 
     if (result.score_title >= ScoreTitle::CountedYakuman) {
-        return result.score[0]; // yakuman
+        return result.score[0]; // 役満の場合
     }
 
     const int num_indicators = round.dora_indicators.size();
 
     if (num_indicators == 1) {
+        // 裏ドラが1枚の場合、裏ドラが乗る確率を解析的に計算する。
         Count wall = wall_counts;
         wall[Tile::Manzu5] += wall[Tile::RedManzu5];
         wall[Tile::Pinzu5] += wall[Tile::RedPinzu5];
@@ -222,6 +269,9 @@ int ExpectedScoreCalculator::calc_score(const Config &config, const Round &round
     }
     else {
         // 裏ドラ考慮ありかつ表ドラが2枚以上の場合、統計データを利用する。
+        // uradora_table_[i][j] は i が表ドラ表示牌の数、
+        // j は 0~10 は j 枚乗る枚数、12 は 11枚以上乗る枚数
+        // 立直の1翻があるため、11枚以上乗った場合は数え役満である
         std::vector<int> up_scores =
             ScoreCalculator::get_up_scores(round, player, result, win_flag, 12);
 
@@ -248,9 +298,14 @@ ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::select1(
     // Calculate necessary tiles.
     auto [type, shanten, wait] = NecessaryTileCalculator::calc(
         player.hand, player.num_melds(), config.shanten_type);
+
+    // ToDo: 手変わりは立直していない場合のみ有効にするべき
     // bool allow_tegawari =
     //     config.enable_tegawari && !riichi &&
     //     distance(hand_counts, hand_org) + shanten < shanten_org + config.extra;
+
+    // 元の手牌から現在の手牌に変化されるのに必要な交換枚数 + 現在の向聴数 < 元の手牌の向聴数 + 追加交換枚数
+    // の場合、手変わりを許可する
     bool allow_tegawari =
         config.enable_tegawari &&
         distance(hand_counts, hand_org) + shanten < shanten_org + config.extra;
@@ -282,6 +337,7 @@ ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::select1(
                         wall_counts, hand_org, shanten_org, call_riichi);
 
             if (!boost::edge(vertex, target, graph).second) {
+                // 自摸前の時点で聴牌の場合、有効牌自摸後は和了形のため、点数計算を行う
                 const int score = (shanten == 0 && is_wait
                                        ? calc_score(config, round, player, hand_counts,
                                                     wall_counts, type, i, riichi)
@@ -310,9 +366,14 @@ ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::select2(
     // Calculate unnecessary tiles.
     auto [type, shanten, disc] = UnnecessaryTileCalculator::calc(
         player.hand, player.num_melds(), config.shanten_type);
+
+    // ToDo: 向聴戻しは立直していない場合のみ有効にするべき
     // bool allow_shanten_down =
     //     config.enable_shanten_down && !riichi &&
     //     distance(hand_counts, hand_org) + shanten < shanten_org + config.extra;
+
+    // 元の手牌から現在の手牌に変化されるのに必要な交換枚数 + 現在の向聴数 < 元の手牌の向聴数 + 追加交換枚数
+    // の場合、向聴戻しを許可する
     bool allow_shanten_down =
         config.enable_shanten_down &&
         distance(hand_counts, hand_org) + shanten < shanten_org + config.extra;
@@ -343,6 +404,7 @@ ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::select2(
             draw(player, hand_counts, wall_counts, i);
 
             if (!boost::edge(source, vertex, graph).second) {
+                // 打牌前の時点で向聴数が-1の場合、和了形のため、点数計算を行う
                 const int score =
                     (shanten == -1 ? calc_score(config, round, player, hand_counts,
                                                 wall_counts, type, i, riichi)
@@ -451,9 +513,14 @@ ExpectedScoreCalculator::calc(const Config &_config, const Round &round,
         config.sum = std::accumulate(wall.begin(), wall.begin() + 34, 0);
     }
 
-    // 立直を有効にした (2024/11/25)
+    // 設定で聴牌時に立直orダマの分岐を行うように考慮する予定だが、未実装
+    // 立直なしの場合、三暗刻などの役が高く評価されてしまい、実戦と乖離した結果が出る傾向があるため、
+    // 現状は立直を強制的に有効にした (2024/11/25)
     config.enable_riichi = true;
+
     Player player = _player;
+    // 手牌と山の各牌の枚数を作成する。
+    // 赤ドラありの場合、赤なしの5と赤ありの5は別々に管理する。
     CountRed hand_counts = encode(player.hand, config.enable_reddora);
     CountRed wall_counts = encode(wall, config.enable_reddora);
 
@@ -463,15 +530,21 @@ ExpectedScoreCalculator::calc(const Config &_config, const Round &round,
         ShantenCalculator::calc(player.hand, player.num_melds(), config.shanten_type));
     std::vector<Stat> stats;
     const int num_tiles = player.num_tiles() + player.num_melds() * 3;
+
+    // 聴牌の場合、立直する。
+    // ToDo: ダマの場合の手牌遷移も探索する必要あり
     const bool riichi = config.enable_riichi && player.is_closed() && shanten_org <= 0;
 
     if (num_tiles == 13) {
+        // 13枚の場合
         if (config.calc_stats) {
-            // Build hand transition graph.
+            // 期待値、確率計算を行う場合
+
+            // 13枚の場合は自摸を起点に手牌遷移のグラフを作成する。
             select1(config, round, player, graph, cache1, cache2, hand_counts,
                     wall_counts, hand_org, shanten_org, riichi);
 
-            // Calculate expected values and probabilities.
+            // 確率、期待値を計算する。
             calc_values(config, graph, cache1, cache2);
 
             // 結果を取得する。
@@ -484,6 +557,7 @@ ExpectedScoreCalculator::calc(const Config &_config, const Round &round,
                 std::vector<double> exp_value(value.begin() + (config.t_max + 1) * 2,
                                               value.end());
 
+                // 有効牌の一覧を計算する。
                 const auto [shanten2, necessary_tiles] =
                     get_necessary_tiles(config, player, wall);
 
@@ -499,11 +573,13 @@ ExpectedScoreCalculator::calc(const Config &_config, const Round &round,
     }
     else {
         if (config.calc_stats) {
-            // Build hand transition graph.
+            // 期待値、確率計算を行う場合
+
+            // 14枚の場合は打牌を起点に手牌遷移のグラフを作成する。
             select2(config, round, player, graph, cache1, cache2, hand_counts,
                     wall_counts, hand_org, shanten_org, riichi);
 
-            // Calculate expected values and probabilities.
+            // 確率、期待値を計算する。
             calc_values(config, graph, cache1, cache2);
 
             // 結果を取得する。
@@ -521,6 +597,7 @@ ExpectedScoreCalculator::calc(const Config &_config, const Round &round,
                         std::vector<double> exp_value(
                             value.begin() + (config.t_max + 1) * 2, value.end());
 
+                        // 有効牌の一覧を計算する。
                         const auto [shanten2, necessary_tiles] =
                             get_necessary_tiles(config, player, wall);
 
