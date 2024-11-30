@@ -19,12 +19,13 @@ Miscellaneous programs about Japanese Mahjong
 
 ## Reference
 
-アルゴリズムについて、以下のページを参考にしております。
+アルゴリズムに関しましては、以下のページを参考にさせていただいております。
 
-- [麻雀アルゴリズム](https://tomohxx.github.io/mahjong-algorithm-book/)
-- [ネット上の向聴数計算アルゴリズムの知見に勝手に補足する](https://zenn.dev/zurukumo/articles/93ae2c381cbe6d)
-- [【麻雀】シャンテン数 高速計算アルゴリズム #C++ - Qiita](https://qiita.com/KamichanR/items/de08c48f92834c0d1f74)
-- [A Fast and Space-Efficient Algorithm for Calculating Deficient Numbers (a.k.a. Shanten Numbers).pdf](https://www.slideshare.net/slideshow/a-fast-and-space-efficient-algorithm-for-calculating-deficient-numbers-a-k-a-shanten-numbers-pdf/269706674)
+- tomohxx. [麻雀アルゴリズム](https://tomohxx.github.io/mahjong-algorithm-book/): tommox
+- zurukumo. [ネット上の向聴数計算アルゴリズムの知見に勝手に補足する](https://zenn.dev/zurukumo/articles/93ae2c381cbe6d)
+- KamichanR. [【麻雀】シャンテン数 高速計算アルゴリズム #C++ - Qiita](https://qiita.com/KamichanR/items/de08c48f92834c0d1f74)
+- Cryolite. [A Fast and Space-Efficient Algorithm for Calculating Deficient Numbers (a.k.a. Shanten Numbers).pdf](https://www.slideshare.net/slideshow/a-fast-and-space-efficient-algorithm-for-calculating-deficient-numbers-a-k-a-shanten-numbers-pdf/269706674)
+- あら. [あらの（一人）麻雀研究所](https://mahjong.ara.black/)
 
 ## Features
 
