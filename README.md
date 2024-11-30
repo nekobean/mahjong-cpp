@@ -19,7 +19,7 @@ Miscellaneous programs about Japanese Mahjong
 
 ## Reference
 
-アルゴリズムについて、以下のページの内容を参考にさせていただいております。
+アルゴリズムについて、以下のページを参考にしております。
 
 - [麻雀アルゴリズム](https://tomohxx.github.io/mahjong-algorithm-book/)
 - [ネット上の向聴数計算アルゴリズムの知見に勝手に補足する](https://zenn.dev/zurukumo/articles/93ae2c381cbe6d)
@@ -27,8 +27,6 @@ Miscellaneous programs about Japanese Mahjong
 - [A Fast and Space-Efficient Algorithm for Calculating Deficient Numbers (a.k.a. Shanten Numbers).pdf](https://www.slideshare.net/slideshow/a-fast-and-space-efficient-algorithm-for-calculating-deficient-numbers-a-k-a-shanten-numbers-pdf/269706674)
 
 ## Features
-
-🚧This program is under development. Currently the following features have been implemented.🚧
 
 - [x] Shanten Number Calculation (向聴数計算)
 - [x] Necessary Tile Calculation (有効牌計算)
