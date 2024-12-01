@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
     /////////////////////////////////////////////////////
 
     // Create hand by mpsz notation or vector of tiles.
-    Hand hand = from_mpsz("222567345p333s22z");
+    Hand hand = from_mpsz("11123m567p333z444z");
     // Hand hand = from_array({Tile::Manzu2, Tile::Manzu2, Tile::Manzu2, Tile::Manzu5,
     //                          Tile::Manzu6, Tile::Manzu7, Tile::Pinzu3, Tile::Pinzu4,
     //                          Tile::Pinzu5, Tile::Souzu3, Tile::Souzu3, Tile::Souzu3,
@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
     // Set seat wind from Tile::East, Tile::South, Tile::West, Tile::North. (自風)
     player.wind = Tile::East;
     // Set win tile (和了牌)
-    const int win_tile = Tile::South;
+    const int win_tile = Tile::Manzu1;
     // Set win flag (フラグ)
     // WinFlag::Tsumo           : Tsumo win (自摸和了)
     // WinFlag::Riichi          : Riich established (立直成立)

@@ -556,46 +556,6 @@ static inline std::map<int, std::string> Name = {
 } // namespace ScoreTitle
 
 /**
- * @brief Fu types
- */
-namespace Fu
-{
-
-enum
-{
-    Null = -1,
-    Hu20,  /* 20 Fu */
-    Hu25,  /* 25 Fu */
-    Hu30,  /* 30 Fu */
-    Hu40,  /* 40 Fu */
-    Hu50,  /* 50 Fu */
-    Hu60,  /* 60 Fu */
-    Hu70,  /* 70 Fu */
-    Hu80,  /* 80 Fu */
-    Hu90,  /* 90 Fu */
-    Hu100, /* 100 Fu */
-    Hu110, /* 110 Fu */
-};
-
-static inline std::map<int, std::string> Name = {
-    ENTRY(Null, u8"Null", u8"Null"),    ENTRY(Hu20, u8"20Fu", u8"20符"),
-    ENTRY(Hu25, u8"25Fu", u8"25符"),    ENTRY(Hu30, u8"30Fu", u8"30符"),
-    ENTRY(Hu40, u8"40Fu", u8"40符"),    ENTRY(Hu50, u8"50Fu", u8"50符"),
-    ENTRY(Hu60, u8"60Fu", u8"60符"),    ENTRY(Hu70, u8"70Fu", u8"70符"),
-    ENTRY(Hu80, u8"80Fu", u8"80符"),    ENTRY(Hu90, u8"90Fu", u8"90符"),
-    ENTRY(Hu100, u8"100Fu", u8"100符"), ENTRY(Hu110, u8"110Fu", u8"110符")};
-
-static inline std::map<int, int> Values = {
-    {Null, -1}, {Hu20, 20}, {Hu25, 25}, {Hu30, 30}, {Hu40, 40},   {Hu50, 50},
-    {Hu60, 60}, {Hu70, 70}, {Hu80, 80}, {Hu90, 90}, {Hu100, 100}, {Hu110, 110}};
-
-static inline std::map<int, int> Keys = {
-    {-1, Null}, {20, Hu20}, {25, Hu25}, {30, Hu30}, {40, Hu40},   {50, Hu50},
-    {60, Hu60}, {70, Hu70}, {80, Hu80}, {90, Hu90}, {100, Hu100}, {110, Hu110}};
-
-} // namespace Fu
-
-/**
  * @brief Convertion table from dora to dora indicator.
  */
 static constexpr std::array<int, 37> ToIndicator = {
