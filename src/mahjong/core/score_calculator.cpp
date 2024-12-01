@@ -557,13 +557,14 @@ std::vector<int> ScoreCalculator::calc_score(const bool is_dealer, const bool is
 {
     using namespace ScoreTable;
 
-    int fu_idx = ScoreTable::fu_to_index(fu);
+    const int fu_idx = ScoreTable::fu_to_index(fu);
+    const int han_idx = han - 1;
 
     if (is_tsumo && is_dealer) {
         // dealer tsumo
         const int player_payment =
             (score_title == ScoreTitle::Null
-                 ? BelowMangan[TsumoPlayerToDealer][fu_idx][han - 1]
+                 ? BelowMangan[TsumoPlayerToDealer][fu_idx][han_idx]
                  : AboveMangan[TsumoPlayerToDealer][score_title]) +
             100 * honba;
         const int score = 1000 * kyotaku + player_payment * 3;
@@ -574,12 +575,12 @@ std::vector<int> ScoreCalculator::calc_score(const bool is_dealer, const bool is
         // player tsumo
         const int dealer_payment =
             (score_title == ScoreTitle::Null
-                 ? BelowMangan[TsumoDealerToPlayer][fu_idx][han - 1]
+                 ? BelowMangan[TsumoDealerToPlayer][fu_idx][han_idx]
                  : AboveMangan[TsumoDealerToPlayer][score_title]) +
             100 * honba;
         const int player_payment =
             (score_title == ScoreTitle::Null
-                 ? BelowMangan[TsumoPlayerToPlayer][fu_idx][han - 1]
+                 ? BelowMangan[TsumoPlayerToPlayer][fu_idx][han_idx]
                  : AboveMangan[TsumoPlayerToPlayer][score_title]) +
             100 * honba;
         const int score = 1000 * kyotaku + dealer_payment + player_payment * 2;
@@ -589,7 +590,7 @@ std::vector<int> ScoreCalculator::calc_score(const bool is_dealer, const bool is
     else if (!is_tsumo && is_dealer) {
         // dealer ron
         const int payment = (score_title == ScoreTitle::Null
-                                 ? BelowMangan[RonDiscarderToDealer][fu_idx][han - 1]
+                                 ? BelowMangan[RonDiscarderToDealer][fu_idx][han_idx]
                                  : AboveMangan[RonDiscarderToDealer][score_title]) +
                             300 * honba;
         const int score = 1000 * kyotaku + payment;
@@ -599,7 +600,7 @@ std::vector<int> ScoreCalculator::calc_score(const bool is_dealer, const bool is
     else {
         // player ron
         const int payment = (score_title == ScoreTitle::Null
-                                 ? BelowMangan[RonDiscarderToPlayer][fu_idx][han - 1]
+                                 ? BelowMangan[RonDiscarderToPlayer][fu_idx][han_idx]
                                  : AboveMangan[RonDiscarderToPlayer][score_title]) +
                             300 * honba;
         const int score = 1000 * kyotaku + payment;
@@ -677,10 +678,11 @@ int ScoreCalculator::count_reddora(const bool rule_reddora, const Hand &hand,
  */
 int ScoreCalculator::get_score_title(const int fu, const int han)
 {
-    int fu_idx = ScoreTable::fu_to_index(fu);
+    const int fu_idx = ScoreTable::fu_to_index(fu);
+    const int han_idx = han - 1;
 
     if (han < 5) {
-        return ScoreTable::IsMangan[fu_idx][han - 1] ? ScoreTitle::Mangan
+        return ScoreTable::IsMangan[fu_idx][han_idx] ? ScoreTitle::Mangan
                                                      : ScoreTitle::Null;
     }
 
