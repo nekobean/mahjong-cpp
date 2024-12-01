@@ -61,118 +61,118 @@ bool load_testcase(const std::string &filepath, std::vector<TestCase> &cases)
     return true;
 }
 
-// TEST_CASE("Shanten number of regular hand")
-// {
-//     boost::filesystem::path filepath =
-//         boost::filesystem::path(CMAKE_TESTCASE_DIR) / "test_shanten_calculator.txt";
+TEST_CASE("Shanten number of regular hand")
+{
+    boost::filesystem::path filepath =
+        boost::filesystem::path(CMAKE_TESTCASE_DIR) / "test_shanten_calculator.txt";
 
-//     std::vector<TestCase> cases;
-//     if (!load_testcase(filepath.string(), cases)) {
-//         return;
-//     }
+    std::vector<TestCase> cases;
+    if (!load_testcase(filepath.string(), cases)) {
+        return;
+    }
 
-//     SECTION("Shanten number of regular hand")
-//     {
-//         for (auto &[hand, regular, thirteen_orphans, seven_pairs] : cases) {
-//             INFO(fmt::format("手牌: {}", to_mpsz(hand)));
-//             REQUIRE(ShantenCalculator::calc_regular(hand, 0) == regular);
-//         }
-//     };
+    SECTION("Shanten number of regular hand")
+    {
+        for (auto &[hand, regular, thirteen_orphans, seven_pairs] : cases) {
+            INFO(fmt::format("手牌: {}", to_mpsz(hand)));
+            REQUIRE(ShantenCalculator::calc_regular(hand, 0) == regular);
+        }
+    };
 
-//     BENCHMARK("Shanten number of regular hand")
-//     {
-//         for (auto &[hand, regular, thirteen_orphans, seven_pairs] : cases) {
-//             ShantenCalculator::calc_regular(hand, 0);
-//         }
-//     };
-// }
+    BENCHMARK("Shanten number of regular hand")
+    {
+        for (auto &[hand, regular, thirteen_orphans, seven_pairs] : cases) {
+            ShantenCalculator::calc_regular(hand, 0);
+        }
+    };
+}
 
-// TEST_CASE("Shanten number of Seven Pairs")
-// {
-//     boost::filesystem::path filepath =
-//         boost::filesystem::path(CMAKE_TESTCASE_DIR) / "test_shanten_calculator.txt";
+TEST_CASE("Shanten number of Seven Pairs")
+{
+    boost::filesystem::path filepath =
+        boost::filesystem::path(CMAKE_TESTCASE_DIR) / "test_shanten_calculator.txt";
 
-//     std::vector<TestCase> cases;
-//     if (!load_testcase(filepath.string(), cases)) {
-//         return;
-//     }
+    std::vector<TestCase> cases;
+    if (!load_testcase(filepath.string(), cases)) {
+        return;
+    }
 
-//     SECTION("Shanten number of Seven Pairs")
-//     {
-//         for (auto &[hand, regular, thirteen_orphans, seven_pairs] : cases) {
-//             INFO(fmt::format("手牌: {}", to_mpsz(hand)));
-//             REQUIRE(ShantenCalculator::calc_seven_pairs(hand) == seven_pairs);
-//         }
-//     };
+    SECTION("Shanten number of Seven Pairs")
+    {
+        for (auto &[hand, regular, thirteen_orphans, seven_pairs] : cases) {
+            INFO(fmt::format("手牌: {}", to_mpsz(hand)));
+            REQUIRE(ShantenCalculator::calc_seven_pairs(hand) == seven_pairs);
+        }
+    };
 
-//     BENCHMARK("Shanten number of Seven Pairs")
-//     {
-//         for (auto &[hand, regular, thirteen_orphans, seven_pairs] : cases) {
-//             ShantenCalculator::calc_seven_pairs(hand);
-//         }
-//     };
-// }
+    BENCHMARK("Shanten number of Seven Pairs")
+    {
+        for (auto &[hand, regular, thirteen_orphans, seven_pairs] : cases) {
+            ShantenCalculator::calc_seven_pairs(hand);
+        }
+    };
+}
 
-// TEST_CASE("Shanten number of Thirteen Orphans")
-// {
-//     boost::filesystem::path filepath =
-//         boost::filesystem::path(CMAKE_TESTCASE_DIR) / "test_shanten_calculator.txt";
+TEST_CASE("Shanten number of Thirteen Orphans")
+{
+    boost::filesystem::path filepath =
+        boost::filesystem::path(CMAKE_TESTCASE_DIR) / "test_shanten_calculator.txt";
 
-//     std::vector<TestCase> cases;
-//     if (!load_testcase(filepath.string(), cases)) {
-//         return;
-//     }
+    std::vector<TestCase> cases;
+    if (!load_testcase(filepath.string(), cases)) {
+        return;
+    }
 
-//     SECTION("Shanten number of Thirteen Orphans")
-//     {
-//         for (auto &[hand, regular, thirteen_orphans, seven_pairs] : cases) {
-//             INFO(fmt::format("手牌: {}", to_mpsz(hand)));
-//             REQUIRE(ShantenCalculator::calc_thirteen_orphans(hand) == thirteen_orphans);
-//         }
-//     };
+    SECTION("Shanten number of Thirteen Orphans")
+    {
+        for (auto &[hand, regular, thirteen_orphans, seven_pairs] : cases) {
+            INFO(fmt::format("手牌: {}", to_mpsz(hand)));
+            REQUIRE(ShantenCalculator::calc_thirteen_orphans(hand) == thirteen_orphans);
+        }
+    };
 
-//     BENCHMARK("Shanten number of Thirteen Orphans")
-//     {
-//         for (auto &[hand, regular, thirteen_orphans, seven_pairs] : cases) {
-//             ShantenCalculator::calc_thirteen_orphans(hand);
-//         }
-//     };
-// }
+    BENCHMARK("Shanten number of Thirteen Orphans")
+    {
+        for (auto &[hand, regular, thirteen_orphans, seven_pairs] : cases) {
+            ShantenCalculator::calc_thirteen_orphans(hand);
+        }
+    };
+}
 
-// TEST_CASE("Shanten number")
-// {
-//     boost::filesystem::path filepath =
-//         boost::filesystem::path(CMAKE_TESTCASE_DIR) / "test_shanten_calculator.txt";
+TEST_CASE("Shanten number")
+{
+    boost::filesystem::path filepath =
+        boost::filesystem::path(CMAKE_TESTCASE_DIR) / "test_shanten_calculator.txt";
 
-//     std::vector<TestCase> cases;
-//     if (!load_testcase(filepath.string(), cases)) {
-//         return;
-//     }
+    std::vector<TestCase> cases;
+    if (!load_testcase(filepath.string(), cases)) {
+        return;
+    }
 
-//     SECTION("Shanten number")
-//     {
-//         for (auto &[hand, regular, thirteen_orphans, seven_pairs] : cases) {
-//             int true_shanten = std::min({regular, thirteen_orphans, seven_pairs});
-//             int true_type =
-//                 (true_shanten == regular ? ShantenFlag::Regular : 0) |
-//                 (true_shanten == thirteen_orphans ? ShantenFlag::ThirteenOrphans : 0) |
-//                 (true_shanten == seven_pairs ? ShantenFlag::SevenPairs : 0);
-//             const auto [type, shanten] =
-//                 ShantenCalculator::calc(hand, 0, ShantenFlag::All);
+    SECTION("Shanten number")
+    {
+        for (auto &[hand, regular, thirteen_orphans, seven_pairs] : cases) {
+            int true_shanten = std::min({regular, thirteen_orphans, seven_pairs});
+            int true_type =
+                (true_shanten == regular ? ShantenFlag::Regular : 0) |
+                (true_shanten == thirteen_orphans ? ShantenFlag::ThirteenOrphans : 0) |
+                (true_shanten == seven_pairs ? ShantenFlag::SevenPairs : 0);
+            const auto [type, shanten] =
+                ShantenCalculator::calc(hand, 0, ShantenFlag::All);
 
-//             INFO(fmt::format("手牌: {}", to_mpsz(hand)));
-//             REQUIRE(shanten == true_shanten);
-//             REQUIRE(type == true_type);
-//         }
-//     };
+            INFO(fmt::format("手牌: {}", to_mpsz(hand)));
+            REQUIRE(shanten == true_shanten);
+            REQUIRE(type == true_type);
+        }
+    };
 
-//     BENCHMARK("Shanten number")
-//     {
-//         for (auto &[hand, regular, thirteen_orphans, seven_pairs] : cases) {
-//             ShantenCalculator::calc(hand, 0, ShantenFlag::All);
-//         }
-//     };
-// }
+    BENCHMARK("Shanten number")
+    {
+        for (auto &[hand, regular, thirteen_orphans, seven_pairs] : cases) {
+            ShantenCalculator::calc(hand, 0, ShantenFlag::All);
+        }
+    };
+}
 
 TEST_CASE("Shanten number with melds")
 {
