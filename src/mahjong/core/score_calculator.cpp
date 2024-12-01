@@ -189,8 +189,8 @@ Result ScoreCalculator::aggregate(const Round &round, const Player &player,
         yaku_han_list.begin(), yaku_han_list.end(),
         [](const auto &a, const auto &b) { return std::get<0>(a) < std::get<0>(b); });
 
-    return {player,      win_tile, win_flag, yaku_han_list, han, Fu::Values.at(fu),
-            score_title, score,    blocks,   wait_type};
+    return {player, win_tile,    win_flag, yaku_han_list, han,
+            fu,     score_title, score,    blocks,        wait_type};
 }
 
 /**
@@ -284,10 +284,10 @@ int ScoreCalculator::calc_fu(const std::vector<Block> &blocks, const int wait_ty
     // Exceptions
     //////////////////////////
     if (is_pinfu && is_tsumo && is_closed) {
-        return Fu::Hu20; // Pinfu + Tsumo
+        return 20; // Pinfu + Tsumo
     }
     else if (is_pinfu && !is_tsumo && !is_closed) {
-        return Fu::Hu30; // Pinfu + Ron
+        return 30; // Pinfu + Ron
     }
 
     // Normal calculation
@@ -339,7 +339,7 @@ int ScoreCalculator::calc_fu(const std::vector<Block> &blocks, const int wait_ty
         }
     }
 
-    return round_fu(fu);
+    return fu;
 }
 
 std::vector<int> ScoreCalculator::get_up_scores(const Round &round,
@@ -356,15 +356,14 @@ std::vector<int> ScoreCalculator::get_up_scores(const Round &round,
     }
 
     // Get scores from current han to han + n.
-    int fu = Fu::Keys.at(result.fu);
     std::vector<int> scores(n + 1);
     for (int i = 0; i <= n; ++i) {
         int han = result.han + i;
-        int score_title = get_score_title(fu, han);
+        int score_title = get_score_title(result.fu, han);
         const bool is_dealer = player.wind == Tile::East;
         const bool tsumo = win_flag & WinFlag::Tsumo;
         const int score = calc_score(is_dealer, tsumo, round.honba, round.kyotaku,
-                                     score_title, han, fu)[0];
+                                     score_title, han, result.fu)[0];
         scores[i] = score;
     }
 
@@ -454,7 +453,7 @@ ScoreCalculator::check_pattern_yaku(const Round &round, const Player &player,
                                     const int shanten_type)
 {
     if (shanten_type == ShantenFlag::SevenPairs) {
-        return {Yaku::Null, Fu::Hu25, {}, WaitType::PairWait};
+        return {Yaku::Null, 25, {}, WaitType::PairWait};
     }
 
     static const std::vector<YakuList> pattern_yaku = {
@@ -476,7 +475,7 @@ ScoreCalculator::check_pattern_yaku(const Round &round, const Player &player,
 
     // Find the block composition with the highest score.
     int max_han = 0;
-    int max_fu = Fu::Null;
+    int max_fu = 0;
     size_t max_idx;
     YakuList max_yaku_list;
     for (size_t i = 0; i < pattern.size(); ++i) {
@@ -530,6 +529,9 @@ ScoreCalculator::check_pattern_yaku(const Round &round, const Player &player,
         }
     }
 
+    max_fu = int(std::ceil(max_fu / 10.)) * 10;
+    ;
+
     return {max_yaku_list, max_fu, std::get<0>(pattern[max_idx]),
             std::get<1>(pattern[max_idx])};
 }
@@ -555,11 +557,13 @@ std::vector<int> ScoreCalculator::calc_score(const bool is_dealer, const bool is
 {
     using namespace ScoreTable;
 
+    int fu_idx = ScoreTable::fu_to_index(fu);
+
     if (is_tsumo && is_dealer) {
         // dealer tsumo
         const int player_payment =
             (score_title == ScoreTitle::Null
-                 ? BelowMangan[TsumoPlayerToDealer][fu][han - 1]
+                 ? BelowMangan[TsumoPlayerToDealer][fu_idx][han - 1]
                  : AboveMangan[TsumoPlayerToDealer][score_title]) +
             100 * honba;
         const int score = 1000 * kyotaku + player_payment * 3;
@@ -570,12 +574,12 @@ std::vector<int> ScoreCalculator::calc_score(const bool is_dealer, const bool is
         // player tsumo
         const int dealer_payment =
             (score_title == ScoreTitle::Null
-                 ? BelowMangan[TsumoDealerToPlayer][fu][han - 1]
+                 ? BelowMangan[TsumoDealerToPlayer][fu_idx][han - 1]
                  : AboveMangan[TsumoDealerToPlayer][score_title]) +
             100 * honba;
         const int player_payment =
             (score_title == ScoreTitle::Null
-                 ? BelowMangan[TsumoPlayerToPlayer][fu][han - 1]
+                 ? BelowMangan[TsumoPlayerToPlayer][fu_idx][han - 1]
                  : AboveMangan[TsumoPlayerToPlayer][score_title]) +
             100 * honba;
         const int score = 1000 * kyotaku + dealer_payment + player_payment * 2;
@@ -585,7 +589,7 @@ std::vector<int> ScoreCalculator::calc_score(const bool is_dealer, const bool is
     else if (!is_tsumo && is_dealer) {
         // dealer ron
         const int payment = (score_title == ScoreTitle::Null
-                                 ? BelowMangan[RonDiscarderToDealer][fu][han - 1]
+                                 ? BelowMangan[RonDiscarderToDealer][fu_idx][han - 1]
                                  : AboveMangan[RonDiscarderToDealer][score_title]) +
                             300 * honba;
         const int score = 1000 * kyotaku + payment;
@@ -595,7 +599,7 @@ std::vector<int> ScoreCalculator::calc_score(const bool is_dealer, const bool is
     else {
         // player ron
         const int payment = (score_title == ScoreTitle::Null
-                                 ? BelowMangan[RonDiscarderToPlayer][fu][han - 1]
+                                 ? BelowMangan[RonDiscarderToPlayer][fu_idx][han - 1]
                                  : AboveMangan[RonDiscarderToPlayer][score_title]) +
                             300 * honba;
         const int score = 1000 * kyotaku + payment;
@@ -673,9 +677,11 @@ int ScoreCalculator::count_reddora(const bool rule_reddora, const Hand &hand,
  */
 int ScoreCalculator::get_score_title(const int fu, const int han)
 {
+    int fu_idx = ScoreTable::fu_to_index(fu);
+
     if (han < 5) {
-        return ScoreTable::IsMangan[fu][han - 1] ? ScoreTitle::Mangan
-                                                 : ScoreTitle::Null;
+        return ScoreTable::IsMangan[fu_idx][han - 1] ? ScoreTitle::Mangan
+                                                     : ScoreTitle::Null;
     }
 
     if (han == 5) {
@@ -723,44 +729,6 @@ int ScoreCalculator::get_score_title(const int n)
 
     return ScoreTitle::Null;
 };
-
-/**
- * @brief Round up fu.
- *
- * @param[in] fu fu
- * @return rounded fu
- */
-int ScoreCalculator::round_fu(const int fu)
-{
-    const int rounded_fu = int(std::ceil(fu / 10.)) * 10;
-
-    switch (rounded_fu) {
-    case 20:
-        return Fu::Hu20;
-    case 25:
-        return Fu::Hu25;
-    case 30:
-        return Fu::Hu30;
-    case 40:
-        return Fu::Hu40;
-    case 50:
-        return Fu::Hu50;
-    case 60:
-        return Fu::Hu60;
-    case 70:
-        return Fu::Hu70;
-    case 80:
-        return Fu::Hu80;
-    case 90:
-        return Fu::Hu90;
-    case 100:
-        return Fu::Hu100;
-    case 110:
-        return Fu::Hu110;
-    }
-
-    return Fu::Null;
-}
 
 ////////////////////////////////////////////////////////////////////////////////////////
 /// Functions to check yaku

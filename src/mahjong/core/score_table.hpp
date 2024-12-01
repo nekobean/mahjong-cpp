@@ -11,6 +11,36 @@ namespace mahjong
  */
 namespace ScoreTable
 {
+static int fu_to_index(int fu)
+{
+    switch (fu) {
+    case 20:
+        return 0;
+    case 25:
+        return 1;
+    case 30:
+        return 2;
+    case 40:
+        return 3;
+    case 50:
+        return 4;
+    case 60:
+        return 5;
+    case 70:
+        return 6;
+    case 80:
+        return 7;
+    case 90:
+        return 8;
+    case 100:
+        return 9;
+    case 110:
+        return 10;
+    default:
+        return -1;
+    }
+}
+
 /**
  * @brief Table to determine Mangan.
  */

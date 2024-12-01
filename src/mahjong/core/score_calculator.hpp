@@ -53,7 +53,6 @@ class ScoreCalculator
                              const std::vector<Meld> &melds);
     static int get_score_title(const int fu, const int han);
     static int get_score_title(const int n);
-    static int round_fu(const int fu);
 
     // Functions to check yaku
     static MergedHand merge_hand(const Player &player);
