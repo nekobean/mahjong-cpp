@@ -139,7 +139,7 @@ std::tuple<int, int64_t> NecessaryTileCalculator::calc_regular(const Hand &hand,
     std::copy(honors.begin(), honors.end(), ret.begin());
     add1(ret, souzu, m);
     add1(ret, pinzu, m);
-    add1(ret, manzu, m);
+    add2(ret, manzu, m);
 
     int shanten = static_cast<int>(ret[5 + m]) - 1;
     int64_t wait = ret[15 + m];
