@@ -1,5 +1,5 @@
-#ifndef MAHJONG_CPP_SCORE_CALCULATOR
-#define MAHJONG_CPP_SCORE_CALCULATOR
+#ifndef SCORE_CALCULATOR
+#define SCORE_CALCULATOR
 
 #include <map>
 #include <vector>
@@ -77,15 +77,15 @@ class ScoreCalculator
                                      const MergedHand &merged_hand);
     static bool check_pinfu(const std::vector<Block> &blocks, const int wait_type,
                             const int round_wind, const int seat_wind);
-    static int check_pure_double_sequence(const std::vector<Block> &blocks);
-    static bool check_all_triplets(const std::vector<Block> &blocks);
-    static bool check_three_concealed_triplets(const std::vector<Block> &blocks);
+    static YakuList check_pure_double_sequence(const std::vector<Block> &blocks);
+    static YakuList check_all_triplets(const std::vector<Block> &blocks);
+    static YakuList check_three_concealed_triplets(const std::vector<Block> &blocks);
     static bool check_triple_triplets(const std::vector<Block> &blocks);
     static bool check_mixed_triple_sequence(const std::vector<Block> &blocks);
     static bool check_pure_straight(const std::vector<Block> &blocks);
-    static int check_outside_hand(const std::vector<Block> &blocks);
+    static YakuList check_outside_hand(const std::vector<Block> &blocks);
 };
 
 } // namespace mahjong
 
-#endif /* MAHJONG_CPP_SCORE_CALCULATOR */
+#endif /* SCORE_CALCULATOR */

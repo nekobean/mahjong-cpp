@@ -493,13 +493,7 @@ ScoreCalculator::check_pattern_yaku(const Round &round, const Player &player,
                 yaku_list |= Yaku::Pinfu; // 平和
             }
 
-            int ipeko_type = check_pure_double_sequence(blocks);
-            if (ipeko_type == 1) {
-                yaku_list |= Yaku::PureDoubleSequence; // 一盃口
-            }
-            else if (ipeko_type == 2) {
-                yaku_list |= Yaku::TwicePureDoubleSequence; // 二盃口
-            }
+            yaku_list |= check_pure_double_sequence(blocks);
         }
 
         if (check_pure_straight(blocks)) {
@@ -512,21 +506,9 @@ ScoreCalculator::check_pattern_yaku(const Round &round, const Player &player,
             yaku_list |= Yaku::MixedTripleSequence; // 三色同順
         }
 
-        int chanta = check_outside_hand(blocks);
-        if (chanta == 1) {
-            yaku_list |= Yaku::HalfOutsideHand; // 混全帯幺九
-        }
-        else if (chanta == 2) {
-            yaku_list |= Yaku::FullyOutsideHand; // 純全帯幺九
-        }
-
-        if (check_all_triplets(blocks)) {
-            yaku_list |= Yaku::AllTriplets; // 対々和
-        }
-
-        if (check_three_concealed_triplets(blocks)) {
-            yaku_list |= Yaku::ThreeConcealedTriplets; // 三暗刻
-        }
+        yaku_list |= check_outside_hand(blocks);
+        yaku_list |= check_all_triplets(blocks);             // 対々和
+        yaku_list |= check_three_concealed_triplets(blocks); // 三暗刻
 
         // Calculate han.
         han = 0;
@@ -816,7 +798,7 @@ bool ScoreCalculator::check_pinfu(const std::vector<Block> &blocks, const int wa
  * @brief Check if Pure Double Sequence (一盃口) or
  *        Twice Pure Double Sequence (二盃口) is established.
  */
-int ScoreCalculator::check_pure_double_sequence(const std::vector<Block> &blocks)
+YakuList ScoreCalculator::check_pure_double_sequence(const std::vector<Block> &blocks)
 {
     // Before calling this function, Check if the hand is closed.
 
@@ -838,27 +820,35 @@ int ScoreCalculator::check_pure_double_sequence(const std::vector<Block> &blocks
         }
     }
 
-    return num_double_sequences;
+    if (num_double_sequences == 1) {
+        return Yaku::PureDoubleSequence;
+    }
+    else if (num_double_sequences == 2) {
+        return Yaku::TwicePureDoubleSequence;
+    }
+
+    return Yaku::Null;
 }
 
 /**
  * @brief Check if All Triplets (対々和) is established.
  */
-bool ScoreCalculator::check_all_triplets(const std::vector<Block> &blocks)
+YakuList ScoreCalculator::check_all_triplets(const std::vector<Block> &blocks)
 {
     for (const auto &block : blocks) {
         if (block.type & BlockType::Sequence) {
-            return false; // sequence
+            return Yaku::Null; // sequence
         }
     }
 
-    return true;
+    return Yaku::AllTriplets;
 }
 
 /**
  * @brief Check if Three Concealed Triplets (三暗刻) is established.
  */
-bool ScoreCalculator::check_three_concealed_triplets(const std::vector<Block> &blocks)
+YakuList
+ScoreCalculator::check_three_concealed_triplets(const std::vector<Block> &blocks)
 {
     int num_triplets = 0;
     for (const auto &block : blocks) {
@@ -867,7 +857,7 @@ bool ScoreCalculator::check_three_concealed_triplets(const std::vector<Block> &b
         }
     }
 
-    return num_triplets == 3;
+    return num_triplets == 3 ? Yaku::ThreeConcealedTriplets : Yaku::Null;
 }
 
 /**
@@ -934,7 +924,7 @@ bool ScoreCalculator::check_pure_straight(const std::vector<Block> &blocks)
  * @brief Check if Half Outside Hand (混全帯幺九) or
  *        Fully Outside Hand (純全帯幺九) is established.
  */
-int ScoreCalculator::check_outside_hand(const std::vector<Block> &blocks)
+YakuList ScoreCalculator::check_outside_hand(const std::vector<Block> &blocks)
 {
     // | Yaku                     | Terminal | Honor | Sequence |
     // | Half Outside Hand        | o        | ○     | ○        |
@@ -966,10 +956,10 @@ int ScoreCalculator::check_outside_hand(const std::vector<Block> &blocks)
     }
 
     if (honor_block && sequence_block) {
-        return 1; // Half Outside Hand
+        return Yaku::HalfOutsideHand; // Half Outside Hand
     }
     if (!honor_block && sequence_block) {
-        return 2; // Fully Outside Hand
+        return Yaku::FullyOutsideHand; // Fully Outside Hand
     }
 
     return 0;
