@@ -320,6 +320,20 @@ int Server::run(unsigned short port)
     return EXIT_SUCCESS;
 }
 
+void print_stack_size()
+{
+#ifdef __linux__
+    pthread_attr_t attr;
+    pthread_attr_init(&attr);
+
+    size_t stackSize;
+    pthread_attr_getstacksize(&attr, &stackSize);
+    spdlog::get("logger")->info("stackSize: {} bytes", stackSize);
+
+    pthread_attr_destroy(&attr);
+#endif
+}
+
 int main(int argc, char *argv[])
 {
     unsigned short port = 50000;
