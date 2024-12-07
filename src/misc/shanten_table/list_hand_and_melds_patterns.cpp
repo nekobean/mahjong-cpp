@@ -1,13 +1,17 @@
 #undef NDEBUG
 
-#include <algorithm> // find
+#include <algorithm>
 #include <cassert>
+#include <future>
 #include <iostream>
+#include <thread>
 #include <vector>
 
+#include <cppitertools/combinations.hpp>
 #include <cppitertools/combinations_with_replacement.hpp>
 #include <cppitertools/product.hpp>
 #include <cppitertools/range.hpp>
+#include <spdlog/spdlog.h>
 
 #include "mahjong/mahjong.hpp"
 
@@ -16,31 +20,57 @@ using namespace mahjong;
 using MeldsAndHand = std::tuple<std::vector<Meld>, Hand>;
 
 /**
- * @brief List patterns of x in {0, 1, 2, 3, 4}^N where sum(x) <= 14.
+ * @brief List suits patterns.
  *
  * @tparam N Number of tile types
+ * @param counts Number of remaining tiles
  * @return Patterns
  */
-template <int N> std::map<int, std::vector<std::array<int, N>>> list_patterns()
+std::map<int, size_t> list_suits_patterns(const std::vector<int> &counts)
 {
-    std::map<int, std::vector<std::array<int, N>>> patterns;
-    for (auto &&pattern : iter::product<N>(iter::range(5))) {
+    std::map<int, size_t> patterns;
+    for (auto &&pattern :
+         iter::product(iter::range(counts[0] + 1), iter::range(counts[1] + 1),
+                       iter::range(counts[2] + 1), iter::range(counts[3] + 1),
+                       iter::range(counts[4] + 1), iter::range(counts[5] + 1),
+                       iter::range(counts[6] + 1), iter::range(counts[7] + 1),
+                       iter::range(counts[8] + 1))) {
+
         // Count total number of tiles.
         const int sum = std::apply([](auto... args) { return (args + ...); }, pattern);
         if (sum > 14) {
             continue;
         }
 
-        // Convert tuple to array.
-        std::array<int, N> key;
-        std::apply(
-            [&key](auto... args) {
-                int i = 0;
-                ((key[i++] = args), ...);
-            },
-            pattern);
+        patterns[sum]++;
+    }
 
-        patterns[sum].push_back(key);
+    return patterns;
+}
+
+/**
+ * @brief List honors patterns.
+ *
+ * @tparam N Number of tile types
+ * @param counts Number of remaining tiles
+ * @return Patterns
+ */
+std::map<int, size_t> list_honors_patterns(const std::vector<int> &counts)
+{
+    std::map<int, size_t> patterns;
+    for (auto &&pattern :
+         iter::product(iter::range(counts[0] + 1), iter::range(counts[1] + 1),
+                       iter::range(counts[2] + 1), iter::range(counts[3] + 1),
+                       iter::range(counts[4] + 1), iter::range(counts[5] + 1),
+                       iter::range(counts[6] + 1))) {
+
+        // Count total number of tiles.
+        const int sum = std::apply([](auto... args) { return (args + ...); }, pattern);
+        if (sum > 14) {
+            continue;
+        }
+
+        patterns[sum]++;
     }
 
     return patterns;
@@ -84,14 +114,13 @@ std::vector<Meld> list_meld_types()
  * @param m Number of melds
  * @return List of melds
  */
-std::vector<std::tuple<std::vector<Meld>, Count>> list_melds(int m)
+std::vector<std::tuple<std::vector<Meld>, std::vector<int>>> list_melds(int m)
 {
     const auto meld_types = list_meld_types();
 
-    std::vector<std::tuple<std::vector<Meld>, Count>> patterns;
+    std::vector<std::tuple<std::vector<Meld>, std::vector<int>>> patterns;
     for (auto &&melds : iter::combinations_with_replacement(meld_types, m)) {
-        Count wall;
-        wall.fill(4);
+        std::vector<int> wall(34, 4);
         for (const auto &meld : melds) {
             for (const auto tile : meld.tiles) {
                 --wall[tile];
@@ -105,48 +134,26 @@ std::vector<std::tuple<std::vector<Meld>, Count>> list_melds(int m)
         patterns.emplace_back(std::vector<Meld>(melds.begin(), melds.end()), wall);
     }
 
-    std::cout << "Number of melds: " << patterns.size() << std::endl;
-
     return patterns;
-}
-
-/**
- * @brief Concatenate the four suits and honors into a hand.
- *
- * @param manzu Manzu tiles
- * @param pinzu Pinzu tiles
- * @param souzu Souzu tiles
- * @param honors Honors tiles
- * @return Hand
- */
-Hand concat(const std::array<int, 9> &manzu, const std::array<int, 9> &pinzu,
-            const std::array<int, 9> &souzu, const std::array<int, 7> &honors)
-{
-    Hand hand{0};
-    for (int i = 0; i < 9; ++i) {
-        hand[i] = manzu[i];
-        hand[i + 9] = pinzu[i];
-        hand[i + 18] = souzu[i];
-    }
-
-    for (int i = 0; i < 7; ++i) {
-        hand[i + 27] = honors[i];
-    }
-
-    return hand;
 }
 
 /**
  * @brief List all hands with \a n tiles.
  *
  * @param n Number of tiles
- * @return list of hands
+ * @param wall Wall
+ * @return Number of hands
  */
-std::vector<Hand> list_hands(const int n)
+size_t list_hands(const int n, const std::vector<int> &wall)
 {
-    std::vector<Hand> hands;
-    auto suits_patterns = list_patterns<9>();
-    auto honors_patterns = list_patterns<7>();
+    auto manzu_patterns =
+        list_suits_patterns(std::vector<int>(wall.begin(), wall.begin() + 9));
+    auto pinzu_patterns =
+        list_suits_patterns(std::vector<int>(wall.begin() + 9, wall.begin() + 18));
+    auto souzu_patterns =
+        list_suits_patterns(std::vector<int>(wall.begin() + 18, wall.begin() + 27));
+    auto honors_patterns =
+        list_honors_patterns(std::vector<int>(wall.begin() + 27, wall.begin() + 34));
 
     size_t num_hands = 0;
     for (int num_m = 0; num_m <= n; ++num_m) {
@@ -154,28 +161,16 @@ std::vector<Hand> list_hands(const int n)
             for (int num_s = 0; num_s <= n - num_m - num_p; ++num_s) {
                 const int num_z = n - num_m - num_p - num_s;
                 assert(num_m + num_p + num_s + num_z == n);
-
-                const auto &manzu = suits_patterns[num_m];
-                const auto &pinzu = suits_patterns[num_p];
-                const auto &souzu = suits_patterns[num_s];
-                const auto &honors = honors_patterns[num_z];
-                for (const auto &m : manzu) {
-                    for (const auto &p : pinzu) {
-                        for (const auto &s : souzu) {
-                            for (const auto &h : honors) {
-                                //hands.push_back(concat(m, p, s, h));
-                                ++num_hands;
-                            }
-                        }
-                    }
-                }
+                const auto manzu = manzu_patterns[num_m];
+                const auto pinzu = pinzu_patterns[num_p];
+                const auto souzu = souzu_patterns[num_s];
+                const auto honors = honors_patterns[num_z];
+                num_hands += manzu * pinzu * souzu * honors;
             }
         }
     }
 
-    std::cout << "Number of hands: " << num_hands << std::endl;
-
-    return hands;
+    return num_hands;
 }
 
 /**
@@ -184,23 +179,38 @@ std::vector<Hand> list_hands(const int n)
  * @param num_melds Number of melds
  * @return Patterns of (melds, hand)
  */
-std::vector<MeldsAndHand> list_hand_and_melds(const int num_melds)
+void list_hand_and_melds(const int num_melds)
 {
-    std::vector<MeldsAndHand> patterns;
     const int num_tiles = 14 - 3 * num_melds;
     const auto melds_list = list_melds(num_melds);
-    const auto hands_list = list_hands(num_tiles);
 
-    return patterns;
+    std::vector<std::future<size_t>> futures;
+
+    for (const auto &[melds, wall] : melds_list) {
+        futures.push_back(std::async(std::launch::async, list_hands, num_tiles, wall));
+    }
+
+    size_t hand_and_melds = 0;
+    for (auto &f : futures) {
+        hand_and_melds += f.get();
+    }
+
+    spdlog::info("num_melds: {}, meld patterns: {}, hand+melds patterns: {}", num_melds,
+                 melds_list.size(), hand_and_melds);
 }
 
 int main()
 {
-    // const auto patterns0 = list_hand_and_melds(0);
-    const auto patterns1 = list_hand_and_melds(1);
-    const auto patterns2 = list_hand_and_melds(2);
-    const auto patterns3 = list_hand_and_melds(3);
-    const auto patterns4 = list_hand_and_melds(4);
+    list_hand_and_melds(0);
+    list_hand_and_melds(1);
+    list_hand_and_melds(2);
+    list_hand_and_melds(3);
+    list_hand_and_melds(4);
+    // num_melds: 0 meld patterns: 1 hand+melds patterns: 326520504500
+    // num_melds: 1 meld patterns: 89 hand+melds patterns: 592886913600
+    // num_melds: 2, meld patterns: 3840, hand+melds patterns: 303564382392
+    // ...
+    // ...
 
     return 0;
 }
