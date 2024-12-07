@@ -1,6 +1,6 @@
 
 
-file(GLOB_RECURSE SRC_FILES ../../src/mahjong/*.cpp)
+file(GLOB_RECURSE SRC_FILES ../../mahjong/*.cpp)
 
 FetchContent_Declare(
     cppitertools
@@ -29,3 +29,10 @@ target_link_libraries(create_uradora_table ${Boost_LIBRARIES} spdlog ${CMAKE_DL_
 add_custom_command(TARGET create_uradora_table PRE_BUILD
                     COMMAND ${CMAKE_COMMAND} -E copy_directory
                     ${CMAKE_SOURCE_DIR}/data/config/ $<TARGET_FILE_DIR:create_uradora_table>)
+
+# list_hand_and_melds_patterns
+add_executable(list_hand_and_melds_patterns ${SRC_FILES} list_hand_and_melds_patterns.cpp)
+target_link_libraries(list_hand_and_melds_patterns ${Boost_LIBRARIES} spdlog ${CMAKE_DL_LIBS})
+add_custom_command(TARGET list_hand_and_melds_patterns PRE_BUILD
+                    COMMAND ${CMAKE_COMMAND} -E copy_directory
+                    ${CMAKE_SOURCE_DIR}/data/config/ $<TARGET_FILE_DIR:list_hand_and_melds_patterns>)
