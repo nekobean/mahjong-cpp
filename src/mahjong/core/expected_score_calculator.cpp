@@ -436,10 +436,11 @@ void ExpectedScoreCalculator::calc_values(const Config &config, Graph &graph,
             }
 
             state.tenpai_prob[t] =
-                state.tenpai_prob[t + 1] + state.tenpai_prob[t] / config.sum;
-            state.win_prob[t] = state.win_prob[t + 1] + state.win_prob[t] / config.sum;
+                state.tenpai_prob[t + 1] + state.tenpai_prob[t] / (config.sum - t);
+            state.win_prob[t] =
+                state.win_prob[t + 1] + state.win_prob[t] / (config.sum - t);
             state.exp_score[t] =
-                state.exp_score[t + 1] + state.exp_score[t] / config.sum;
+                state.exp_score[t + 1] + state.exp_score[t] / (config.sum - t);
         }
 
         // discard node
