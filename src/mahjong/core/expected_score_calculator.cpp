@@ -314,7 +314,7 @@ ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::select1(
     wait |= (wait & (1LL << Tile::Souzu5)) ? (1LL << Tile::RedSouzu5) : 0;
 
     // Add vertex to graph.
-    VertexData state(config.t_max + 1, 0.0, 0.0, 0.0);
+    VertexData state(config.t_max + 1, shanten <= 0, shanten == -1, 0.0);
     const Vertex vertex = boost::add_vertex(state, graph);
     cache1[key] = vertex;
 
