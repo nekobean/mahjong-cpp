@@ -418,7 +418,7 @@ void ExpectedScoreCalculator::calc_values(const Config &config, Graph &graph,
 {
     for (int t = config.t_max - 1; t >= config.t_min; --t) {
         // draw node
-        for (auto &[_, vertex] : cache1) {
+        for (const auto &[_, vertex] : cache1) {
             VertexData &state = graph[vertex];
             for (auto [first, last] = boost::out_edges(vertex, graph); first != last;
                  ++first) {
@@ -443,7 +443,7 @@ void ExpectedScoreCalculator::calc_values(const Config &config, Graph &graph,
         }
 
         // discard node
-        for (auto &[_, vertex] : cache2) {
+        for (const auto &[_, vertex] : cache2) {
             VertexData &state = graph[vertex];
 
             for (auto [first, last] = boost::in_edges(vertex, graph); first != last;
@@ -488,10 +488,6 @@ std::tuple<std::vector<ExpectedScoreCalculator::Stat>, int>
 ExpectedScoreCalculator::calc(const Config &_config, const Round &round,
                               const Player &_player, const Count &wall)
 {
-    // Vertex に格納している (t_max + 1) * 3 の長さの1次元配列のうち、
-    // 1 ~ t_max が tenpai_prob,
-    // t_max + 1 ~ t_max * 2 + 1 が win_prob,
-    // t_max * 2 + 2 ~ t_max * 3 + 2 が exp_score の値を格納している
     Graph graph;
     Cache cache1, cache2;
 
