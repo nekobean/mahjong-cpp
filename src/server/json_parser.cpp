@@ -228,11 +228,11 @@ dump_expected_score(const std::vector<ExpectedScoreCalculator::Stat> &stats,
         }
         x.AddMember("win_prob", win_prob, doc.GetAllocator());
 
-        rapidjson::Value exp_value(rapidjson::kArrayType);
-        for (const auto value : stat.exp_value) {
-            exp_value.PushBack(value, doc.GetAllocator());
+        rapidjson::Value exp_score(rapidjson::kArrayType);
+        for (const auto value : stat.exp_score) {
+            exp_score.PushBack(value, doc.GetAllocator());
         }
-        x.AddMember("exp_score", exp_value, doc.GetAllocator());
+        x.AddMember("exp_score", exp_score, doc.GetAllocator());
 
         x.AddMember("necessary_tiles", dump_necessary_tiles(stat.necessary_tiles, doc),
                     doc.GetAllocator());
@@ -288,7 +288,7 @@ rapidjson::Value create_response(const Request &req, rapidjson::Document &doc)
     ExpectedScoreCalculator::Config config;
     const int num_tiles = req.player.num_tiles() + req.player.num_melds() * 3;
     config.t_min = 1;
-    config.t_max = num_tiles == 14 ? 17 : 18;
+    config.t_max = 18;
     config.sum = std::accumulate(req.wall.begin(), req.wall.begin() + 34, 0);
     config.extra = shanten <= 1 ? 2 : 1;
     config.shanten_type = ShantenFlag::All;

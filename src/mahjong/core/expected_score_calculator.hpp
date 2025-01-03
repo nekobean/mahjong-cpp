@@ -66,7 +66,7 @@ class ExpectedScoreCalculator
         /* win probability */
         std::vector<double> win_prob;
         /* expected score */
-        std::vector<double> exp_value;
+        std::vector<double> exp_score;
         /* list of necessary tiles */
         std::vector<std::tuple<int, int>> necessary_tiles;
         /* shanten */
@@ -103,7 +103,23 @@ class ExpectedScoreCalculator
         int32_t honors;
     };
 
-    using VertexData = std::vector<double>;
+    struct VertexData
+    {
+      public:
+        VertexData() = default;
+        VertexData(const size_t size, const double tenpai_init, const double win_init,
+                   const double exp_init)
+            : tenpai_prob(size, tenpai_init)
+            , win_prob(size, win_init)
+            , exp_score(size, exp_init)
+        {
+        }
+
+        std::vector<double> tenpai_prob;
+        std::vector<double> win_prob;
+        std::vector<double> exp_score;
+    };
+
     using EdgeData = std::tuple<int, int>;
     using Graph = boost::adjacency_list<boost::listS, boost::vecS,
                                         boost::bidirectionalS, VertexData, EdgeData>;
@@ -153,4 +169,4 @@ class ExpectedScoreCalculator
 };
 } // namespace mahjong
 
-#endif
+#endif /* MAHJONG_CPP_EXPECTED_SCORE_CALCULATOR */
