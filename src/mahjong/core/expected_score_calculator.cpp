@@ -420,11 +420,10 @@ void ExpectedScoreCalculator::calc_values(const Config &config, Graph &graph,
         // draw node
         for (const auto &[_, vertex] : cache1) {
             VertexData &state = graph[vertex];
-            for (auto [first, last] = boost::out_edges(vertex, graph); first != last;
-                 ++first) {
-                const auto target = boost::target(*first, graph);
-                const auto [weight, score] = graph[*first];
-                const VertexData &state2 = graph[target];
+            for (const auto edge :
+                 boost::make_iterator_range(boost::out_edges(vertex, graph))) {
+                const auto [weight, score] = graph[edge];
+                const VertexData &state2 = graph[boost::target(edge, graph)];
 
                 state.tenpai_prob[t] +=
                     weight * (state2.tenpai_prob[t + 1] - state.tenpai_prob[t + 1]);
@@ -447,10 +446,9 @@ void ExpectedScoreCalculator::calc_values(const Config &config, Graph &graph,
         for (const auto &[_, vertex] : cache2) {
             VertexData &state = graph[vertex];
 
-            for (auto [first, last] = boost::in_edges(vertex, graph); first != last;
-                 ++first) {
-                const auto source = boost::source(*first, graph);
-                const VertexData &state2 = graph[source];
+            for (const auto edge :
+                 boost::make_iterator_range(boost::in_edges(vertex, graph))) {
+                const VertexData &state2 = graph[boost::source(edge, graph)];
 
                 state.tenpai_prob[t] =
                     std::max(state.tenpai_prob[t], state2.tenpai_prob[t]);
