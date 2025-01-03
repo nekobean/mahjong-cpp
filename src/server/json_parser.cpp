@@ -228,11 +228,11 @@ dump_expected_score(const std::vector<ExpectedScoreCalculator::Stat> &stats,
         }
         x.AddMember("win_prob", win_prob, doc.GetAllocator());
 
-        rapidjson::Value exp_value(rapidjson::kArrayType);
-        for (const auto value : stat.exp_value) {
-            exp_value.PushBack(value, doc.GetAllocator());
+        rapidjson::Value exp_score(rapidjson::kArrayType);
+        for (const auto value : stat.exp_score) {
+            exp_score.PushBack(value, doc.GetAllocator());
         }
-        x.AddMember("exp_score", exp_value, doc.GetAllocator());
+        x.AddMember("exp_score", exp_score, doc.GetAllocator());
 
         x.AddMember("necessary_tiles", dump_necessary_tiles(stat.necessary_tiles, doc),
                     doc.GetAllocator());

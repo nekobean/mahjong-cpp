@@ -66,7 +66,7 @@ class ExpectedScoreCalculator
         /* win probability */
         std::vector<double> win_prob;
         /* expected score */
-        std::vector<double> exp_value;
+        std::vector<double> exp_score;
         /* list of necessary tiles */
         std::vector<std::tuple<int, int>> necessary_tiles;
         /* shanten */
@@ -111,13 +111,13 @@ class ExpectedScoreCalculator
                    const double exp_init)
             : tenpai_prob(size, tenpai_init)
             , win_prob(size, win_init)
-            , exp_value(size, exp_init)
+            , exp_score(size, exp_init)
         {
         }
 
         std::vector<double> tenpai_prob;
         std::vector<double> win_prob;
-        std::vector<double> exp_value;
+        std::vector<double> exp_score;
     };
 
     using EdgeData = std::tuple<int, int>;

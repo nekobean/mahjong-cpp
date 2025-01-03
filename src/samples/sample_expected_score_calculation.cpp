@@ -13,7 +13,8 @@ int main(int argc, char *argv[])
     //////////////////////////////////////////
     Player player;
     // Create hand by mpsz notation or vector of tiles.
-    player.hand = from_mpsz("33456789m6p24677s");
+    //player.hand = from_mpsz("13m12457899p1367s"); // 1430.33
+    player.hand = from_mpsz("222567m345p33667s");
     // Hand hand = from_array({Tile::Manzu2, Tile::Manzu2, Tile::Manzu2, Tile::Manzu5,
     //                         Tile::Manzu6, Tile::Manzu7, Tile::Pinzu3, Tile::Pinzu4,
     //                         Tile::Souzu3, Tile::Souzu3, Tile::Souzu6, Tile::Souzu6,
@@ -43,7 +44,7 @@ int main(int argc, char *argv[])
     //////////////////////////////////////////
     ExpectedScoreCalculator::Config config;
     config.t_min = 1;
-    config.t_max = 17;
+    config.t_max = 18;
     config.extra = 1;
     config.shanten_type = ShantenFlag::All;
     config.enable_reddora = true;
@@ -89,11 +90,6 @@ int main(int argc, char *argv[])
 
     std::cout << "=== Player ===" << std::endl;
     std::cout << to_string(player) << std::endl;
-
-    std::cout << "=== Info ===" << std::endl;
-    std::cout << fmt::format("{:>15}{}", "shanten: ", shanten) << std::endl;
-    std::cout << fmt::format("{:>15}{} ms", "time: ", elapsed_ms) << std::endl;
-    std::cout << fmt::format("{:>15}{} hands", "searched: ", searched) << std::endl;
 
     std::cout << "=== Necessary Tiles ===" << std::endl;
     for (const auto &stat : stats) {
@@ -158,8 +154,13 @@ int main(int argc, char *argv[])
     for (int t = config.t_min; t <= config.t_max; ++t) {
         std::cout << fmt::format("{:>4}", t);
         for (const auto &stat : stats) {
-            std::cout << fmt::format("{:>9.2f}", stat.exp_value[t]);
+            std::cout << fmt::format("{:>9.2f}", stat.exp_score[t]);
         }
         std::cout << std::endl;
     }
+
+    std::cout << "=== Info ===" << std::endl;
+    std::cout << fmt::format("{:>15}{}", "shanten: ", shanten) << std::endl;
+    std::cout << fmt::format("{:>15}{} ms", "time: ", elapsed_ms) << std::endl;
+    std::cout << fmt::format("{:>15}{} hands", "searched: ", searched) << std::endl;
 }

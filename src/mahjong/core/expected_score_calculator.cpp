@@ -314,7 +314,7 @@ ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::select1(
     wait |= (wait & (1LL << Tile::Souzu5)) ? (1LL << Tile::RedSouzu5) : 0;
 
     // Add vertex to graph.
-    VertexData state(static_cast<size_t>(config.t_max + 1), 0.0, 0.0, 0.0);
+    VertexData state(config.t_max + 1, 0.0, 0.0, 0.0);
     const Vertex vertex = boost::add_vertex(state, graph);
     cache1[key] = vertex;
 
@@ -382,8 +382,7 @@ ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::select2(
     disc |= (disc & (1LL << Tile::Souzu5)) ? (1LL << Tile::RedSouzu5) : 0;
 
     // Add vertex to graph.
-    VertexData state(static_cast<size_t>(config.t_max + 1), shanten <= 0, shanten == -1,
-                     0.0);
+    VertexData state(config.t_max + 1, shanten <= 0, shanten == -1, 0.0);
     const Vertex vertex = boost::add_vertex(state, graph);
     cache2[key] = vertex;
 
@@ -431,16 +430,16 @@ void ExpectedScoreCalculator::calc_values(const Config &config, Graph &graph,
                     weight * (state2.tenpai_prob[t + 1] - state.tenpai_prob[t + 1]);
                 state.win_prob[t] +=
                     weight * (state2.win_prob[t + 1] - state.win_prob[t + 1]);
-                state.exp_value[t] += weight * (std::max(static_cast<double>(score),
-                                                         state2.exp_value[t + 1]) -
-                                                state.exp_value[t + 1]);
+                state.exp_score[t] += weight * (std::max(static_cast<double>(score),
+                                                         state2.exp_score[t + 1]) -
+                                                state.exp_score[t + 1]);
             }
 
             state.tenpai_prob[t] =
                 state.tenpai_prob[t + 1] + state.tenpai_prob[t] / config.sum;
             state.win_prob[t] = state.win_prob[t + 1] + state.win_prob[t] / config.sum;
-            state.exp_value[t] =
-                state.exp_value[t + 1] + state.exp_value[t] / config.sum;
+            state.exp_score[t] =
+                state.exp_score[t + 1] + state.exp_score[t] / config.sum;
         }
 
         // discard node
@@ -455,7 +454,7 @@ void ExpectedScoreCalculator::calc_values(const Config &config, Graph &graph,
                 state.tenpai_prob[t] =
                     std::max(state.tenpai_prob[t], state2.tenpai_prob[t]);
                 state.win_prob[t] = std::max(state.win_prob[t], state2.win_prob[t]);
-                state.exp_value[t] = std::max(state.exp_value[t], state2.exp_value[t]);
+                state.exp_score[t] = std::max(state.exp_score[t], state2.exp_score[t]);
             }
         }
     }
@@ -492,7 +491,7 @@ ExpectedScoreCalculator::calc(const Config &_config, const Round &round,
     // Vertex に格納している (t_max + 1) * 3 の長さの1次元配列のうち、
     // 1 ~ t_max が tenpai_prob,
     // t_max + 1 ~ t_max * 2 + 1 が win_prob,
-    // t_max * 2 + 2 ~ t_max * 3 + 2 が exp_value の値を格納している
+    // t_max * 2 + 2 ~ t_max * 3 + 2 が exp_score の値を格納している
     Graph graph;
     Cache cache1, cache2;
 
@@ -544,7 +543,7 @@ ExpectedScoreCalculator::calc(const Config &_config, const Round &round,
                     get_necessary_tiles(config, player, wall);
 
                 stats.emplace_back(Stat{Tile::Null, state.tenpai_prob, state.win_prob,
-                                        state.exp_value, necessary_tiles, shanten2});
+                                        state.exp_score, necessary_tiles, shanten2});
             }
         }
         else {
@@ -577,7 +576,7 @@ ExpectedScoreCalculator::calc(const Config &_config, const Round &round,
                             get_necessary_tiles(config, player, wall);
 
                         stats.emplace_back(Stat{i, state.tenpai_prob, state.win_prob,
-                                                state.exp_value, necessary_tiles,
+                                                state.exp_score, necessary_tiles,
                                                 shanten2});
                     }
                     draw(player, hand_counts, wall_counts, i);
