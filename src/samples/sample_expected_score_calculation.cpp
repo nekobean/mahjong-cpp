@@ -59,9 +59,9 @@ int main(int argc, char *argv[])
         ShantenCalculator::calc(player.hand, player.num_melds(), config.shanten_type);
 
     // Calculate tenpai probability, win probability, and expected score.
-    const auto start = std::chrono::system_clock::now();
+    const auto start = std::chrono::steady_clock::now();
     const auto [stats, searched] = ExpectedScoreCalculator::calc(config, round, player);
-    const auto end = std::chrono::system_clock::now();
+    const auto end = std::chrono::steady_clock::now();
     const int elapsed_ms = static_cast<int>(
         std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
 

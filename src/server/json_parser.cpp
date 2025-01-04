@@ -299,10 +299,10 @@ rapidjson::Value create_response(const Request &req, rapidjson::Document &doc)
     config.enable_tegawari = req.config.enable_tegawari;
     config.enable_riichi = req.config.enable_riichi;
 
-    const auto start = std::chrono::system_clock::now();
+    const auto start = std::chrono::steady_clock::now();
     const auto [stats, searched] =
         ExpectedScoreCalculator::calc(config, req.round, req.player, req.wall);
-    const auto end = std::chrono::system_clock::now();
+    const auto end = std::chrono::steady_clock::now();
     const auto elapsed_ms =
         std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
 
