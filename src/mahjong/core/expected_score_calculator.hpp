@@ -121,8 +121,8 @@ class ExpectedScoreCalculator
     };
 
     using EdgeData = std::tuple<int, int>;
-    using Graph = boost::adjacency_list<boost::listS, boost::vecS,
-                                        boost::bidirectionalS, VertexData, EdgeData>;
+    using Graph = boost::adjacency_list<boost::vecS, boost::vecS, boost::bidirectionalS,
+                                        VertexData, EdgeData>;
     using Vertex = Graph::vertex_descriptor;
     using Edge = Graph::edge_descriptor;
     using Cache = std::map<CacheKey, Vertex>;
