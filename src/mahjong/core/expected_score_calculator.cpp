@@ -284,7 +284,7 @@ int ExpectedScoreCalculator::calc_score(const Config &config, const Round &round
     }
 }
 
-ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::select1(
+ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::draw_node(
     const Config &config, const Round &round, Player &player, Graph &graph,
     Cache &cache1, Cache &cache2, CountRed &hand_counts, CountRed &wall_counts,
     const CountRed &hand_org, const int shanten_org, const bool riichi)
@@ -314,8 +314,9 @@ ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::select1(
     wait |= (wait & (1LL << Tile::Souzu5)) ? (1LL << Tile::RedSouzu5) : 0;
 
     // Add vertex to graph.
-    VertexData state(config.t_max + 1, shanten <= 0, shanten == -1, 0.0);
-    const Vertex vertex = boost::add_vertex(state, graph);
+    VertexData vertex_data(config.t_max + 1, 0.0, 0.0, 0.0);
+    vertex_data.tenpai_prob[config.t_max] = shanten == 0;
+    const Vertex vertex = boost::add_vertex(vertex_data, graph);
     cache1[key] = vertex;
 
     for (int i = 0; i < 37; ++i) {
@@ -333,8 +334,8 @@ ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::select1(
                     : riichi;
 
             const Vertex target =
-                select2(config, round, player, graph, cache1, cache2, hand_counts,
-                        wall_counts, hand_org, shanten_org, call_riichi);
+                discard_node(config, round, player, graph, cache1, cache2, hand_counts,
+                             wall_counts, hand_org, shanten_org, call_riichi);
 
             if (!boost::edge(vertex, target, graph).second) {
                 // 自摸前の時点で聴牌の場合、有効牌自摸後は和了形のため、点数計算を行う
@@ -352,7 +353,7 @@ ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::select1(
     return vertex;
 }
 
-ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::select2(
+ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::discard_node(
     const Config &config, const Round &round, Player &player, Graph &graph,
     Cache &cache1, Cache &cache2, CountRed &hand_counts, CountRed &wall_counts,
     const CountRed &hand_org, const int shanten_org, const bool riichi)
@@ -382,8 +383,8 @@ ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::select2(
     disc |= (disc & (1LL << Tile::Souzu5)) ? (1LL << Tile::RedSouzu5) : 0;
 
     // Add vertex to graph.
-    VertexData state(config.t_max + 1, shanten <= 0, shanten == -1, 0.0);
-    const Vertex vertex = boost::add_vertex(state, graph);
+    const Vertex vertex = boost::add_vertex(
+        VertexData(config.t_max + 1, shanten == 0, shanten == -1, 0.0), graph);
     cache2[key] = vertex;
 
     for (int i = 0; i < 37; ++i) {
@@ -394,8 +395,8 @@ ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::select2(
 
             const int weight = wall_counts[i];
             const Vertex source =
-                select1(config, round, player, graph, cache1, cache2, hand_counts,
-                        wall_counts, hand_org, shanten_org, riichi);
+                draw_node(config, round, player, graph, cache1, cache2, hand_counts,
+                          wall_counts, hand_org, shanten_org, riichi);
 
             draw(player, hand_counts, wall_counts, i);
 
@@ -413,47 +414,45 @@ ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::select2(
     return vertex;
 }
 
-void ExpectedScoreCalculator::calc_values(const Config &config, Graph &graph,
-                                          const Cache &cache1, const Cache &cache2)
+void ExpectedScoreCalculator::calc_stats(const Config &config, Graph &graph,
+                                         const Cache &cache1, const Cache &cache2)
 {
-    for (int t = config.t_max - 1; t >= config.t_min; --t) {
+    for (int t = config.t_max; t >= config.t_min; --t) {
         // draw node
-        for (const auto &[_, vertex] : cache1) {
-            VertexData &state = graph[vertex];
-            for (const auto edge :
-                 boost::make_iterator_range(boost::out_edges(vertex, graph))) {
-                const auto [weight, score] = graph[edge];
-                const VertexData &state2 = graph[boost::target(edge, graph)];
+        if (t < config.t_max) {
+            for (const auto &[_, vertex] : cache1) {
+                VertexData &s1 = graph[vertex];
+                for (const auto &edge :
+                     boost::make_iterator_range(boost::out_edges(vertex, graph))) {
+                    const auto &[weight, score] = graph[edge];
+                    const VertexData &s2 = graph[boost::target(edge, graph)];
 
-                state.tenpai_prob[t] +=
-                    weight * (state2.tenpai_prob[t + 1] - state.tenpai_prob[t + 1]);
-                state.win_prob[t] +=
-                    weight * (state2.win_prob[t + 1] - state.win_prob[t + 1]);
-                state.exp_score[t] += weight * (std::max(static_cast<double>(score),
-                                                         state2.exp_score[t + 1]) -
-                                                state.exp_score[t + 1]);
+                    s1.tenpai_prob[t] +=
+                        weight * (s2.tenpai_prob[t + 1] - s1.tenpai_prob[t + 1]);
+                    s1.win_prob[t] +=
+                        weight * (s2.win_prob[t + 1] - s1.win_prob[t + 1]);
+                    s1.exp_score[t] += weight * (std::max(static_cast<double>(score),
+                                                          s2.exp_score[t + 1]) -
+                                                 s1.exp_score[t + 1]);
+                }
+
+                s1.tenpai_prob[t] =
+                    s1.tenpai_prob[t + 1] + s1.tenpai_prob[t] / (config.sum - t);
+                s1.win_prob[t] = s1.win_prob[t + 1] + s1.win_prob[t] / (config.sum - t);
+                s1.exp_score[t] =
+                    s1.exp_score[t + 1] + s1.exp_score[t] / (config.sum - t);
             }
-
-            state.tenpai_prob[t] =
-                state.tenpai_prob[t + 1] + state.tenpai_prob[t] / (config.sum - t);
-            state.win_prob[t] =
-                state.win_prob[t + 1] + state.win_prob[t] / (config.sum - t);
-            state.exp_score[t] =
-                state.exp_score[t + 1] + state.exp_score[t] / (config.sum - t);
         }
 
         // discard node
         for (const auto &[_, vertex] : cache2) {
-            VertexData &state = graph[vertex];
-
-            for (const auto edge :
+            VertexData &s1 = graph[vertex];
+            for (const auto &edge :
                  boost::make_iterator_range(boost::in_edges(vertex, graph))) {
-                const VertexData &state2 = graph[boost::source(edge, graph)];
-
-                state.tenpai_prob[t] =
-                    std::max(state.tenpai_prob[t], state2.tenpai_prob[t]);
-                state.win_prob[t] = std::max(state.win_prob[t], state2.win_prob[t]);
-                state.exp_score[t] = std::max(state.exp_score[t], state2.exp_score[t]);
+                const VertexData &s2 = graph[boost::source(edge, graph)];
+                s1.tenpai_prob[t] = std::max(s1.tenpai_prob[t], s2.tenpai_prob[t]);
+                s1.win_prob[t] = std::max(s1.win_prob[t], s2.win_prob[t]);
+                s1.exp_score[t] = std::max(s1.exp_score[t], s2.exp_score[t]);
             }
         }
     }
@@ -523,11 +522,11 @@ ExpectedScoreCalculator::calc(const Config &_config, const Round &round,
             // 期待値、確率計算を行う場合
 
             // 13枚の場合は自摸を起点に手牌遷移のグラフを作成する。
-            select1(config, round, player, graph, cache1, cache2, hand_counts,
-                    wall_counts, hand_org, shanten_org, riichi);
+            draw_node(config, round, player, graph, cache1, cache2, hand_counts,
+                      wall_counts, hand_org, shanten_org, riichi);
 
             // 確率、期待値を計算する。
-            calc_values(config, graph, cache1, cache2);
+            calc_stats(config, graph, cache1, cache2);
 
             // 結果を取得する。
             if (const auto itr = cache1.find(hand_counts); itr != cache1.end()) {
@@ -552,11 +551,11 @@ ExpectedScoreCalculator::calc(const Config &_config, const Round &round,
             // 期待値、確率計算を行う場合
 
             // 14枚の場合は打牌を起点に手牌遷移のグラフを作成する。
-            select2(config, round, player, graph, cache1, cache2, hand_counts,
-                    wall_counts, hand_org, shanten_org, riichi);
+            discard_node(config, round, player, graph, cache1, cache2, hand_counts,
+                         wall_counts, hand_org, shanten_org, riichi);
 
             // 確率、期待値を計算する。
-            calc_values(config, graph, cache1, cache2);
+            calc_stats(config, graph, cache1, cache2);
 
             // 結果を取得する。
             for (int i = 0; i < 37; ++i) {

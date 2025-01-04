@@ -290,7 +290,7 @@ rapidjson::Value create_response(const Request &req, rapidjson::Document &doc)
     config.t_min = 1;
     config.t_max = 18;
     config.sum = std::accumulate(req.wall.begin(), req.wall.begin() + 34, 0);
-    config.extra = shanten <= 1 ? 2 : 1;
+    config.extra = 1;
     config.shanten_type = ShantenFlag::All;
     config.calc_stats = shanten <= 3;
     config.enable_reddora = req.config.enable_reddora;

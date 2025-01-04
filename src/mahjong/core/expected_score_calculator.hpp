@@ -153,16 +153,18 @@ class ExpectedScoreCalculator
     static int calc_score(const Config &config, const Round &round, Player &player,
                           CountRed &hand_counts, CountRed &wall_counts,
                           const int shanten_type, const int tile, const bool riichi);
-    static Vertex select1(const Config &config, const Round &round, Player &player,
-                          Graph &graph, Cache &cache1, Cache &cache2,
-                          CountRed &hand_reds, CountRed &wall_reds,
-                          const CountRed &origin_reds, int sht_org, const bool riichi);
-    static Vertex select2(const Config &config, const Round &round, Player &player,
-                          Graph &graph, Cache &cache1, Cache &cache2,
-                          CountRed &hand_reds, CountRed &wall_reds,
-                          const CountRed &origin_reds, int sht_org, const bool riichi);
-    static void calc_values(const Config &config, Graph &graph, const Cache &cache1,
-                            const Cache &cache2);
+    static Vertex draw_node(const Config &config, const Round &round, Player &player,
+                            Graph &graph, Cache &cache1, Cache &cache2,
+                            CountRed &hand_reds, CountRed &wall_reds,
+                            const CountRed &origin_reds, int sht_org,
+                            const bool riichi);
+    static Vertex discard_node(const Config &config, const Round &round, Player &player,
+                               Graph &graph, Cache &cache1, Cache &cache2,
+                               CountRed &hand_reds, CountRed &wall_reds,
+                               const CountRed &origin_reds, int sht_org,
+                               const bool riichi);
+    static void calc_stats(const Config &config, Graph &graph, const Cache &cache1,
+                           const Cache &cache2);
     static std::tuple<int, std::vector<std::tuple<int, int>>>
     get_necessary_tiles(const Config &config, const Player &player, const Count &wall);
     static bool load_uradora_table();
