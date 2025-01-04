@@ -414,6 +414,14 @@ ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::discard_node(
     return vertex;
 }
 
+/**
+ * @brief Calculate the probability of tenpai, the probability of winning, and the expected score.
+ *        https://github.com/nekobean/mahjong-cpp/wiki/%E8%81%B4%E7%89%8C%E7%A2%BA%E7%8E%87%E3%80%81%E5%92%8C%E4%BA%86%E7%A2%BA%E7%8E%87%E3%80%81%E7%82%B9%E6%95%B0%E6%9C%9F%E5%BE%85%E5%80%A4
+ * @param config Configulation
+ * @param graph Graph
+ * @param cache1 List of draw node
+ * @param cache2 List of discard node
+ */
 void ExpectedScoreCalculator::calc_stats(const Config &config, Graph &graph,
                                          const Cache &cache1, const Cache &cache2)
 {
