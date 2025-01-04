@@ -13,7 +13,7 @@ int main(int argc, char *argv[])
     //////////////////////////////////////////
     Player player;
     // Create hand by mpsz notation or vector of tiles.
-    //player.hand = from_mpsz("13m12457899p1367s"); // 1430.33
+    //player.hand = from_mpsz("13m12457899p1367s");
     player.hand = from_mpsz("222567m345p33667s");
     // Hand hand = from_array({Tile::Manzu2, Tile::Manzu2, Tile::Manzu2, Tile::Manzu5,
     //                         Tile::Manzu6, Tile::Manzu7, Tile::Pinzu3, Tile::Pinzu4,
