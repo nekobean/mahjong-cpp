@@ -9,6 +9,8 @@
 
 #include "mahjong/types/types.hpp"
 
+//#define DEBUG_GRAPH
+
 namespace mahjong
 {
 class ExpectedScoreCalculator
@@ -28,7 +30,7 @@ class ExpectedScoreCalculator
             , enable_uradora(true)
             , enable_shanten_down(true)
             , enable_tegawari(true)
-            , enable_riichi(false)
+            , enable_riichi(true)
             , calc_stats(true)
         {
         }
@@ -76,7 +78,8 @@ class ExpectedScoreCalculator
   private:
     struct CacheKey
     {
-        CacheKey(const Count &hand) : manzu(0), pinzu(0), souzu(0), honors(0)
+        CacheKey(const Count &hand, const bool riichi)
+            : manzu(0), pinzu(0), souzu(0), honors(0)
         {
             manzu = std::accumulate(hand.begin(), hand.begin() + 9, 0,
                                     [](int x, int y) { return x * 8 + y; });
@@ -89,6 +92,7 @@ class ExpectedScoreCalculator
             honors |= hand[Tile::RedManzu5] << 21;
             honors |= hand[Tile::RedPinzu5] << 22;
             honors |= hand[Tile::RedSouzu5] << 23;
+            honors |= riichi << 24;
         }
 
         bool operator<(const CacheKey &other) const
@@ -107,6 +111,20 @@ class ExpectedScoreCalculator
     {
       public:
         VertexData() = default;
+
+#ifdef DEBUG_GRAPH
+        VertexData(const size_t size, const double tenpai_init, const double win_init,
+                   const double exp_init, const Player &player, const int shanten,
+                   const bool riichi)
+            : tenpai_prob(size, tenpai_init)
+            , win_prob(size, win_init)
+            , exp_score(size, exp_init)
+            , player(player)
+            , shanten(shanten)
+            , riichi(riichi)
+        {
+        }
+#else
         VertexData(const size_t size, const double tenpai_init, const double win_init,
                    const double exp_init)
             : tenpai_prob(size, tenpai_init)
@@ -114,13 +132,23 @@ class ExpectedScoreCalculator
             , exp_score(size, exp_init)
         {
         }
+#endif
 
         std::vector<double> tenpai_prob;
         std::vector<double> win_prob;
         std::vector<double> exp_score;
+#ifdef DEBUG_GRAPH
+        Player player;
+        int shanten;
+        bool riichi;
+#endif
     };
 
+#ifdef DEBUG_GRAPH
+    using EdgeData = std::tuple<int, int, int, int>;
+#else
     using EdgeData = std::tuple<int, int>;
+#endif
     using Graph = boost::adjacency_list<boost::listS, boost::vecS,
                                         boost::bidirectionalS, VertexData, EdgeData>;
     using Vertex = Graph::vertex_descriptor;
@@ -142,6 +170,7 @@ class ExpectedScoreCalculator
                                                    const Count &wall);
     static Count create_wall(const Round &round, const Player &player,
                              bool enable_reddora);
+    static void write_graph(const std::string &filename, const Graph &graph);
 
   private:
     static CountRed encode(const Count &counts, const bool enable_reddora);
@@ -168,6 +197,8 @@ class ExpectedScoreCalculator
     static std::tuple<int, std::vector<std::tuple<int, int>>>
     get_necessary_tiles(const Config &config, const Player &player, const Count &wall);
     static bool load_uradora_table();
+    static VertexData get_stat(Graph &graph, const Cache &cache1,
+                               CountRed &hand_counts);
 };
 } // namespace mahjong
 

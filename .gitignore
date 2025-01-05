@@ -165,3 +165,4 @@ build/
 .vscode/
 __pycache__/
 compare/
+*.dot
