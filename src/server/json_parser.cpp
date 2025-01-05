@@ -299,6 +299,12 @@ rapidjson::Value create_response(const Request &req, rapidjson::Document &doc)
     config.enable_tegawari = req.config.enable_tegawari;
     config.enable_riichi = req.config.enable_riichi;
 
+    // ToDo: 立直の問題を直すまで、聴牌は向聴戻し、手変わりを無効化
+    if (shanten == 0) {
+        config.enable_shanten_down = false;
+        config.enable_tegawari = false;
+    }
+
     const auto start = std::chrono::steady_clock::now();
     const auto [stats, searched] =
         ExpectedScoreCalculator::calc(config, req.round, req.player, req.wall);
