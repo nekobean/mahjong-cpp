@@ -20,13 +20,13 @@ Miscellaneous programs about Japanese Mahjong
 
 アルゴリズムに関しましては、以下のページを参考にさせていただいております。
 
-- [tomohxx](https://github.com/tomohxx) 氏: [麻雀アルゴリズム](https://tomohxx.github.io/mahjong-algorithm-book/)
+- [tomohxx](https://github.com/tomohxx) 氏: [麻雀アルゴリズム](https://tomohxx.github.io/mahjong-algorithm-book/)<br>
   得点期待値、和了確率、向聴数などのアルゴリズムや実装方法について紹介されています。
 - [zurukumo](https://github.com/zurukumo) 氏: [ネット上の向聴数計算アルゴリズムの知見に勝手に補足する](https://zenn.dev/zurukumo/articles/93ae2c381cbe6d)
 - KamichanR 氏: [【麻雀】シャンテン数 高速計算アルゴリズム #C++ - Qiita](https://qiita.com/KamichanR/items/de08c48f92834c0d1f74)
-- [Cryolite](https://github.com/Cryolite) 氏: [A Fast and Space-Efficient Algorithm for Calculating Deficient Numbers (a.k.a. Shanten Numbers).pdf](https://www.slideshare.net/slideshow/a-fast-and-space-efficient-algorithm-for-calculating-deficient-numbers-a-k-a-shanten-numbers-pdf/269706674)
+- [Cryolite](https://github.com/Cryolite) 氏: [A Fast and Space-Efficient Algorithm for Calculating Deficient Numbers (a.k.a. Shanten Numbers).pdf](https://www.slideshare.net/slideshow/a-fast-and-space-efficient-algorithm-for-calculating-deficient-numbers-a-k-a-shanten-numbers-pdf/269706674)<br>
   牌の組み合わせの効率的なハッシュ化の方法について紹介されています。
-- あら氏: [あらの（一人）麻雀研究所](https://mahjong.ara.black/)
+- あら氏: [あらの（一人）麻雀研究所](https://mahjong.ara.black/)<br>
   何切る練習ソフト[一人麻雀練習機](https://ara.moo.jp/mjhmr/)を公開しており、仕組みについて紹介されています。
 
 ## Features
