@@ -28,7 +28,7 @@ Miscellaneous programs about Japanese Mahjong
   - 牌の組み合わせの効率的なハッシュ化の方法について紹介されています。
 - あら氏: [あらの（一人）麻雀研究所](https://mahjong.ara.black/)
   - 何切る練習ソフト「[一人麻雀練習機](https://ara.moo.jp/mjhmr/)」を公開しており、仕組みについて紹介されています。
-- [Apricot-S](https://github.com/Apricot-S) 氏: [Apricot-S/xiangting](https://github.com/Apricot-S/xiangting) / [Apricot-S/xiangting-py](https://github.com/Apricot-S/xiangting-py)
+- [Apricot-S](https://github.com/Apricot-S) 氏: xiangting ([Rust](https://crates.io/crates/xiangting) / [Python](https://pypi.org/project/xiangting/))
   - Rust・Python から利用できる向聴数計算ライブラリを公開されています。
 
 詳しくは **[麻雀プログラム関係のリンク集](https://github.com/nekobean/mahjong-cpp/wiki/%E9%BA%BB%E9%9B%80%E3%83%97%E3%83%AD%E3%82%B0%E3%83%A9%E3%83%A0%E9%96%A2%E4%BF%82%E3%81%AE%E3%83%AA%E3%83%B3%E3%82%AF%E9%9B%86)** にまとめています。
