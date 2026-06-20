@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 3.16)
-project(mahjong-cpp VERSION 0.9.1)
+project(mahjong-cpp VERSION 0.9.6)
+
+if(POLICY CMP0167)
+  cmake_policy(SET CMP0167 NEW)
+endif()
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -29,8 +33,10 @@ endif()
 set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF)
-find_package(Boost REQUIRED COMPONENTS filesystem system)
-include_directories(${Boost_INCLUDE_DIRS})
+if(DEFINED ENV{BOOST_ROOT})
+  list(PREPEND CMAKE_PREFIX_PATH "$ENV{BOOST_ROOT}/stage/lib/cmake")
+endif()
+find_package(Boost REQUIRED CONFIG COMPONENTS filesystem system)
 
 # RapidJSON
 include(FetchContent)
@@ -84,9 +90,11 @@ set(LIB_NAME mahjong-cpp)
 file(GLOB_RECURSE SRC_FILES src/mahjong/*.cpp)
 add_library(${LIB_NAME} ${SRC_FILES})
 if (MSVC)
-  target_link_libraries(${LIB_NAME} ${CMAKE_DL_LIBS} ${Boost_LIBRARIES} spdlog)
+  target_link_libraries(${LIB_NAME} ${CMAKE_DL_LIBS} Boost::filesystem Boost::system
+                        spdlog)
 else()
-  target_link_libraries(${LIB_NAME} ${CMAKE_DL_LIBS} ${Boost_LIBRARIES} spdlog::spdlog -static-libgcc -static-libstdc++)
+  target_link_libraries(${LIB_NAME} ${CMAKE_DL_LIBS} Boost::filesystem Boost::system
+                        spdlog::spdlog -static-libgcc -static-libstdc++)
 endif()
 
 if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)

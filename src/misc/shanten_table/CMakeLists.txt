@@ -17,7 +17,8 @@ add_definitions("-DCMAKE_CONFIG_DIR=\"${CMAKE_CONFIG_DIR}\"")
 
 # create_distance_table
 add_executable(create_distance_table ${SRC_FILES} create_distance_table.cpp)
-target_link_libraries(create_distance_table ${Boost_LIBRARIES} spdlog ${CMAKE_DL_LIBS})
+target_link_libraries(create_distance_table Boost::filesystem Boost::system spdlog
+                      ${CMAKE_DL_LIBS})
 
 add_custom_command(TARGET create_distance_table PRE_BUILD
                     COMMAND ${CMAKE_COMMAND} -E copy_directory
@@ -25,14 +26,16 @@ add_custom_command(TARGET create_distance_table PRE_BUILD
 
 # create_uradora_table
 add_executable(create_uradora_table ${SRC_FILES} create_uradora_table.cpp)
-target_link_libraries(create_uradora_table ${Boost_LIBRARIES} spdlog ${CMAKE_DL_LIBS})
+target_link_libraries(create_uradora_table Boost::filesystem Boost::system spdlog
+                      ${CMAKE_DL_LIBS})
 add_custom_command(TARGET create_uradora_table PRE_BUILD
                     COMMAND ${CMAKE_COMMAND} -E copy_directory
                     ${CMAKE_SOURCE_DIR}/data/config/ $<TARGET_FILE_DIR:create_uradora_table>)
 
 # list_hand_and_melds_patterns
 add_executable(list_hand_and_melds_patterns ${SRC_FILES} list_hand_and_melds_patterns.cpp)
-target_link_libraries(list_hand_and_melds_patterns ${Boost_LIBRARIES} spdlog ${CMAKE_DL_LIBS})
+target_link_libraries(list_hand_and_melds_patterns Boost::filesystem Boost::system
+                      spdlog ${CMAKE_DL_LIBS})
 add_custom_command(TARGET list_hand_and_melds_patterns PRE_BUILD
                     COMMAND ${CMAKE_COMMAND} -E copy_directory
                     ${CMAKE_SOURCE_DIR}/data/config/ $<TARGET_FILE_DIR:list_hand_and_melds_patterns>)
