@@ -13,7 +13,7 @@ else()
   message(STATUS "Use fetched Catch2")
 endif()
 
-file(GLOB_RECURSE SRC_FILES ../mahjong/*.cpp ../compare/*.cpp ../server/json_parser.cpp ../server/request_processor.cpp)
+file(GLOB_RECURSE SRC_FILES ../mahjong/*.cpp ../compare/*.cpp ../server/json_parser.cpp ../server/request_processor.cpp ../server/server.cpp)
 set(CMAKE_TESTCASE_DIR ${CMAKE_SOURCE_DIR}/data/testcase)
 add_definitions("-DCMAKE_TESTCASE_DIR=\"${CMAKE_TESTCASE_DIR}\"")
 
@@ -22,6 +22,7 @@ foreach(ENTRY_FILE ${ENTRY_FILES})
   get_filename_component(EXE_NAME ${ENTRY_FILE} NAME_WE)
   add_executable(${EXE_NAME} ${SRC_FILES} ${ENTRY_FILE})
   add_dependencies(${EXE_NAME} ${LIB_NAME})
+  target_compile_definitions(${EXE_NAME} PRIVATE MAHJONG_CPP_DISABLE_SERVER_MAIN)
   if (MSVC)
     target_link_libraries(${EXE_NAME} ${LIB_NAME} ${CMAKE_DL_LIBS}
                           Boost::filesystem Boost::system spdlog Catch2)

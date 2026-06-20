@@ -32,11 +32,21 @@ std::shared_ptr<spdlog::logger> get_logger()
     return spdlog::get("logger");
 }
 
+std::string build_error_json(const std::string &message)
+{
+    rapidjson::Document doc;
+    doc.SetObject();
+    build_error_response(message, doc);
+    return dump_json(doc);
+}
+
 } // namespace
+
+constexpr size_t MaxWaitingRequests = 20;
 
 Server server;
 
-Server::Server() : pool_(3)
+Server::Server() : pool_(3, MaxWaitingRequests)
 {
 }
 
@@ -83,7 +93,6 @@ std::string Server::process_request(const std::string &json)
     rapidjson::Document res_doc;
     res_doc.SetObject();
 
-    // Parse request JSON.
     try {
         parse_json(json, req_doc);
     }
@@ -109,6 +118,30 @@ std::string Server::process_request(const std::string &json)
     }
 
     return dump_json(res_doc);
+}
+
+Server::HttpResponse Server::process_http_post(const std::string &json)
+{
+    try {
+        ThreadPool::EnqueueResult<std::string> queued =
+            pool_.enqueue_with_status([&] { return process_request(json); });
+
+        if (queued.will_wait) {
+            get_logger()->warn("Request queued because all calculation workers are busy: "
+                               "waiting={}, body_size={}",
+                               queued.waiting_tasks, json.size());
+        }
+
+        return {static_cast<unsigned>(http::status::ok), "application/json",
+                queued.future.get()};
+    }
+    catch (const ThreadPoolQueueFull &) {
+        get_logger()->warn("Request rejected because the calculation queue is full: "
+                           "max_waiting={}, body_size={}",
+                           MaxWaitingRequests, json.size());
+        return {static_cast<unsigned>(http::status::service_unavailable),
+                "application/json", build_error_json("Server busy.")};
+    }
 }
 
 // This function produces an HTTP response for the given
@@ -163,17 +196,14 @@ void handle_request(beast::string_view doc_root,
         req.target().find("..") != beast::string_view::npos)
         return send(bad_request("Illegal request-target"));
 
-    auto future =
-        server.pool_.enqueue([&] { return server.process_request(req.body()); });
-    http::string_body::value_type body;
-    body = future.get();
+    const Server::HttpResponse response = server.process_http_post(req.body());
 
     // Respond to GET request
     http::response<http::string_body> res{
-        std::piecewise_construct, std::make_tuple(std::move(body)),
-        std::make_tuple(http::status::ok, req.version())};
+        std::piecewise_construct, std::make_tuple(response.body),
+        std::make_tuple(static_cast<http::status>(response.status), req.version())};
     res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
-    res.set(http::field::content_type, "application/json");
+    res.set(http::field::content_type, response.content_type);
     res.set(http::field::access_control_allow_origin, "*");
     res.prepare_payload();
     res.keep_alive(req.keep_alive());
@@ -283,6 +313,7 @@ int Server::run(unsigned short port)
     return EXIT_SUCCESS;
 }
 
+#ifndef MAHJONG_CPP_DISABLE_SERVER_MAIN
 int main(int argc, char *argv[])
 {
     unsigned short port = 50000;
@@ -303,3 +334,4 @@ int main(int argc, char *argv[])
 
     return server.run(port);
 }
+#endif

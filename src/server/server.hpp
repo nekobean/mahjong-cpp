@@ -8,9 +8,17 @@
 class Server
 {
   public:
+    struct HttpResponse
+    {
+        unsigned status;
+        std::string content_type;
+        std::string body;
+    };
+
     Server();
     int run(unsigned short port);
     std::string process_request(const std::string &json);
+    HttpResponse process_http_post(const std::string &json);
     ThreadPool pool_;
 
   private:
