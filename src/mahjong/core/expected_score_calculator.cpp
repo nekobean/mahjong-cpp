@@ -139,11 +139,11 @@ int ExpectedScoreCalculator::distance(const SeparatedCount &hand,
  * @param wall_counts 赤ドラを区別する山の残り枚数
  * @param tile 牌
  */
-int ExpectedScoreCalculator::calc_score(const Config &config, const Round &round,
-                                        Player &player, SeparatedCount &hand_counts,
-                                        SeparatedCount &wall_counts,
-                                        const int shanten_type, const int win_tile,
-                                        const bool riichi)
+double ExpectedScoreCalculator::calc_score(const Config &config, const Round &round,
+                                           Player &player, SeparatedCount &hand_counts,
+                                           SeparatedCount &wall_counts,
+                                           const int shanten_type, const int win_tile,
+                                           const bool riichi)
 {
     // 立直している場合、立直、自摸のフラグを立てる
     int win_flag = riichi ? (WinFlag::Tsumo | WinFlag::Riichi) : WinFlag::Tsumo;
@@ -152,7 +152,7 @@ int ExpectedScoreCalculator::calc_score(const Config &config, const Round &round
         ScoreCalculator::calc_fast(round, player, win_tile, win_flag, shanten_type);
 
     if (!result.success) {
-        return 0; // 役なしの場合は0点
+        return 0.0; // 役なしの場合は0点
     }
 
     if (!config.enable_uradora || !(win_flag & WinFlag::Riichi) ||
@@ -273,10 +273,10 @@ ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::draw_node(
 
             if (!boost::edge(vertex, target, graph).second) {
                 // 自摸前の時点で聴牌の場合、有効牌自摸後は和了形のため、点数計算を行う
-                const int score = (shanten == 0 && is_wait
-                                       ? calc_score(config, round, player, hand_counts,
-                                                    wall_counts, type, i, riichi)
-                                       : 0);
+                const double score = (shanten == 0 && is_wait
+                                          ? calc_score(config, round, player, hand_counts,
+                                                       wall_counts, type, i, riichi)
+                                          : 0.0);
                 boost::add_edge(vertex, target, {weight, score}, graph);
             }
 
@@ -337,10 +337,10 @@ ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::discard_node(
 
             if (!boost::edge(source, vertex, graph).second) {
                 // 打牌前の時点で向聴数が-1の場合、和了形のため、点数計算を行う
-                const int score =
+                const double score =
                     (shanten == -1 ? calc_score(config, round, player, hand_counts,
-                                                wall_counts, type, i, riichi)
-                                   : 0);
+                                                 wall_counts, type, i, riichi)
+                                   : 0.0);
                 boost::add_edge(source, vertex, {weight, score}, graph);
             }
         }

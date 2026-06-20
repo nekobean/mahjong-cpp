@@ -123,7 +123,7 @@ class ExpectedScoreCalculator
         std::vector<double> exp_score;
     };
 
-    using EdgeData = std::tuple<int, int>;
+    using EdgeData = std::tuple<int, double>;
     using Graph = boost::adjacency_list<boost::vecS, boost::vecS, boost::bidirectionalS,
                                         VertexData, EdgeData>;
     using Vertex = Graph::vertex_descriptor;
@@ -146,9 +146,9 @@ class ExpectedScoreCalculator
 
   private:
     static int distance(const SeparatedCount &hand, const SeparatedCount &origin);
-    static int calc_score(const Config &config, const Round &round, Player &player,
-                          SeparatedCount &hand_counts, SeparatedCount &wall_counts,
-                          const int shanten_type, const int tile, const bool riichi);
+    static double calc_score(const Config &config, const Round &round, Player &player,
+                             SeparatedCount &hand_counts, SeparatedCount &wall_counts,
+                             const int shanten_type, const int tile, const bool riichi);
     static Vertex draw_node(const Config &config, const Round &round, Player &player,
                             Graph &graph, Cache &cache1, Cache &cache2,
                             SeparatedCount &hand_reds, SeparatedCount &wall_reds,
