@@ -4,7 +4,6 @@
 #include <algorithm> // max, fill
 #include <cassert>
 
-#include <boost/dll.hpp>
 #include <boost/graph/graph_utility.hpp>
 
 #include "mahjong/core/necessary_tile_calculator.hpp"
@@ -19,7 +18,16 @@ namespace mahjong
 namespace
 {
 
-SeparatedCount encode(const MergedCount &counts, const bool enable_reddora)
+MergedCount to_merged_count(const SeparatedCount &counts)
+{
+    MergedCount merged = counts;
+    merged[Tile::Manzu5] += merged[Tile::RedManzu5];
+    merged[Tile::Pinzu5] += merged[Tile::RedPinzu5];
+    merged[Tile::Souzu5] += merged[Tile::RedSouzu5];
+    return merged;
+}
+
+SeparatedCount to_separated_count(const MergedCount &counts, const bool enable_reddora)
 {
     SeparatedCount ret{0};
     for (int i = 0; i < 34; ++i) {
@@ -78,6 +86,125 @@ void discard(Player &player, SeparatedCount &hand_counts, SeparatedCount &wall_c
     }
 }
 
+double combination(const int n, const int r)
+{
+    if (r < 0 || r > n) {
+        return 0.0;
+    }
+
+    const int k = std::min(r, n - r);
+    double value = 1.0;
+    for (int i = 1; i <= k; ++i) {
+        value *= static_cast<double>(n - k + i);
+        value /= static_cast<double>(i);
+    }
+    return value;
+}
+
+std::array<double, 13> calc_uradora_distribution(const MergedCount &wall,
+                                                 const MergedCount &hand_and_melds,
+                                                 const int num_indicators)
+{
+    std::array<std::array<double, 13>, 6> dp{};
+    dp[0][0] = 1.0;
+
+    for (int tile = 0; tile < 34; ++tile) {
+        const int count = wall[ToIndicator[tile]];
+        const int gain = hand_and_melds[tile];
+        if (count == 0) {
+            continue;
+        }
+
+        auto next = dp;
+        for (int selected = 0; selected < num_indicators; ++selected) {
+            for (int uradora = 0; uradora <= 12; ++uradora) {
+                if (dp[selected][uradora] == 0.0) {
+                    continue;
+                }
+                const int max_take = std::min(count, num_indicators - selected);
+                for (int take = 1; take <= max_take; ++take) {
+                    const int next_selected = selected + take;
+                    const int next_uradora = std::min(12, uradora + gain * take);
+                    next[next_selected][next_uradora] +=
+                        dp[selected][uradora] * combination(count, take);
+                }
+            }
+        }
+        dp = next;
+    }
+
+    const double denominator = combination(
+        static_cast<int>(std::accumulate(wall.begin(), wall.begin() + 34, 0)),
+        num_indicators);
+    assert(denominator > 0.0);
+
+    std::array<double, 13> probabilities{};
+    for (int uradora = 0; uradora <= 12; ++uradora) {
+        probabilities[uradora] = dp[num_indicators][uradora] / denominator;
+    }
+    return probabilities;
+}
+
+double calc_uradora_score(const ExpectedScoreCalculator::Config &config,
+                          const Round &round, const Player &player,
+                          const SeparatedCount &hand_counts,
+                          const SeparatedCount &wall_counts, const Result &result,
+                          const int win_flag)
+{
+    const int num_indicators = round.dora_indicators.size();
+
+    const MergedCount wall = to_merged_count(wall_counts);
+    MergedCount hand_and_melds = to_merged_count(hand_counts);
+    for (const auto &meld : player.melds) {
+        for (auto tile : meld.tiles) {
+            ++hand_and_melds[to_no_reddora(tile)];
+        }
+    }
+
+    const auto uradora_probabilities =
+        calc_uradora_distribution(wall, hand_and_melds, num_indicators);
+    const std::vector<int> up_scores =
+        ScoreCalculator::get_up_scores(round, player, result, win_flag, 12);
+
+    double score = 0;
+    for (int i = 0; i <= 12; ++i) {
+        score += up_scores[i] * uradora_probabilities[i];
+    }
+
+    return score;
+}
+
+double calc_score(const ExpectedScoreCalculator::Config &config, const Round &round,
+                  Player &player, SeparatedCount &hand_counts,
+                  SeparatedCount &wall_counts, const int shanten_type,
+                  const int win_tile, const bool riichi)
+{
+    // 立直している場合、立直、自摸のフラグを立てる。
+    int win_flag = riichi ? (WinFlag::Tsumo | WinFlag::Riichi) : WinFlag::Tsumo;
+
+    Result result =
+        ScoreCalculator::calc_fast(round, player, win_tile, win_flag, shanten_type);
+
+    // 役なしの場合は0点とする。
+    if (!result.success) {
+        return 0.0;
+    }
+
+    // 裏ドラがない場合、裏ドラなしの点数を返す。
+    if (!config.enable_uradora || !(win_flag & WinFlag::Riichi) ||
+        round.dora_indicators.empty()) {
+        return result.score[0];
+    }
+
+    // 役満以上は裏ドラで点数が変わらない。
+    if (result.score_title >= ScoreTitle::CountedYakuman) {
+        return result.score[0];
+    }
+
+    return calc_uradora_score(config, round, player, hand_counts, wall_counts, result,
+                              win_flag);
+}
+
 } // namespace
 
 MergedCount create_wall(const Round &round, const Player &player,
@@ -129,92 +256,6 @@ int ExpectedScoreCalculator::distance(const SeparatedCount &hand,
     }
 
     return dist;
-}
-
-/**
- * @brief tile を手牌に加え、山から削除する。
- *
- * @param player プレイヤー
- * @param hand_counts 赤ドラを区別する手牌の残り枚数
- * @param wall_counts 赤ドラを区別する山の残り枚数
- * @param tile 牌
- */
-double ExpectedScoreCalculator::calc_score(const Config &config, const Round &round,
-                                           Player &player, SeparatedCount &hand_counts,
-                                           SeparatedCount &wall_counts,
-                                           const int shanten_type, const int win_tile,
-                                           const bool riichi)
-{
-    // 立直している場合、立直、自摸のフラグを立てる
-    int win_flag = riichi ? (WinFlag::Tsumo | WinFlag::Riichi) : WinFlag::Tsumo;
-
-    Result result =
-        ScoreCalculator::calc_fast(round, player, win_tile, win_flag, shanten_type);
-
-    if (!result.success) {
-        return 0.0; // 役なしの場合は0点
-    }
-
-    if (!config.enable_uradora || !(win_flag & WinFlag::Riichi) ||
-        round.dora_indicators.empty()) {
-        // 裏ドラ計算なし、立直していない、表ドラ表示牌なしの場合
-        return result.score[0];
-    }
-
-    if (result.score_title >= ScoreTitle::CountedYakuman) {
-        return result.score[0]; // 役満の場合
-    }
-
-    const int num_indicators = round.dora_indicators.size();
-
-    if (num_indicators == 1) {
-        // 裏ドラが1枚の場合、裏ドラが乗る確率を解析的に計算する。
-        MergedCount wall = wall_counts;
-        wall[Tile::Manzu5] += wall[Tile::RedManzu5];
-        wall[Tile::Pinzu5] += wall[Tile::RedPinzu5];
-        wall[Tile::Souzu5] += wall[Tile::RedSouzu5];
-        MergedCount hand_and_melds = hand_counts;
-        hand_and_melds[Tile::Manzu5] += hand_and_melds[Tile::RedManzu5];
-        hand_and_melds[Tile::Pinzu5] += hand_and_melds[Tile::RedPinzu5];
-        hand_and_melds[Tile::Souzu5] += hand_and_melds[Tile::RedSouzu5];
-        for (const auto &meld : player.melds) {
-            for (auto tile : meld.tiles) {
-                ++hand_and_melds[to_no_reddora(tile)];
-            }
-        }
-
-        std::vector<int> up_scores =
-            ScoreCalculator::get_up_scores(round, player, result, win_flag, 4);
-
-        std::vector<double> num_indicators(5, 0);
-        for (int tile = 0; tile < 34; ++tile) {
-            int num = hand_and_melds[tile];
-            num_indicators[num] += wall[ToIndicator[tile]];
-        }
-
-        // 裏ドラがi枚乗った場合の点数 * 裏ドラがi枚乗る確率を i = 0~4 で足し合わせる
-        double score = 0;
-        for (int i = 0; i <= 4; ++i) {
-            score += up_scores[i] * double(num_indicators[i]) / config.sum;
-        }
-
-        return score;
-    }
-    else {
-        // 裏ドラ考慮ありかつ表ドラが2枚以上の場合、統計データを利用する。
-        // uradora_table_[i][j] は i が表ドラ表示牌の数、
-        // j は 0~10 は j 枚乗る枚数、12 は 11枚以上乗る枚数
-        // 立直の1翻があるため、11枚以上乗った場合は数え役満である
-        std::vector<int> up_scores =
-            ScoreCalculator::get_up_scores(round, player, result, win_flag, 12);
-
-        double score = 0;
-        for (int i = 0; i <= 12; ++i) {
-            score += up_scores[i] * uradora_table_[num_indicators][i];
-        }
-
-        return score;
-    }
 }
 
 ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::draw_node(
@@ -273,10 +314,11 @@ ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::draw_node(
 
             if (!boost::edge(vertex, target, graph).second) {
                 // 自摸前の時点で聴牌の場合、有効牌自摸後は和了形のため、点数計算を行う
-                const double score = (shanten == 0 && is_wait
-                                          ? calc_score(config, round, player, hand_counts,
-                                                       wall_counts, type, i, riichi)
-                                          : 0.0);
+                const double score =
+                    (shanten == 0 && is_wait
+                         ? calc_score(config, round, player, hand_counts, wall_counts,
+                                      type, i, riichi)
+                         : 0.0);
                 boost::add_edge(vertex, target, {weight, score}, graph);
             }
 
@@ -339,7 +381,7 @@ ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::discard_node(
                 // 打牌前の時点で向聴数が-1の場合、和了形のため、点数計算を行う
                 const double score =
                     (shanten == -1 ? calc_score(config, round, player, hand_counts,
-                                                 wall_counts, type, i, riichi)
+                                                wall_counts, type, i, riichi)
                                    : 0.0);
                 boost::add_edge(source, vertex, {weight, score}, graph);
             }
@@ -445,8 +487,8 @@ ExpectedScoreCalculator::calc(const Config &_config, const Round &round,
     Player player = _player;
     // 手牌と山の各牌の枚数を作成する。
     // 赤ドラありの場合、赤なしの5と赤ありの5は別々に管理する。
-    SeparatedCount hand_counts = encode(player.hand, config.enable_reddora);
-    SeparatedCount wall_counts = encode(wall, config.enable_reddora);
+    SeparatedCount hand_counts = to_separated_count(player.hand, config.enable_reddora);
+    SeparatedCount wall_counts = to_separated_count(wall, config.enable_reddora);
 
     // Calculate shanten number of specified hand.
     const SeparatedCount hand_org = hand_counts;
@@ -537,26 +579,5 @@ ExpectedScoreCalculator::calc(const Config &_config, const Round &round,
 
     return {stats, searched};
 }
-
-bool ExpectedScoreCalculator::load_uradora_table()
-{
-    boost::filesystem::path path =
-        boost::dll::program_location().parent_path() / "uradora.bin";
-    std::ifstream ifs(path.string(), std::ios::binary);
-    ifs.read(reinterpret_cast<char *>(&uradora_table_), sizeof(uradora_table_));
-
-    spdlog::info(u8"Uradora table file loaded. (path: {})", path.string());
-
-    return true;
-}
-
-ExpectedScoreCalculator::ExpectedScoreCalculator()
-{
-    load_uradora_table();
-}
-
-std::array<std::array<double, 13>, 6> ExpectedScoreCalculator::uradora_table_;
-
-static ExpectedScoreCalculator inst;
 
 } // namespace mahjong

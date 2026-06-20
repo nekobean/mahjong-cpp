@@ -130,11 +130,8 @@ class ExpectedScoreCalculator
     using Edge = Graph::edge_descriptor;
     using Cache = std::map<CacheKey, Vertex>;
 
-    // uradora_table[num_indicators][num_doras]
-    static std::array<std::array<double, 13>, 6> uradora_table_;
-
   public:
-    ExpectedScoreCalculator();
+    ExpectedScoreCalculator() = default;
 
     static std::tuple<std::vector<Stat>, int>
     calc(const Config &config, const Round &round, const Player &player);
@@ -146,9 +143,6 @@ class ExpectedScoreCalculator
 
   private:
     static int distance(const SeparatedCount &hand, const SeparatedCount &origin);
-    static double calc_score(const Config &config, const Round &round, Player &player,
-                             SeparatedCount &hand_counts, SeparatedCount &wall_counts,
-                             const int shanten_type, const int tile, const bool riichi);
     static Vertex draw_node(const Config &config, const Round &round, Player &player,
                             Graph &graph, Cache &cache1, Cache &cache2,
                             SeparatedCount &hand_reds, SeparatedCount &wall_reds,
@@ -164,7 +158,6 @@ class ExpectedScoreCalculator
     static std::tuple<int, std::vector<std::tuple<int, int>>>
     get_necessary_tiles(const Config &config, const Player &player,
                         const MergedCount &wall);
-    static bool load_uradora_table();
 };
 } // namespace mahjong
 
