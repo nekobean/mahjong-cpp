@@ -16,7 +16,6 @@ namespace mahjong
 {
 
 using Hand = std::array<int, 37>;
-using Count = std::array<int, 37>;
 
 /**
  * @brief Tile types

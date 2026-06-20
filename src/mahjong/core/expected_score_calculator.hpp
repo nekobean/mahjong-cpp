@@ -11,10 +11,13 @@
 
 namespace mahjong
 {
+using MergedCount = std::array<int, 37>;
+using SeparatedCount = std::array<int, 37>;
+
+MergedCount create_wall(const Round &round, const Player &player, bool enable_reddora);
+
 class ExpectedScoreCalculator
 {
-    using CountRed = std::array<int, 37>;
-
   public:
     struct Config
     {
@@ -76,7 +79,7 @@ class ExpectedScoreCalculator
   private:
     struct CacheKey
     {
-        CacheKey(const Count &hand) : manzu(0), pinzu(0), souzu(0), honors(0)
+        CacheKey(const MergedCount &hand) : manzu(0), pinzu(0), souzu(0), honors(0)
         {
             manzu = std::accumulate(hand.begin(), hand.begin() + 9, 0,
                                     [](int x, int y) { return x * 8 + y; });
@@ -139,34 +142,28 @@ class ExpectedScoreCalculator
     static std::tuple<std::vector<Stat>, int> calc(const Config &config,
                                                    const Round &round,
                                                    const Player &player,
-                                                   const Count &wall);
-    static Count create_wall(const Round &round, const Player &player,
-                             bool enable_reddora);
+                                                   const MergedCount &wall);
 
   private:
-    static CountRed encode(const Count &counts, const bool enable_reddora);
-    static int distance(const CountRed &hand, const CountRed &origin);
-    static void draw(Player &player, CountRed &hand_reds, CountRed &wall_reds,
-                     const int tile);
-    static void discard(Player &player, CountRed &hand_reds, CountRed &wall_reds,
-                        const int tile);
+    static int distance(const SeparatedCount &hand, const SeparatedCount &origin);
     static int calc_score(const Config &config, const Round &round, Player &player,
-                          CountRed &hand_counts, CountRed &wall_counts,
+                          SeparatedCount &hand_counts, SeparatedCount &wall_counts,
                           const int shanten_type, const int tile, const bool riichi);
     static Vertex draw_node(const Config &config, const Round &round, Player &player,
                             Graph &graph, Cache &cache1, Cache &cache2,
-                            CountRed &hand_reds, CountRed &wall_reds,
-                            const CountRed &origin_reds, int sht_org,
+                            SeparatedCount &hand_reds, SeparatedCount &wall_reds,
+                            const SeparatedCount &origin_reds, int sht_org,
                             const bool riichi);
     static Vertex discard_node(const Config &config, const Round &round, Player &player,
                                Graph &graph, Cache &cache1, Cache &cache2,
-                               CountRed &hand_reds, CountRed &wall_reds,
-                               const CountRed &origin_reds, int sht_org,
+                               SeparatedCount &hand_reds, SeparatedCount &wall_reds,
+                               const SeparatedCount &origin_reds, int sht_org,
                                const bool riichi);
     static void calc_stats(const Config &config, Graph &graph, const Cache &cache1,
                            const Cache &cache2);
     static std::tuple<int, std::vector<std::tuple<int, int>>>
-    get_necessary_tiles(const Config &config, const Player &player, const Count &wall);
+    get_necessary_tiles(const Config &config, const Player &player,
+                        const MergedCount &wall);
     static bool load_uradora_table();
 };
 } // namespace mahjong

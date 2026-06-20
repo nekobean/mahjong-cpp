@@ -16,18 +16,74 @@
 namespace mahjong
 {
 
-/**
- * @brief 山の残り枚数を計算する。
- *
- * @param round 場の情報
- * @param player プレイヤーの情報
- * @param enable_reddora 赤ドラを有効にするか
- * @return 山の残り枚数
- */
-Count ExpectedScoreCalculator::create_wall(const Round &round, const Player &player,
-                                           const bool enable_reddora)
+namespace
 {
-    Count wall{0}, melds{0}, indicators{0};
+
+SeparatedCount encode(const MergedCount &counts, const bool enable_reddora)
+{
+    SeparatedCount ret{0};
+    for (int i = 0; i < 34; ++i) {
+        ret[i] = counts[i];
+    }
+
+    if (enable_reddora) {
+        if (counts[Tile::RedManzu5]) {
+            --ret[Tile::Manzu5];
+            ++ret[Tile::RedManzu5];
+        }
+        if (counts[Tile::RedPinzu5]) {
+            --ret[Tile::Pinzu5];
+            ++ret[Tile::RedPinzu5];
+        }
+        if (counts[Tile::RedSouzu5]) {
+            --ret[Tile::Souzu5];
+            ++ret[Tile::RedSouzu5];
+        }
+    }
+
+    return ret;
+}
+
+void draw(Player &player, SeparatedCount &hand_counts, SeparatedCount &wall_counts,
+          const int tile)
+{
+    ++hand_counts[tile];
+    --wall_counts[tile];
+    player.hand[tile]++;
+    if (tile == Tile::RedManzu5) {
+        player.hand[Tile::Manzu5]++;
+    }
+    else if (tile == Tile::RedPinzu5) {
+        player.hand[Tile::Pinzu5]++;
+    }
+    else if (tile == Tile::RedSouzu5) {
+        player.hand[Tile::Souzu5]++;
+    }
+}
+
+void discard(Player &player, SeparatedCount &hand_counts, SeparatedCount &wall_counts,
+             const int tile)
+{
+    --hand_counts[tile];
+    ++wall_counts[tile];
+    player.hand[tile]--;
+    if (tile == Tile::RedManzu5) {
+        player.hand[Tile::Manzu5]--;
+    }
+    else if (tile == Tile::RedPinzu5) {
+        player.hand[Tile::Pinzu5]--;
+    }
+    else if (tile == Tile::RedSouzu5) {
+        player.hand[Tile::Souzu5]--;
+    }
+}
+
+} // namespace
+
+MergedCount create_wall(const Round &round, const Player &player,
+                        const bool enable_reddora)
+{
+    MergedCount wall{0}, melds{0}, indicators{0};
 
     for (auto tile : round.dora_indicators) {
         ++indicators[to_no_reddora(tile)];
@@ -54,86 +110,7 @@ Count ExpectedScoreCalculator::create_wall(const Round &round, const Player &pla
         }
     }
 
-    // assert
-    if (!enable_reddora) {
-        for (int i = 34; i < 37; ++i) {
-            assert(wall[i] == 0);
-        }
-    }
-    else {
-        if (wall[Tile::RedManzu5]) {
-            assert(wall[Tile::Manzu5] >= 1);
-        }
-        if (wall[Tile::RedPinzu5]) {
-            assert(wall[Tile::Pinzu5] >= 1);
-        }
-        if (wall[Tile::RedSouzu5]) {
-            assert(wall[Tile::Souzu5] >= 1);
-        }
-        if (wall[Tile::Manzu5] == 4) {
-            assert(wall[Tile::RedManzu5] == 1);
-        }
-        if (wall[Tile::Pinzu5] == 4) {
-            assert(wall[Tile::RedPinzu5] == 1);
-        }
-        if (wall[Tile::Souzu5] == 4) {
-            assert(wall[Tile::RedSouzu5] == 1);
-        }
-    }
-
-    // for (int i = 0; i < 34; ++i) {
-    //     assert(wall[i] >= 0 && wall[i] <= 4);
-    // }
-    // for (int i = 34; i < 37; ++i) {
-    //     if (enable_reddora) {
-    //         assert(wall[i] >= 0 && wall[i] <= 1);
-    //     }
-    //     else {
-    //         assert(wall[i] == 0);
-    //     }
-    // }
-
     return wall;
-}
-
-/**
- * @brief 残り枚数で赤ドラの表現を以下のように変更する。
- *        counts[Tile::Manzu5]: 赤を含む5萬の枚数、counts[Tile::RedManzu5]: 赤5萬があるかどうか
- *        counts[Tile::Pinzu5]: 赤を含む5筒の枚数、counts[Tile::RedPinzu5]: 赤5筒があるかどうか
- *        counts[Tile::Souzu5]: 赤を含む5索の枚数、counts[Tile::RedSouzu5]: 赤5索があるかどうか
- *        ↓
- *        counts[Tile::Manzu5]: 赤ドラ以外の5萬の枚数、counts[Tile::RedManzu5]: 赤5萬の枚数
- *        counts[Tile::Pinzu5]: 赤ドラ以外の5筒の枚数、counts[Tile::RedPinzu5]: 赤5筒の枚数
- *        counts[Tile::Souzu5]: 赤ドラ以外の5索の枚数、counts[Tile::RedSouzu5]: 赤5索の枚数
- *
- * @param counts 残り枚数
- * @param enable_reddora 赤ドラを有効にするか
- * @return 赤ドラを区別した残り枚数
- */
-ExpectedScoreCalculator::CountRed
-ExpectedScoreCalculator::encode(const Count &counts, const bool enable_reddora)
-{
-    CountRed ret{0};
-    for (int i = 0; i < 34; ++i) {
-        ret[i] = counts[i];
-    }
-
-    if (enable_reddora) {
-        if (counts[Tile::RedManzu5]) {
-            --ret[Tile::Manzu5];
-            ++ret[Tile::RedManzu5];
-        }
-        if (counts[Tile::RedPinzu5]) {
-            --ret[Tile::Pinzu5];
-            ++ret[Tile::RedPinzu5];
-        }
-        if (counts[Tile::RedSouzu5]) {
-            --ret[Tile::Souzu5];
-            ++ret[Tile::RedSouzu5];
-        }
-    }
-
-    return ret;
 }
 
 /**
@@ -143,7 +120,8 @@ ExpectedScoreCalculator::encode(const Count &counts, const bool enable_reddora)
  * @param hand_org
  * @return int
  */
-int ExpectedScoreCalculator::distance(const CountRed &hand, const CountRed &hand_org)
+int ExpectedScoreCalculator::distance(const SeparatedCount &hand,
+                                      const SeparatedCount &hand_org)
 {
     int dist = 0;
     for (int i = 0; i < hand.size(); ++i) {
@@ -161,56 +139,11 @@ int ExpectedScoreCalculator::distance(const CountRed &hand, const CountRed &hand
  * @param wall_counts 赤ドラを区別する山の残り枚数
  * @param tile 牌
  */
-void ExpectedScoreCalculator::draw(Player &player, CountRed &hand_counts,
-                                   CountRed &wall_counts, const int tile)
-{
-    ++hand_counts[tile];
-    --wall_counts[tile];
-
-    // Update hand
-    player.hand[tile]++;
-    if (tile == Tile::RedManzu5) {
-        player.hand[Tile::Manzu5]++;
-    }
-    else if (tile == Tile::RedPinzu5) {
-        player.hand[Tile::Pinzu5]++;
-    }
-    else if (tile == Tile::RedSouzu5) {
-        player.hand[Tile::Souzu5]++;
-    }
-}
-
-/**
- * @brief tile を手牌から削除し、山に加える。
- *
- * @param player プレイヤー
- * @param hand_counts 赤ドラを区別する手牌の残り枚数
- * @param wall_counts 赤ドラを区別する山の残り枚数
- * @param tile 牌
- */
-void ExpectedScoreCalculator::discard(Player &player, CountRed &hand_counts,
-                                      CountRed &wall_counts, const int tile)
-{
-    --hand_counts[tile];
-    ++wall_counts[tile];
-
-    // Update hand
-    player.hand[tile]--;
-    if (tile == Tile::RedManzu5) {
-        player.hand[Tile::Manzu5]--;
-    }
-    else if (tile == Tile::RedPinzu5) {
-        player.hand[Tile::Pinzu5]--;
-    }
-    else if (tile == Tile::RedSouzu5) {
-        player.hand[Tile::Souzu5]--;
-    }
-}
-
 int ExpectedScoreCalculator::calc_score(const Config &config, const Round &round,
-                                        Player &player, CountRed &hand_counts,
-                                        CountRed &wall_counts, const int shanten_type,
-                                        const int win_tile, const bool riichi)
+                                        Player &player, SeparatedCount &hand_counts,
+                                        SeparatedCount &wall_counts,
+                                        const int shanten_type, const int win_tile,
+                                        const bool riichi)
 {
     // 立直している場合、立直、自摸のフラグを立てる
     int win_flag = riichi ? (WinFlag::Tsumo | WinFlag::Riichi) : WinFlag::Tsumo;
@@ -236,11 +169,11 @@ int ExpectedScoreCalculator::calc_score(const Config &config, const Round &round
 
     if (num_indicators == 1) {
         // 裏ドラが1枚の場合、裏ドラが乗る確率を解析的に計算する。
-        Count wall = wall_counts;
+        MergedCount wall = wall_counts;
         wall[Tile::Manzu5] += wall[Tile::RedManzu5];
         wall[Tile::Pinzu5] += wall[Tile::RedPinzu5];
         wall[Tile::Souzu5] += wall[Tile::RedSouzu5];
-        Count hand_and_melds = hand_counts;
+        MergedCount hand_and_melds = hand_counts;
         hand_and_melds[Tile::Manzu5] += hand_and_melds[Tile::RedManzu5];
         hand_and_melds[Tile::Pinzu5] += hand_and_melds[Tile::RedPinzu5];
         hand_and_melds[Tile::Souzu5] += hand_and_melds[Tile::RedSouzu5];
@@ -286,8 +219,9 @@ int ExpectedScoreCalculator::calc_score(const Config &config, const Round &round
 
 ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::draw_node(
     const Config &config, const Round &round, Player &player, Graph &graph,
-    Cache &cache1, Cache &cache2, CountRed &hand_counts, CountRed &wall_counts,
-    const CountRed &hand_org, const int shanten_org, const bool riichi)
+    Cache &cache1, Cache &cache2, SeparatedCount &hand_counts,
+    SeparatedCount &wall_counts, const SeparatedCount &hand_org, const int shanten_org,
+    const bool riichi)
 {
     // If vertex exists in the cache, return it.
     CacheKey key(hand_counts);
@@ -355,8 +289,9 @@ ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::draw_node(
 
 ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::discard_node(
     const Config &config, const Round &round, Player &player, Graph &graph,
-    Cache &cache1, Cache &cache2, CountRed &hand_counts, CountRed &wall_counts,
-    const CountRed &hand_org, const int shanten_org, const bool riichi)
+    Cache &cache1, Cache &cache2, SeparatedCount &hand_counts,
+    SeparatedCount &wall_counts, const SeparatedCount &hand_org, const int shanten_org,
+    const bool riichi)
 {
     // If vertex exists in the cache, return it.
     CacheKey key(hand_counts);
@@ -470,14 +405,14 @@ std::tuple<std::vector<ExpectedScoreCalculator::Stat>, int>
 ExpectedScoreCalculator::calc(const Config &config, const Round &round,
                               const Player &player)
 {
-    const Count wall = create_wall(round, player, config.enable_reddora);
+    const MergedCount wall = create_wall(round, player, config.enable_reddora);
 
     return calc(config, round, player, wall);
 }
 
 std::tuple<int, std::vector<std::tuple<int, int>>>
 ExpectedScoreCalculator::get_necessary_tiles(const Config &config, const Player &player,
-                                             const Count &wall)
+                                             const MergedCount &wall)
 {
     const auto [shanten_type, shanten, tiles] = NecessaryTileCalculator::select(
         player.hand, player.num_melds(), config.shanten_type);
@@ -492,7 +427,7 @@ ExpectedScoreCalculator::get_necessary_tiles(const Config &config, const Player 
 
 std::tuple<std::vector<ExpectedScoreCalculator::Stat>, int>
 ExpectedScoreCalculator::calc(const Config &_config, const Round &round,
-                              const Player &_player, const Count &wall)
+                              const Player &_player, const MergedCount &wall)
 {
     Graph graph;
     Cache cache1, cache2;
@@ -510,11 +445,11 @@ ExpectedScoreCalculator::calc(const Config &_config, const Round &round,
     Player player = _player;
     // 手牌と山の各牌の枚数を作成する。
     // 赤ドラありの場合、赤なしの5と赤ありの5は別々に管理する。
-    CountRed hand_counts = encode(player.hand, config.enable_reddora);
-    CountRed wall_counts = encode(wall, config.enable_reddora);
+    SeparatedCount hand_counts = encode(player.hand, config.enable_reddora);
+    SeparatedCount wall_counts = encode(wall, config.enable_reddora);
 
     // Calculate shanten number of specified hand.
-    const CountRed hand_org = hand_counts;
+    const SeparatedCount hand_org = hand_counts;
     const int shanten_org = std::get<1>(
         ShantenCalculator::calc(player.hand, player.num_melds(), config.shanten_type));
     std::vector<Stat> stats;

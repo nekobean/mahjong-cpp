@@ -100,8 +100,8 @@ rapidjson::Document make_valid_request_document(bool include_wall = true,
         player.melds.emplace_back(1, std::vector<int>{1, 1, 1});
         player.melds.emplace_back(2, std::vector<int>{4, 5, 6});
 
-        const Count wall_counts =
-            ExpectedScoreCalculator::create_wall(round, player, true);
+        const MergedCount wall_counts =
+            create_wall(round, player, true);
 
         rapidjson::Value wall(rapidjson::kArrayType);
         for (const int count : wall_counts) {
@@ -219,7 +219,7 @@ Request make_sample_request()
     req.player.melds.emplace_back(2, std::vector<int>{4, 5, 6});
 
     req.wall =
-        ExpectedScoreCalculator::create_wall(req.round, req.player, req.config.enable_reddora);
+        create_wall(req.round, req.player, req.config.enable_reddora);
     req.objective = 2;
     req.ip = "127.0.0.1";
     req.version = PROJECT_VERSION;
@@ -373,8 +373,8 @@ TEST_CASE("deserialize_request maps validated JSON to Request")
         REQUIRE(req.objective == 2);
         REQUIRE(req.ip == "127.0.0.1");
         REQUIRE(req.version == PROJECT_VERSION);
-        REQUIRE(req.wall == ExpectedScoreCalculator::create_wall(
-                                req.round, req.player, req.config.enable_reddora));
+        REQUIRE(req.wall == create_wall(
+            req.round, req.player, req.config.enable_reddora));
     }
 
     SECTION("builds the wall when it is omitted")
@@ -383,9 +383,8 @@ TEST_CASE("deserialize_request maps validated JSON to Request")
         parse_json(make_valid_request_json(false, false), doc);
 
         const Request req = deserialize_request(doc);
-        const Count expected_wall =
-            ExpectedScoreCalculator::create_wall(req.round, req.player,
-                                                 req.config.enable_reddora);
+        const MergedCount expected_wall =
+            create_wall(req.round, req.player, req.config.enable_reddora);
 
         REQUIRE(req.wall == expected_wall);
         REQUIRE(req.ip.empty());

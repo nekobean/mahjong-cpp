@@ -93,8 +93,7 @@ Request make_request(const rapidjson::Value &doc)
         }
     }
     else {
-        req.wall = ExpectedScoreCalculator::create_wall(req.round, req.player,
-                                                        req.config.enable_reddora);
+        req.wall = create_wall(req.round, req.player, req.config.enable_reddora);
     }
 
     if (doc.HasMember("ip")) {
@@ -110,8 +109,7 @@ Request make_request(const rapidjson::Value &doc)
 
 void validate_tile_counts(const Request &req)
 {
-    Count wall = ExpectedScoreCalculator::create_wall(req.round, req.player,
-                                                      req.config.enable_reddora);
+    MergedCount wall = create_wall(req.round, req.player, req.config.enable_reddora);
 
     for (int i = 0; i < 37; ++i) {
         if (wall[i] < 0) {

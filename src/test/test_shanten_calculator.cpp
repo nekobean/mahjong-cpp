@@ -188,7 +188,7 @@ TEST_CASE("Shanten number with melds")
 
         for (int i = 0; i < N; ++i) {
             Player player1, player2;
-            Count wall;
+            MergedCount wall;
             wall.fill(4);
             while (true) {
                 const int num_tiles = player1.num_melds() * 3 + player1.num_tiles();
