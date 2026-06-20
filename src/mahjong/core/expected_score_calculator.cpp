@@ -153,6 +153,7 @@ double calc_uradora_score(const ExpectedScoreCalculator::Config &config,
 {
     const int num_indicators = round.dora_indicators.size();
 
+    // 裏ドラ表示牌の抽選では、赤5と通常5を同じ牌として扱う。
     const MergedCount wall = to_merged_count(wall_counts);
     MergedCount hand_and_melds = to_merged_count(hand_counts);
     for (const auto &meld : player.melds) {
@@ -161,6 +162,7 @@ double calc_uradora_score(const ExpectedScoreCalculator::Config &config,
         }
     }
 
+    // 裏ドラ枚数ごとの確率と、各枚数での点数を掛け合わせる。
     const auto uradora_probabilities =
         calc_uradora_distribution(wall, hand_and_melds, num_indicators);
     const std::vector<int> up_scores =
@@ -179,7 +181,7 @@ double calc_score(const ExpectedScoreCalculator::Config &config, const Round &ro
                   SeparatedCount &wall_counts, const int shanten_type,
                   const int win_tile, const bool riichi)
 {
-    // 立直している場合、立直、自摸のフラグを立てる。
+    // 期待値計算では和了を自摸和了として評価する。
     int win_flag = riichi ? (WinFlag::Tsumo | WinFlag::Riichi) : WinFlag::Tsumo;
 
     Result result =
@@ -190,7 +192,7 @@ double calc_score(const ExpectedScoreCalculator::Config &config, const Round &ro
         return 0.0;
     }
 
-    // 裏ドラがない場合、裏ドラなしの点数を返す。
+    // 裏ドラ期待値を計算しない場合は、通常の和了点を返す。
     if (!config.enable_uradora || !(win_flag & WinFlag::Riichi) ||
         round.dora_indicators.empty()) {
         return result.score[0];
