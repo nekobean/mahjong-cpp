@@ -1,0 +1,294 @@
+{
+  "oneOf": [
+    {
+      "type": "object",
+      "required": [
+        "success",
+        "input",
+        "config",
+        "shanten",
+        "stats",
+        "searched",
+        "time"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "success": {
+          "enum": [true]
+        },
+        "input": {
+          "$ref": "#/definitions/input"
+        },
+        "config": {
+          "$ref": "#/definitions/config"
+        },
+        "shanten": {
+          "$ref": "#/definitions/shanten"
+        },
+        "stats": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/stat"
+          }
+        },
+        "searched": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "time": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    {
+      "type": "object",
+      "required": ["success", "err_msg"],
+      "additionalProperties": false,
+      "properties": {
+        "success": {
+          "enum": [false]
+        },
+        "err_msg": {
+          "type": "string"
+        }
+      }
+    }
+  ],
+  "definitions": {
+    "tile": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 36
+    },
+    "tile_or_null": {
+      "type": "integer",
+      "minimum": -1,
+      "maximum": 36
+    },
+    "probability": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "input": {
+      "type": "object",
+      "required": [
+        "round_wind",
+        "seat_wind",
+        "dora_indicators",
+        "hand",
+        "melds",
+        "wall"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "round_wind": {
+          "type": "integer",
+          "enum": [27, 28, 29, 30]
+        },
+        "seat_wind": {
+          "type": "integer",
+          "enum": [27, 28, 29, 30]
+        },
+        "dora_indicators": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/tile"
+          },
+          "minItems": 0,
+          "maxItems": 5
+        },
+        "hand": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/tile"
+          },
+          "minItems": 1,
+          "maxItems": 14
+        },
+        "melds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/meld"
+          },
+          "minItems": 0,
+          "maxItems": 4
+        },
+        "wall": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4
+          },
+          "minItems": 37,
+          "maxItems": 37
+        }
+      }
+    },
+    "meld": {
+      "type": "object",
+      "required": ["type", "tiles"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4
+        },
+        "tiles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/tile"
+          },
+          "minItems": 3,
+          "maxItems": 4
+        }
+      }
+    },
+    "config": {
+      "type": "object",
+      "required": [
+        "enable_reddora",
+        "enable_uradora",
+        "enable_shanten_down",
+        "enable_tegawari",
+        "objective",
+        "t_min",
+        "t_max",
+        "sum",
+        "shanten_type",
+        "calc_stats",
+        "num_tiles"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "enable_reddora": {
+          "type": "boolean"
+        },
+        "enable_uradora": {
+          "type": "boolean"
+        },
+        "enable_shanten_down": {
+          "type": "boolean"
+        },
+        "enable_tegawari": {
+          "type": "boolean"
+        },
+        "extra": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "objective": {
+          "type": "integer",
+          "enum": [0, 1, 2]
+        },
+        "t_min": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18
+        },
+        "t_max": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18
+        },
+        "sum": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "shanten_type": {
+          "type": "integer"
+        },
+        "calc_stats": {
+          "type": "boolean"
+        },
+        "num_tiles": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 14
+        }
+      }
+    },
+    "shanten": {
+      "type": "object",
+      "required": ["all", "regular", "seven_pairs", "thirteen_orphans"],
+      "additionalProperties": false,
+      "properties": {
+        "all": {
+          "type": "integer"
+        },
+        "regular": {
+          "type": "integer"
+        },
+        "seven_pairs": {
+          "type": "integer"
+        },
+        "thirteen_orphans": {
+          "type": "integer"
+        }
+      }
+    },
+    "stat": {
+      "type": "object",
+      "required": [
+        "tile",
+        "tenpai_prob",
+        "win_prob",
+        "exp_score",
+        "necessary_tiles",
+        "shanten"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "tile": {
+          "$ref": "#/definitions/tile_or_null"
+        },
+        "tenpai_prob": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/probability"
+          }
+        },
+        "win_prob": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/probability"
+          }
+        },
+        "exp_score": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "necessary_tiles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/necessary_tile"
+          }
+        },
+        "shanten": {
+          "type": "integer"
+        }
+      }
+    },
+    "necessary_tile": {
+      "type": "object",
+      "required": ["tile", "count"],
+      "additionalProperties": false,
+      "properties": {
+        "tile": {
+          "$ref": "#/definitions/tile"
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4
+        }
+      }
+    }
+  }
+}

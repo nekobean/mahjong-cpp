@@ -1,8 +1,8 @@
 #include "json_parser.hpp"
 
 #include <algorithm>
-#include <chrono>
-#include <sstream>
+#include <cstring>
+#include <fstream>
 #include <string>
 
 #include <boost/dll.hpp>
@@ -17,130 +17,75 @@
 
 using namespace mahjong;
 
-/**
- * @brief Convert JSON value to string.
- *
- * @param[in] value document
- * @return JSON value as string
- */
-std::string to_json_str(rapidjson::Value &value)
+namespace
 {
-    std::stringstream ss;
-    rapidjson::OStreamWrapper osw(ss);
-    rapidjson::PrettyWriter<rapidjson::OStreamWrapper> writer(osw);
-    writer.SetMaxDecimalPlaces(4);
-    value.Accept(writer);
 
-    return ss.str();
+const rapidjson::SchemaDocument &get_request_schema()
+{
+    static const rapidjson::SchemaDocument schema = []() {
+        boost::filesystem::path schema_path =
+            boost::dll::program_location().parent_path() / "request_schema.json";
+
+        std::ifstream ifs(schema_path.string());
+        if (!ifs.is_open()) {
+            throw std::runtime_error(fmt::format("Failed to open JSON schema: path={}.",
+                                                 schema_path.string()));
+        }
+
+        rapidjson::Document schema_doc;
+        rapidjson::IStreamWrapper isw(ifs);
+        if (schema_doc.ParseStream(isw).HasParseError()) {
+            throw std::runtime_error(fmt::format(
+                "Failed to parse JSON schema: path={}.", schema_path.string()));
+        }
+
+        return rapidjson::SchemaDocument(schema_doc);
+    }();
+
+    return schema;
 }
 
-/**
- * @brief Convert JSON document to string.
- *
- * @param[in] doc document
- * @return JSON document as string
- */
-std::string to_json_str(rapidjson::Document &doc)
-{
-    rapidjson::StringBuffer buffer;
-    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-    writer.SetMaxDecimalPlaces(4);
-    doc.Accept(writer);
-
-    return buffer.GetString();
-}
-
-void parse_json(const std::string &json, rapidjson::Document &doc)
-{
-    if (doc.Parse(json.c_str()).HasParseError()) {
-        throw std::runtime_error(
-            "Failed to parse json string. (reason invalid json format)");
-    }
-
-    boost::filesystem::path schema_path =
-        boost::dll::program_location().parent_path() / "request_schema.json";
-
-    // Open JSON schema.
-    std::ifstream ifs(schema_path.string());
-    if (!ifs.is_open()) {
-        throw std::runtime_error(fmt::format("Failed to open json schema. (path: {})",
-                                             schema_path.string()));
-    }
-
-    // Parse JSON schema.
-    rapidjson::Document schema_doc;
-    rapidjson::IStreamWrapper isw(ifs);
-    if (schema_doc.ParseStream(isw).HasParseError()) {
-        throw std::runtime_error(fmt::format("Failed to parse json schema. (path: {})",
-                                             schema_path.string()));
-    }
-    rapidjson::SchemaDocument schema(schema_doc);
-
-    // Validate JSON schema.
-    rapidjson::SchemaValidator validator(schema);
-    if (!doc.Accept(validator)) {
-        rapidjson::StringBuffer sb;
-        validator.GetInvalidSchemaPointer().StringifyUriFragment(sb);
-        const std::string invalid_schema = sb.GetString();
-        const std::string invalid_keyword = validator.GetInvalidSchemaKeyword();
-        sb.Clear();
-        validator.GetInvalidDocumentPointer().StringifyUriFragment(sb);
-        const std::string invalid_doc = sb.GetString();
-
-        throw std::runtime_error(fmt::format(
-            "Failed to validate json schema. (schema: {}, keyword: {}, doc: {})",
-            invalid_schema, invalid_keyword, invalid_doc));
-    }
-
-    // Check version.
-    if (strcmp(doc["version"].GetString(), PROJECT_VERSION) != 0) {
-        throw std::runtime_error(fmt::format(
-            u8"リクエストのバージョンの不一致です。"
-            u8"ブラウザのキャッシュの影響と思われるので、ページを更新してください。",
-            PROJECT_VERSION, doc["version"].GetString()));
-    }
-}
-
-Request parse_request_doc(const rapidjson::Document &doc)
-{
-    // Parse request.
-    Request req = create_request(doc);
-
-    // Check request.
-    validate_request(req);
-
-    return req;
-}
-
-Request create_request(const rapidjson::Value &doc)
+// Build the internal request representation from a parsed JSON value.
+Request make_request(const rapidjson::Value &doc)
 {
     Request req;
-    req.config.enable_reddora = doc["enable_reddora"].GetBool();
-    req.config.enable_uradora = doc["enable_uradora"].GetBool();
-    req.config.enable_shanten_down = doc["enable_shanten_down"].GetBool();
-    req.config.enable_tegawari = doc["enable_tegawari"].GetBool();
-    req.config.enable_riichi = doc["enable_riichi"].GetBool();
-
     req.round.wind = doc["round_wind"].GetInt();
-    for (const auto &x : doc["dora_indicators"].GetArray()) {
+    req.player.wind = doc["seat_wind"].GetInt();
+
+    const auto dora_indicators = doc["dora_indicators"].GetArray();
+    req.round.dora_indicators.reserve(dora_indicators.Size());
+    for (const auto &x : dora_indicators) {
         req.round.dora_indicators.push_back(x.GetInt());
     }
 
     std::vector<int> hand;
-    for (const auto &x : doc["hand"].GetArray()) {
+    const auto hand_array = doc["hand"].GetArray();
+    hand.reserve(hand_array.Size());
+    for (const auto &x : hand_array) {
         hand.push_back(x.GetInt());
     }
     req.player.hand = from_array(hand);
 
-    for (const auto &meld : doc["melds"].GetArray()) {
+    const auto melds = doc["melds"].GetArray();
+    req.player.melds.reserve(melds.Size());
+    for (const auto &meld : melds) {
         int meld_type = meld["type"].GetInt();
         std::vector<int> meld_tiles;
-        for (const auto &x : meld["tiles"].GetArray()) {
+        const auto meld_tile_array = meld["tiles"].GetArray();
+        meld_tiles.reserve(meld_tile_array.Size());
+        for (const auto &x : meld_tile_array) {
             meld_tiles.push_back(x.GetInt());
         }
         req.player.melds.emplace_back(meld_type, meld_tiles);
     }
-    req.player.wind = doc["seat_wind"].GetInt();
+
+    req.config.enable_reddora = doc["enable_reddora"].GetBool();
+    req.config.enable_shanten_down = doc["enable_shanten_down"].GetBool();
+    req.config.enable_tegawari = doc["enable_tegawari"].GetBool();
+    req.config.enable_uradora = doc["enable_uradora"].GetBool();
+    req.config.enable_riichi = true;
+
+    req.objective = doc["objective"].GetInt();
 
     if (doc.HasMember("wall")) {
         for (int i = 0; i < 37; ++i) {
@@ -163,7 +108,7 @@ Request create_request(const rapidjson::Value &doc)
     return req;
 }
 
-void validate_request(const Request &req)
+void validate_tile_counts(const Request &req)
 {
     Count wall = ExpectedScoreCalculator::create_wall(req.round, req.player,
                                                       req.config.enable_reddora);
@@ -171,160 +116,263 @@ void validate_request(const Request &req)
     for (int i = 0; i < 37; ++i) {
         if (wall[i] < 0) {
             throw std::runtime_error(
-                fmt::format("More than 5 tiles are used. (tile: {}, count: {}) ",
+                fmt::format("Too many tiles are used: tile={}, count={}",
                             Tile::Name.at(i), 4 - wall[i]));
         }
     }
 
     for (int i = 0; i < 37; ++i) {
         if (req.wall[i] > wall[i]) {
-            throw std::runtime_error(fmt::format(
-                "More tiles than wall are used. (tile: {}, wall: {}, used: {}",
-                Tile::Name.at(i), req.wall[i], 4 - wall[i]));
+            throw std::runtime_error(
+                fmt::format("More tiles are requested than remain in the wall: "
+                            "tile={}, wall={}, used={}",
+                            Tile::Name.at(i), req.wall[i], 4 - wall[i]));
         }
     }
 
     int total_count = req.player.num_tiles() + req.player.num_melds() * 3;
     if (total_count % 3 == 0 || total_count > 14) {
-        throw std::runtime_error("Invalid number of tiles.");
+        throw std::runtime_error("Invalid tile count.");
     }
 }
 
-rapidjson::Value dump_necessary_tiles(const std::vector<std::tuple<int, int>> &tiles,
-                                      rapidjson::Document &doc)
+rapidjson::Value
+serialize_necessary_tiles(const std::vector<std::tuple<int, int>> &tiles,
+                          rapidjson::Document &doc)
 {
+    auto &allocator = doc.GetAllocator();
     rapidjson::Value value(rapidjson::kArrayType);
     for (const auto [tile, count] : tiles) {
         rapidjson::Value x(rapidjson::kObjectType);
-        x.AddMember("tile", tile, doc.GetAllocator());
-        x.AddMember("count", count, doc.GetAllocator());
-        value.PushBack(x, doc.GetAllocator());
+        x.AddMember("tile", tile, allocator);
+        x.AddMember("count", count, allocator);
+        value.PushBack(x, allocator);
     }
 
     return value;
 }
 
 rapidjson::Value
-dump_expected_score(const std::vector<ExpectedScoreCalculator::Stat> &stats,
-                    rapidjson::Document &doc)
+serialize_expected_score(const std::vector<ExpectedScoreCalculator::Stat> &stats,
+                         rapidjson::Document &doc)
 {
-    // 確率値が100%を1%程度超えることがあるので、100%を超えないようにする
-    // 原因については要調査
+    auto &allocator = doc.GetAllocator();
+
     rapidjson::Value value(rapidjson::kArrayType);
     for (const auto &stat : stats) {
         rapidjson::Value x(rapidjson::kObjectType);
 
-        x.AddMember("tile", stat.tile, doc.GetAllocator());
+        x.AddMember("tile", stat.tile, allocator);
 
         rapidjson::Value tenpai_prob(rapidjson::kArrayType);
         for (const auto prob : stat.tenpai_prob) {
-            tenpai_prob.PushBack(std::min(prob, 1.), doc.GetAllocator());
+            tenpai_prob.PushBack(prob, allocator);
         }
-        x.AddMember("tenpai_prob", tenpai_prob, doc.GetAllocator());
+        x.AddMember("tenpai_prob", tenpai_prob, allocator);
 
         rapidjson::Value win_prob(rapidjson::kArrayType);
         for (const auto prob : stat.win_prob) {
-            win_prob.PushBack(std::min(prob, 1.), doc.GetAllocator());
+            win_prob.PushBack(prob, allocator);
         }
-        x.AddMember("win_prob", win_prob, doc.GetAllocator());
+        x.AddMember("win_prob", win_prob, allocator);
 
         rapidjson::Value exp_score(rapidjson::kArrayType);
         for (const auto value : stat.exp_score) {
-            exp_score.PushBack(value, doc.GetAllocator());
+            exp_score.PushBack(value, allocator);
         }
-        x.AddMember("exp_score", exp_score, doc.GetAllocator());
+        x.AddMember("exp_score", exp_score, allocator);
 
-        x.AddMember("necessary_tiles", dump_necessary_tiles(stat.necessary_tiles, doc),
-                    doc.GetAllocator());
+        x.AddMember("necessary_tiles",
+                    serialize_necessary_tiles(stat.necessary_tiles, doc), allocator);
 
-        x.AddMember("shanten", stat.shanten, doc.GetAllocator());
+        x.AddMember("shanten", stat.shanten, allocator);
 
-        value.PushBack(x, doc.GetAllocator());
+        value.PushBack(x, allocator);
     }
 
     return value;
 }
 
-rapidjson::Value dump_string(const std::string &str, rapidjson::Document &doc)
+rapidjson::Value serialize_string(const std::string &str, rapidjson::Document &doc)
 {
+    auto &allocator = doc.GetAllocator();
     rapidjson::Value value;
     value.SetString(str.c_str(), static_cast<rapidjson::SizeType>(str.length()),
-                    doc.GetAllocator());
+                    allocator);
 
     return value;
 }
 
-rapidjson::Value create_response(const Request &req, rapidjson::Document &doc)
+rapidjson::Value serialize_input(const Request &req, rapidjson::Document &doc)
 {
-    using namespace mahjong;
+    auto &allocator = doc.GetAllocator();
+    rapidjson::Value input_val(rapidjson::kObjectType);
 
-    rapidjson::Value res_val(rapidjson::kObjectType);
+    input_val.AddMember("round_wind", req.round.wind, allocator);
+    input_val.AddMember("seat_wind", req.player.wind, allocator);
 
-    // shanten number
-    ///////////////////////////////
-    const int shanten = std::get<1>(ShantenCalculator::calc(
-        req.player.hand, req.player.num_melds(), ShantenFlag::All));
-    const int regular_shanten = std::get<1>(ShantenCalculator::calc(
-        req.player.hand, req.player.num_melds(), ShantenFlag::Regular));
-    const int seven_pairs_shanten = std::get<1>(ShantenCalculator::calc(
-        req.player.hand, req.player.num_melds(), ShantenFlag::SevenPairs));
-    const int thirteen_orphans_shanten = std::get<1>(ShantenCalculator::calc(
-        req.player.hand, req.player.num_melds(), ShantenFlag::ThirteenOrphans));
-
-    if (shanten == -1) {
-        throw std::runtime_error(u8"手牌はすでに和了形です。");
+    rapidjson::Value dora_indicators(rapidjson::kArrayType);
+    for (const auto tile : req.round.dora_indicators) {
+        dora_indicators.PushBack(tile, allocator);
     }
+    input_val.AddMember("dora_indicators", dora_indicators, allocator);
+
+    rapidjson::Value hand(rapidjson::kArrayType);
+    for (int i = 0; i < 37; ++i) {
+        for (int j = 0; j < req.player.hand[i]; ++j) {
+            hand.PushBack(i, allocator);
+        }
+    }
+    input_val.AddMember("hand", hand, allocator);
+
+    rapidjson::Value melds(rapidjson::kArrayType);
+    for (const auto &meld : req.player.melds) {
+        rapidjson::Value meld_val(rapidjson::kObjectType);
+        meld_val.AddMember("type", meld.type, allocator);
+
+        rapidjson::Value tiles(rapidjson::kArrayType);
+        for (const auto tile : meld.tiles) {
+            tiles.PushBack(tile, allocator);
+        }
+        meld_val.AddMember("tiles", tiles, allocator);
+
+        melds.PushBack(meld_val, allocator);
+    }
+    input_val.AddMember("melds", melds, allocator);
+
+    rapidjson::Value wall(rapidjson::kArrayType);
+    for (const auto count : req.wall) {
+        wall.PushBack(count, allocator);
+    }
+    input_val.AddMember("wall", wall, allocator);
+
+    return input_val;
+}
+
+} // namespace
+
+/**
+ * @brief Convert a JSON document to a string.
+ *
+ * @param[in] doc JSON document to serialize.
+ * @return Serialized JSON string.
+ */
+std::string dump_json(const rapidjson::Document &doc)
+{
+    rapidjson::StringBuffer buffer;
+    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+    writer.SetMaxDecimalPlaces(4);
+    doc.Accept(writer);
+
+    return buffer.GetString();
+}
+
+/**
+ * @brief Parse and validate a request JSON string.
+ *
+ * @param[in] json Request JSON string.
+ * @param[out] doc Parsed JSON document.
+ * @throw std::runtime_error If parsing, schema validation, or version check fails.
+ */
+void parse_json(const std::string &json, rapidjson::Document &doc)
+{
+    if (doc.Parse(json.c_str()).HasParseError()) {
+        throw std::runtime_error("Failed to parse JSON string: invalid JSON format.");
+    }
+
+    // Validate JSON schema.
+    rapidjson::SchemaValidator validator(get_request_schema());
+    if (!doc.Accept(validator)) {
+        rapidjson::StringBuffer sb;
+        validator.GetInvalidSchemaPointer().StringifyUriFragment(sb);
+        const std::string invalid_schema = sb.GetString();
+        const std::string invalid_keyword = validator.GetInvalidSchemaKeyword();
+        sb.Clear();
+        validator.GetInvalidDocumentPointer().StringifyUriFragment(sb);
+        const std::string invalid_doc = sb.GetString();
+
+        throw std::runtime_error(
+            fmt::format("JSON schema validation failed: schema={}, keyword={}, doc={}",
+                        invalid_schema, invalid_keyword, invalid_doc));
+    }
+
+    if (std::strcmp(doc["version"].GetString(), PROJECT_VERSION) != 0) {
+        throw std::runtime_error(
+            fmt::format("Request version mismatch: expected={}, actual={}.",
+                        PROJECT_VERSION, doc["version"].GetString()));
+    }
+}
+
+/**
+ * @brief Deserialize and validate a request from a parsed JSON document.
+ *
+ * @param[in] doc Parsed request JSON document.
+ * @return Validated request object.
+ * @throw std::runtime_error If the request content is invalid.
+ */
+Request deserialize_request(const rapidjson::Document &doc)
+{
+    Request req = make_request(doc);
+
+    validate_tile_counts(req);
+
+    return req;
+}
+
+/**
+ * @brief Build a success response JSON document from a request.
+ *
+ * @param[in] req Validated request object.
+ * @param[in] result Calculated result to serialize.
+ * @param[in,out] doc Response document to populate.
+ */
+void build_success_response(const Request &req, const CalculationResult &result,
+                            rapidjson::Document &doc)
+{
+    auto &allocator = doc.GetAllocator();
+    doc.SetObject();
+    doc.AddMember("success", true, allocator);
+    doc.AddMember("input", serialize_input(req, doc), allocator);
 
     rapidjson::Value shanten_val(rapidjson::kObjectType);
-    shanten_val.AddMember("all", shanten, doc.GetAllocator());
-    shanten_val.AddMember("regular", regular_shanten, doc.GetAllocator());
-    shanten_val.AddMember("seven_pairs", seven_pairs_shanten, doc.GetAllocator());
-    shanten_val.AddMember("thirteen_orphans", thirteen_orphans_shanten,
-                          doc.GetAllocator());
-    res_val.AddMember("shanten", shanten_val, doc.GetAllocator());
-
-    // expected score
-    ///////////////////////////////
-    ExpectedScoreCalculator::Config config;
-    const int num_tiles = req.player.num_tiles() + req.player.num_melds() * 3;
-    config.t_min = 1;
-    config.t_max = 18;
-    config.sum = std::accumulate(req.wall.begin(), req.wall.begin() + 34, 0);
-    config.extra = 1;
-    config.shanten_type = ShantenFlag::All;
-    config.calc_stats = shanten <= 3;
-    config.enable_reddora = req.config.enable_reddora;
-    config.enable_uradora = req.config.enable_uradora;
-    config.enable_shanten_down = req.config.enable_shanten_down;
-    config.enable_tegawari = req.config.enable_tegawari;
-    config.enable_riichi = req.config.enable_riichi;
-
-    // ToDo: 立直の問題を直すまで、聴牌は向聴戻し、手変わりを無効化
-    if (shanten == 0) {
-        config.enable_shanten_down = false;
-        config.enable_tegawari = false;
-    }
-
-    const auto start = std::chrono::steady_clock::now();
-    const auto [stats, searched] =
-        ExpectedScoreCalculator::calc(config, req.round, req.player, req.wall);
-    const auto end = std::chrono::steady_clock::now();
-    const auto elapsed_ms =
-        std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
-
-    res_val.AddMember("stats", dump_expected_score(stats, doc), doc.GetAllocator());
-    res_val.AddMember("searched", searched, doc.GetAllocator());
-    res_val.AddMember("time", elapsed_ms, doc.GetAllocator());
+    shanten_val.AddMember("all", result.shanten, allocator);
+    shanten_val.AddMember("regular", result.regular_shanten, allocator);
+    shanten_val.AddMember("seven_pairs", result.seven_pairs_shanten, allocator);
+    shanten_val.AddMember("thirteen_orphans", result.thirteen_orphans_shanten,
+                          allocator);
+    doc.AddMember("shanten", shanten_val, allocator);
+    doc.AddMember("stats", serialize_expected_score(result.stats, doc), allocator);
+    doc.AddMember("searched", result.searched, allocator);
+    doc.AddMember("time", result.time_us, allocator);
 
     rapidjson::Value config_val(rapidjson::kObjectType);
-    config_val.AddMember("t_min", config.t_min, doc.GetAllocator());
-    config_val.AddMember("t_max", config.t_max, doc.GetAllocator());
-    config_val.AddMember("sum", config.sum, doc.GetAllocator());
-    config_val.AddMember("extra", config.extra, doc.GetAllocator());
-    config_val.AddMember("shanten_type", config.shanten_type, doc.GetAllocator());
-    config_val.AddMember("calc_stats", config.calc_stats, doc.GetAllocator());
-    config_val.AddMember("num_tiles", num_tiles, doc.GetAllocator());
-    res_val.AddMember("config", config_val, doc.GetAllocator());
+    config_val.AddMember("enable_reddora", result.config.enable_reddora, allocator);
+    config_val.AddMember("enable_uradora", result.config.enable_uradora, allocator);
+    config_val.AddMember("enable_shanten_down", result.config.enable_shanten_down,
+                         allocator);
+    config_val.AddMember("enable_tegawari", result.config.enable_tegawari, allocator);
+    config_val.AddMember("objective", req.objective, allocator);
+    config_val.AddMember("t_min", result.config.t_min, allocator);
+    config_val.AddMember("t_max", result.config.t_max, allocator);
+    config_val.AddMember("sum", result.config.sum, allocator);
+    config_val.AddMember("extra", result.config.extra, allocator);
+    config_val.AddMember("shanten_type", result.config.shanten_type, allocator);
+    config_val.AddMember("calc_stats", result.config.calc_stats, allocator);
+    config_val.AddMember(
+        "num_tiles", req.player.num_tiles() + req.player.num_melds() * 3, allocator);
+    doc.AddMember("config", config_val, allocator);
+}
 
-    return res_val;
+/**
+ * @brief Build an error response JSON document.
+ *
+ * @param[in] message Error message to serialize.
+ * @param[in,out] doc Response document to populate.
+ */
+void build_error_response(const std::string &message, rapidjson::Document &doc)
+{
+    auto &allocator = doc.GetAllocator();
+    doc.SetObject();
+    doc.AddMember("success", false, allocator);
+    doc.AddMember("err_msg", serialize_string(message, doc), allocator);
 }

@@ -4,10 +4,13 @@ add_executable(${EXE_NAME} ${SRC_FILES})
 add_dependencies(${EXE_NAME} ${LIB_NAME})
 
 if (MSVC)
-    target_link_libraries(${EXE_NAME} ${LIB_NAME} ${CMAKE_DL_LIBS} ${Boost_LIBRARIES} spdlog)
+    target_link_libraries(${EXE_NAME} ${LIB_NAME} ${CMAKE_DL_LIBS}
+                          Boost::filesystem Boost::system spdlog)
 else()
     set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Wall -Wextra")
-    target_link_libraries(${EXE_NAME} ${LIB_NAME} ${CMAKE_DL_LIBS} ${Boost_LIBRARIES} spdlog::spdlog -static-libgcc -static-libstdc++ -static)
+    target_link_libraries(${EXE_NAME} ${LIB_NAME} ${CMAKE_DL_LIBS}
+                          Boost::filesystem Boost::system spdlog::spdlog
+                          -static-libgcc -static-libstdc++ -static)
 endif()
 
 add_custom_command(TARGET ${EXE_NAME} PRE_BUILD

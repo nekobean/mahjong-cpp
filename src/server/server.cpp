@@ -1,4 +1,5 @@
 #include "server.hpp"
+#include "request_processor.hpp"
 
 #include <fstream>
 #include <iostream>
@@ -18,11 +19,20 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 
-//#define OUTPUT_DETAIL_LOG
 namespace beast = boost::beast;   // from <boost/beast.hpp>
 namespace http = beast::http;     // from <boost/beast/http.hpp>
 namespace net = boost::asio;      // from <boost/asio.hpp>
 using tcp = boost::asio::ip::tcp; // from <boost/asio/ip/tcp.hpp>
+
+namespace
+{
+
+std::shared_ptr<spdlog::logger> get_logger()
+{
+    return spdlog::get("logger");
+}
+
+} // namespace
 
 Server server;
 
@@ -56,48 +66,15 @@ void Server::log_request(const Request &req)
         wall += std::to_string(c);
     }
 
-    spdlog::get("logger")->info(
-        "ip: {}, version: {}, "
-        "round: {}, seat: {}, indicators: {}, "
-        "hand: {}, melds: {}, wall: {}, "
-        "reddora: {}, uradora: {}, shantendown: {}, tegawari: {}, riichi: {}",
+    get_logger()->info(
+        "Received request: ip={}, version={}, "
+        "round={}, seat={}, indicators={}, "
+        "hand={}, melds={}, wall={}, "
+        "red_dora={}, ura_dora={}, shanten_down={}, tegawari={}, riichi={}",
         req.ip, req.version, round_wind, seat_wind, dora_indicators, hand, melds, wall,
         req.config.enable_reddora, req.config.enable_uradora,
         req.config.enable_shanten_down, req.config.enable_tegawari,
         req.config.enable_riichi);
-
-#ifdef OUTPUT_DETAIL_LOG
-    {
-        boost::filesystem::path save_dir =
-            boost::dll::program_location().parent_path() / "requests";
-        if (!boost::filesystem::exists(save_dir))
-            boost::filesystem::create_directory(save_dir);
-        std::string req_save_path =
-            save_dir.string() + "\\" + (to_mpsz(req.hand.counts) + ".json");
-        std::filesystem::path pa =
-            std::filesystem::u8path((const char *)req_save_path.c_str());
-        std::ofstream ofs(pa.string());
-        ofs << json;
-        ofs.close();
-    }
-
-    {
-        boost::filesystem::path save_dir =
-            boost::dll::program_location().parent_path() / "response";
-        if (!boost::filesystem::exists(save_dir))
-            boost::filesystem::create_directory(save_dir);
-        std::string req_save_path =
-            save_dir.string() + "\\" + (to_mpsz(req.hand.counts) + ".json");
-        std::filesystem::path pa =
-            std::filesystem::u8path((const char *)req_save_path.c_str());
-        std::ofstream ofs(pa.string());
-
-        std::cout << to_json_str(doc) << std::endl;
-
-        ofs << to_json_str(doc);
-        ofs.close();
-    }
-#endif
 }
 
 std::string Server::process_request(const std::string &json)
@@ -111,41 +88,27 @@ std::string Server::process_request(const std::string &json)
         parse_json(json, req_doc);
     }
     catch (const std::exception &e) {
-        res_doc.AddMember("success", false, res_doc.GetAllocator());
-        res_doc.AddMember("request", req_doc, res_doc.GetAllocator());
-        res_doc.AddMember("err_msg", dump_string(e.what(), res_doc),
-                          res_doc.GetAllocator());
-        spdlog::get("logger")->error("Failed to parse json. ({})", e.what());
-        std::cout << to_json_str(res_doc) << std::endl;
-        return to_json_str(res_doc);
+        build_error_response(e.what(), res_doc);
+        get_logger()->info("Failed to process request: reason={}.", e.what());
+        return dump_json(res_doc);
     }
 
     const std::string ip = req_doc.HasMember("ip") ? req_doc["ip"].GetString() : "";
 
-    // Create request object.
     try {
-        Request req = parse_request_doc(req_doc);
+        Request req = deserialize_request(req_doc);
         log_request(req);
-        rapidjson::Value res_val = create_response(req, res_doc);
-        res_doc.AddMember("success", true, res_doc.GetAllocator());
-        res_doc.AddMember("request", req_doc, res_doc.GetAllocator());
-        res_doc.AddMember("response", res_val, res_doc.GetAllocator());
+        CalculationResult result = calculate_result(req);
+        build_success_response(req, result, res_doc);
     }
     catch (const std::exception &e) {
-        res_doc.AddMember("success", false, res_doc.GetAllocator());
-        res_doc.AddMember("request", req_doc, res_doc.GetAllocator());
-        res_doc.AddMember("err_msg", dump_string(e.what(), res_doc),
-                          res_doc.GetAllocator());
-        if (std::string(u8"手牌はすでに和了形です。") == e.what()) {
-            spdlog::get("logger")->info("ip: {}, error: {}", ip, e.what());
-        }
-        else {
-            spdlog::get("logger")->error("ip: {}, error: {}", ip, e.what());
-        }
-        return to_json_str(res_doc);
+        build_error_response(e.what(), res_doc);
+        get_logger()->info("Failed to process request: ip={}, reason={}.", ip,
+                           e.what());
+        return dump_json(res_doc);
     }
 
-    return to_json_str(res_doc);
+    return dump_json(res_doc);
 }
 
 // This function produces an HTTP response for the given
@@ -290,7 +253,7 @@ void do_session(tcp::socket &socket, std::shared_ptr<std::string const> const &d
 
 int Server::run(unsigned short port)
 {
-    spdlog::get("logger")->info("Launching server... (port: {})", port);
+    get_logger()->info("Starting server on port {}", port);
 
     try {
         auto const address = net::ip::make_address("0.0.0.0");
@@ -313,25 +276,11 @@ int Server::run(unsigned short port)
         }
     }
     catch (const std::exception &e) {
-        spdlog::get("logger")->error("Error: {}", e.what());
+        get_logger()->error("Server terminated with an error: {}", e.what());
         return EXIT_FAILURE;
     }
 
     return EXIT_SUCCESS;
-}
-
-void print_stack_size()
-{
-#ifdef __linux__
-    pthread_attr_t attr;
-    pthread_attr_init(&attr);
-
-    size_t stackSize;
-    pthread_attr_getstacksize(&attr, &stackSize);
-    spdlog::get("logger")->info("stackSize: {} bytes", stackSize);
-
-    pthread_attr_destroy(&attr);
-#endif
 }
 
 int main(int argc, char *argv[])
@@ -350,7 +299,7 @@ int main(int argc, char *argv[])
     spdlog::register_logger(logger);
     spdlog::flush_every(std::chrono::seconds(3));
 
-    spdlog::get("logger")->info("{} {}", PROJECT_NAME, PROJECT_VERSION);
+    get_logger()->info("Starting {} version {}", PROJECT_NAME, PROJECT_VERSION);
 
     return server.run(port);
 }

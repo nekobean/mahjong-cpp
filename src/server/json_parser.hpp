@@ -1,5 +1,5 @@
-#ifndef MAHJONG_CPP_JSON_PARSER
-#define MAHJONG_CPP_JSON_PARSER
+#ifndef MAHJONG_CPP_JSON_PARSER_H
+#define MAHJONG_CPP_JSON_PARSER_H
 
 #include <rapidjson/document.h>
 
@@ -11,22 +11,28 @@ struct Request
     mahjong::Round round;
     mahjong::Player player;
     mahjong::Count wall;
+    int objective = 0;
     std::string ip;
     std::string version;
 };
 
-std::string to_json_str(rapidjson::Value &value);
-std::string to_json_str(rapidjson::Document &doc);
-void parse_json(const std::string &json, rapidjson::Document &doc);
-Request parse_request_doc(const rapidjson::Document &doc);
-Request create_request(const rapidjson::Value &doc);
-void validate_request(const Request &req);
-rapidjson::Value create_response(const Request &req, rapidjson::Document &doc);
-rapidjson::Value dump_necessary_tiles(const std::vector<std::tuple<int, int>> &tiles,
-                                      rapidjson::Document &doc);
-rapidjson::Value dump_string(const std::string &str, rapidjson::Document &doc);
-rapidjson::Value
-dump_expected_score(const std::vector<mahjong::ExpectedScoreCalculator::Stat> &stats,
-                    rapidjson::Document &doc);
+struct CalculationResult
+{
+    mahjong::ExpectedScoreCalculator::Config config;
+    int shanten;
+    int regular_shanten;
+    int seven_pairs_shanten;
+    int thirteen_orphans_shanten;
+    std::vector<mahjong::ExpectedScoreCalculator::Stat> stats;
+    int searched;
+    long long time_us;
+};
 
-#endif // MAHJONG_CPP_JSON_PARSER
+std::string dump_json(const rapidjson::Document &doc);
+void parse_json(const std::string &json, rapidjson::Document &doc);
+Request deserialize_request(const rapidjson::Document &doc);
+void build_success_response(const Request &req, const CalculationResult &result,
+                            rapidjson::Document &doc);
+void build_error_response(const std::string &message, rapidjson::Document &doc);
+
+#endif // MAHJONG_CPP_JSON_PARSER_H
