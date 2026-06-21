@@ -340,7 +340,7 @@ void build_success_response(const Request &req, const CalculationResult &result,
     doc.AddMember("shanten", shanten_val, allocator);
     doc.AddMember("stats", serialize_expected_score(result.stats, doc), allocator);
     doc.AddMember("searched", result.searched, allocator);
-    doc.AddMember("time", result.time_us, allocator);
+    doc.AddMember("time", static_cast<int64_t>(result.time_us), allocator);
 
     rapidjson::Value config_val(rapidjson::kObjectType);
     config_val.AddMember("enable_reddora", result.config.enable_reddora, allocator);

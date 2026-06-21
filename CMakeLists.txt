@@ -48,7 +48,7 @@ else()
   FetchContent_Declare(
     rapidjson
     GIT_REPOSITORY https://github.com/Tencent/rapidjson.git
-    GIT_TAG v1.1.0
+    GIT_TAG 24b5e7a8b27f42fa16b96fc70aade9106cf7102f
   )
   FetchContent_Populate(rapidjson)
   include_directories(${rapidjson_SOURCE_DIR}/include)
