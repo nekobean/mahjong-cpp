@@ -214,6 +214,16 @@ std::vector<double> to_vector(const std::array<double, N> &values, const int t_m
     return {values.begin(), values.begin() + t_max + 1};
 }
 
+int distance(const SeparatedCount &hand, const SeparatedCount &hand_org)
+{
+    int dist = 0;
+    for (int i = 0; i < hand.size(); ++i) {
+        dist += std::max(hand[i] - hand_org[i], 0);
+    }
+
+    return dist;
+}
+
 } // namespace
 
 MergedCount create_wall(const Round &round, const Player &player,
@@ -247,24 +257,6 @@ MergedCount create_wall(const Round &round, const Player &player,
     }
 
     return wall;
-}
-
-/**
- * @brief 手牌 hand から手牌 hand_org に変化するための交換枚数を計算する。
- *
- * @param hand
- * @param hand_org
- * @return int
- */
-int ExpectedScoreCalculator::distance(const SeparatedCount &hand,
-                                      const SeparatedCount &hand_org)
-{
-    int dist = 0;
-    for (int i = 0; i < hand.size(); ++i) {
-        dist += std::max(hand[i] - hand_org[i], 0);
-    }
-
-    return dist;
 }
 
 ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::draw_node(
@@ -361,9 +353,7 @@ ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::discard_node(
 
         if (hand_counts[i] && (allow_shanten_down || is_disc)) {
             const bool call_riichi =
-                player.is_closed() && shanten == 0 && is_disc
-                    ? true
-                    : riichi;
+                player.is_closed() && shanten == 0 && is_disc ? true : riichi;
 
             discard(player, hand_counts, wall_counts, i);
 
@@ -559,11 +549,11 @@ ExpectedScoreCalculator::calc(const Config &_config, const Round &round,
                 const auto [shanten2, necessary_tiles] =
                     get_necessary_tiles(config, player, wall);
 
-                stats.emplace_back(
-                    Stat{Tile::Null, to_vector(state.tenpai_prob, config.t_max),
-                         to_vector(state.win_prob, config.t_max),
-                         to_vector(state.exp_score, config.t_max), necessary_tiles,
-                         shanten2});
+                stats.emplace_back(Stat{Tile::Null,
+                                        to_vector(state.tenpai_prob, config.t_max),
+                                        to_vector(state.win_prob, config.t_max),
+                                        to_vector(state.exp_score, config.t_max),
+                                        necessary_tiles, shanten2});
             }
         }
         else {
@@ -597,10 +587,9 @@ ExpectedScoreCalculator::calc(const Config &_config, const Round &round,
             for (int i = 0; i < 37; ++i) {
                 if (hand_counts[i] > 0) {
                     const bool is_disc = discard_tiles & (1LL << i);
-                    const bool call_riichi = player.is_closed() &&
-                                                     discard_shanten == 0 && is_disc
-                                                 ? true
-                                                 : riichi;
+                    const bool call_riichi =
+                        player.is_closed() && discard_shanten == 0 && is_disc ? true
+                                                                              : riichi;
 
                     discard(player, hand_counts, wall_counts, i);
                     if (const auto itr =

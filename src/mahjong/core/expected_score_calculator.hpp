@@ -163,7 +163,6 @@ class ExpectedScoreCalculator
                                                    const MergedCount &wall);
 
   private:
-    static int distance(const SeparatedCount &hand, const SeparatedCount &origin);
     static Vertex draw_node(const Config &config, const Round &round, Player &player,
                             Graph &graph, Cache &cache1, Cache &cache2,
                             SeparatedCount &hand_reds, SeparatedCount &wall_reds,
