@@ -259,118 +259,144 @@ MergedCount create_wall(const Round &round, const Player &player,
     return wall;
 }
 
-ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::draw_node(
-    const Config &config, const Round &round, Player &player, Graph &graph,
-    Cache &cache1, Cache &cache2, SeparatedCount &hand_counts,
-    SeparatedCount &wall_counts, const SeparatedCount &hand_org, const int shanten_org,
+class ExpectedScoreCalculator::GraphBuilder
+{
+  public:
+    GraphBuilder(const Config &config, const Round &round, Player &player,
+                 SeparatedCount &hand_counts, SeparatedCount &wall_counts,
+                 const SeparatedCount &hand_org, const int shanten_org)
+        : config_(config)
+        , round_(round)
+        , player_(player)
+        , hand_counts_(hand_counts)
+        , wall_counts_(wall_counts)
+        , hand_org_(hand_org)
+        , shanten_org_(shanten_org)
+    {
+    }
+
+    Vertex draw_node(bool riichi);
+    Vertex discard_node(bool riichi);
+
+    Graph &graph() { return graph_; }
+    const Cache &draw_cache() const { return cache1_; }
+    const Cache &discard_cache() const { return cache2_; }
+
+  private:
+    const Config &config_;
+    const Round &round_;
+    Player &player_;
+    SeparatedCount &hand_counts_;
+    SeparatedCount &wall_counts_;
+    const SeparatedCount &hand_org_;
+    const int shanten_org_;
+    Graph graph_;
+    Cache cache1_;
+    Cache cache2_;
+};
+
+ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::GraphBuilder::draw_node(
     const bool riichi)
 {
     // If vertex exists in the cache, return it.
-    CacheKey key(hand_counts, riichi);
-    if (const auto itr = cache1.find(key); itr != cache1.end()) {
+    CacheKey key(hand_counts_, riichi);
+    if (const auto itr = cache1_.find(key); itr != cache1_.end()) {
         return itr->second;
     }
 
     // Calculate necessary tiles.
     auto [type, shanten, wait] = NecessaryTileCalculator::calc(
-        player.hand, player.num_melds(), config.shanten_type);
+        player_.hand, player_.num_melds(), config_.shanten_type);
 
     // 元の手牌から現在の手牌に変化されるのに必要な交換枚数 + 現在の向聴数 < 元の手牌の向聴数 + 追加交換枚数
     // の場合、立直前に限り手変わりを許可する
     bool allow_tegawari =
-        config.enable_tegawari && !riichi &&
-        distance(hand_counts, hand_org) + shanten < shanten_org + config.extra;
+        config_.enable_tegawari && !riichi &&
+        distance(hand_counts_, hand_org_) + shanten < shanten_org_ + config_.extra;
     wait |= (wait & (1LL << Tile::Manzu5)) ? (1LL << Tile::RedManzu5) : 0;
     wait |= (wait & (1LL << Tile::Pinzu5)) ? (1LL << Tile::RedPinzu5) : 0;
     wait |= (wait & (1LL << Tile::Souzu5)) ? (1LL << Tile::RedSouzu5) : 0;
 
     // Add vertex to graph.
-    const Vertex vertex = boost::add_vertex(graph);
-    graph[vertex].is_tenpai = shanten == 0;
-    cache1[key] = vertex;
+    const Vertex vertex = boost::add_vertex(graph_);
+    graph_[vertex].is_tenpai = shanten == 0;
+    cache1_[key] = vertex;
 
     for (int i = 0; i < 37; ++i) {
         bool is_wait = wait & (1LL << i);
 
-        if (wall_counts[i] && (allow_tegawari || is_wait)) {
-            const int weight = wall_counts[i];
+        if (wall_counts_[i] && (allow_tegawari || is_wait)) {
+            const int weight = wall_counts_[i];
 
-            draw(player, hand_counts, wall_counts, i);
+            draw(player_, hand_counts_, wall_counts_, i);
 
-            const Vertex target =
-                discard_node(config, round, player, graph, cache1, cache2, hand_counts,
-                             wall_counts, hand_org, shanten_org, riichi);
+            const Vertex target = discard_node(riichi);
 
-            if (!boost::edge(vertex, target, graph).second) {
+            if (!boost::edge(vertex, target, graph_).second) {
                 // 自摸前の時点で聴牌の場合、有効牌自摸後は和了形のため、点数計算を行う
                 const double score =
                     (shanten == 0 && is_wait
-                         ? calc_score(config, round, player, hand_counts, wall_counts,
+                         ? calc_score(config_, round_, player_, hand_counts_, wall_counts_,
                                       type, i, riichi)
                          : 0.0);
-                boost::add_edge(vertex, target, {weight, score}, graph);
+                boost::add_edge(vertex, target, {weight, score}, graph_);
             }
 
-            discard(player, hand_counts, wall_counts, i);
+            discard(player_, hand_counts_, wall_counts_, i);
         }
     }
 
     return vertex;
 }
 
-ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::discard_node(
-    const Config &config, const Round &round, Player &player, Graph &graph,
-    Cache &cache1, Cache &cache2, SeparatedCount &hand_counts,
-    SeparatedCount &wall_counts, const SeparatedCount &hand_org, const int shanten_org,
+ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::GraphBuilder::discard_node(
     const bool riichi)
 {
     // If vertex exists in the cache, return it.
-    CacheKey key(hand_counts, riichi);
-    if (const auto itr = cache2.find(key); itr != cache2.end()) {
+    CacheKey key(hand_counts_, riichi);
+    if (const auto itr = cache2_.find(key); itr != cache2_.end()) {
         return itr->second;
     }
 
     // Calculate unnecessary tiles.
     auto [type, shanten, disc] = UnnecessaryTileCalculator::calc(
-        player.hand, player.num_melds(), config.shanten_type);
+        player_.hand, player_.num_melds(), config_.shanten_type);
 
     // 元の手牌から現在の手牌に変化されるのに必要な交換枚数 + 現在の向聴数 < 元の手牌の向聴数 + 追加交換枚数
     // の場合、立直前に限り向聴戻しを許可する
     bool allow_shanten_down =
-        config.enable_shanten_down && !riichi &&
-        distance(hand_counts, hand_org) + shanten < shanten_org + config.extra;
+        config_.enable_shanten_down && !riichi &&
+        distance(hand_counts_, hand_org_) + shanten < shanten_org_ + config_.extra;
     disc |= (disc & (1LL << Tile::Manzu5)) ? (1LL << Tile::RedManzu5) : 0;
     disc |= (disc & (1LL << Tile::Pinzu5)) ? (1LL << Tile::RedPinzu5) : 0;
     disc |= (disc & (1LL << Tile::Souzu5)) ? (1LL << Tile::RedSouzu5) : 0;
 
     // Add vertex to graph.
-    const Vertex vertex = boost::add_vertex(graph);
-    graph[vertex].is_tenpai = shanten == 0;
-    cache2[key] = vertex;
+    const Vertex vertex = boost::add_vertex(graph_);
+    graph_[vertex].is_tenpai = shanten == 0;
+    cache2_[key] = vertex;
 
     for (int i = 0; i < 37; ++i) {
         bool is_disc = disc & (1LL << i);
 
-        if (hand_counts[i] && (allow_shanten_down || is_disc)) {
+        if (hand_counts_[i] && (allow_shanten_down || is_disc)) {
             const bool call_riichi =
-                player.is_closed() && shanten == 0 && is_disc ? true : riichi;
+                player_.is_closed() && shanten == 0 && is_disc ? true : riichi;
 
-            discard(player, hand_counts, wall_counts, i);
+            discard(player_, hand_counts_, wall_counts_, i);
 
-            const int weight = wall_counts[i];
-            const Vertex source =
-                draw_node(config, round, player, graph, cache1, cache2, hand_counts,
-                          wall_counts, hand_org, shanten_org, call_riichi);
+            const int weight = wall_counts_[i];
+            const Vertex source = draw_node(call_riichi);
 
-            draw(player, hand_counts, wall_counts, i);
+            draw(player_, hand_counts_, wall_counts_, i);
 
-            if (!boost::edge(source, vertex, graph).second) {
+            if (!boost::edge(source, vertex, graph_).second) {
                 // 打牌前の時点で向聴数が-1の場合、和了形のため、点数計算を行う
                 const double score =
-                    (shanten == -1 ? calc_score(config, round, player, hand_counts,
-                                                wall_counts, type, i, riichi)
+                    (shanten == -1 ? calc_score(config_, round_, player_, hand_counts_,
+                                                wall_counts_, type, i, riichi)
                                    : 0.0);
-                boost::add_edge(source, vertex, {weight, score}, graph);
+                boost::add_edge(source, vertex, {weight, score}, graph_);
             }
         }
     }
@@ -502,9 +528,6 @@ std::tuple<std::vector<ExpectedScoreCalculator::Stat>, int>
 ExpectedScoreCalculator::calc(const Config &_config, const Round &round,
                               const Player &_player, const MergedCount &wall)
 {
-    Graph graph;
-    Cache cache1, cache2;
-
     Config config = _config;
     assert(config.t_min >= 0);
     assert(config.t_max <= MaxTurn);
@@ -522,6 +545,8 @@ ExpectedScoreCalculator::calc(const Config &_config, const Round &round,
     const SeparatedCount hand_org = hand_counts;
     const int shanten_org = std::get<1>(
         ShantenCalculator::calc(player.hand, player.num_melds(), config.shanten_type));
+    GraphBuilder graph_builder(config, round, player, hand_counts, wall_counts, hand_org,
+                               shanten_org);
     std::vector<Stat> stats;
     const int num_tiles = player.num_tiles() + player.num_melds() * 3;
 
@@ -534,16 +559,17 @@ ExpectedScoreCalculator::calc(const Config &_config, const Round &round,
             // 期待値、確率計算を行う場合
 
             // 13枚の場合は自摸を起点に手牌遷移のグラフを作成する。
-            draw_node(config, round, player, graph, cache1, cache2, hand_counts,
-                      wall_counts, hand_org, shanten_org, riichi);
+            graph_builder.draw_node(riichi);
 
             // 確率、期待値を計算する。
-            calc_stats(config, graph, cache1, cache2);
+            calc_stats(config, graph_builder.graph(), graph_builder.draw_cache(),
+                       graph_builder.discard_cache());
 
             // 結果を取得する。
-            if (const auto itr = cache1.find(CacheKey(hand_counts, riichi));
-                itr != cache1.end()) {
-                const VertexData &state = graph[itr->second];
+            if (const auto itr =
+                    graph_builder.draw_cache().find(CacheKey(hand_counts, riichi));
+                itr != graph_builder.draw_cache().end()) {
+                const VertexData &state = graph_builder.graph()[itr->second];
 
                 // 有効牌の一覧を計算する。
                 const auto [shanten2, necessary_tiles] =
@@ -567,11 +593,11 @@ ExpectedScoreCalculator::calc(const Config &_config, const Round &round,
             // 期待値、確率計算を行う場合
 
             // 14枚の場合は打牌を起点に手牌遷移のグラフを作成する。
-            discard_node(config, round, player, graph, cache1, cache2, hand_counts,
-                         wall_counts, hand_org, shanten_org, riichi);
+            graph_builder.discard_node(riichi);
 
             // 確率、期待値を計算する。
-            calc_stats(config, graph, cache1, cache2);
+            calc_stats(config, graph_builder.graph(), graph_builder.draw_cache(),
+                       graph_builder.discard_cache());
 
             // 結果を取得する。
             auto [discard_type, discard_shanten, discard_tiles] =
@@ -593,9 +619,10 @@ ExpectedScoreCalculator::calc(const Config &_config, const Round &round,
 
                     discard(player, hand_counts, wall_counts, i);
                     if (const auto itr =
-                            cache1.find(CacheKey(hand_counts, call_riichi));
-                        itr != cache1.end()) {
-                        const VertexData &state = graph[itr->second];
+                            graph_builder.draw_cache().find(
+                                CacheKey(hand_counts, call_riichi));
+                        itr != graph_builder.draw_cache().end()) {
+                        const VertexData &state = graph_builder.graph()[itr->second];
 
                         // 有効牌の一覧を計算する。
                         const auto [shanten2, necessary_tiles] =
@@ -624,7 +651,7 @@ ExpectedScoreCalculator::calc(const Config &_config, const Round &round,
         }
     }
 
-    const int searched = static_cast<int>(boost::num_vertices(graph));
+    const int searched = static_cast<int>(boost::num_vertices(graph_builder.graph()));
 
     return {stats, searched};
 }

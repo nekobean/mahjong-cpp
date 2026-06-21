@@ -163,16 +163,8 @@ class ExpectedScoreCalculator
                                                    const MergedCount &wall);
 
   private:
-    static Vertex draw_node(const Config &config, const Round &round, Player &player,
-                            Graph &graph, Cache &cache1, Cache &cache2,
-                            SeparatedCount &hand_reds, SeparatedCount &wall_reds,
-                            const SeparatedCount &origin_reds, int sht_org,
-                            const bool riichi);
-    static Vertex discard_node(const Config &config, const Round &round, Player &player,
-                               Graph &graph, Cache &cache1, Cache &cache2,
-                               SeparatedCount &hand_reds, SeparatedCount &wall_reds,
-                               const SeparatedCount &origin_reds, int sht_org,
-                               const bool riichi);
+    class GraphBuilder;
+
     static void calc_stats(const Config &config, Graph &graph, const Cache &cache1,
                            const Cache &cache2);
     static std::tuple<int, std::vector<std::tuple<int, int>>>
