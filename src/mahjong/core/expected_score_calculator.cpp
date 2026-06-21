@@ -207,6 +207,13 @@ double calc_score(const ExpectedScoreCalculator::Config &config, const Round &ro
                               win_flag);
 }
 
+template <std::size_t N>
+std::vector<double> to_vector(const std::array<double, N> &values, const int t_max)
+{
+    assert(t_max >= 0 && t_max < static_cast<int>(N));
+    return {values.begin(), values.begin() + t_max + 1};
+}
+
 } // namespace
 
 MergedCount create_wall(const Round &round, const Player &player,
@@ -286,8 +293,8 @@ ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::draw_node(
     wait |= (wait & (1LL << Tile::Souzu5)) ? (1LL << Tile::RedSouzu5) : 0;
 
     // Add vertex to graph.
-    VertexData vertex_data(config.t_max + 1, shanten == 0);
-    const Vertex vertex = boost::add_vertex(vertex_data, graph);
+    const Vertex vertex = boost::add_vertex(graph);
+    graph[vertex].is_tenpai = shanten == 0;
     cache1[key] = vertex;
 
     for (int i = 0; i < 37; ++i) {
@@ -345,8 +352,8 @@ ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::discard_node(
     disc |= (disc & (1LL << Tile::Souzu5)) ? (1LL << Tile::RedSouzu5) : 0;
 
     // Add vertex to graph.
-    VertexData vertex_data(config.t_max + 1, shanten == 0);
-    const Vertex vertex = boost::add_vertex(vertex_data, graph);
+    const Vertex vertex = boost::add_vertex(graph);
+    graph[vertex].is_tenpai = shanten == 0;
     cache2[key] = vertex;
 
     for (int i = 0; i < 37; ++i) {
@@ -509,6 +516,8 @@ ExpectedScoreCalculator::calc(const Config &_config, const Round &round,
     Cache cache1, cache2;
 
     Config config = _config;
+    assert(config.t_min >= 0);
+    assert(config.t_max <= MaxTurn);
     if (config.sum == 0) {
         config.sum = std::accumulate(wall.begin(), wall.begin() + 34, 0);
     }
@@ -550,8 +559,11 @@ ExpectedScoreCalculator::calc(const Config &_config, const Round &round,
                 const auto [shanten2, necessary_tiles] =
                     get_necessary_tiles(config, player, wall);
 
-                stats.emplace_back(Stat{Tile::Null, state.tenpai_prob, state.win_prob,
-                                        state.exp_score, necessary_tiles, shanten2});
+                stats.emplace_back(
+                    Stat{Tile::Null, to_vector(state.tenpai_prob, config.t_max),
+                         to_vector(state.win_prob, config.t_max),
+                         to_vector(state.exp_score, config.t_max), necessary_tiles,
+                         shanten2});
             }
         }
         else {
@@ -600,9 +612,11 @@ ExpectedScoreCalculator::calc(const Config &_config, const Round &round,
                         const auto [shanten2, necessary_tiles] =
                             get_necessary_tiles(config, player, wall);
 
-                        stats.emplace_back(Stat{i, state.tenpai_prob, state.win_prob,
-                                                state.exp_score, necessary_tiles,
-                                                shanten2});
+                        stats.emplace_back(
+                            Stat{i, to_vector(state.tenpai_prob, config.t_max),
+                                 to_vector(state.win_prob, config.t_max),
+                                 to_vector(state.exp_score, config.t_max),
+                                 necessary_tiles, shanten2});
                     }
                     draw(player, hand_counts, wall_counts, i);
                 }

@@ -1,6 +1,7 @@
 #ifndef MAHJONG_CPP_EXPECTED_SCORE_CALCULATOR
 #define MAHJONG_CPP_EXPECTED_SCORE_CALCULATOR
 
+#include <array>
 #include <cstdint>
 #include <tuple>
 #include <vector>
@@ -85,6 +86,8 @@ class ExpectedScoreCalculator
     };
 
   private:
+    static constexpr int MaxTurn = 18;
+
     struct CacheKey
     {
         CacheKey(const MergedCount &hand, const bool riichi)
@@ -130,17 +133,14 @@ class ExpectedScoreCalculator
     {
       public:
         VertexData() = default;
-        VertexData(const size_t size, const bool tenpai)
-            : tenpai_prob(size, 0.0)
-            , win_prob(size, 0.0)
-            , exp_score(size, 0.0)
-            , is_tenpai(tenpai)
+        explicit VertexData(const bool tenpai)
+            : is_tenpai(tenpai)
         {
         }
 
-        std::vector<double> tenpai_prob;
-        std::vector<double> win_prob;
-        std::vector<double> exp_score;
+        std::array<double, MaxTurn + 1> tenpai_prob{};
+        std::array<double, MaxTurn + 1> win_prob{};
+        std::array<double, MaxTurn + 1> exp_score{};
         bool is_tenpai = false;
     };
 
