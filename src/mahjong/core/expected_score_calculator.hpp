@@ -19,6 +19,13 @@ MergedCount create_wall(const Round &round, const Player &player, bool enable_re
 class ExpectedScoreCalculator
 {
   public:
+    enum class Objective
+    {
+        TenpaiProbability = 0,
+        WinProbability = 1,
+        ExpectedScore = 2,
+    };
+
     struct Config
     {
         Config()
@@ -32,6 +39,7 @@ class ExpectedScoreCalculator
             , enable_shanten_down(true)
             , enable_tegawari(true)
             , enable_riichi(false)
+            , objective(Objective::ExpectedScore)
             , calc_stats(true)
         {
         }
@@ -56,6 +64,8 @@ class ExpectedScoreCalculator
         bool enable_tegawari;
         /* call riichi when tenpai */
         bool enable_riichi;
+        /* objective used to select the best discard */
+        Objective objective;
         /* calculate value */
         bool calc_stats;
     };
@@ -110,17 +120,18 @@ class ExpectedScoreCalculator
     {
       public:
         VertexData() = default;
-        VertexData(const size_t size, const double tenpai_init, const double win_init,
-                   const double exp_init)
-            : tenpai_prob(size, tenpai_init)
-            , win_prob(size, win_init)
-            , exp_score(size, exp_init)
+        VertexData(const size_t size, const bool tenpai)
+            : tenpai_prob(size, 0.0)
+            , win_prob(size, 0.0)
+            , exp_score(size, 0.0)
+            , is_tenpai(tenpai)
         {
         }
 
         std::vector<double> tenpai_prob;
         std::vector<double> win_prob;
         std::vector<double> exp_score;
+        bool is_tenpai = false;
     };
 
     using EdgeData = std::tuple<int, double>;

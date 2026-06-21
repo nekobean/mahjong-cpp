@@ -291,8 +291,7 @@ ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::draw_node(
     wait |= (wait & (1LL << Tile::Souzu5)) ? (1LL << Tile::RedSouzu5) : 0;
 
     // Add vertex to graph.
-    VertexData vertex_data(config.t_max + 1, 0.0, 0.0, 0.0);
-    vertex_data.tenpai_prob[config.t_max] = shanten == 0;
+    VertexData vertex_data(config.t_max + 1, shanten == 0);
     const Vertex vertex = boost::add_vertex(vertex_data, graph);
     cache1[key] = vertex;
 
@@ -362,8 +361,8 @@ ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::discard_node(
     disc |= (disc & (1LL << Tile::Souzu5)) ? (1LL << Tile::RedSouzu5) : 0;
 
     // Add vertex to graph.
-    const Vertex vertex = boost::add_vertex(
-        VertexData(config.t_max + 1, shanten == 0, shanten == -1, 0.0), graph);
+    VertexData vertex_data(config.t_max + 1, shanten == 0);
+    const Vertex vertex = boost::add_vertex(vertex_data, graph);
     cache2[key] = vertex;
 
     for (int i = 0; i < 37; ++i) {
@@ -404,42 +403,86 @@ ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::discard_node(
 void ExpectedScoreCalculator::calc_stats(const Config &config, Graph &graph,
                                          const Cache &cache1, const Cache &cache2)
 {
+    const auto objective_value = [&](const VertexData &state, const int turn) {
+        switch (config.objective) {
+        case Objective::TenpaiProbability:
+            return state.tenpai_prob[turn];
+        case Objective::WinProbability:
+            return state.win_prob[turn];
+        case Objective::ExpectedScore:
+            return state.exp_score[turn];
+        }
+        return state.exp_score[turn];
+    };
+
+    const auto win_objective_value = [&](const double score) {
+        switch (config.objective) {
+        case Objective::TenpaiProbability:
+        case Objective::WinProbability:
+            return 1.0;
+        case Objective::ExpectedScore:
+            return score;
+        }
+        return score;
+    };
+
     for (int t = config.t_max; t >= config.t_min; --t) {
         // draw node
-        if (t < config.t_max) {
-            for (const auto &[_, vertex] : cache1) {
-                VertexData &s1 = graph[vertex];
-                for (const auto &edge :
-                     boost::make_iterator_range(boost::out_edges(vertex, graph))) {
-                    const auto &[weight, score] = graph[edge];
-                    const VertexData &s2 = graph[boost::target(edge, graph)];
+        for (const auto &[_, vertex] : cache1) {
+            VertexData &s1 = graph[vertex];
+            if (t == config.t_max) {
+                if (s1.is_tenpai) {
+                    s1.tenpai_prob[t] = 1.0;
+                }
+                continue;
+            }
 
-                    s1.tenpai_prob[t] +=
-                        weight * (s2.tenpai_prob[t + 1] - s1.tenpai_prob[t + 1]);
-                    s1.win_prob[t] +=
-                        weight * (s2.win_prob[t + 1] - s1.win_prob[t + 1]);
-                    s1.exp_score[t] += weight * (std::max(static_cast<double>(score),
-                                                          s2.exp_score[t + 1]) -
-                                                 s1.exp_score[t + 1]);
+            for (const auto &edge :
+                 boost::make_iterator_range(boost::out_edges(vertex, graph))) {
+                const auto &[weight, score] = graph[edge];
+                const VertexData &s2 = graph[boost::target(edge, graph)];
+
+                double tenpai_prob = s2.tenpai_prob[t + 1];
+                double win_prob = s2.win_prob[t + 1];
+                double exp_score = s2.exp_score[t + 1];
+                if (score > 0.0 &&
+                    win_objective_value(score) >= objective_value(s2, t + 1)) {
+                    tenpai_prob = 1.0;
+                    win_prob = 1.0;
+                    exp_score = score;
                 }
 
-                s1.tenpai_prob[t] =
-                    s1.tenpai_prob[t + 1] + s1.tenpai_prob[t] / (config.sum - t);
-                s1.win_prob[t] = s1.win_prob[t + 1] + s1.win_prob[t] / (config.sum - t);
-                s1.exp_score[t] =
-                    s1.exp_score[t + 1] + s1.exp_score[t] / (config.sum - t);
+                s1.tenpai_prob[t] += weight * (tenpai_prob - s1.tenpai_prob[t + 1]);
+                s1.win_prob[t] += weight * (win_prob - s1.win_prob[t + 1]);
+                s1.exp_score[t] += weight * (exp_score - s1.exp_score[t + 1]);
             }
+
+            s1.tenpai_prob[t] =
+                s1.tenpai_prob[t + 1] + s1.tenpai_prob[t] / (config.sum - t);
+            if (s1.is_tenpai) {
+                s1.tenpai_prob[t] = 1.0;
+            }
+            s1.win_prob[t] = s1.win_prob[t + 1] + s1.win_prob[t] / (config.sum - t);
+            s1.exp_score[t] = s1.exp_score[t + 1] + s1.exp_score[t] / (config.sum - t);
         }
 
         // discard node
         for (const auto &[_, vertex] : cache2) {
             VertexData &s1 = graph[vertex];
+            const VertexData *best = nullptr;
+
             for (const auto &edge :
                  boost::make_iterator_range(boost::in_edges(vertex, graph))) {
                 const VertexData &s2 = graph[boost::source(edge, graph)];
-                s1.tenpai_prob[t] = std::max(s1.tenpai_prob[t], s2.tenpai_prob[t]);
-                s1.win_prob[t] = std::max(s1.win_prob[t], s2.win_prob[t]);
-                s1.exp_score[t] = std::max(s1.exp_score[t], s2.exp_score[t]);
+                if (!best || objective_value(s2, t) > objective_value(*best, t)) {
+                    best = &s2;
+                }
+            }
+
+            if (best) {
+                s1.tenpai_prob[t] = best->tenpai_prob[t];
+                s1.win_prob[t] = best->win_prob[t];
+                s1.exp_score[t] = best->exp_score[t];
             }
         }
     }
