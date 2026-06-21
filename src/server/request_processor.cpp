@@ -36,12 +36,6 @@ CalculationResult calculate_result(const Request &req)
         throw std::runtime_error(u8"手牌はすでに和了形です。");
     }
 
-    // ToDo: 立直の問題を直すまで、聴牌は向聴戻し、手変わりを無効化
-    if (result.shanten == 0) {
-        result.config.enable_shanten_down = false;
-        result.config.enable_tegawari = false;
-    }
-
     const auto start = std::chrono::steady_clock::now();
     std::tie(result.stats, result.searched) =
         ExpectedScoreCalculator::calc(result.config, req.round, req.player, req.wall);

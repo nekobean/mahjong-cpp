@@ -89,7 +89,8 @@ class ExpectedScoreCalculator
   private:
     struct CacheKey
     {
-        CacheKey(const MergedCount &hand) : manzu(0), pinzu(0), souzu(0), honors(0)
+        CacheKey(const MergedCount &hand, const bool riichi)
+            : manzu(0), pinzu(0), souzu(0), honors(0), riichi(riichi)
         {
             manzu = std::accumulate(hand.begin(), hand.begin() + 9, 0,
                                     [](int x, int y) { return x * 8 + y; });
@@ -106,14 +107,16 @@ class ExpectedScoreCalculator
 
         bool operator<(const CacheKey &other) const
         {
-            return std::make_tuple(manzu, pinzu, souzu, honors) <
-                   std::make_tuple(other.manzu, other.pinzu, other.souzu, other.honors);
+            return std::make_tuple(manzu, pinzu, souzu, honors, riichi) <
+                   std::make_tuple(other.manzu, other.pinzu, other.souzu, other.honors,
+                                   other.riichi);
         }
 
         int32_t manzu;
         int32_t pinzu;
         int32_t souzu;
         int32_t honors;
+        bool riichi;
     };
 
     struct VertexData

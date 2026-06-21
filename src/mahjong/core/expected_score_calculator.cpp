@@ -267,7 +267,7 @@ ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::draw_node(
     const bool riichi)
 {
     // If vertex exists in the cache, return it.
-    CacheKey key(hand_counts);
+    CacheKey key(hand_counts, riichi);
     if (const auto itr = cache1.find(key); itr != cache1.end()) {
         return itr->second;
     }
@@ -276,15 +276,10 @@ ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::draw_node(
     auto [type, shanten, wait] = NecessaryTileCalculator::calc(
         player.hand, player.num_melds(), config.shanten_type);
 
-    // ToDo: 手変わりは立直していない場合のみ有効にするべき
-    // bool allow_tegawari =
-    //     config.enable_tegawari && !riichi &&
-    //     distance(hand_counts, hand_org) + shanten < shanten_org + config.extra;
-
     // 元の手牌から現在の手牌に変化されるのに必要な交換枚数 + 現在の向聴数 < 元の手牌の向聴数 + 追加交換枚数
-    // の場合、手変わりを許可する
+    // の場合、立直前に限り手変わりを許可する
     bool allow_tegawari =
-        config.enable_tegawari &&
+        config.enable_tegawari && !riichi &&
         distance(hand_counts, hand_org) + shanten < shanten_org + config.extra;
     wait |= (wait & (1LL << Tile::Manzu5)) ? (1LL << Tile::RedManzu5) : 0;
     wait |= (wait & (1LL << Tile::Pinzu5)) ? (1LL << Tile::RedPinzu5) : 0;
@@ -303,15 +298,9 @@ ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::draw_node(
 
             draw(player, hand_counts, wall_counts, i);
 
-            // 1向聴で有効牌を自摸した場合、聴牌なので立直する
-            bool call_riichi =
-                config.enable_riichi && player.is_closed() && shanten == 1 && is_wait
-                    ? true
-                    : riichi;
-
             const Vertex target =
                 discard_node(config, round, player, graph, cache1, cache2, hand_counts,
-                             wall_counts, hand_org, shanten_org, call_riichi);
+                             wall_counts, hand_org, shanten_org, riichi);
 
             if (!boost::edge(vertex, target, graph).second) {
                 // 自摸前の時点で聴牌の場合、有効牌自摸後は和了形のため、点数計算を行う
@@ -337,7 +326,7 @@ ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::discard_node(
     const bool riichi)
 {
     // If vertex exists in the cache, return it.
-    CacheKey key(hand_counts);
+    CacheKey key(hand_counts, riichi);
     if (const auto itr = cache2.find(key); itr != cache2.end()) {
         return itr->second;
     }
@@ -346,15 +335,10 @@ ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::discard_node(
     auto [type, shanten, disc] = UnnecessaryTileCalculator::calc(
         player.hand, player.num_melds(), config.shanten_type);
 
-    // ToDo: 向聴戻しは立直していない場合のみ有効にするべき
-    // bool allow_shanten_down =
-    //     config.enable_shanten_down && !riichi &&
-    //     distance(hand_counts, hand_org) + shanten < shanten_org + config.extra;
-
     // 元の手牌から現在の手牌に変化されるのに必要な交換枚数 + 現在の向聴数 < 元の手牌の向聴数 + 追加交換枚数
-    // の場合、向聴戻しを許可する
+    // の場合、立直前に限り向聴戻しを許可する
     bool allow_shanten_down =
-        config.enable_shanten_down &&
+        config.enable_shanten_down && !riichi &&
         distance(hand_counts, hand_org) + shanten < shanten_org + config.extra;
     disc |= (disc & (1LL << Tile::Manzu5)) ? (1LL << Tile::RedManzu5) : 0;
     disc |= (disc & (1LL << Tile::Pinzu5)) ? (1LL << Tile::RedPinzu5) : 0;
@@ -369,12 +353,17 @@ ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::discard_node(
         bool is_disc = disc & (1LL << i);
 
         if (hand_counts[i] && (allow_shanten_down || is_disc)) {
+            const bool call_riichi =
+                config.enable_riichi && player.is_closed() && shanten == 0 && is_disc
+                    ? true
+                    : riichi;
+
             discard(player, hand_counts, wall_counts, i);
 
             const int weight = wall_counts[i];
             const Vertex source =
                 draw_node(config, round, player, graph, cache1, cache2, hand_counts,
-                          wall_counts, hand_org, shanten_org, riichi);
+                          wall_counts, hand_org, shanten_org, call_riichi);
 
             draw(player, hand_counts, wall_counts, i);
 
@@ -542,9 +531,8 @@ ExpectedScoreCalculator::calc(const Config &_config, const Round &round,
     std::vector<Stat> stats;
     const int num_tiles = player.num_tiles() + player.num_melds() * 3;
 
-    // 聴牌の場合、立直する。
-    // ToDo: ダマの場合の手牌遷移も探索する必要あり
-    const bool riichi = config.enable_riichi && player.is_closed() && shanten_org <= 0;
+    // 初期状態では未立直として扱い、打牌ごとに立直するか判定する。
+    const bool riichi = false;
 
     if (num_tiles == 13) {
         // 13枚の場合
@@ -559,7 +547,8 @@ ExpectedScoreCalculator::calc(const Config &_config, const Round &round,
             calc_stats(config, graph, cache1, cache2);
 
             // 結果を取得する。
-            if (const auto itr = cache1.find(hand_counts); itr != cache1.end()) {
+            if (const auto itr = cache1.find(CacheKey(hand_counts, riichi));
+                itr != cache1.end()) {
                 const VertexData &state = graph[itr->second];
 
                 // 有効牌の一覧を計算する。
@@ -588,10 +577,28 @@ ExpectedScoreCalculator::calc(const Config &_config, const Round &round,
             calc_stats(config, graph, cache1, cache2);
 
             // 結果を取得する。
+            auto [discard_type, discard_shanten, discard_tiles] =
+                UnnecessaryTileCalculator::calc(player.hand, player.num_melds(),
+                                                config.shanten_type);
+            discard_tiles |=
+                (discard_tiles & (1LL << Tile::Manzu5)) ? (1LL << Tile::RedManzu5) : 0;
+            discard_tiles |=
+                (discard_tiles & (1LL << Tile::Pinzu5)) ? (1LL << Tile::RedPinzu5) : 0;
+            discard_tiles |=
+                (discard_tiles & (1LL << Tile::Souzu5)) ? (1LL << Tile::RedSouzu5) : 0;
+
             for (int i = 0; i < 37; ++i) {
                 if (hand_counts[i] > 0) {
+                    const bool is_disc = discard_tiles & (1LL << i);
+                    const bool call_riichi = config.enable_riichi &&
+                                                     player.is_closed() &&
+                                                     discard_shanten == 0 && is_disc
+                                                 ? true
+                                                 : riichi;
+
                     discard(player, hand_counts, wall_counts, i);
-                    if (const auto itr = cache1.find(hand_counts);
+                    if (const auto itr =
+                            cache1.find(CacheKey(hand_counts, call_riichi));
                         itr != cache1.end()) {
                         const VertexData &state = graph[itr->second];
 
