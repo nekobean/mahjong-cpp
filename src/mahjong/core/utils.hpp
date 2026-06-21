@@ -27,7 +27,7 @@ inline int to_reddora(int tile)
         return Tile::Manzu5;
     }
     else if (tile == Tile::RedPinzu5) {
-        return Tile::Manzu5;
+        return Tile::Pinzu5;
     }
     else if (tile == Tile::RedSouzu5) {
         return Tile::Souzu5;

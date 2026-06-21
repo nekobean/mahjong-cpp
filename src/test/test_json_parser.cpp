@@ -449,6 +449,25 @@ TEST_CASE("build_error_response creates a schema-compliant error document")
     validate_response_schema(doc);
 }
 
+TEST_CASE("build_success_response serializes red fives without duplicate normal fives")
+{
+    Request req = make_sample_request();
+    req.player.hand = from_array({Tile::Pinzu5, Tile::RedPinzu5, Tile::Manzu1,
+                                  Tile::Manzu2, Tile::Manzu3, Tile::Souzu1,
+                                  Tile::Souzu2, Tile::Souzu3});
+    req.wall = create_wall(req.round, req.player, req.config.enable_reddora);
+
+    const CalculationResult result = make_sample_result();
+
+    rapidjson::Document doc;
+    build_success_response(req, result, doc);
+
+    REQUIRE(to_int_vector(doc["input"]["hand"]) ==
+            std::vector<int>({Tile::Manzu1, Tile::Manzu2, Tile::Manzu3,
+                              Tile::Pinzu5, Tile::Souzu1, Tile::Souzu2,
+                              Tile::Souzu3, Tile::RedPinzu5}));
+}
+
 TEST_CASE("build_success_response creates a schema-compliant success document")
 {
     const Request req = make_sample_request();

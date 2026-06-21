@@ -216,7 +216,17 @@ rapidjson::Value serialize_input(const Request &req, rapidjson::Document &doc)
 
     rapidjson::Value hand(rapidjson::kArrayType);
     for (int i = 0; i < 37; ++i) {
-        for (int j = 0; j < req.player.hand[i]; ++j) {
+        int count = req.player.hand[i];
+        if (i == Tile::Manzu5) {
+            count -= req.player.hand[Tile::RedManzu5];
+        }
+        else if (i == Tile::Pinzu5) {
+            count -= req.player.hand[Tile::RedPinzu5];
+        }
+        else if (i == Tile::Souzu5) {
+            count -= req.player.hand[Tile::RedSouzu5];
+        }
+        for (int j = 0; j < count; ++j) {
             hand.PushBack(i, allocator);
         }
     }
