@@ -36,7 +36,7 @@ set(Boost_USE_STATIC_RUNTIME OFF)
 if(DEFINED ENV{BOOST_ROOT})
   list(PREPEND CMAKE_PREFIX_PATH "$ENV{BOOST_ROOT}/stage/lib/cmake")
 endif()
-find_package(Boost REQUIRED CONFIG COMPONENTS filesystem system)
+find_package(Boost 1.81 REQUIRED CONFIG COMPONENTS filesystem system)
 
 # RapidJSON
 include(FetchContent)

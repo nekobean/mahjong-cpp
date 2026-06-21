@@ -1,11 +1,12 @@
 #ifndef MAHJONG_CPP_EXPECTED_SCORE_CALCULATOR
 #define MAHJONG_CPP_EXPECTED_SCORE_CALCULATOR
 
-#include <map>
+#include <cstdint>
 #include <tuple>
 #include <vector>
 
 #include <boost/graph/adjacency_list.hpp>
+#include <boost/unordered/unordered_flat_map.hpp>
 
 #include "mahjong/types/types.hpp"
 
@@ -87,7 +88,7 @@ class ExpectedScoreCalculator
     struct CacheKey
     {
         CacheKey(const MergedCount &hand, const bool riichi)
-            : manzu(0), pinzu(0), souzu(0), honors(0), riichi(riichi)
+            : manzu(0), pinzu(0), souzu(0), honors(0)
         {
             manzu = std::accumulate(hand.begin(), hand.begin() + 9, 0,
                                     [](int x, int y) { return x * 8 + y; });
@@ -100,22 +101,31 @@ class ExpectedScoreCalculator
             honors |= hand[Tile::RedManzu5] << 21;
             honors |= hand[Tile::RedPinzu5] << 22;
             honors |= hand[Tile::RedSouzu5] << 23;
+            honors |= static_cast<int32_t>(riichi) << 24;
         }
 
-        bool operator<(const CacheKey &other) const
+        bool operator==(const CacheKey &other) const
         {
-            return std::make_tuple(manzu, pinzu, souzu, honors, riichi) <
-                   std::make_tuple(other.manzu, other.pinzu, other.souzu, other.honors,
-                                   other.riichi);
+            return manzu == other.manzu && pinzu == other.pinzu &&
+                   souzu == other.souzu && honors == other.honors;
         }
-
         int32_t manzu;
         int32_t pinzu;
         int32_t souzu;
         int32_t honors;
-        bool riichi;
     };
 
+    struct CacheKeyHash
+    {
+        std::size_t operator()(const CacheKey &key) const noexcept
+        {
+            std::uint64_t h = key.manzu;
+            h = h * 0x9e3779b97f4a7c15ULL + key.pinzu;
+            h = h * 0x9e3779b97f4a7c15ULL + key.souzu;
+            h = h * 0x9e3779b97f4a7c15ULL + key.honors;
+            return static_cast<std::size_t>(h);
+        }
+    };
     struct VertexData
     {
       public:
@@ -139,7 +149,7 @@ class ExpectedScoreCalculator
                                         VertexData, EdgeData>;
     using Vertex = Graph::vertex_descriptor;
     using Edge = Graph::edge_descriptor;
-    using Cache = std::map<CacheKey, Vertex>;
+    using Cache = boost::unordered_flat_map<CacheKey, Vertex, CacheKeyHash>;
 
   public:
     ExpectedScoreCalculator() = default;
