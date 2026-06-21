@@ -14,8 +14,6 @@ Miscellaneous programs about Japanese Mahjong
 
 ![麻雀何切るシミュレーター](docs/mahjong-nanikiru-simulator.png)
 
-アプリの紹介: [麻雀 - 期待値計算ツール 何切るシミュレーター](https://pystyle.info/mahjong-nanikiru-simulator/)
-
 ## Reference
 
 アルゴリズムに関しましては、以下のページを参考にさせていただいております。
@@ -53,7 +51,7 @@ Miscellaneous programs about Japanese Mahjong
 ### Windows
 
 - [CMake](https://cmake.org/download/)
-- Visual Studio 2019 or 2022
+- Visual Studio 2019 or 2022 or 2026
 
 ### Linux
 
