@@ -163,13 +163,13 @@ serialize_expected_score(const std::vector<ExpectedScoreCalculator::Stat> &stats
 
         rapidjson::Value tenpai_prob(rapidjson::kArrayType);
         for (const auto prob : stat.tenpai_prob) {
-            tenpai_prob.PushBack(prob, allocator);
+            tenpai_prob.PushBack(std::clamp(prob, 0.0, 1.0), allocator);
         }
         x.AddMember("tenpai_prob", tenpai_prob, allocator);
 
         rapidjson::Value win_prob(rapidjson::kArrayType);
         for (const auto prob : stat.win_prob) {
-            win_prob.PushBack(prob, allocator);
+            win_prob.PushBack(std::clamp(prob, 0.0, 1.0), allocator);
         }
         x.AddMember("win_prob", win_prob, allocator);
 
