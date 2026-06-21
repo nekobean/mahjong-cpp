@@ -208,7 +208,6 @@ Request make_sample_request()
     req.config.enable_uradora = false;
     req.config.enable_shanten_down = true;
     req.config.enable_tegawari = false;
-    req.config.enable_riichi = true;
 
     req.round.wind = 27;
     req.round.dora_indicators = {31, 32};
@@ -234,7 +233,6 @@ CalculationResult make_sample_result()
     result.config.enable_uradora = false;
     result.config.enable_shanten_down = true;
     result.config.enable_tegawari = false;
-    result.config.enable_riichi = true;
     result.config.t_min = 1;
     result.config.t_max = 18;
     result.config.sum = 62;
@@ -369,7 +367,6 @@ TEST_CASE("deserialize_request maps validated JSON to Request")
         REQUIRE_FALSE(req.config.enable_uradora);
         REQUIRE(req.config.enable_shanten_down);
         REQUIRE_FALSE(req.config.enable_tegawari);
-        REQUIRE(req.config.enable_riichi);
         REQUIRE(req.objective == 2);
         REQUIRE(req.ip == "127.0.0.1");
         REQUIRE(req.version == PROJECT_VERSION);

@@ -354,7 +354,7 @@ ExpectedScoreCalculator::Vertex ExpectedScoreCalculator::discard_node(
 
         if (hand_counts[i] && (allow_shanten_down || is_disc)) {
             const bool call_riichi =
-                config.enable_riichi && player.is_closed() && shanten == 0 && is_disc
+                player.is_closed() && shanten == 0 && is_disc
                     ? true
                     : riichi;
 
@@ -513,11 +513,6 @@ ExpectedScoreCalculator::calc(const Config &_config, const Round &round,
         config.sum = std::accumulate(wall.begin(), wall.begin() + 34, 0);
     }
 
-    // 設定で聴牌時に立直orダマの分岐を行うように考慮する予定だが、未実装
-    // 立直なしの場合、三暗刻などの役が高く評価されてしまい、実戦と乖離した結果が出る傾向があるため、
-    // 現状は立直を強制的に有効にした (2024/11/25)
-    config.enable_riichi = true;
-
     Player player = _player;
     // 手牌と山の各牌の枚数を作成する。
     // 赤ドラありの場合、赤なしの5と赤ありの5は別々に管理する。
@@ -590,8 +585,7 @@ ExpectedScoreCalculator::calc(const Config &_config, const Round &round,
             for (int i = 0; i < 37; ++i) {
                 if (hand_counts[i] > 0) {
                     const bool is_disc = discard_tiles & (1LL << i);
-                    const bool call_riichi = config.enable_riichi &&
-                                                     player.is_closed() &&
+                    const bool call_riichi = player.is_closed() &&
                                                      discard_shanten == 0 && is_disc
                                                  ? true
                                                  : riichi;

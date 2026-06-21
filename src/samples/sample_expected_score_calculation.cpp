@@ -51,7 +51,6 @@ int main(int argc, char *argv[])
     config.enable_uradora = true;
     config.enable_shanten_down = true;
     config.enable_tegawari = true;
-    config.enable_riichi = false;
 
     // Calculation
     //////////////////////////////////////////
@@ -83,7 +82,6 @@ int main(int argc, char *argv[])
               << std::endl;
     std::cout << fmt::format("{:>15}{}", "tegawari: ", config.enable_tegawari)
               << std::endl;
-    std::cout << fmt::format("{:>15}{}", "riichi: ", config.enable_riichi) << std::endl;
 
     std::cout << "=== Round ===" << std::endl;
     std::cout << to_string(round) << std::endl;

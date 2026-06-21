@@ -83,7 +83,6 @@ Request make_request(const rapidjson::Value &doc)
     req.config.enable_shanten_down = doc["enable_shanten_down"].GetBool();
     req.config.enable_tegawari = doc["enable_tegawari"].GetBool();
     req.config.enable_uradora = doc["enable_uradora"].GetBool();
-    req.config.enable_riichi = true;
 
     req.objective = doc["objective"].GetInt();
 

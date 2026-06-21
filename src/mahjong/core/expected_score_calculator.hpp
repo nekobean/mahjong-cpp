@@ -38,7 +38,6 @@ class ExpectedScoreCalculator
             , enable_uradora(true)
             , enable_shanten_down(true)
             , enable_tegawari(true)
-            , enable_riichi(false)
             , objective(Objective::ExpectedScore)
             , calc_stats(true)
         {
@@ -62,8 +61,6 @@ class ExpectedScoreCalculator
         bool enable_shanten_down;
         /* allow tegawari */
         bool enable_tegawari;
-        /* call riichi when tenpai */
-        bool enable_riichi;
         /* objective used to select the best discard */
         Objective objective;
         /* calculate value */

@@ -80,11 +80,10 @@ void Server::log_request(const Request &req)
         "Received request: ip={}, version={}, "
         "round={}, seat={}, indicators={}, "
         "hand={}, melds={}, wall={}, "
-        "red_dora={}, ura_dora={}, shanten_down={}, tegawari={}, riichi={}",
+        "red_dora={}, ura_dora={}, shanten_down={}, tegawari={}",
         req.ip, req.version, round_wind, seat_wind, dora_indicators, hand, melds, wall,
         req.config.enable_reddora, req.config.enable_uradora,
-        req.config.enable_shanten_down, req.config.enable_tegawari,
-        req.config.enable_riichi);
+        req.config.enable_shanten_down, req.config.enable_tegawari);
 }
 
 std::string Server::process_request(const std::string &json)

@@ -14,7 +14,6 @@ CalculationResult calculate_result(const Request &req)
     result.config.enable_uradora = req.config.enable_uradora;
     result.config.enable_shanten_down = req.config.enable_shanten_down;
     result.config.enable_tegawari = req.config.enable_tegawari;
-    result.config.enable_riichi = req.config.enable_riichi;
     result.config.objective =
         static_cast<ExpectedScoreCalculator::Objective>(req.objective);
     result.config.t_min = 1;
