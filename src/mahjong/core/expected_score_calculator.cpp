@@ -530,18 +530,15 @@ void ExpectedScoreCalculator::calc_draw_hand(const Config &config, const Player 
                                              GraphBuilder &graph_builder,
                                              std::vector<Stat> &stats)
 {
-    // 初期状態では未立直として扱う。
-    const bool riichi = false;
-
     // 13枚の場合は自摸を起点に手牌遷移のグラフを作成する。
-    graph_builder.draw_node(riichi);
+    graph_builder.draw_node(false);
 
     // 確率、期待値を計算する。
     calc_stats(config, graph_builder.graph(), graph_builder.draw_cache(),
                graph_builder.discard_cache());
 
     // 結果を取得する。
-    if (const auto itr = graph_builder.draw_cache().find(CacheKey(hand_counts, riichi));
+    if (const auto itr = graph_builder.draw_cache().find(CacheKey(hand_counts, false));
         itr != graph_builder.draw_cache().end()) {
         const VertexData &state = graph_builder.graph()[itr->second];
 
@@ -563,11 +560,8 @@ void ExpectedScoreCalculator::calc_discard_hand(const Config &config, Player &pl
                                                 GraphBuilder &graph_builder,
                                                 std::vector<Stat> &stats)
 {
-    // 初期状態では未立直として扱い、打牌ごとに立直するか判定する。
-    const bool riichi = false;
-
     // 14枚の場合は打牌を起点に手牌遷移のグラフを作成する。
-    graph_builder.discard_node(riichi);
+    graph_builder.discard_node(false);
 
     // 確率、期待値を計算する。
     calc_stats(config, graph_builder.graph(), graph_builder.draw_cache(),
@@ -588,7 +582,7 @@ void ExpectedScoreCalculator::calc_discard_hand(const Config &config, Player &pl
         if (hand_counts[i] > 0) {
             const bool is_disc = discard_tiles & (1LL << i);
             const bool call_riichi =
-                player.is_closed() && discard_shanten == 0 && is_disc ? true : riichi;
+                player.is_closed() && discard_shanten == 0 && is_disc;
 
             discard(player, hand_counts, wall_counts, i);
             if (const auto itr =
@@ -596,7 +590,6 @@ void ExpectedScoreCalculator::calc_discard_hand(const Config &config, Player &pl
                 itr != graph_builder.draw_cache().end()) {
                 const VertexData &state = graph_builder.graph()[itr->second];
 
-                // 有効牌の一覧を計算する。
                 const auto [shanten2, necessary_tiles] =
                     get_necessary_tiles(config, player, wall);
 

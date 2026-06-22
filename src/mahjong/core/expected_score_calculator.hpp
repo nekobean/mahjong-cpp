@@ -133,8 +133,7 @@ class ExpectedScoreCalculator
     {
       public:
         VertexData() = default;
-        explicit VertexData(const bool tenpai)
-            : is_tenpai(tenpai)
+        explicit VertexData(const bool tenpai) : is_tenpai(tenpai)
         {
         }
 
