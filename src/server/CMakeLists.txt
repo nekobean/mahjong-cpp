@@ -6,12 +6,6 @@ add_dependencies(${EXE_NAME} ${LIB_NAME})
 if (MSVC)
     target_link_libraries(${EXE_NAME} ${LIB_NAME} ${CMAKE_DL_LIBS}
                           Boost::filesystem Boost::system spdlog)
-elseif(ENABLE_OPENMP AND UNIX AND NOT APPLE AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Wall -Wextra")
-    target_link_libraries(${EXE_NAME} ${LIB_NAME} ${CMAKE_DL_LIBS}
-                          Boost::filesystem Boost::system spdlog::spdlog
-                          ${OpenMP_CXX_FLAGS}
-                          -static-libgcc -static-libstdc++ -static)
 elseif(ENABLE_OPENMP)
     set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Wall -Wextra")
     target_link_libraries(${EXE_NAME} ${LIB_NAME} ${CMAKE_DL_LIBS}
