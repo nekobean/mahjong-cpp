@@ -224,6 +224,21 @@ int distance(const SeparatedCount &hand, const SeparatedCount &hand_org)
     return dist;
 }
 
+std::tuple<int, std::vector<std::tuple<int, int>>>
+get_necessary_tiles(const ExpectedScoreCalculator::Config &config, const Player &player,
+                    const MergedCount &wall)
+{
+    const auto [shanten_type, shanten, tiles] = NecessaryTileCalculator::select(
+        player.hand, player.num_melds(), config.shanten_type);
+
+    std::vector<std::tuple<int, int>> necessary_tiles;
+    for (const auto tile : tiles) {
+        necessary_tiles.emplace_back(tile, wall[tile]);
+    }
+
+    return {shanten, necessary_tiles};
+}
+
 } // namespace
 
 MergedCount create_wall(const Round &round, const Player &player,
@@ -509,19 +524,90 @@ ExpectedScoreCalculator::calc(const Config &config, const Round &round,
     return calc(config, round, player, wall);
 }
 
-std::tuple<int, std::vector<std::tuple<int, int>>>
-ExpectedScoreCalculator::get_necessary_tiles(const Config &config, const Player &player,
-                                             const MergedCount &wall)
+void ExpectedScoreCalculator::calc_draw_hand(const Config &config, const Player &player,
+                                             const MergedCount &wall,
+                                             const SeparatedCount &hand_counts,
+                                             GraphBuilder &graph_builder,
+                                             std::vector<Stat> &stats)
 {
-    const auto [shanten_type, shanten, tiles] = NecessaryTileCalculator::select(
-        player.hand, player.num_melds(), config.shanten_type);
+    // 初期状態では未立直として扱う。
+    const bool riichi = false;
 
-    std::vector<std::tuple<int, int>> necessary_tiles;
-    for (const auto tile : tiles) {
-        necessary_tiles.emplace_back(tile, wall[tile]);
+    // 13枚の場合は自摸を起点に手牌遷移のグラフを作成する。
+    graph_builder.draw_node(riichi);
+
+    // 確率、期待値を計算する。
+    calc_stats(config, graph_builder.graph(), graph_builder.draw_cache(),
+               graph_builder.discard_cache());
+
+    // 結果を取得する。
+    if (const auto itr = graph_builder.draw_cache().find(CacheKey(hand_counts, riichi));
+        itr != graph_builder.draw_cache().end()) {
+        const VertexData &state = graph_builder.graph()[itr->second];
+
+        // 有効牌の一覧を計算する。
+        const auto [shanten2, necessary_tiles] =
+            get_necessary_tiles(config, player, wall);
+
+        stats.emplace_back(Stat{Tile::Null, to_vector(state.tenpai_prob, config.t_max),
+                                to_vector(state.win_prob, config.t_max),
+                                to_vector(state.exp_score, config.t_max),
+                                necessary_tiles, shanten2});
     }
+}
 
-    return {shanten, necessary_tiles};
+void ExpectedScoreCalculator::calc_discard_hand(const Config &config, Player &player,
+                                                const MergedCount &wall,
+                                                SeparatedCount &hand_counts,
+                                                SeparatedCount &wall_counts,
+                                                GraphBuilder &graph_builder,
+                                                std::vector<Stat> &stats)
+{
+    // 初期状態では未立直として扱い、打牌ごとに立直するか判定する。
+    const bool riichi = false;
+
+    // 14枚の場合は打牌を起点に手牌遷移のグラフを作成する。
+    graph_builder.discard_node(riichi);
+
+    // 確率、期待値を計算する。
+    calc_stats(config, graph_builder.graph(), graph_builder.draw_cache(),
+               graph_builder.discard_cache());
+
+    // 結果を取得する。
+    auto [discard_type, discard_shanten, discard_tiles] =
+        UnnecessaryTileCalculator::calc(player.hand, player.num_melds(),
+                                        config.shanten_type);
+    discard_tiles |=
+        (discard_tiles & (1LL << Tile::Manzu5)) ? (1LL << Tile::RedManzu5) : 0;
+    discard_tiles |=
+        (discard_tiles & (1LL << Tile::Pinzu5)) ? (1LL << Tile::RedPinzu5) : 0;
+    discard_tiles |=
+        (discard_tiles & (1LL << Tile::Souzu5)) ? (1LL << Tile::RedSouzu5) : 0;
+
+    for (int i = 0; i < 37; ++i) {
+        if (hand_counts[i] > 0) {
+            const bool is_disc = discard_tiles & (1LL << i);
+            const bool call_riichi =
+                player.is_closed() && discard_shanten == 0 && is_disc ? true : riichi;
+
+            discard(player, hand_counts, wall_counts, i);
+            if (const auto itr =
+                    graph_builder.draw_cache().find(CacheKey(hand_counts, call_riichi));
+                itr != graph_builder.draw_cache().end()) {
+                const VertexData &state = graph_builder.graph()[itr->second];
+
+                // 有効牌の一覧を計算する。
+                const auto [shanten2, necessary_tiles] =
+                    get_necessary_tiles(config, player, wall);
+
+                stats.emplace_back(Stat{i, to_vector(state.tenpai_prob, config.t_max),
+                                        to_vector(state.win_prob, config.t_max),
+                                        to_vector(state.exp_score, config.t_max),
+                                        necessary_tiles, shanten2});
+            }
+            draw(player, hand_counts, wall_counts, i);
+        }
+    }
 }
 
 std::tuple<std::vector<ExpectedScoreCalculator::Stat>, int>
@@ -536,118 +622,44 @@ ExpectedScoreCalculator::calc(const Config &_config, const Round &round,
     }
 
     Player player = _player;
-    // 手牌と山の各牌の枚数を作成する。
-    // 赤ドラありの場合、赤なしの5と赤ありの5は別々に管理する。
     SeparatedCount hand_counts = to_separated_count(player.hand, config.enable_reddora);
     SeparatedCount wall_counts = to_separated_count(wall, config.enable_reddora);
+    std::vector<Stat> stats;
+    const int num_tiles = player.num_tiles() + player.num_melds() * 3;
 
-    // Calculate shanten number of specified hand.
+    if (!config.calc_stats) {
+        if (num_tiles == 13) {
+            const auto [shanten, necessary_tiles] =
+                get_necessary_tiles(config, player, wall);
+            stats.emplace_back(Stat{Tile::Null, {}, {}, {}, necessary_tiles, shanten});
+        }
+        else {
+            for (int i = 0; i < 37; ++i) {
+                if (hand_counts[i] > 0) {
+                    discard(player, hand_counts, wall_counts, i);
+                    const auto [shanten, necessary_tiles] =
+                        get_necessary_tiles(config, player, wall);
+                    stats.emplace_back(Stat{i, {}, {}, {}, necessary_tiles, shanten});
+                    draw(player, hand_counts, wall_counts, i);
+                }
+            }
+        }
+
+        return {stats, 0};
+    }
+
     const SeparatedCount hand_org = hand_counts;
     const int shanten_org = std::get<1>(
         ShantenCalculator::calc(player.hand, player.num_melds(), config.shanten_type));
     GraphBuilder graph_builder(config, round, player, hand_counts, wall_counts,
                                hand_org, shanten_org);
-    std::vector<Stat> stats;
-    const int num_tiles = player.num_tiles() + player.num_melds() * 3;
-
-    // 初期状態では未立直として扱い、打牌ごとに立直するか判定する。
-    const bool riichi = false;
 
     if (num_tiles == 13) {
-        // 13枚の場合
-        if (config.calc_stats) {
-            // 期待値、確率計算を行う場合
-
-            // 13枚の場合は自摸を起点に手牌遷移のグラフを作成する。
-            graph_builder.draw_node(riichi);
-
-            // 確率、期待値を計算する。
-            calc_stats(config, graph_builder.graph(), graph_builder.draw_cache(),
-                       graph_builder.discard_cache());
-
-            // 結果を取得する。
-            if (const auto itr =
-                    graph_builder.draw_cache().find(CacheKey(hand_counts, riichi));
-                itr != graph_builder.draw_cache().end()) {
-                const VertexData &state = graph_builder.graph()[itr->second];
-
-                // 有効牌の一覧を計算する。
-                const auto [shanten2, necessary_tiles] =
-                    get_necessary_tiles(config, player, wall);
-
-                stats.emplace_back(Stat{Tile::Null,
-                                        to_vector(state.tenpai_prob, config.t_max),
-                                        to_vector(state.win_prob, config.t_max),
-                                        to_vector(state.exp_score, config.t_max),
-                                        necessary_tiles, shanten2});
-            }
-        }
-        else {
-            const auto [shanten2, necessary_tiles] =
-                get_necessary_tiles(config, player, wall);
-            stats.emplace_back(Stat{Tile::Null, {}, {}, {}, necessary_tiles, shanten2});
-        }
+        calc_draw_hand(config, player, wall, hand_counts, graph_builder, stats);
     }
     else {
-        if (config.calc_stats) {
-            // 期待値、確率計算を行う場合
-
-            // 14枚の場合は打牌を起点に手牌遷移のグラフを作成する。
-            graph_builder.discard_node(riichi);
-
-            // 確率、期待値を計算する。
-            calc_stats(config, graph_builder.graph(), graph_builder.draw_cache(),
-                       graph_builder.discard_cache());
-
-            // 結果を取得する。
-            auto [discard_type, discard_shanten, discard_tiles] =
-                UnnecessaryTileCalculator::calc(player.hand, player.num_melds(),
-                                                config.shanten_type);
-            discard_tiles |=
-                (discard_tiles & (1LL << Tile::Manzu5)) ? (1LL << Tile::RedManzu5) : 0;
-            discard_tiles |=
-                (discard_tiles & (1LL << Tile::Pinzu5)) ? (1LL << Tile::RedPinzu5) : 0;
-            discard_tiles |=
-                (discard_tiles & (1LL << Tile::Souzu5)) ? (1LL << Tile::RedSouzu5) : 0;
-
-            for (int i = 0; i < 37; ++i) {
-                if (hand_counts[i] > 0) {
-                    const bool is_disc = discard_tiles & (1LL << i);
-                    const bool call_riichi =
-                        player.is_closed() && discard_shanten == 0 && is_disc ? true
-                                                                              : riichi;
-
-                    discard(player, hand_counts, wall_counts, i);
-                    if (const auto itr = graph_builder.draw_cache().find(
-                            CacheKey(hand_counts, call_riichi));
-                        itr != graph_builder.draw_cache().end()) {
-                        const VertexData &state = graph_builder.graph()[itr->second];
-
-                        // 有効牌の一覧を計算する。
-                        const auto [shanten2, necessary_tiles] =
-                            get_necessary_tiles(config, player, wall);
-
-                        stats.emplace_back(
-                            Stat{i, to_vector(state.tenpai_prob, config.t_max),
-                                 to_vector(state.win_prob, config.t_max),
-                                 to_vector(state.exp_score, config.t_max),
-                                 necessary_tiles, shanten2});
-                    }
-                    draw(player, hand_counts, wall_counts, i);
-                }
-            }
-        }
-        else {
-            for (int i = 0; i < 37; ++i) {
-                if (hand_counts[i] > 0) {
-                    discard(player, hand_counts, wall_counts, i);
-                    const auto [shanten2, necessary_tiles] =
-                        get_necessary_tiles(config, player, wall);
-                    stats.emplace_back(Stat{i, {}, {}, {}, necessary_tiles, shanten2});
-                    draw(player, hand_counts, wall_counts, i);
-                }
-            }
-        }
+        calc_discard_hand(config, player, wall, hand_counts, wall_counts, graph_builder,
+                          stats);
     }
 
     const int searched = static_cast<int>(boost::num_vertices(graph_builder.graph()));

@@ -165,11 +165,17 @@ class ExpectedScoreCalculator
   private:
     class GraphBuilder;
 
+    static void calc_draw_hand(const Config &config, const Player &player,
+                               const MergedCount &wall,
+                               const SeparatedCount &hand_counts,
+                               GraphBuilder &graph_builder, std::vector<Stat> &stats);
+    static void calc_discard_hand(const Config &config, Player &player,
+                                  const MergedCount &wall, SeparatedCount &hand_counts,
+                                  SeparatedCount &wall_counts,
+                                  GraphBuilder &graph_builder,
+                                  std::vector<Stat> &stats);
     static void calc_stats(const Config &config, Graph &graph, const Cache &cache1,
                            const Cache &cache2);
-    static std::tuple<int, std::vector<std::tuple<int, int>>>
-    get_necessary_tiles(const Config &config, const Player &player,
-                        const MergedCount &wall);
 };
 } // namespace mahjong
 
