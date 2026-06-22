@@ -4,8 +4,6 @@
 #include <algorithm> // max, fill
 #include <cassert>
 
-#include <boost/graph/graph_utility.hpp>
-
 #include "mahjong/core/necessary_tile_calculator.hpp"
 #include "mahjong/core/score_calculator.hpp"
 #include "mahjong/core/shanten_calculator.hpp"
@@ -354,7 +352,7 @@ ExpectedScoreCalculator::GraphBuilder::draw_node(const bool riichi)
     const bool allow_tegawari = config_.enable_tegawari && !riichi && can_extend_search;
     wait = add_red5_flags(wait);
 
-    const Vertex vertex = boost::add_vertex(graph_);
+    const Vertex vertex = graph_.add_vertex();
     graph_[vertex].is_tenpai = shanten == 0;
     cache1_[key] = vertex;
     draw_vertices_.push_back(vertex);
@@ -369,14 +367,14 @@ ExpectedScoreCalculator::GraphBuilder::draw_node(const bool riichi)
 
             const Vertex target = discard_node(riichi);
 
-            if (!boost::edge(vertex, target, graph_).second) {
+            if (!graph_.has_edge(vertex, target)) {
                 // 自摸前の時点で聴牌の場合、有効牌自摸後は和了形のため、点数計算を行う
                 double score = 0.0;
                 if (shanten == 0 && is_wait) {
                     score = calc_score(config_, round_, player_, hand_counts_,
                                        wall_counts_, type, i, riichi);
                 }
-                boost::add_edge(vertex, target, {weight, score}, graph_);
+                graph_.add_edge(vertex, target, weight, score);
             }
 
             discard(player_, hand_counts_, wall_counts_, i);
@@ -403,7 +401,7 @@ ExpectedScoreCalculator::GraphBuilder::discard_node(const bool riichi)
         config_.enable_shanten_down && !riichi && can_extend_search;
     disc = add_red5_flags(disc);
 
-    const Vertex vertex = boost::add_vertex(graph_);
+    const Vertex vertex = graph_.add_vertex();
     graph_[vertex].is_tenpai = shanten == 0;
     cache2_[key] = vertex;
     discard_vertices_.push_back(vertex);
@@ -422,14 +420,14 @@ ExpectedScoreCalculator::GraphBuilder::discard_node(const bool riichi)
 
             draw(player_, hand_counts_, wall_counts_, i);
 
-            if (!boost::edge(source, vertex, graph_).second) {
+            if (!graph_.has_edge(source, vertex)) {
                 // 打牌前の時点で向聴数が-1の場合、和了形のため、点数計算を行う
                 double score = 0.0;
                 if (shanten == -1) {
                     score = calc_score(config_, round_, player_, hand_counts_,
                                        wall_counts_, type, i, riichi);
                 }
-                boost::add_edge(source, vertex, {weight, score}, graph_);
+                graph_.add_edge(source, vertex, weight, score);
             }
         }
     }
@@ -448,21 +446,22 @@ ExpectedScoreCalculator::GraphBuilder::discard_node(const bool riichi)
 ExpectedScoreCalculator::EdgeCsr
 ExpectedScoreCalculator::build_edge_csr(const Graph &graph)
 {
-    const std::size_t vertex_count = boost::num_vertices(graph);
-    const std::size_t edge_count = boost::num_edges(graph);
+    const std::size_t vertex_count = graph.num_vertices();
+    const std::size_t edge_count = graph.edges.size();
+    assert(vertex_count <= std::numeric_limits<std::uint32_t>::max());
+    assert(edge_count <= std::numeric_limits<std::uint32_t>::max());
 
     EdgeCsr edge_csr;
     edge_csr.draw_edge_offsets.assign(vertex_count + 1, 0);
     edge_csr.selection_edge_offsets.assign(vertex_count + 1, 0);
 
     for (std::size_t vertex_index = 0; vertex_index < vertex_count; ++vertex_index) {
-        const Vertex vertex = static_cast<Vertex>(vertex_index);
-        for (const auto &edge :
-             boost::make_iterator_range(boost::out_edges(vertex, graph))) {
+        for (std::uint32_t edge = graph.first_out_edges[vertex_index];
+             edge != Graph::NoEdge; edge = graph.edges[edge].next_out) {
             ++edge_csr.draw_edge_offsets[vertex_index + 1];
         }
-        for (const auto &edge :
-             boost::make_iterator_range(boost::in_edges(vertex, graph))) {
+        for (std::uint32_t edge = graph.first_in_edges[vertex_index];
+             edge != Graph::NoEdge; edge = graph.edges[edge].next_in) {
             ++edge_csr.selection_edge_offsets[vertex_index + 1];
         }
     }
@@ -481,19 +480,19 @@ ExpectedScoreCalculator::build_edge_csr(const Graph &graph)
     std::vector<std::uint32_t> selection_positions = edge_csr.selection_edge_offsets;
 
     for (std::size_t vertex_index = 0; vertex_index < vertex_count; ++vertex_index) {
-        const Vertex vertex = static_cast<Vertex>(vertex_index);
-        for (const auto &edge :
-             boost::make_iterator_range(boost::out_edges(vertex, graph))) {
-            const auto &[weight, score] = graph[edge];
-            const auto target = static_cast<std::uint32_t>(boost::target(edge, graph));
+        for (std::uint32_t edge_index = graph.first_out_edges[vertex_index];
+             edge_index != Graph::NoEdge;
+             edge_index = graph.edges[edge_index].next_out) {
+            const EdgeData &edge = graph.edges[edge_index];
             edge_csr.draw_edges[draw_positions[vertex_index]++] =
-                DrawEdge{target, weight, score};
+                DrawEdge{edge.target, edge.weight, edge.score};
         }
-        for (const auto &edge :
-             boost::make_iterator_range(boost::in_edges(vertex, graph))) {
-            const auto source = static_cast<std::uint32_t>(boost::source(edge, graph));
+        for (std::uint32_t edge_index = graph.first_in_edges[vertex_index];
+             edge_index != Graph::NoEdge;
+             edge_index = graph.edges[edge_index].next_in) {
+            const EdgeData &edge = graph.edges[edge_index];
             edge_csr.selection_edges[selection_positions[vertex_index]++] =
-                SelectionEdge{source};
+                SelectionEdge{edge.source};
         }
     }
 
@@ -730,7 +729,7 @@ ExpectedScoreCalculator::calc(const Config &_config, const Round &round,
                           stats);
     }
 
-    const int searched = static_cast<int>(boost::num_vertices(graph_builder.graph()));
+    const int searched = static_cast<int>(graph_builder.graph().num_vertices());
 
     return {stats, searched};
 }

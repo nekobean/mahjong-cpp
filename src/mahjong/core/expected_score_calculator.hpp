@@ -3,10 +3,10 @@
 
 #include <array>
 #include <cstdint>
+#include <limits>
 #include <tuple>
 #include <vector>
 
-#include <boost/graph/adjacency_list.hpp>
 #include <boost/unordered/unordered_flat_map.hpp>
 
 #include "mahjong/types/types.hpp"
@@ -129,11 +129,74 @@ class ExpectedScoreCalculator
         bool is_tenpai = false;
     };
 
-    using EdgeData = std::tuple<int, double>;
-    using Graph = boost::adjacency_list<boost::vecS, boost::vecS, boost::bidirectionalS,
-                                        VertexData, EdgeData>;
-    using Vertex = Graph::vertex_descriptor;
-    using Edge = Graph::edge_descriptor;
+    using Vertex = std::uint32_t;
+
+    struct EdgeData
+    {
+        Vertex source;
+        Vertex target;
+        std::uint32_t next_out;
+        std::uint32_t next_in;
+        int weight;
+        double score;
+    };
+
+    struct Graph
+    {
+        static constexpr std::uint32_t NoEdge =
+            std::numeric_limits<std::uint32_t>::max();
+
+        Vertex add_vertex()
+        {
+            const Vertex vertex = static_cast<Vertex>(vertices.size());
+            vertices.emplace_back();
+            first_out_edges.push_back(NoEdge);
+            first_in_edges.push_back(NoEdge);
+            return vertex;
+        }
+
+        void add_edge(const Vertex source, const Vertex target, const int weight,
+                      const double score)
+        {
+            const auto edge = static_cast<std::uint32_t>(edges.size());
+            edges.push_back(EdgeData{source, target, first_out_edges[source],
+                                     first_in_edges[target], weight, score});
+            first_out_edges[source] = edge;
+            first_in_edges[target] = edge;
+        }
+
+        bool has_edge(const Vertex source, const Vertex target) const
+        {
+            for (std::uint32_t edge = first_out_edges[source]; edge != NoEdge;
+                 edge = edges[edge].next_out) {
+                if (edges[edge].target == target) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        std::size_t num_vertices() const
+        {
+            return vertices.size();
+        }
+
+        VertexData &operator[](const Vertex vertex)
+        {
+            return vertices[vertex];
+        }
+
+        const VertexData &operator[](const Vertex vertex) const
+        {
+            return vertices[vertex];
+        }
+
+        std::vector<VertexData> vertices;
+        std::vector<EdgeData> edges;
+        std::vector<std::uint32_t> first_out_edges;
+        std::vector<std::uint32_t> first_in_edges;
+    };
+
     using Cache = boost::unordered_flat_map<CacheKey, Vertex, CacheKeyHash>;
 
     struct DrawEdge
