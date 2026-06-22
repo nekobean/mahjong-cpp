@@ -330,7 +330,7 @@ class ExpectedScoreCalculator::GraphBuilder
 ExpectedScoreCalculator::Vertex
 ExpectedScoreCalculator::GraphBuilder::draw_node(const bool riichi)
 {
-    CacheKey key(hand_counts_, riichi);
+    const CacheKey key(hand_counts_, riichi);
     if (const auto itr = cache1_.find(key); itr != cache1_.end()) {
         return itr->second;
     }
@@ -340,7 +340,7 @@ ExpectedScoreCalculator::GraphBuilder::draw_node(const bool riichi)
 
     const bool can_extend_search =
         distance(hand_counts_, hand_org_) + shanten < shanten_org_ + config_.extra;
-    bool allow_tegawari = config_.enable_tegawari && !riichi && can_extend_search;
+    const bool allow_tegawari = config_.enable_tegawari && !riichi && can_extend_search;
     wait = add_red5_flags(wait);
 
     const Vertex vertex = boost::add_vertex(graph_);
@@ -348,7 +348,7 @@ ExpectedScoreCalculator::GraphBuilder::draw_node(const bool riichi)
     cache1_[key] = vertex;
 
     for (int i = 0; i < 37; ++i) {
-        bool is_wait = wait & (1LL << i);
+        const bool is_wait = wait & (1LL << i);
 
         if (wall_counts_[i] && (allow_tegawari || is_wait)) {
             const int weight = wall_counts_[i];
@@ -377,7 +377,7 @@ ExpectedScoreCalculator::GraphBuilder::draw_node(const bool riichi)
 ExpectedScoreCalculator::Vertex
 ExpectedScoreCalculator::GraphBuilder::discard_node(const bool riichi)
 {
-    CacheKey key(hand_counts_, riichi);
+    const CacheKey key(hand_counts_, riichi);
     if (const auto itr = cache2_.find(key); itr != cache2_.end()) {
         return itr->second;
     }
@@ -387,7 +387,7 @@ ExpectedScoreCalculator::GraphBuilder::discard_node(const bool riichi)
 
     const bool can_extend_search =
         distance(hand_counts_, hand_org_) + shanten < shanten_org_ + config_.extra;
-    bool allow_shanten_down =
+    const bool allow_shanten_down =
         config_.enable_shanten_down && !riichi && can_extend_search;
     disc = add_red5_flags(disc);
 
@@ -396,7 +396,7 @@ ExpectedScoreCalculator::GraphBuilder::discard_node(const bool riichi)
     cache2_[key] = vertex;
 
     for (int i = 0; i < 37; ++i) {
-        bool is_disc = disc & (1LL << i);
+        const bool is_disc = disc & (1LL << i);
 
         if (hand_counts_[i] && (allow_shanten_down || is_disc)) {
             const bool call_riichi =
