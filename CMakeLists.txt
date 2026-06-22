@@ -72,6 +72,11 @@ endif()
 option(BUILD_SERVER "build server programs." ON)
 option(BUILD_TEST "build test programs." OFF)
 option(BUILD_SAMPLES "build sample programs." ON)
+option(ENABLE_OPENMP "enable OpenMP parallel loops." OFF)
+
+if(ENABLE_OPENMP)
+  find_package(OpenMP REQUIRED)
+endif()
 
 # Build mahjong-cpp
 
@@ -95,6 +100,9 @@ if (MSVC)
 else()
   target_link_libraries(${LIB_NAME} ${CMAKE_DL_LIBS} Boost::filesystem Boost::system
                         spdlog::spdlog -static-libgcc -static-libstdc++)
+endif()
+if(ENABLE_OPENMP)
+  target_compile_options(${LIB_NAME} PUBLIC ${OpenMP_CXX_FLAGS})
 endif()
 
 if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)

@@ -6,6 +6,10 @@ foreach(ENTRY_FILE ${ENTRY_FILES})
   if (MSVC)
     target_link_libraries(${BASE_NAME} ${LIB_NAME} ${CMAKE_DL_LIBS}
                           Boost::filesystem Boost::system spdlog)
+  elseif(ENABLE_OPENMP)
+    target_link_libraries(${BASE_NAME} ${LIB_NAME} ${CMAKE_DL_LIBS}
+                          Boost::filesystem Boost::system spdlog::spdlog
+                          OpenMP::OpenMP_CXX)
   else()
     target_link_libraries(${BASE_NAME} ${LIB_NAME} ${CMAKE_DL_LIBS}
                           Boost::filesystem Boost::system spdlog::spdlog

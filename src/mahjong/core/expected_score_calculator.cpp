@@ -529,7 +529,12 @@ void ExpectedScoreCalculator::calc_stats(const Config &config, Graph &graph,
 
     for (int t = config.t_max; t >= config.t_min; --t) {
         // draw node
-        for (const Vertex vertex : draw_vertices) {
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static)
+#endif
+        for (std::int64_t i = 0; i < static_cast<std::int64_t>(draw_vertices.size());
+             ++i) {
+            const Vertex vertex = draw_vertices[i];
             VertexData &s1 = graph[vertex];
             if (t == config.t_max) {
                 if (s1.is_tenpai) {
@@ -571,7 +576,12 @@ void ExpectedScoreCalculator::calc_stats(const Config &config, Graph &graph,
         }
 
         // discard node
-        for (const Vertex vertex : discard_vertices) {
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static)
+#endif
+        for (std::int64_t i = 0; i < static_cast<std::int64_t>(discard_vertices.size());
+             ++i) {
+            const Vertex vertex = discard_vertices[i];
             VertexData &s1 = graph[vertex];
             const VertexData *best = nullptr;
 
