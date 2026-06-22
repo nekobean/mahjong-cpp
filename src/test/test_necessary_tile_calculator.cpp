@@ -74,7 +74,8 @@ TEST_CASE("Necessary tile calculator for regular hand")
     {
         double avg_tiles = 0;
         for (auto &hand : cases) {
-            int shanten = ShantenCalculator::calc_regular(hand, 0);
+            int shanten =
+                std::get<1>(ShantenCalculator::calc(hand, 0, ShantenFlag::Regular));
 
             std::vector<int> tiles;
             for (int tile = 0; tile < 34; ++tile) {
@@ -83,7 +84,8 @@ TEST_CASE("Necessary tile calculator for regular hand")
                 }
 
                 hand[tile]++;
-                if (shanten > ShantenCalculator::calc_regular(hand, 0)) {
+                if (shanten > std::get<1>(ShantenCalculator::calc(
+                                  hand, 0, ShantenFlag::Regular))) {
                     tiles.push_back(tile);
                 }
                 hand[tile]--;
@@ -123,7 +125,8 @@ TEST_CASE("Necessary tile calculator for Seven Pairs")
     {
         double avg_tiles = 0;
         for (auto &hand : cases) {
-            int shanten = ShantenCalculator::calc_seven_pairs(hand);
+            int shanten =
+                std::get<1>(ShantenCalculator::calc(hand, 0, ShantenFlag::SevenPairs));
 
             std::vector<int> tiles;
             for (int tile = 0; tile < 34; ++tile) {
@@ -132,7 +135,8 @@ TEST_CASE("Necessary tile calculator for Seven Pairs")
                 }
 
                 hand[tile]++;
-                if (shanten > ShantenCalculator::calc_seven_pairs(hand)) {
+                if (shanten > std::get<1>(ShantenCalculator::calc(
+                                  hand, 0, ShantenFlag::SevenPairs))) {
                     tiles.push_back(tile);
                 }
                 hand[tile]--;
@@ -172,7 +176,8 @@ TEST_CASE("Necessary tile calculator for Thirteen Orphans")
     {
         double avg_tiles = 0;
         for (auto &hand : cases) {
-            int shanten = ShantenCalculator::calc_thirteen_orphans(hand);
+            int shanten = std::get<1>(
+                ShantenCalculator::calc(hand, 0, ShantenFlag::ThirteenOrphans));
 
             std::vector<int> tiles;
             for (int tile :
@@ -184,7 +189,8 @@ TEST_CASE("Necessary tile calculator for Thirteen Orphans")
                 }
 
                 hand[tile]++;
-                if (shanten > ShantenCalculator::calc_thirteen_orphans(hand)) {
+                if (shanten > std::get<1>(ShantenCalculator::calc(
+                                  hand, 0, ShantenFlag::ThirteenOrphans))) {
                     tiles.push_back(tile);
                 }
                 hand[tile]--;
@@ -257,4 +263,41 @@ TEST_CASE("Necessary tile calculator")
             NecessaryTileCalculator::select(hand, 0, ShantenFlag::All);
         }
     };
+}
+
+TEST_CASE("Necessary tile calculator for Sanma")
+{
+    SECTION("Regular hand waits only enabled tiles")
+    {
+        Hand hand{0};
+        hand[Tile::Pinzu1] = 3;
+        hand[Tile::Pinzu2] = 3;
+        hand[Tile::Pinzu3] = 3;
+        hand[Tile::Pinzu4] = 3;
+        hand[Tile::Manzu1] = 1;
+
+        const auto [type, shanten, tiles] = NecessaryTileCalculator::select(
+            hand, 0, ShantenFlag::Regular, MahjongMode::Sanma);
+
+        REQUIRE(type == ShantenFlag::Regular);
+        REQUIRE(shanten == 0);
+        REQUIRE(tiles == std::vector<int>{Tile::Manzu1});
+    }
+
+    SECTION("Seven Pairs does not wait for disabled tiles")
+    {
+        Hand hand{0};
+        for (int tile : {Tile::Manzu1, Tile::Manzu9, Tile::Pinzu1, Tile::Pinzu9,
+                         Tile::Souzu1, Tile::Souzu9}) {
+            hand[tile] = 2;
+        }
+        hand[Tile::North] = 1;
+
+        const auto [type, shanten, tiles] = NecessaryTileCalculator::select(
+            hand, 0, ShantenFlag::SevenPairs, MahjongMode::Sanma);
+
+        REQUIRE(type == ShantenFlag::SevenPairs);
+        REQUIRE(shanten == 0);
+        REQUIRE(tiles == std::vector<int>{Tile::North});
+    }
 }

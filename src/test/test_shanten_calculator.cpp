@@ -75,14 +75,15 @@ TEST_CASE("Shanten number of regular hand")
     {
         for (auto &[hand, regular, thirteen_orphans, seven_pairs] : cases) {
             INFO(fmt::format("手牌: {}", to_mpsz(hand)));
-            REQUIRE(ShantenCalculator::calc_regular(hand, 0) == regular);
+            REQUIRE(std::get<1>(ShantenCalculator::calc(
+                        hand, 0, ShantenFlag::Regular)) == regular);
         }
     };
 
     BENCHMARK("Shanten number of regular hand")
     {
         for (auto &[hand, regular, thirteen_orphans, seven_pairs] : cases) {
-            ShantenCalculator::calc_regular(hand, 0);
+            ShantenCalculator::calc(hand, 0, ShantenFlag::Regular);
         }
     };
 }
@@ -101,14 +102,15 @@ TEST_CASE("Shanten number of Seven Pairs")
     {
         for (auto &[hand, regular, thirteen_orphans, seven_pairs] : cases) {
             INFO(fmt::format("手牌: {}", to_mpsz(hand)));
-            REQUIRE(ShantenCalculator::calc_seven_pairs(hand) == seven_pairs);
+            REQUIRE(std::get<1>(ShantenCalculator::calc(
+                        hand, 0, ShantenFlag::SevenPairs)) == seven_pairs);
         }
     };
 
     BENCHMARK("Shanten number of Seven Pairs")
     {
         for (auto &[hand, regular, thirteen_orphans, seven_pairs] : cases) {
-            ShantenCalculator::calc_seven_pairs(hand);
+            ShantenCalculator::calc(hand, 0, ShantenFlag::SevenPairs);
         }
     };
 }
@@ -127,14 +129,15 @@ TEST_CASE("Shanten number of Thirteen Orphans")
     {
         for (auto &[hand, regular, thirteen_orphans, seven_pairs] : cases) {
             INFO(fmt::format("手牌: {}", to_mpsz(hand)));
-            REQUIRE(ShantenCalculator::calc_thirteen_orphans(hand) == thirteen_orphans);
+            REQUIRE(std::get<1>(ShantenCalculator::calc(
+                        hand, 0, ShantenFlag::ThirteenOrphans)) == thirteen_orphans);
         }
     };
 
     BENCHMARK("Shanten number of Thirteen Orphans")
     {
         for (auto &[hand, regular, thirteen_orphans, seven_pairs] : cases) {
-            ShantenCalculator::calc_thirteen_orphans(hand);
+            ShantenCalculator::calc(hand, 0, ShantenFlag::ThirteenOrphans);
         }
     };
 }
@@ -172,6 +175,38 @@ TEST_CASE("Shanten number")
             ShantenCalculator::calc(hand, 0, ShantenFlag::All);
         }
     };
+}
+
+TEST_CASE("Sanma shanten number")
+{
+    SECTION("Regular winning hand")
+    {
+        Hand hand{0};
+        hand[Tile::Manzu1] = 3;
+        hand[Tile::Manzu9] = 3;
+        hand[Tile::Pinzu1] = 1;
+        hand[Tile::Pinzu2] = 1;
+        hand[Tile::Pinzu3] = 1;
+        hand[Tile::Souzu1] = 1;
+        hand[Tile::Souzu2] = 1;
+        hand[Tile::Souzu3] = 1;
+        hand[Tile::East] = 2;
+
+        REQUIRE(std::get<1>(ShantenCalculator::calc(hand, 0, ShantenFlag::Regular,
+                                                    MahjongMode::Sanma)) == -1);
+    }
+
+    SECTION("Seven Pairs uses only Sanma tiles")
+    {
+        Hand hand{0};
+        for (int tile : {Tile::Manzu1, Tile::Manzu9, Tile::Pinzu1, Tile::Pinzu9,
+                         Tile::Souzu1, Tile::Souzu9, Tile::North}) {
+            hand[tile] = 2;
+        }
+
+        REQUIRE(std::get<1>(ShantenCalculator::calc(hand, 0, ShantenFlag::SevenPairs,
+                                                    MahjongMode::Sanma)) == -1);
+    }
 }
 
 TEST_CASE("Shanten number with melds")

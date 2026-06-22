@@ -4,6 +4,7 @@
 #include <array>
 #include <cstdint>
 #include <fstream> // ifstream
+#include <iterator>
 #include <numeric> // accumulate
 #include <string>
 
@@ -26,6 +27,7 @@ class Table
     // The table size is defined as the maximum hash value + 1.
     static constexpr size_t SuitsTableSize = 1943751;
     static constexpr size_t HonorsTableSize = 77751;
+    static constexpr size_t SanmaManzuTableSize = 25;
 
   public:
     using TableType = std::array<int32_t, 30>;
@@ -34,6 +36,7 @@ class Table
     Table();
     template <typename ForwardIterator>
     static HashType suits_hash(ForwardIterator first, ForwardIterator last);
+    static HashType sanma_manzu_hash(int manzu1_count, int manzu9_count);
     template <typename ForwardIterator>
     static HashType honors_hash(ForwardIterator first, ForwardIterator last);
 
@@ -46,6 +49,7 @@ class Table
   public:
     static std::array<TableType, SuitsTableSize> suits_table_;
     static std::array<TableType, HonorsTableSize> honors_table_;
+    static std::array<TableType, SanmaManzuTableSize> sanma_manzu_table_;
 };
 
 /**
@@ -75,6 +79,19 @@ inline Table::HashType Table::suits_hash(ForwardIterator first, ForwardIterator 
 #else
     return std::accumulate(first, last, 0, [](int x, int y) { return 5 * x + y; });
 #endif
+}
+
+/**
+ * @brief Computes the hash value for accessing the Sanma manzu table.
+ *
+ * @param manzu1_count The number of 1m tiles.
+ * @param manzu9_count The number of 9m tiles.
+ * @return The hash value for the Sanma manzu table.
+ */
+inline Table::HashType Table::sanma_manzu_hash(const int manzu1_count,
+                                               const int manzu9_count)
+{
+    return 5 * manzu1_count + manzu9_count;
 }
 
 /**
@@ -124,17 +141,26 @@ bool Table::load_table(const std::string &filepath,
         return false;
     }
 
-    do {
+    while (file) {
         HashType key;
         uint32_t value;
-        file.read(reinterpret_cast<char *>(&key), sizeof(key));
+        if (!file.read(reinterpret_cast<char *>(&key), sizeof(key))) {
+            break;
+        }
+        if (key < 0 || static_cast<size_t>(key) >= TableSize) {
+            spdlog::error(u8"Invalid table key. (path: {}, key: {})", filepath, key);
+            return false;
+        }
         for (size_t i = 0; i < 10; ++i) {
-            file.read(reinterpret_cast<char *>(&value), sizeof(value));
+            if (!file.read(reinterpret_cast<char *>(&value), sizeof(value))) {
+                spdlog::error(u8"Failed to read table file. (path: {})", filepath);
+                return false;
+            }
             table[key][i] = value & 0b1111;                   // distance
             table[key][i + 10] = (value >> 4) & 0b111111111;  // wait
             table[key][i + 20] = (value >> 13) & 0b111111111; // discard
         }
-    } while (!file.eof());
+    }
 
     spdlog::info(u8"Table file loaded. (path: {}, size: {})", filepath, table.size());
 
