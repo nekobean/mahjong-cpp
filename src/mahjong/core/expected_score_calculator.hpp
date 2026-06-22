@@ -180,8 +180,10 @@ class ExpectedScoreCalculator
                                   GraphBuilder &graph_builder,
                                   std::vector<Stat> &stats);
     static EdgeCsr build_edge_csr(const Graph &graph);
-    static void calc_stats(const Config &config, Graph &graph, const Cache &cache1,
-                           const Cache &cache2, const EdgeCsr &edge_csr);
+    static void calc_stats(const Config &config, Graph &graph,
+                           const std::vector<Vertex> &draw_vertices,
+                           const std::vector<Vertex> &discard_vertices,
+                           const EdgeCsr &edge_csr);
 };
 } // namespace mahjong
 

@@ -314,6 +314,14 @@ class ExpectedScoreCalculator::GraphBuilder
     {
         return cache2_;
     }
+    const std::vector<Vertex> &draw_vertices() const
+    {
+        return draw_vertices_;
+    }
+    const std::vector<Vertex> &discard_vertices() const
+    {
+        return discard_vertices_;
+    }
 
   private:
     const Config &config_;
@@ -326,6 +334,8 @@ class ExpectedScoreCalculator::GraphBuilder
     Graph graph_;
     Cache cache1_;
     Cache cache2_;
+    std::vector<Vertex> draw_vertices_;
+    std::vector<Vertex> discard_vertices_;
 };
 
 ExpectedScoreCalculator::Vertex
@@ -347,6 +357,7 @@ ExpectedScoreCalculator::GraphBuilder::draw_node(const bool riichi)
     const Vertex vertex = boost::add_vertex(graph_);
     graph_[vertex].is_tenpai = shanten == 0;
     cache1_[key] = vertex;
+    draw_vertices_.push_back(vertex);
 
     for (int i = 0; i < 37; ++i) {
         const bool is_wait = wait & (1LL << i);
@@ -395,6 +406,7 @@ ExpectedScoreCalculator::GraphBuilder::discard_node(const bool riichi)
     const Vertex vertex = boost::add_vertex(graph_);
     graph_[vertex].is_tenpai = shanten == 0;
     cache2_[key] = vertex;
+    discard_vertices_.push_back(vertex);
 
     for (int i = 0; i < 37; ++i) {
         const bool is_disc = disc & (1LL << i);
@@ -489,7 +501,8 @@ ExpectedScoreCalculator::build_edge_csr(const Graph &graph)
 }
 
 void ExpectedScoreCalculator::calc_stats(const Config &config, Graph &graph,
-                                         const Cache &cache1, const Cache &cache2,
+                                         const std::vector<Vertex> &draw_vertices,
+                                         const std::vector<Vertex> &discard_vertices,
                                          const EdgeCsr &edge_csr)
 {
     const auto objective_value = [&](const VertexData &state, const int turn) {
@@ -517,7 +530,7 @@ void ExpectedScoreCalculator::calc_stats(const Config &config, Graph &graph,
 
     for (int t = config.t_max; t >= config.t_min; --t) {
         // draw node
-        for (const auto &[_, vertex] : cache1) {
+        for (const Vertex vertex : draw_vertices) {
             VertexData &s1 = graph[vertex];
             if (t == config.t_max) {
                 if (s1.is_tenpai) {
@@ -559,7 +572,7 @@ void ExpectedScoreCalculator::calc_stats(const Config &config, Graph &graph,
         }
 
         // discard node
-        for (const auto &[_, vertex] : cache2) {
+        for (const Vertex vertex : discard_vertices) {
             VertexData &s1 = graph[vertex];
             const VertexData *best = nullptr;
 
@@ -604,8 +617,8 @@ void ExpectedScoreCalculator::calc_draw_hand(const Config &config, const Player 
 
     // 確率、期待値を計算する。
     const EdgeCsr edge_csr = build_edge_csr(graph_builder.graph());
-    calc_stats(config, graph_builder.graph(), graph_builder.draw_cache(),
-               graph_builder.discard_cache(), edge_csr);
+    calc_stats(config, graph_builder.graph(), graph_builder.draw_vertices(),
+               graph_builder.discard_vertices(), edge_csr);
 
     // 結果を取得する。
     const VertexData &state = graph_builder.graph()[vertex];
@@ -631,8 +644,8 @@ void ExpectedScoreCalculator::calc_discard_hand(const Config &config, Player &pl
 
     // 確率、期待値を計算する。
     const EdgeCsr edge_csr = build_edge_csr(graph_builder.graph());
-    calc_stats(config, graph_builder.graph(), graph_builder.draw_cache(),
-               graph_builder.discard_cache(), edge_csr);
+    calc_stats(config, graph_builder.graph(), graph_builder.draw_vertices(),
+               graph_builder.discard_vertices(), edge_csr);
 
     // 結果を取得する。
     auto [discard_type, discard_shanten, discard_tiles] =
