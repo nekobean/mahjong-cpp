@@ -4,8 +4,11 @@
 #include <execution>
 #include <fstream>
 #include <iostream>
+#include <limits>
 #include <map>
 #include <numeric>
+#include <tuple>
+#include <utility>
 #include <vector>
 #undef NDEBUG
 #include <cassert>
@@ -115,13 +118,13 @@ std::vector<std::vector<int>> list_honors_win_patterns()
 
     for (auto &&[num_koutsu, num_head] :
          iter::product(num_koutsu_patterns, num_head_patterns)) {
-        // 順子の数、刻子の数、雀頭の数が与えられたとき、数牌の組み合わせを列挙する。
+        // 刻子の数、雀頭の数が与えられたとき、字牌の組み合わせを列挙する。
         for (auto &&koutsu_pos :
              iter::combinations_with_replacement(koutsu_positions, num_koutsu)) {
             for (auto &&head_pos :
                  iter::combinations_with_replacement(head_positions, num_head)) {
 
-                std::vector<int> pattern(9, 0);
+                std::vector<int> pattern(7, 0);
 
                 for (auto i : koutsu_pos) {
                     pattern[i] += 3;
@@ -188,6 +191,8 @@ std::vector<std::vector<int>> list_honors_patterns()
 
 int calc_distance(const std::vector<int> &before, const std::vector<int> &after)
 {
+    assert(before.size() == after.size());
+
     int distance = 0;
     for (size_t i = 0; i < before.size(); ++i) {
         distance += std::max(after[i] - before[i], 0);
@@ -200,42 +205,38 @@ std::map<Table::HashType, ValueType>
 create_table(const std::vector<std::vector<int>> &patterns,
              const std::vector<std::vector<int>> &win_patterns)
 {
-    std::map<Table::HashType, ValueType> table;
-    for (const auto &pattern : patterns) {
-        Table::HashType hash = pattern.size() == 9
-                                   ? Table::suits_hash(pattern.begin(), pattern.end())
-                                   : Table::honors_hash(pattern.begin(), pattern.end());
-        table[hash].fill(std::numeric_limits<int>::max());
-    }
+    std::vector<size_t> indices(patterns.size());
+    std::iota(indices.begin(), indices.end(), 0);
 
-    // 並列処理を行う
+    std::vector<std::pair<Table::HashType, ValueType>> entries(patterns.size());
     std::for_each(
-        std::execution::par, patterns.begin(), patterns.end(),
-        [&](const auto &pattern) {
-            Table::HashType hash =
-                pattern.size() == 9
-                    ? Table::suits_hash(pattern.begin(), pattern.end())
-                    : Table::honors_hash(pattern.begin(), pattern.end());
-            auto &distances = table[hash];
+        std::execution::par, indices.begin(), indices.end(), [&](const size_t index) {
+            const auto &pattern = patterns[index];
+            auto &[hash, distances] = entries[index];
+
+            hash = pattern.size() == 9
+                       ? Table::suits_hash(pattern.begin(), pattern.end())
+                       : Table::honors_hash(pattern.begin(), pattern.end());
+            distances.fill(std::numeric_limits<int>::max());
 
             for (const auto &win_pattern : win_patterns) {
                 int num_win_tiles =
                     std::accumulate(win_pattern.begin(), win_pattern.end(), 0);
-                int index = num_win_tiles / 3 + (num_win_tiles % 3 != 0 ? 5 : 0);
+                int table_index = num_win_tiles / 3 + (num_win_tiles % 3 != 0 ? 5 : 0);
                 int distance = calc_distance(pattern, win_pattern);
-                distances[index] =
-                    std::min(distances[index], static_cast<KeyType>(distance));
+                distances[table_index] =
+                    std::min(distances[table_index], static_cast<KeyType>(distance));
             }
 
             for (const auto &win_pattern : win_patterns) {
                 int num_win_tiles =
                     std::accumulate(win_pattern.begin(), win_pattern.end(), 0);
-                int index = num_win_tiles / 3 + (num_win_tiles % 3 != 0 ? 5 : 0);
+                int table_index = num_win_tiles / 3 + (num_win_tiles % 3 != 0 ? 5 : 0);
                 int distance = calc_distance(pattern, win_pattern);
 
-                int dist = distances[index] & 0b1111; // 1~4bit
-                int wait = distances[index] >> 4;     // 5~13bit
-                int desc = distances[index] >> 13;    // 14~22bit
+                int dist = distances[table_index] & 0b1111; // 1~4bit
+                int wait = distances[table_index] >> 4;     // 5~13bit
+                int desc = distances[table_index] >> 13;    // 14~22bit
                 if (dist == distance) {
                     for (size_t i = 0; i < pattern.size(); ++i) {
                         if (win_pattern[i] > pattern[i]) {
@@ -247,9 +248,15 @@ create_table(const std::vector<std::vector<int>> &patterns,
                     }
                 }
 
-                distances[index] = dist | (wait << 4) | (desc << 13);
+                distances[table_index] = dist | (wait << 4) | (desc << 13);
             }
         });
+
+    std::map<Table::HashType, ValueType> table;
+    for (const auto &[hash, distances] : entries) {
+        [[maybe_unused]] const auto [_, inserted] = table.emplace(hash, distances);
+        assert(inserted);
+    }
 
     return table;
 }
@@ -272,6 +279,11 @@ bool write_file(const std::string &filename,
     }
 
     file.close();
+    if (!file) {
+        std::cerr << "Failed to write table file. (path: " << filename << ")"
+                  << std::endl;
+        return false;
+    }
 
     std::cout << "Table file written. (path: " << filename << ")" << std::endl;
 
