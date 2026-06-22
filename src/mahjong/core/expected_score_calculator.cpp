@@ -224,6 +224,14 @@ int distance(const SeparatedCount &hand, const SeparatedCount &hand_org)
     return dist;
 }
 
+int64_t add_red5_flags(int64_t tiles)
+{
+    tiles |= (tiles & (1LL << Tile::Manzu5)) ? (1LL << Tile::RedManzu5) : 0;
+    tiles |= (tiles & (1LL << Tile::Pinzu5)) ? (1LL << Tile::RedPinzu5) : 0;
+    tiles |= (tiles & (1LL << Tile::Souzu5)) ? (1LL << Tile::RedSouzu5) : 0;
+    return tiles;
+}
+
 std::tuple<int, std::vector<std::tuple<int, int>>>
 get_necessary_tiles(const ExpectedScoreCalculator::Config &config, const Player &player,
                     const MergedCount &wall)
@@ -333,9 +341,7 @@ ExpectedScoreCalculator::GraphBuilder::draw_node(const bool riichi)
     const bool can_extend_search =
         distance(hand_counts_, hand_org_) + shanten < shanten_org_ + config_.extra;
     bool allow_tegawari = config_.enable_tegawari && !riichi && can_extend_search;
-    wait |= (wait & (1LL << Tile::Manzu5)) ? (1LL << Tile::RedManzu5) : 0;
-    wait |= (wait & (1LL << Tile::Pinzu5)) ? (1LL << Tile::RedPinzu5) : 0;
-    wait |= (wait & (1LL << Tile::Souzu5)) ? (1LL << Tile::RedSouzu5) : 0;
+    wait = add_red5_flags(wait);
 
     const Vertex vertex = boost::add_vertex(graph_);
     graph_[vertex].is_tenpai = shanten == 0;
@@ -383,9 +389,7 @@ ExpectedScoreCalculator::GraphBuilder::discard_node(const bool riichi)
         distance(hand_counts_, hand_org_) + shanten < shanten_org_ + config_.extra;
     bool allow_shanten_down =
         config_.enable_shanten_down && !riichi && can_extend_search;
-    disc |= (disc & (1LL << Tile::Manzu5)) ? (1LL << Tile::RedManzu5) : 0;
-    disc |= (disc & (1LL << Tile::Pinzu5)) ? (1LL << Tile::RedPinzu5) : 0;
-    disc |= (disc & (1LL << Tile::Souzu5)) ? (1LL << Tile::RedSouzu5) : 0;
+    disc = add_red5_flags(disc);
 
     const Vertex vertex = boost::add_vertex(graph_);
     graph_[vertex].is_tenpai = shanten == 0;
@@ -571,12 +575,7 @@ void ExpectedScoreCalculator::calc_discard_hand(const Config &config, Player &pl
     auto [discard_type, discard_shanten, discard_tiles] =
         UnnecessaryTileCalculator::calc(player.hand, player.num_melds(),
                                         config.shanten_type);
-    discard_tiles |=
-        (discard_tiles & (1LL << Tile::Manzu5)) ? (1LL << Tile::RedManzu5) : 0;
-    discard_tiles |=
-        (discard_tiles & (1LL << Tile::Pinzu5)) ? (1LL << Tile::RedPinzu5) : 0;
-    discard_tiles |=
-        (discard_tiles & (1LL << Tile::Souzu5)) ? (1LL << Tile::RedSouzu5) : 0;
+    discard_tiles = add_red5_flags(discard_tiles);
 
     for (int i = 0; i < 37; ++i) {
         if (hand_counts[i] > 0) {
