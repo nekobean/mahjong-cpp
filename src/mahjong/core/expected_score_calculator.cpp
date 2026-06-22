@@ -537,26 +537,22 @@ void ExpectedScoreCalculator::calc_draw_hand(const Config &config, const Player 
                                              std::vector<Stat> &stats)
 {
     // 13枚の場合は自摸を起点に手牌遷移のグラフを作成する。
-    graph_builder.draw_node(false);
+    const Vertex vertex = graph_builder.draw_node(false);
 
     // 確率、期待値を計算する。
     calc_stats(config, graph_builder.graph(), graph_builder.draw_cache(),
                graph_builder.discard_cache());
 
     // 結果を取得する。
-    if (const auto itr = graph_builder.draw_cache().find(CacheKey(hand_counts, false));
-        itr != graph_builder.draw_cache().end()) {
-        const VertexData &state = graph_builder.graph()[itr->second];
+    const VertexData &state = graph_builder.graph()[vertex];
 
-        // 有効牌の一覧を計算する。
-        const auto [shanten2, necessary_tiles] =
-            get_necessary_tiles(config, player, wall);
+    // 有効牌の一覧を計算する。
+    const auto [shanten2, necessary_tiles] = get_necessary_tiles(config, player, wall);
 
-        stats.emplace_back(Stat{Tile::Null, to_vector(state.tenpai_prob, config.t_max),
-                                to_vector(state.win_prob, config.t_max),
-                                to_vector(state.exp_score, config.t_max),
-                                necessary_tiles, shanten2});
-    }
+    stats.emplace_back(Stat{Tile::Null, to_vector(state.tenpai_prob, config.t_max),
+                            to_vector(state.win_prob, config.t_max),
+                            to_vector(state.exp_score, config.t_max), necessary_tiles,
+                            shanten2});
 }
 
 void ExpectedScoreCalculator::calc_discard_hand(const Config &config, Player &player,
