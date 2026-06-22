@@ -30,43 +30,28 @@ class ExpectedScoreCalculator
 
     struct Config
     {
-        Config()
-            : t_min(1)
-            , t_max(18)
-            , sum(0)
-            , extra(0)
-            , shanten_type(ShantenFlag::All)
-            , enable_reddora(true)
-            , enable_uradora(true)
-            , enable_shanten_down(true)
-            , enable_tegawari(true)
-            , objective(Objective::ExpectedScore)
-            , calc_stats(true)
-        {
-        }
-
         /* min turn to be calculated */
-        int t_min;
+        int t_min = 1;
         /* max turn to be calculated */
-        int t_max;
+        int t_max = 18;
         /* number of wall tiles */
-        int sum;
+        int sum = 0;
         /* search the range of possible (shanten number + extra) exchanges */
-        int extra;
+        int extra = 0;
         /* calculation shanten type */
-        int shanten_type;
+        int shanten_type = ShantenFlag::All;
         /* enable red dora */
-        bool enable_reddora;
+        bool enable_reddora = true;
         /* enable ura dora */
-        bool enable_uradora;
+        bool enable_uradora = true;
         /* allow shanten down */
-        bool enable_shanten_down;
+        bool enable_shanten_down = true;
         /* allow tegawari */
-        bool enable_tegawari;
+        bool enable_tegawari = true;
         /* objective used to select the best discard */
-        Objective objective;
+        Objective objective = Objective::ExpectedScore;
         /* calculate value */
-        bool calc_stats;
+        bool calc_stats = true;
     };
 
     struct Stat
@@ -129,6 +114,7 @@ class ExpectedScoreCalculator
             return static_cast<std::size_t>(h);
         }
     };
+
     struct VertexData
     {
       public:
