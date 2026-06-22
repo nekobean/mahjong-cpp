@@ -240,6 +240,7 @@ get_necessary_tiles(const ExpectedScoreCalculator::Config &config, const Player 
         player.hand, player.num_melds(), config.shanten_type);
 
     std::vector<std::tuple<int, int>> necessary_tiles;
+    necessary_tiles.reserve(tiles.size());
     for (const auto tile : tiles) {
         necessary_tiles.emplace_back(tile, wall[tile]);
     }
