@@ -136,6 +136,26 @@ class ExpectedScoreCalculator
     using Edge = Graph::edge_descriptor;
     using Cache = boost::unordered_flat_map<CacheKey, Vertex, CacheKeyHash>;
 
+    struct DrawEdge
+    {
+        std::uint32_t target;
+        int weight;
+        double score;
+    };
+
+    struct SelectionEdge
+    {
+        std::uint32_t source;
+    };
+
+    struct EdgeCsr
+    {
+        std::vector<DrawEdge> draw_edges;
+        std::vector<SelectionEdge> selection_edges;
+        std::vector<std::uint32_t> draw_edge_offsets;
+        std::vector<std::uint32_t> selection_edge_offsets;
+    };
+
   public:
     ExpectedScoreCalculator() = default;
 
@@ -159,8 +179,9 @@ class ExpectedScoreCalculator
                                   SeparatedCount &wall_counts,
                                   GraphBuilder &graph_builder,
                                   std::vector<Stat> &stats);
+    static EdgeCsr build_edge_csr(const Graph &graph);
     static void calc_stats(const Config &config, Graph &graph, const Cache &cache1,
-                           const Cache &cache2);
+                           const Cache &cache2, const EdgeCsr &edge_csr);
 };
 } // namespace mahjong
 

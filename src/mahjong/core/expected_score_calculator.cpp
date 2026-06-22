@@ -433,8 +433,64 @@ ExpectedScoreCalculator::GraphBuilder::discard_node(const bool riichi)
  * @param cache1 List of draw node
  * @param cache2 List of discard node
  */
+ExpectedScoreCalculator::EdgeCsr
+ExpectedScoreCalculator::build_edge_csr(const Graph &graph)
+{
+    const std::size_t vertex_count = boost::num_vertices(graph);
+    const std::size_t edge_count = boost::num_edges(graph);
+
+    EdgeCsr edge_csr;
+    edge_csr.draw_edge_offsets.assign(vertex_count + 1, 0);
+    edge_csr.selection_edge_offsets.assign(vertex_count + 1, 0);
+
+    for (std::size_t vertex_index = 0; vertex_index < vertex_count; ++vertex_index) {
+        const Vertex vertex = static_cast<Vertex>(vertex_index);
+        for (const auto &edge :
+             boost::make_iterator_range(boost::out_edges(vertex, graph))) {
+            ++edge_csr.draw_edge_offsets[vertex_index + 1];
+        }
+        for (const auto &edge :
+             boost::make_iterator_range(boost::in_edges(vertex, graph))) {
+            ++edge_csr.selection_edge_offsets[vertex_index + 1];
+        }
+    }
+
+    for (std::size_t vertex_index = 0; vertex_index < vertex_count; ++vertex_index) {
+        edge_csr.draw_edge_offsets[vertex_index + 1] +=
+            edge_csr.draw_edge_offsets[vertex_index];
+        edge_csr.selection_edge_offsets[vertex_index + 1] +=
+            edge_csr.selection_edge_offsets[vertex_index];
+    }
+
+    edge_csr.draw_edges.resize(edge_csr.draw_edge_offsets.back());
+    edge_csr.selection_edges.resize(edge_csr.selection_edge_offsets.back());
+
+    std::vector<std::uint32_t> draw_positions = edge_csr.draw_edge_offsets;
+    std::vector<std::uint32_t> selection_positions = edge_csr.selection_edge_offsets;
+
+    for (std::size_t vertex_index = 0; vertex_index < vertex_count; ++vertex_index) {
+        const Vertex vertex = static_cast<Vertex>(vertex_index);
+        for (const auto &edge :
+             boost::make_iterator_range(boost::out_edges(vertex, graph))) {
+            const auto &[weight, score] = graph[edge];
+            const auto target = static_cast<std::uint32_t>(boost::target(edge, graph));
+            edge_csr.draw_edges[draw_positions[vertex_index]++] =
+                DrawEdge{target, weight, score};
+        }
+        for (const auto &edge :
+             boost::make_iterator_range(boost::in_edges(vertex, graph))) {
+            const auto source = static_cast<std::uint32_t>(boost::source(edge, graph));
+            edge_csr.selection_edges[selection_positions[vertex_index]++] =
+                SelectionEdge{source};
+        }
+    }
+
+    return edge_csr;
+}
+
 void ExpectedScoreCalculator::calc_stats(const Config &config, Graph &graph,
-                                         const Cache &cache1, const Cache &cache2)
+                                         const Cache &cache1, const Cache &cache2,
+                                         const EdgeCsr &edge_csr)
 {
     const auto objective_value = [&](const VertexData &state, const int turn) {
         switch (config.objective) {
@@ -470,24 +526,27 @@ void ExpectedScoreCalculator::calc_stats(const Config &config, Graph &graph,
                 continue;
             }
 
-            for (const auto &edge :
-                 boost::make_iterator_range(boost::out_edges(vertex, graph))) {
-                const auto &[weight, score] = graph[edge];
-                const VertexData &s2 = graph[boost::target(edge, graph)];
+            const std::size_t vertex_index = static_cast<std::size_t>(vertex);
+            for (std::uint32_t edge_index = edge_csr.draw_edge_offsets[vertex_index];
+                 edge_index < edge_csr.draw_edge_offsets[vertex_index + 1];
+                 ++edge_index) {
+                const DrawEdge &edge = edge_csr.draw_edges[edge_index];
+                const VertexData &s2 = graph[edge.target];
 
                 double tenpai_prob = s2.tenpai_prob[t + 1];
                 double win_prob = s2.win_prob[t + 1];
                 double exp_score = s2.exp_score[t + 1];
-                if (score > 0.0 &&
-                    win_objective_value(score) >= objective_value(s2, t + 1)) {
+                if (edge.score > 0.0 &&
+                    win_objective_value(edge.score) >= objective_value(s2, t + 1)) {
                     tenpai_prob = 1.0;
                     win_prob = 1.0;
-                    exp_score = score;
+                    exp_score = edge.score;
                 }
 
-                s1.tenpai_prob[t] += weight * (tenpai_prob - s1.tenpai_prob[t + 1]);
-                s1.win_prob[t] += weight * (win_prob - s1.win_prob[t + 1]);
-                s1.exp_score[t] += weight * (exp_score - s1.exp_score[t + 1]);
+                s1.tenpai_prob[t] +=
+                    edge.weight * (tenpai_prob - s1.tenpai_prob[t + 1]);
+                s1.win_prob[t] += edge.weight * (win_prob - s1.win_prob[t + 1]);
+                s1.exp_score[t] += edge.weight * (exp_score - s1.exp_score[t + 1]);
             }
 
             s1.tenpai_prob[t] =
@@ -504,9 +563,13 @@ void ExpectedScoreCalculator::calc_stats(const Config &config, Graph &graph,
             VertexData &s1 = graph[vertex];
             const VertexData *best = nullptr;
 
-            for (const auto &edge :
-                 boost::make_iterator_range(boost::in_edges(vertex, graph))) {
-                const VertexData &s2 = graph[boost::source(edge, graph)];
+            const std::size_t vertex_index = static_cast<std::size_t>(vertex);
+            for (std::uint32_t edge_index =
+                     edge_csr.selection_edge_offsets[vertex_index];
+                 edge_index < edge_csr.selection_edge_offsets[vertex_index + 1];
+                 ++edge_index) {
+                const SelectionEdge &edge = edge_csr.selection_edges[edge_index];
+                const VertexData &s2 = graph[edge.source];
                 if (!best || objective_value(s2, t) > objective_value(*best, t)) {
                     best = &s2;
                 }
@@ -540,8 +603,9 @@ void ExpectedScoreCalculator::calc_draw_hand(const Config &config, const Player 
     const Vertex vertex = graph_builder.draw_node(false);
 
     // 確率、期待値を計算する。
+    const EdgeCsr edge_csr = build_edge_csr(graph_builder.graph());
     calc_stats(config, graph_builder.graph(), graph_builder.draw_cache(),
-               graph_builder.discard_cache());
+               graph_builder.discard_cache(), edge_csr);
 
     // 結果を取得する。
     const VertexData &state = graph_builder.graph()[vertex];
@@ -566,8 +630,9 @@ void ExpectedScoreCalculator::calc_discard_hand(const Config &config, Player &pl
     graph_builder.discard_node(false);
 
     // 確率、期待値を計算する。
+    const EdgeCsr edge_csr = build_edge_csr(graph_builder.graph());
     calc_stats(config, graph_builder.graph(), graph_builder.draw_cache(),
-               graph_builder.discard_cache());
+               graph_builder.discard_cache(), edge_csr);
 
     // 結果を取得する。
     auto [discard_type, discard_shanten, discard_tiles] =
