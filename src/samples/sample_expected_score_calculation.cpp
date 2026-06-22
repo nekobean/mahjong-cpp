@@ -43,14 +43,8 @@ int main(int argc, char *argv[])
     // Calculation Settings
     //////////////////////////////////////////
     ExpectedScoreCalculator::Config config;
-    config.t_min = 1;
-    config.t_max = 18;
-    config.extra = 1;
-    config.shanten_type = ShantenFlag::All;
-    config.enable_reddora = true;
-    config.enable_uradora = true;
-    config.enable_shanten_down = true;
-    config.enable_tegawari = true;
+    const MergedCount wall = create_wall(round, player, config.enable_reddora);
+    config.sum = std::accumulate(wall.begin(), wall.begin() + 34, 0);
 
     // Calculation
     //////////////////////////////////////////
@@ -59,7 +53,8 @@ int main(int argc, char *argv[])
 
     // Calculate tenpai probability, win probability, and expected score.
     const auto start = std::chrono::steady_clock::now();
-    const auto [stats, searched] = ExpectedScoreCalculator::calc(config, round, player);
+    const auto [stats, searched] =
+        ExpectedScoreCalculator::calc(config, round, player, wall);
     const auto end = std::chrono::steady_clock::now();
     const int elapsed_ms = static_cast<int>(
         std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());

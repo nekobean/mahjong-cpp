@@ -37,7 +37,7 @@ class ExpectedScoreCalculator
         /* number of wall tiles */
         int sum = 0;
         /* search the range of possible (shanten number + extra) exchanges */
-        int extra = 0;
+        int extra = 1;
         /* calculation shanten type */
         int shanten_type = ShantenFlag::All;
         /* enable red dora */
