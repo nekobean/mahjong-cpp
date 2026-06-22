@@ -359,11 +359,11 @@ ExpectedScoreCalculator::GraphBuilder::draw_node(const bool riichi)
 
             if (!boost::edge(vertex, target, graph_).second) {
                 // 自摸前の時点で聴牌の場合、有効牌自摸後は和了形のため、点数計算を行う
-                const double score =
-                    (shanten == 0 && is_wait
-                         ? calc_score(config_, round_, player_, hand_counts_,
-                                      wall_counts_, type, i, riichi)
-                         : 0.0);
+                double score = 0.0;
+                if (shanten == 0 && is_wait) {
+                    score = calc_score(config_, round_, player_, hand_counts_,
+                                       wall_counts_, type, i, riichi);
+                }
                 boost::add_edge(vertex, target, {weight, score}, graph_);
             }
 
@@ -411,10 +411,11 @@ ExpectedScoreCalculator::GraphBuilder::discard_node(const bool riichi)
 
             if (!boost::edge(source, vertex, graph_).second) {
                 // 打牌前の時点で向聴数が-1の場合、和了形のため、点数計算を行う
-                const double score =
-                    (shanten == -1 ? calc_score(config_, round_, player_, hand_counts_,
-                                                wall_counts_, type, i, riichi)
-                                   : 0.0);
+                double score = 0.0;
+                if (shanten == -1) {
+                    score = calc_score(config_, round_, player_, hand_counts_,
+                                       wall_counts_, type, i, riichi);
+                }
                 boost::add_edge(source, vertex, {weight, score}, graph_);
             }
         }
