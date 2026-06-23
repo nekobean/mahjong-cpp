@@ -335,9 +335,9 @@ enum : YakuList
     Dora = 1LL << 10,                            /* Dora (ドラ) */
     UraDora = 1LL << 11,                         /* Ura Dora (裏ドラ) */
     RedDora = 1LL << 12,                         /* Red Dora (赤ドラ) */
-    WhiteDragon = 1LL << 13,                     /* White Dragon (三元牌 白) */
-    GreenDragon = 1LL << 14,                     /* Green Dragon (三元牌 發) */
-    RedDragon = 1LL << 15,                       /* Red Dragon (三元牌 中) */
+    WhiteDragon = 1LL << 13,                     /* White Dragon (役牌 白) */
+    GreenDragon = 1LL << 14,                     /* Green Dragon (役牌 發) */
+    RedDragon = 1LL << 15,                       /* Red Dragon (役牌 中) */
     SelfWindEast = 1LL << 16,                    /* Self Wind East (自風 東) */
     SelfWindSouth = 1LL << 17,                   /* Self Wind South (自風 南) */
     SelfWindWest = 1LL << 18,                    /* Self Wind West (自風 西) */
@@ -398,9 +398,9 @@ static inline std::map<YakuList, std::string> Name = {
     ENTRY(Dora, u8"Dora", u8"ドラ"),
     ENTRY(UraDora, u8"Ura Dora", u8"裏ドラ"),
     ENTRY(RedDora, u8"Red Dora", u8"赤ドラ"),
-    ENTRY(WhiteDragon, u8"White Dragon", u8"三元牌 白"),
-    ENTRY(GreenDragon, u8"Green Dragon", u8"三元牌 發"),
-    ENTRY(RedDragon, u8"Red Dragon", u8"三元牌 中"),
+    ENTRY(WhiteDragon, u8"White Dragon", u8"役牌 白"),
+    ENTRY(GreenDragon, u8"Green Dragon", u8"役牌 發"),
+    ENTRY(RedDragon, u8"Red Dragon", u8"役牌 中"),
     ENTRY(SelfWindEast, u8"Self Wind East", u8"自風 東"),
     ENTRY(SelfWindSouth, u8"Self Wind South", u8"自風 南"),
     ENTRY(SelfWindWest, u8"Self Wind West", u8"自風 西"),

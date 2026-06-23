@@ -57,8 +57,6 @@ int count_reddora(const bool rule_reddora, const Hand &hand,
                   const std::vector<Meld> &melds);
 int get_score_title(const int fu, const int han);
 int get_score_title(const int n);
-
-// Functions to check yaku
 MergedHand merge_hand(const Player &player);
 YakuList check_all_green(const MergedHand &merged_hand);
 YakuList check_three_dragons(const MergedHand &merged_hand);
