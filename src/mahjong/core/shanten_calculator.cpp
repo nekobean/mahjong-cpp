@@ -17,6 +17,7 @@
 
 #include <spdlog/spdlog.h>
 
+#include "mahjong/core/utils.hpp"
 #include "mahjong/types/types.hpp"
 
 namespace mahjong
@@ -104,8 +105,8 @@ int ShantenCalculator::calc_regular(const Hand &hand, const int num_melds)
             hand[Tile::Manzu1], hand[Tile::Manzu9])];
     }
     else {
-        manzu_ptr = &Table::suits_table_[Table::suits_hash(hand.begin(),
-                                                           hand.begin() + 9)];
+        manzu_ptr =
+            &Table::suits_table_[Table::suits_hash(hand.begin(), hand.begin() + 9)];
     }
     Table::HashType pinzu_hash = Table::suits_hash(hand.begin() + 9, hand.begin() + 18);
     Table::HashType souzu_hash =
@@ -134,8 +135,7 @@ int ShantenCalculator::calc_regular(const Hand &hand, const int num_melds)
  * @param[in] mode Mahjong game mode
  * @return int The shanten number
  */
-template <MahjongMode Mode>
-int ShantenCalculator::calc_seven_pairs(const Hand &hand)
+template <MahjongMode Mode> int ShantenCalculator::calc_seven_pairs(const Hand &hand)
 {
     int num_types = 0;
     int num_pairs = 0;

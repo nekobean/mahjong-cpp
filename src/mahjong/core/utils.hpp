@@ -126,6 +126,22 @@ inline int to_no_reddora(int tile)
     }
 }
 
+inline bool is_sanma_disabled_tile(const int tile)
+{
+    return (Tile::Manzu2 <= tile && tile <= Tile::Manzu8) || tile == Tile::RedManzu5;
+}
+
+inline bool has_sanma_disabled_tiles(const Hand &hand)
+{
+    for (int tile = Tile::Manzu2; tile <= Tile::Manzu8; ++tile) {
+        if (hand[tile] > 0) {
+            return true;
+        }
+    }
+
+    return hand[Tile::RedManzu5] > 0;
+}
+
 /**
  * @brief 赤牌かどうかを判定する。
  *

@@ -18,6 +18,7 @@
 #include <spdlog/spdlog.h>
 
 #include "mahjong/core/string.hpp"
+#include "mahjong/core/utils.hpp"
 
 namespace mahjong
 {
@@ -101,9 +102,9 @@ std::tuple<int, int, int64_t> NecessaryTileCalculator::calc(const Hand &hand,
     }
 
     if ((type & ShantenFlag::SevenPairs) && num_melds == 0) {
-        const auto [shanten, wait] =
-            mode == MahjongMode::Sanma ? calc_seven_pairs<MahjongMode::Sanma>(hand)
-                                       : calc_seven_pairs<MahjongMode::Yonma>(hand);
+        const auto [shanten, wait] = mode == MahjongMode::Sanma
+                                         ? calc_seven_pairs<MahjongMode::Sanma>(hand)
+                                         : calc_seven_pairs<MahjongMode::Yonma>(hand);
         if (shanten < std::get<1>(ret)) {
             ret = {ShantenFlag::SevenPairs, shanten, wait};
         }
@@ -145,8 +146,8 @@ std::tuple<int, int64_t> NecessaryTileCalculator::calc_regular(const Hand &hand,
             hand[Tile::Manzu1], hand[Tile::Manzu9])];
     }
     else {
-        manzu_ptr = &Table::suits_table_[Table::suits_hash(hand.begin(),
-                                                           hand.begin() + 9)];
+        manzu_ptr =
+            &Table::suits_table_[Table::suits_hash(hand.begin(), hand.begin() + 9)];
     }
     Table::HashType pinzu_hash = Table::suits_hash(hand.begin() + 9, hand.begin() + 18);
     Table::HashType souzu_hash =
