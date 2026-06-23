@@ -48,8 +48,8 @@ int main(int argc, char *argv[])
 
     // Calculation
     //////////////////////////////////////////
-    const auto [type, shanten] =
-        ShantenCalculator::calc(player.hand, player.num_melds(), config.shanten_type);
+    const auto [type, shanten] = ShantenCalculator::calc(
+        player.hand, player.num_melds(), config.shanten_type, round.mode);
 
     // Calculate tenpai probability, win probability, and expected score.
     const auto start = std::chrono::steady_clock::now();

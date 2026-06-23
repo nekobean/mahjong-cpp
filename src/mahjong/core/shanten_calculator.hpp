@@ -22,7 +22,7 @@ class ShantenCalculator
 
   public:
     static std::tuple<int, int> calc(const Hand &hand, const int num_melds, int type,
-                                     MahjongMode mode = MahjongMode::Yonma);
+                                     MahjongMode mode);
 
   private:
     template <MahjongMode Mode>

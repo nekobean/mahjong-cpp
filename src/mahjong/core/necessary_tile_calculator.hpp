@@ -18,11 +18,9 @@ class NecessaryTileCalculator
 
   public:
     static std::tuple<int, int, std::vector<int>>
-    select(const Hand &hand, const int num_melds, const int type,
-           MahjongMode mode = MahjongMode::Yonma);
+    select(const Hand &hand, const int num_melds, const int type, MahjongMode mode);
     static std::tuple<int, int, int64_t> calc(const Hand &hand, const int num_melds,
-                                              const int type,
-                                              MahjongMode mode = MahjongMode::Yonma);
+                                              const int type, MahjongMode mode);
 
   private:
     template <MahjongMode Mode>

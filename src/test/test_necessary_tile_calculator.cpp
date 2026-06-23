@@ -74,8 +74,8 @@ TEST_CASE("Necessary tile calculator for regular hand")
     {
         double avg_tiles = 0;
         for (auto &hand : cases) {
-            int shanten =
-                std::get<1>(ShantenCalculator::calc(hand, 0, ShantenFlag::Regular));
+            int shanten = std::get<1>(ShantenCalculator::calc(
+                hand, 0, ShantenFlag::Regular, MahjongMode::Yonma));
 
             std::vector<int> tiles;
             for (int tile = 0; tile < 34; ++tile) {
@@ -85,14 +85,14 @@ TEST_CASE("Necessary tile calculator for regular hand")
 
                 hand[tile]++;
                 if (shanten > std::get<1>(ShantenCalculator::calc(
-                                  hand, 0, ShantenFlag::Regular))) {
+                                  hand, 0, ShantenFlag::Regular, MahjongMode::Yonma))) {
                     tiles.push_back(tile);
                 }
                 hand[tile]--;
             }
 
-            const auto [_, shanten2, tiles2] =
-                NecessaryTileCalculator::select(hand, 0, ShantenFlag::Regular);
+            const auto [_, shanten2, tiles2] = NecessaryTileCalculator::select(
+                hand, 0, ShantenFlag::Regular, MahjongMode::Yonma);
             avg_tiles += tiles.size();
 
             INFO(fmt::format("手牌: {}", to_mpsz(hand)));
@@ -106,7 +106,8 @@ TEST_CASE("Necessary tile calculator for regular hand")
     BENCHMARK("Necessary tile calculator for regular hand")
     {
         for (const auto &hand : cases) {
-            NecessaryTileCalculator::select(hand, 0, ShantenFlag::Regular);
+            NecessaryTileCalculator::select(hand, 0, ShantenFlag::Regular,
+                                            MahjongMode::Yonma);
         }
     };
 }
@@ -125,8 +126,8 @@ TEST_CASE("Necessary tile calculator for Seven Pairs")
     {
         double avg_tiles = 0;
         for (auto &hand : cases) {
-            int shanten =
-                std::get<1>(ShantenCalculator::calc(hand, 0, ShantenFlag::SevenPairs));
+            int shanten = std::get<1>(ShantenCalculator::calc(
+                hand, 0, ShantenFlag::SevenPairs, MahjongMode::Yonma));
 
             std::vector<int> tiles;
             for (int tile = 0; tile < 34; ++tile) {
@@ -135,15 +136,16 @@ TEST_CASE("Necessary tile calculator for Seven Pairs")
                 }
 
                 hand[tile]++;
-                if (shanten > std::get<1>(ShantenCalculator::calc(
-                                  hand, 0, ShantenFlag::SevenPairs))) {
+                if (shanten >
+                    std::get<1>(ShantenCalculator::calc(
+                        hand, 0, ShantenFlag::SevenPairs, MahjongMode::Yonma))) {
                     tiles.push_back(tile);
                 }
                 hand[tile]--;
             }
 
-            const auto [_, shanten2, tiles2] =
-                NecessaryTileCalculator::select(hand, 0, ShantenFlag::SevenPairs);
+            const auto [_, shanten2, tiles2] = NecessaryTileCalculator::select(
+                hand, 0, ShantenFlag::SevenPairs, MahjongMode::Yonma);
             avg_tiles += tiles.size();
 
             INFO(fmt::format("手牌: {}", to_mpsz(hand)));
@@ -157,7 +159,8 @@ TEST_CASE("Necessary tile calculator for Seven Pairs")
     BENCHMARK("Necessary tile calculator for Seven Pairs")
     {
         for (const auto &hand : cases) {
-            NecessaryTileCalculator::select(hand, 0, ShantenFlag::SevenPairs);
+            NecessaryTileCalculator::select(hand, 0, ShantenFlag::SevenPairs,
+                                            MahjongMode::Yonma);
         }
     };
 }
@@ -176,8 +179,8 @@ TEST_CASE("Necessary tile calculator for Thirteen Orphans")
     {
         double avg_tiles = 0;
         for (auto &hand : cases) {
-            int shanten = std::get<1>(
-                ShantenCalculator::calc(hand, 0, ShantenFlag::ThirteenOrphans));
+            int shanten = std::get<1>(ShantenCalculator::calc(
+                hand, 0, ShantenFlag::ThirteenOrphans, MahjongMode::Yonma));
 
             std::vector<int> tiles;
             for (int tile :
@@ -189,15 +192,16 @@ TEST_CASE("Necessary tile calculator for Thirteen Orphans")
                 }
 
                 hand[tile]++;
-                if (shanten > std::get<1>(ShantenCalculator::calc(
-                                  hand, 0, ShantenFlag::ThirteenOrphans))) {
+                if (shanten >
+                    std::get<1>(ShantenCalculator::calc(
+                        hand, 0, ShantenFlag::ThirteenOrphans, MahjongMode::Yonma))) {
                     tiles.push_back(tile);
                 }
                 hand[tile]--;
             }
 
-            const auto [_, shanten2, tiles2] =
-                NecessaryTileCalculator::select(hand, 0, ShantenFlag::ThirteenOrphans);
+            const auto [_, shanten2, tiles2] = NecessaryTileCalculator::select(
+                hand, 0, ShantenFlag::ThirteenOrphans, MahjongMode::Yonma);
             avg_tiles += tiles.size();
 
             INFO(fmt::format("手牌: {}", to_mpsz(hand)));
@@ -211,7 +215,8 @@ TEST_CASE("Necessary tile calculator for Thirteen Orphans")
     BENCHMARK("Necessary tile calculator for Thirteen Orphans")
     {
         for (const auto &hand : cases) {
-            NecessaryTileCalculator::select(hand, 0, ShantenFlag::ThirteenOrphans);
+            NecessaryTileCalculator::select(hand, 0, ShantenFlag::ThirteenOrphans,
+                                            MahjongMode::Yonma);
         }
     };
 }
@@ -230,7 +235,7 @@ TEST_CASE("Necessary tile calculator")
     {
         for (auto &hand : cases) {
             const auto [type, shanten] =
-                ShantenCalculator::calc(hand, 0, ShantenFlag::All);
+                ShantenCalculator::calc(hand, 0, ShantenFlag::All, MahjongMode::Yonma);
 
             std::vector<int> tiles;
             for (int tile = 0; tile < 34; ++tile) {
@@ -239,16 +244,16 @@ TEST_CASE("Necessary tile calculator")
                 }
 
                 hand[tile]++;
-                const auto [type_after, shanten_after] =
-                    ShantenCalculator::calc(hand, 0, ShantenFlag::All);
+                const auto [type_after, shanten_after] = ShantenCalculator::calc(
+                    hand, 0, ShantenFlag::All, MahjongMode::Yonma);
                 if (shanten_after < shanten) {
                     tiles.push_back(tile);
                 }
                 hand[tile]--;
             }
 
-            const auto [type2, shanten2, tiles2] =
-                NecessaryTileCalculator::select(hand, 0, ShantenFlag::All);
+            const auto [type2, shanten2, tiles2] = NecessaryTileCalculator::select(
+                hand, 0, ShantenFlag::All, MahjongMode::Yonma);
 
             INFO(fmt::format("手牌: {}", to_mpsz(hand)));
             REQUIRE(type == type2);
@@ -260,7 +265,8 @@ TEST_CASE("Necessary tile calculator")
     BENCHMARK("Necessary tile calculator")
     {
         for (const auto &hand : cases) {
-            NecessaryTileCalculator::select(hand, 0, ShantenFlag::All);
+            NecessaryTileCalculator::select(hand, 0, ShantenFlag::All,
+                                            MahjongMode::Yonma);
         }
     };
 }

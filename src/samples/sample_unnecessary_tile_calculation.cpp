@@ -16,8 +16,8 @@ int main(int argc, char *argv[])
     int num_melds = 0;
 
     // Calculate unnecessary tiles.
-    auto [shanten_type, shanten, tiles] =
-        UnnecessaryTileCalculator::select(hand, num_melds, ShantenFlag::All);
+    auto [shanten_type, shanten, tiles] = UnnecessaryTileCalculator::select(
+        hand, num_melds, ShantenFlag::All, MahjongMode::Yonma);
 
     std::cout << "shanten: " << shanten << std::endl;
     for (auto tile : tiles) {
