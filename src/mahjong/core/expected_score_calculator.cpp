@@ -315,6 +315,9 @@ MergedCount create_wall(const Round &round, const Player &player,
         }
     }
 
+    // Extracted north tiles (nuki dora) are removed from the wall.
+    wall[Tile::North] -= player.num_nuki;
+
     return wall;
 }
 

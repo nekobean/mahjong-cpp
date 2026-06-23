@@ -82,6 +82,10 @@ Request make_request(const rapidjson::Value &doc)
         req.player.melds.emplace_back(meld_type, meld_tiles);
     }
 
+    if (doc.HasMember("nuki")) {
+        req.player.num_nuki = doc["nuki"].GetInt();
+    }
+
     req.config.enable_reddora = doc["enable_reddora"].GetBool();
     req.config.enable_shanten_down = doc["enable_shanten_down"].GetBool();
     req.config.enable_tegawari = doc["enable_tegawari"].GetBool();
@@ -139,6 +143,9 @@ void validate_tile_counts(const Request &req)
 void validate_sanma_tiles(const Request &req)
 {
     if (req.round.mode != MahjongMode::Sanma) {
+        if (req.player.num_nuki > 0) {
+            throw std::runtime_error("Nuki dora is only allowed in sanma.");
+        }
         return;
     }
 
@@ -290,6 +297,8 @@ rapidjson::Value serialize_input(const Request &req, rapidjson::Document &doc)
         melds.PushBack(meld_val, allocator);
     }
     input_val.AddMember("melds", melds, allocator);
+
+    input_val.AddMember("nuki", req.player.num_nuki, allocator);
 
     rapidjson::Value wall(rapidjson::kArrayType);
     for (const auto count : req.wall) {

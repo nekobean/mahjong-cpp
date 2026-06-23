@@ -160,15 +160,18 @@ Result ScoreCalculator::aggregate(const Round &round, const Player &player,
     }
 
     // Count number of doras, uradoras and red doras.
-    const int num_doras =
-        count_dora(player.hand, player.melds, round.dora_indicators, round.mode);
+    // Extracted north tiles (nuki dora) are also counted as dora/uradora when
+    // north is indicated as dora.
+    const int num_nuki = round.mode == MahjongMode::Sanma ? player.num_nuki : 0;
+    const int num_doras = count_dora(player.hand, player.melds, round.dora_indicators,
+                                     round.mode, num_nuki);
     if (num_doras) {
         yaku_han_list.emplace_back(Yaku::Dora, num_doras);
         han += num_doras;
     }
 
-    const int num_uradoras =
-        count_dora(player.hand, player.melds, round.uradora_indicators, round.mode);
+    const int num_uradoras = count_dora(player.hand, player.melds,
+                                        round.uradora_indicators, round.mode, num_nuki);
     if (num_uradoras) {
         yaku_han_list.emplace_back(Yaku::UraDora, num_uradoras);
         han += num_uradoras;
@@ -179,6 +182,13 @@ Result ScoreCalculator::aggregate(const Round &round, const Player &player,
     if (num_reddoras) {
         yaku_han_list.emplace_back(Yaku::RedDora, num_reddoras);
         han += num_reddoras;
+    }
+
+    // Count extracted north tiles (nuki dora). Each extracted north always counts
+    // as one dora regardless of dora indicators.
+    if (num_nuki) {
+        yaku_han_list.emplace_back(Yaku::NukiDora, num_nuki);
+        han += num_nuki;
     }
 
     const int score_title = get_score_title(fu, han);
@@ -624,11 +634,12 @@ std::vector<int> ScoreCalculator::calc_score(const bool is_dealer, const bool is
  * @param melds list of melds
  * @param indicators list of dora indicators
  * @param mode Mahjong game mode
+ * @param num_nuki number of extracted north tiles
  * @return number of dora tiles
  */
 int ScoreCalculator::count_dora(const Hand &hand, const std::vector<Meld> &melds,
                                 const std::vector<int> &indicators,
-                                const MahjongMode mode)
+                                const MahjongMode mode, const int num_nuki)
 {
     int num_doras = 0;
     for (const auto tile : indicators) {
@@ -641,6 +652,11 @@ int ScoreCalculator::count_dora(const Hand &hand, const std::vector<Meld> &melds
             for (const auto tile : meld.tiles) {
                 num_doras += to_no_reddora(tile) == dora;
             }
+        }
+
+        // Count extracted north tiles as dora when north is indicated as dora.
+        if (dora == Tile::North) {
+            num_doras += num_nuki;
         }
     }
 

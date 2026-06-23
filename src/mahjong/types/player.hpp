@@ -78,6 +78,9 @@ class Player
     // Seat wind (自風)
     int wind;
 
+    // Number of extracted north tiles (抜きドラ(北抜き)の枚数) ※三麻のみ
+    int num_nuki = 0;
+
     int num_tiles() const
     {
         return std::accumulate(hand.begin(), hand.begin() + 34, 0);

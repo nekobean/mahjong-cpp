@@ -80,6 +80,7 @@
         "dora_indicators",
         "hand",
         "melds",
+        "nuki",
         "wall"
       ],
       "additionalProperties": false,
@@ -119,6 +120,11 @@
           },
           "minItems": 0,
           "maxItems": 4
+        },
+        "nuki": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4
         },
         "wall": {
           "type": "array",

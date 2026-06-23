@@ -48,7 +48,8 @@ class ScoreCalculator
                                        MahjongMode mode, const int score_title,
                                        const int han = 0, const int fu = 0);
     static int count_dora(const Hand &hand, const std::vector<Meld> &melds,
-                          const std::vector<int> &indicators, MahjongMode mode);
+                          const std::vector<int> &indicators, MahjongMode mode,
+                          int num_nuki = 0);
     static int count_reddora(const bool rule_reddora, const Hand &hand,
                              const std::vector<Meld> &melds);
     static int get_score_title(const int fu, const int han);

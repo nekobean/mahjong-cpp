@@ -378,7 +378,8 @@ enum : YakuList
     BigFourWinds = 1LL << 53,                    /* Big Four Winds (大四喜) */
     TrueNineGates = 1LL << 54,                   /* True Nine Gates (純正九連宝燈) */
     ThirteenWaitThirteenOrphans = 1LL << 55,     /* Thirteen-wait Thirteen Orphans (国士無双13面待ち) */
-    Length = 56LL,
+    NukiDora = 1LL << 56,                        /* Nuki Dora (抜きドラ) ※三麻のみ */
+    Length = 57LL,
 };
 // clang-format on
 
@@ -442,6 +443,7 @@ static inline std::map<YakuList, std::string> Name = {
     ENTRY(TrueNineGates, u8"True Nine Gates", u8"純正九連宝燈"),
     ENTRY(ThirteenWaitThirteenOrphans, u8"Thirteen-wait Thirteen Orphans",
           u8"国士無双13面待ち"),
+    ENTRY(NukiDora, u8"Nuki Dora", u8"抜きドラ"),
 };
 
 // clang-format off
@@ -503,6 +505,7 @@ static inline std::map<YakuList, std::array<int, 2>> Han = {
     {BigFourWinds,                   {2, 0}},  // ダブル役満
     {TrueNineGates,                  {2, 0}},  // ダブル役満
     {ThirteenWaitThirteenOrphans,    {2, 0}},  // ダブル役満
+    {NukiDora,                       {0, 0}},  // 抜き枚数で動的加算
 };
 // clang-format on
 
