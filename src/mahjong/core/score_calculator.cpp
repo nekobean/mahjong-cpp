@@ -595,20 +595,22 @@ std::vector<int> ScoreCalculator::calc_score(const bool is_dealer, const bool is
     }
     else if (!is_tsumo && is_dealer) {
         // dealer ron
+        const int honba_payment = (mode == MahjongMode::Sanma ? 200 : 300) * honba;
         const int payment = (score_title == ScoreTitle::Null
                                  ? BelowMangan[RonDiscarderToDealer][fu_idx][han_idx]
                                  : AboveMangan[RonDiscarderToDealer][score_title]) +
-                            300 * honba;
+                            honba_payment;
         const int score = 1000 * kyotaku + payment;
 
         return {score, payment};
     }
     else {
         // player ron
+        const int honba_payment = (mode == MahjongMode::Sanma ? 200 : 300) * honba;
         const int payment = (score_title == ScoreTitle::Null
                                  ? BelowMangan[RonDiscarderToPlayer][fu_idx][han_idx]
                                  : AboveMangan[RonDiscarderToPlayer][score_title]) +
-                            300 * honba;
+                            honba_payment;
         const int score = 1000 * kyotaku + payment;
 
         return {score, payment};
