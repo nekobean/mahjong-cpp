@@ -22,6 +22,10 @@
     }
   },
   "properties": {
+    "mode": {
+      "type": "integer",
+      "enum": [0, 1]
+    },
     "round_wind": {
       "type": "integer",
       "enum": [27, 28, 29, 30]

@@ -49,6 +49,9 @@ const rapidjson::SchemaDocument &get_request_schema()
 Request make_request(const rapidjson::Value &doc)
 {
     Request req;
+    if (doc.HasMember("mode")) {
+        req.round.mode = static_cast<MahjongMode>(doc["mode"].GetInt());
+    }
     req.round.wind = doc["round_wind"].GetInt();
     req.player.wind = doc["seat_wind"].GetInt();
 
@@ -133,6 +136,43 @@ void validate_tile_counts(const Request &req)
     }
 }
 
+void validate_sanma_tiles(const Request &req)
+{
+    if (req.round.mode != MahjongMode::Sanma) {
+        return;
+    }
+
+    if (has_sanma_disabled_tiles(req.player.hand)) {
+        throw std::runtime_error("Sanma hand contains disabled tiles.");
+    }
+
+    for (const auto &meld : req.player.melds) {
+        for (const auto tile : meld.tiles) {
+            if (is_sanma_disabled_tile(tile)) {
+                throw std::runtime_error(
+                    fmt::format("Sanma meld contains a disabled tile: tile={}.",
+                                Tile::Name.at(tile)));
+            }
+        }
+    }
+
+    for (const auto tile : req.round.dora_indicators) {
+        if (is_sanma_disabled_tile(tile)) {
+            throw std::runtime_error(
+                fmt::format("Sanma dora indicator contains a disabled tile: tile={}.",
+                            Tile::Name.at(tile)));
+        }
+    }
+
+    for (int tile = 0; tile < Tile::Length; ++tile) {
+        if (is_sanma_disabled_tile(tile) && req.wall[tile] > 0) {
+            throw std::runtime_error(
+                fmt::format("Sanma wall contains disabled tiles: tile={}, count={}.",
+                            Tile::Name.at(tile), req.wall[tile]));
+        }
+    }
+}
+
 rapidjson::Value
 serialize_necessary_tiles(const std::vector<std::tuple<int, int>> &tiles,
                           rapidjson::Document &doc)
@@ -205,6 +245,7 @@ rapidjson::Value serialize_input(const Request &req, rapidjson::Document &doc)
     auto &allocator = doc.GetAllocator();
     rapidjson::Value input_val(rapidjson::kObjectType);
 
+    input_val.AddMember("mode", static_cast<int>(req.round.mode), allocator);
     input_val.AddMember("round_wind", req.round.wind, allocator);
     input_val.AddMember("seat_wind", req.player.wind, allocator);
 
@@ -321,6 +362,7 @@ Request deserialize_request(const rapidjson::Document &doc)
 {
     Request req = make_request(doc);
 
+    validate_sanma_tiles(req);
     validate_tile_counts(req);
 
     return req;

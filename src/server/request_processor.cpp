@@ -22,13 +22,15 @@ CalculationResult calculate_result(const Request &req)
     result.config.extra = 1;
     result.config.shanten_type = ShantenFlag::All;
     result.shanten = std::get<1>(ShantenCalculator::calc(
-        req.player.hand, req.player.num_melds(), ShantenFlag::All));
+        req.player.hand, req.player.num_melds(), ShantenFlag::All, req.round.mode));
     result.regular_shanten = std::get<1>(ShantenCalculator::calc(
-        req.player.hand, req.player.num_melds(), ShantenFlag::Regular));
-    result.seven_pairs_shanten = std::get<1>(ShantenCalculator::calc(
-        req.player.hand, req.player.num_melds(), ShantenFlag::SevenPairs));
-    result.thirteen_orphans_shanten = std::get<1>(ShantenCalculator::calc(
-        req.player.hand, req.player.num_melds(), ShantenFlag::ThirteenOrphans));
+        req.player.hand, req.player.num_melds(), ShantenFlag::Regular, req.round.mode));
+    result.seven_pairs_shanten =
+        std::get<1>(ShantenCalculator::calc(req.player.hand, req.player.num_melds(),
+                                            ShantenFlag::SevenPairs, req.round.mode));
+    result.thirteen_orphans_shanten = std::get<1>(
+        ShantenCalculator::calc(req.player.hand, req.player.num_melds(),
+                                ShantenFlag::ThirteenOrphans, req.round.mode));
     result.config.calc_stats = result.shanten <= 3;
 
     if (result.shanten == -1) {

@@ -15,7 +15,8 @@ class Round
 {
   public:
     Round()
-        : rules(RuleFlag::RedDora | RuleFlag::OpenTanyao)
+        : mode(MahjongMode::Yonma)
+        , rules(RuleFlag::RedDora | RuleFlag::OpenTanyao)
         , wind(Tile::Null)
         , kyoku(1)
         , honba(0)
@@ -38,6 +39,8 @@ class Round
     }
 
   public:
+    /* Mahjong game mode */
+    MahjongMode mode;
     /* Game rule */
     int rules;
     /* Round wind (場風) */

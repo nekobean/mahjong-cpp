@@ -65,6 +65,7 @@ void Server::log_request(const Request &req)
 
     const std::string round_wind = Tile::Name.at(req.round.wind);
     const std::string seat_wind = Tile::Name.at(req.player.wind);
+    const char *mode = req.round.mode == MahjongMode::Sanma ? "sanma" : "yonma";
     const std::string hand = to_mpsz(req.player.hand);
     std::string melds;
     for (const auto &meld : req.player.melds) {
@@ -76,14 +77,14 @@ void Server::log_request(const Request &req)
         wall += std::to_string(c);
     }
 
-    get_logger()->info(
-        "Received request: ip={}, version={}, "
-        "round={}, seat={}, indicators={}, "
-        "hand={}, melds={}, wall={}, "
-        "red_dora={}, ura_dora={}, shanten_down={}, tegawari={}",
-        req.ip, req.version, round_wind, seat_wind, dora_indicators, hand, melds, wall,
-        req.config.enable_reddora, req.config.enable_uradora,
-        req.config.enable_shanten_down, req.config.enable_tegawari);
+    get_logger()->info("Received request: ip={}, version={}, "
+                       "mode={}, round={}, seat={}, indicators={}, "
+                       "hand={}, melds={}, wall={}, "
+                       "red_dora={}, ura_dora={}, shanten_down={}, tegawari={}",
+                       req.ip, req.version, mode, round_wind, seat_wind,
+                       dora_indicators, hand, melds, wall, req.config.enable_reddora,
+                       req.config.enable_uradora, req.config.enable_shanten_down,
+                       req.config.enable_tegawari);
 }
 
 std::string Server::process_request(const std::string &json)
@@ -126,9 +127,10 @@ Server::HttpResponse Server::process_http_post(const std::string &json)
             pool_.enqueue_with_status([&] { return process_request(json); });
 
         if (queued.will_wait) {
-            get_logger()->warn("Request queued because all calculation workers are busy: "
-                               "waiting={}, body_size={}",
-                               queued.waiting_tasks, json.size());
+            get_logger()->warn(
+                "Request queued because all calculation workers are busy: "
+                "waiting={}, body_size={}",
+                queued.waiting_tasks, json.size());
         }
 
         return {static_cast<unsigned>(http::status::ok), "application/json",

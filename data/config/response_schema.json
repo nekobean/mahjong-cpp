@@ -74,6 +74,7 @@
     "input": {
       "type": "object",
       "required": [
+        "mode",
         "round_wind",
         "seat_wind",
         "dora_indicators",
@@ -83,6 +84,10 @@
       ],
       "additionalProperties": false,
       "properties": {
+        "mode": {
+          "type": "integer",
+          "enum": [0, 1]
+        },
         "round_wind": {
           "type": "integer",
           "enum": [27, 28, 29, 30]
