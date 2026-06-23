@@ -564,9 +564,9 @@ static inline std::map<int, std::string> Name = {
 } // namespace ScoreTitle
 
 /**
- * @brief Convertion table from dora to dora indicator.
+ * @brief Convertion table from dora to dora indicator for four-player mahjong.
  */
-static constexpr std::array<int, 37> ToIndicator = {
+static constexpr std::array<int, 37> ToIndicatorYonma = {
     Tile::Manzu9, Tile::Manzu1, Tile::Manzu2, Tile::Manzu3, Tile::Manzu4, Tile::Manzu5,
     Tile::Manzu6, Tile::Manzu7, Tile::Manzu8, Tile::Pinzu9, Tile::Pinzu1, Tile::Pinzu2,
     Tile::Pinzu3, Tile::Pinzu4, Tile::Pinzu5, Tile::Pinzu6, Tile::Pinzu7, Tile::Pinzu8,
@@ -576,9 +576,22 @@ static constexpr std::array<int, 37> ToIndicator = {
     Tile::Souzu4};
 
 /**
- * @brief Conversion table from dora indicator to dora.
+ * @brief Convertion table from dora to dora indicator for three-player mahjong.
  */
-static constexpr std::array<int, 37> ToDora = {
+static constexpr std::array<int, 37> ToIndicatorSanma = {
+    Tile::Manzu9, Tile::Manzu2, Tile::Manzu3, Tile::Manzu4, Tile::Manzu5,
+    Tile::Manzu6, Tile::Manzu7, Tile::Manzu8, Tile::Manzu1, Tile::Pinzu9,
+    Tile::Pinzu1, Tile::Pinzu2, Tile::Pinzu3, Tile::Pinzu4, Tile::Pinzu5,
+    Tile::Pinzu6, Tile::Pinzu7, Tile::Pinzu8, Tile::Souzu9, Tile::Souzu1,
+    Tile::Souzu2, Tile::Souzu3, Tile::Souzu4, Tile::Souzu5, Tile::Souzu6,
+    Tile::Souzu7, Tile::Souzu8, Tile::North,  Tile::East,   Tile::South,
+    Tile::West,   Tile::Red,    Tile::White,  Tile::Green,  Tile::RedManzu5,
+    Tile::Pinzu4, Tile::Souzu4};
+
+/**
+ * @brief Conversion table from dora indicator to dora for four-player mahjong.
+ */
+static constexpr std::array<int, 37> ToDoraYonma = {
     Tile::Manzu2, Tile::Manzu3, Tile::Manzu4, Tile::Manzu5, Tile::Manzu6, Tile::Manzu7,
     Tile::Manzu8, Tile::Manzu9, Tile::Manzu1, Tile::Pinzu2, Tile::Pinzu3, Tile::Pinzu4,
     Tile::Pinzu5, Tile::Pinzu6, Tile::Pinzu7, Tile::Pinzu8, Tile::Pinzu9, Tile::Pinzu1,
@@ -586,6 +599,32 @@ static constexpr std::array<int, 37> ToDora = {
     Tile::Souzu8, Tile::Souzu9, Tile::Souzu1, Tile::South,  Tile::West,   Tile::North,
     Tile::East,   Tile::Green,  Tile::Red,    Tile::White,  Tile::Manzu6, Tile::Pinzu6,
     Tile::Souzu6};
+
+/**
+ * @brief Conversion table from dora indicator to dora for three-player mahjong.
+ */
+static constexpr std::array<int, 37> ToDoraSanma = {
+    Tile::Manzu9, Tile::Manzu2, Tile::Manzu3, Tile::Manzu4, Tile::Manzu5,
+    Tile::Manzu6, Tile::Manzu7, Tile::Manzu8, Tile::Manzu1, Tile::Pinzu2,
+    Tile::Pinzu3, Tile::Pinzu4, Tile::Pinzu5, Tile::Pinzu6, Tile::Pinzu7,
+    Tile::Pinzu8, Tile::Pinzu9, Tile::Pinzu1, Tile::Souzu2, Tile::Souzu3,
+    Tile::Souzu4, Tile::Souzu5, Tile::Souzu6, Tile::Souzu7, Tile::Souzu8,
+    Tile::Souzu9, Tile::Souzu1, Tile::South,  Tile::West,   Tile::North,
+    Tile::East,   Tile::Green,  Tile::Red,    Tile::White,  Tile::RedManzu5,
+    Tile::Pinzu6, Tile::Souzu6};
+
+inline int to_indicator(const int tile, const MahjongMode mode)
+{
+    const auto &table =
+        mode == MahjongMode::Sanma ? ToIndicatorSanma : ToIndicatorYonma;
+    return table[tile];
+}
+
+inline int to_dora(const int indicator, const MahjongMode mode)
+{
+    const auto &table = mode == MahjongMode::Sanma ? ToDoraSanma : ToDoraYonma;
+    return table[indicator];
+}
 
 } // namespace mahjong
 

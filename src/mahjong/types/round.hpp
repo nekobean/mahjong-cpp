@@ -27,14 +27,14 @@ class Round
     void set_dora(const std::vector<int> &tiles)
     {
         for (const auto tile : tiles) {
-            dora_indicators.push_back(ToIndicator[tile]);
+            dora_indicators.push_back(to_indicator(tile, mode));
         }
     }
 
     void set_uradora(const std::vector<int> &tiles)
     {
         for (const auto tile : tiles) {
-            uradora_indicators.push_back(ToIndicator[tile]);
+            uradora_indicators.push_back(to_indicator(tile, mode));
         }
     }
 

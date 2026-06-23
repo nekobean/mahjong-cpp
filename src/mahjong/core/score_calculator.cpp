@@ -34,7 +34,7 @@ Result ScoreCalculator::calc(const Round &round, const Player &player, int win_t
 
     // 向聴数を計算する。
     const auto [shanten_type, shanten] = ShantenCalculator::calc(
-        player.hand, int(player.melds.size()), ShantenFlag::All);
+        player.hand, int(player.melds.size()), ShantenFlag::All, round.mode);
     if (shanten != -1) {
         return Result(player, win_tile, win_flag, u8"The hand is not winning form.");
     }
@@ -159,14 +159,15 @@ Result ScoreCalculator::aggregate(const Round &round, const Player &player,
     }
 
     // Count number of doras, uradoras and red doras.
-    const int num_doras = count_dora(player.hand, player.melds, round.dora_indicators);
+    const int num_doras =
+        count_dora(player.hand, player.melds, round.dora_indicators, round.mode);
     if (num_doras) {
         yaku_han_list.emplace_back(Yaku::Dora, num_doras);
         han += num_doras;
     }
 
     const int num_uradoras =
-        count_dora(player.hand, player.melds, round.uradora_indicators);
+        count_dora(player.hand, player.melds, round.uradora_indicators, round.mode);
     if (num_uradoras) {
         yaku_han_list.emplace_back(Yaku::UraDora, num_uradoras);
         han += num_uradoras;
@@ -615,14 +616,16 @@ std::vector<int> ScoreCalculator::calc_score(const bool is_dealer, const bool is
  * @param hand hand
  * @param melds list of melds
  * @param indicators list of dora indicators
+ * @param mode Mahjong game mode
  * @return number of dora tiles
  */
 int ScoreCalculator::count_dora(const Hand &hand, const std::vector<Meld> &melds,
-                                const std::vector<int> &indicators)
+                                const std::vector<int> &indicators,
+                                const MahjongMode mode)
 {
     int num_doras = 0;
     for (const auto tile : indicators) {
-        const int dora = ToDora[tile];
+        const int dora = to_dora(tile, mode);
         // Count doras in the hand.
         num_doras += hand[dora];
 
