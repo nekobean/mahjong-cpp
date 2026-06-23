@@ -25,8 +25,10 @@ class ShantenCalculator
                                      MahjongMode mode = MahjongMode::Yonma);
 
   private:
-    static int calc_regular(const Hand &hand, const int num_melds, MahjongMode mode);
-    static int calc_seven_pairs(const Hand &hand, MahjongMode mode);
+    template <MahjongMode Mode>
+    static int calc_regular(const Hand &hand, const int num_melds);
+    template <MahjongMode Mode>
+    static int calc_seven_pairs(const Hand &hand);
     static int calc_thirteen_orphans(const Hand &hand);
     static void add1(ResultType &lhs, const Table::TableType &rhs, const int m);
     static void add2(ResultType &lhs, const Table::TableType &rhs, const int m);
