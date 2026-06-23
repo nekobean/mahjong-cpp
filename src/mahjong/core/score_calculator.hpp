@@ -45,8 +45,8 @@ class ScoreCalculator
                        const int win_flag, const int shanten_type);
     static std::vector<int> calc_score(const bool is_dealer, const bool is_tsumo,
                                        const int honba, const int kyotaku,
-                                       const int score_title, const int han = 0,
-                                       const int fu = 0);
+                                       MahjongMode mode, const int score_title,
+                                       const int han = 0, const int fu = 0);
     static int count_dora(const Hand &hand, const std::vector<Meld> &melds,
                           const std::vector<int> &indicators, MahjongMode mode);
     static int count_reddora(const bool rule_reddora, const Hand &hand,

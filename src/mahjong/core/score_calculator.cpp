@@ -106,7 +106,8 @@ Result ScoreCalculator::aggregate(const Round &round, const Player &player,
         score_title = ScoreTitle::Mangan;
 
         // Nagashi Mangan is treated as Tsumo.
-        score = calc_score(is_dealer, true, round.honba, round.kyotaku, score_title);
+        score = calc_score(is_dealer, true, round.honba, round.kyotaku, round.mode,
+                           score_title);
     }
     else {
         // Count yakuman multiplier.
@@ -122,7 +123,7 @@ Result ScoreCalculator::aggregate(const Round &round, const Player &player,
 
         score_title = get_score_title(n);
         score = calc_score(is_dealer, win_flag & WinFlag::Tsumo, round.honba,
-                           round.kyotaku, score_title);
+                           round.kyotaku, round.mode, score_title);
     }
 
     return {player, win_tile, win_flag, yaku_han_list, score_title, score};
@@ -184,7 +185,7 @@ Result ScoreCalculator::aggregate(const Round &round, const Player &player,
     const bool is_dealer = player.wind == Tile::East;
     const std::vector<int> score =
         calc_score(is_dealer, win_flag & WinFlag::Tsumo, round.honba, round.kyotaku,
-                   score_title, han, fu);
+                   round.mode, score_title, han, fu);
 
     std::sort(
         yaku_han_list.begin(), yaku_han_list.end(),
@@ -364,7 +365,7 @@ std::vector<int> ScoreCalculator::get_up_scores(const Round &round,
         const bool is_dealer = player.wind == Tile::East;
         const bool tsumo = win_flag & WinFlag::Tsumo;
         const int score = calc_score(is_dealer, tsumo, round.honba, round.kyotaku,
-                                     score_title, han, result.fu)[0];
+                                     round.mode, score_title, han, result.fu)[0];
         scores[i] = score;
     }
 
@@ -544,6 +545,7 @@ ScoreCalculator::check_pattern_yaku(const Round &round, const Player &player,
  * @param[in] is_tsumo Whether the player wins by Tsumo
  * @param[in] honba honba
  * @param[in] kyotaku kyotaku
+ * @param[in] mode Mahjong game mode
  * @param[in] score_title score title
  * @param[in] han han
  * @param[in] fu fu
@@ -553,6 +555,7 @@ ScoreCalculator::check_pattern_yaku(const Round &round, const Player &player,
  */
 std::vector<int> ScoreCalculator::calc_score(const bool is_dealer, const bool is_tsumo,
                                              const int honba, const int kyotaku,
+                                             const MahjongMode mode,
                                              const int score_title, const int han,
                                              const int fu)
 {
@@ -560,6 +563,7 @@ std::vector<int> ScoreCalculator::calc_score(const bool is_dealer, const bool is
 
     const int fu_idx = ScoreTable::fu_to_index(fu);
     const int han_idx = han - 1;
+    const int num_tsumo_payers = mode == MahjongMode::Sanma ? 2 : 3;
 
     if (is_tsumo && is_dealer) {
         // dealer tsumo
@@ -568,7 +572,7 @@ std::vector<int> ScoreCalculator::calc_score(const bool is_dealer, const bool is
                  ? BelowMangan[TsumoPlayerToDealer][fu_idx][han_idx]
                  : AboveMangan[TsumoPlayerToDealer][score_title]) +
             100 * honba;
-        const int score = 1000 * kyotaku + player_payment * 3;
+        const int score = 1000 * kyotaku + player_payment * num_tsumo_payers;
 
         return {score, player_payment};
     }
@@ -584,7 +588,8 @@ std::vector<int> ScoreCalculator::calc_score(const bool is_dealer, const bool is
                  ? BelowMangan[TsumoPlayerToPlayer][fu_idx][han_idx]
                  : AboveMangan[TsumoPlayerToPlayer][score_title]) +
             100 * honba;
-        const int score = 1000 * kyotaku + dealer_payment + player_payment * 2;
+        const int score =
+            1000 * kyotaku + dealer_payment + player_payment * (num_tsumo_payers - 1);
 
         return {score, dealer_payment, player_payment};
     }

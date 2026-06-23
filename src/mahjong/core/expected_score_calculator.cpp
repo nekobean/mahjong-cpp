@@ -130,13 +130,14 @@ double combination(const int n, const int r)
 
 std::array<double, 13> calc_uradora_distribution(const MergedCount &wall,
                                                  const MergedCount &hand_and_melds,
-                                                 const int num_indicators)
+                                                 const int num_indicators,
+                                                 const MahjongMode mode)
 {
     std::array<std::array<double, 13>, 6> dp{};
     dp[0][0] = 1.0;
 
     for (int tile = 0; tile < 34; ++tile) {
-        const int count = wall[ToIndicator[tile]];
+        const int count = wall[to_indicator(tile, mode)];
         const int gain = hand_and_melds[tile];
         if (count == 0) {
             continue;
@@ -191,7 +192,7 @@ double calc_uradora_score(const ExpectedScoreCalculator::Config &config,
 
     // 裏ドラ枚数ごとの確率と、各枚数での点数を掛け合わせる。
     const auto uradora_probabilities =
-        calc_uradora_distribution(wall, hand_and_melds, num_indicators);
+        calc_uradora_distribution(wall, hand_and_melds, num_indicators, round.mode);
     const std::vector<int> up_scores =
         ScoreCalculator::get_up_scores(round, player, result, win_flag, 12);
 
@@ -261,10 +262,10 @@ int64_t add_red5_flags(int64_t tiles)
 
 std::tuple<int, std::vector<std::tuple<int, int>>>
 get_necessary_tiles(const ExpectedScoreCalculator::Config &config, const Player &player,
-                    const MergedCount &wall)
+                    const MergedCount &wall, const MahjongMode mode)
 {
     const auto [shanten_type, shanten, tiles] = NecessaryTileCalculator::select(
-        player.hand, player.num_melds(), config.shanten_type);
+        player.hand, player.num_melds(), config.shanten_type, mode);
 
     std::vector<std::tuple<int, int>> necessary_tiles;
     necessary_tiles.reserve(tiles.size());
@@ -281,6 +282,7 @@ MergedCount create_wall(const Round &round, const Player &player,
                         const bool enable_reddora)
 {
     MergedCount wall{0}, melds{0}, indicators{0};
+    const bool is_sanma = round.mode == MahjongMode::Sanma;
 
     for (auto tile : round.dora_indicators) {
         ++indicators[to_no_reddora(tile)];
@@ -299,10 +301,16 @@ MergedCount create_wall(const Round &round, const Player &player,
     }
 
     for (int i = 0; i < 34; ++i) {
+        if (is_sanma && is_sanma_disabled_tile(i)) {
+            continue;
+        }
         wall[i] = 4 - (player.hand[i] + melds[i] + indicators[i]);
     }
     if (enable_reddora) {
         for (int i = 34; i < 37; ++i) {
+            if (is_sanma && is_sanma_disabled_tile(i)) {
+                continue;
+            }
             wall[i] = 1 - (player.hand[i] + melds[i] + indicators[i]);
         }
     }
@@ -374,7 +382,7 @@ ExpectedScoreCalculator::GraphBuilder::draw_node(const bool riichi)
     }
 
     auto [type, shanten, wait] = NecessaryTileCalculator::calc(
-        player_.hand, player_.num_melds(), config_.shanten_type);
+        player_.hand, player_.num_melds(), config_.shanten_type, round_.mode);
 
     const bool can_extend_search =
         distance(hand_counts_, hand_org_) + shanten < shanten_org_ + config_.extra;
@@ -422,7 +430,7 @@ ExpectedScoreCalculator::GraphBuilder::discard_node(const bool riichi)
     }
 
     auto [type, shanten, disc] = UnnecessaryTileCalculator::calc(
-        player_.hand, player_.num_melds(), config_.shanten_type);
+        player_.hand, player_.num_melds(), config_.shanten_type, round_.mode);
 
     const bool can_extend_search =
         distance(hand_counts_, hand_org_) + shanten < shanten_org_ + config_.extra;
@@ -645,6 +653,7 @@ ExpectedScoreCalculator::calc(const Config &config, const Round &round,
 }
 
 void ExpectedScoreCalculator::calc_draw_hand(const Config &config, const Player &player,
+                                             const Round &round,
                                              const MergedCount &wall,
                                              const SeparatedCount &hand_counts,
                                              GraphBuilder &graph_builder,
@@ -662,7 +671,8 @@ void ExpectedScoreCalculator::calc_draw_hand(const Config &config, const Player 
     const VertexData &state = graph_builder.graph()[vertex];
 
     // 有効牌の一覧を計算する。
-    const auto [shanten2, necessary_tiles] = get_necessary_tiles(config, player, wall);
+    const auto [shanten2, necessary_tiles] =
+        get_necessary_tiles(config, player, wall, round.mode);
 
     stats.emplace_back(Stat{Tile::Null, to_vector(state.tenpai_prob, config.t_max),
                             to_vector(state.win_prob, config.t_max),
@@ -670,12 +680,10 @@ void ExpectedScoreCalculator::calc_draw_hand(const Config &config, const Player 
                             shanten2});
 }
 
-void ExpectedScoreCalculator::calc_discard_hand(const Config &config, Player &player,
-                                                const MergedCount &wall,
-                                                SeparatedCount &hand_counts,
-                                                SeparatedCount &wall_counts,
-                                                GraphBuilder &graph_builder,
-                                                std::vector<Stat> &stats)
+void ExpectedScoreCalculator::calc_discard_hand(
+    const Config &config, Player &player, const Round &round, const MergedCount &wall,
+    SeparatedCount &hand_counts, SeparatedCount &wall_counts,
+    GraphBuilder &graph_builder, std::vector<Stat> &stats)
 {
     // 14枚の場合は打牌を起点に手牌遷移のグラフを作成する。
     graph_builder.discard_node(false);
@@ -688,7 +696,7 @@ void ExpectedScoreCalculator::calc_discard_hand(const Config &config, Player &pl
     // 結果を取得する。
     auto [discard_type, discard_shanten, discard_tiles] =
         UnnecessaryTileCalculator::calc(player.hand, player.num_melds(),
-                                        config.shanten_type);
+                                        config.shanten_type, round.mode);
     discard_tiles = add_red5_flags(discard_tiles);
 
     for (int i = 0; i < 37; ++i) {
@@ -704,7 +712,7 @@ void ExpectedScoreCalculator::calc_discard_hand(const Config &config, Player &pl
                 const VertexData &state = graph_builder.graph()[itr->second];
 
                 const auto [shanten2, necessary_tiles] =
-                    get_necessary_tiles(config, player, wall);
+                    get_necessary_tiles(config, player, wall, round.mode);
 
                 stats.emplace_back(Stat{i, to_vector(state.tenpai_prob, config.t_max),
                                         to_vector(state.win_prob, config.t_max),
@@ -745,7 +753,7 @@ ExpectedScoreCalculator::calc(const Config &_config, const Round &_round,
     if (!config.calc_stats) {
         if (num_tiles == 13) {
             const auto [shanten, necessary_tiles] =
-                get_necessary_tiles(config, player, wall);
+                get_necessary_tiles(config, player, wall, round.mode);
             stats.emplace_back(Stat{Tile::Null, {}, {}, {}, necessary_tiles, shanten});
         }
         else {
@@ -753,7 +761,7 @@ ExpectedScoreCalculator::calc(const Config &_config, const Round &_round,
                 if (hand_counts[i] > 0) {
                     discard(player, hand_counts, wall_counts, i);
                     const auto [shanten, necessary_tiles] =
-                        get_necessary_tiles(config, player, wall);
+                        get_necessary_tiles(config, player, wall, round.mode);
                     stats.emplace_back(Stat{i, {}, {}, {}, necessary_tiles, shanten});
                     draw(player, hand_counts, wall_counts, i);
                 }
@@ -764,17 +772,17 @@ ExpectedScoreCalculator::calc(const Config &_config, const Round &_round,
     }
 
     const SeparatedCount hand_org = hand_counts;
-    const int shanten_org = std::get<1>(
-        ShantenCalculator::calc(player.hand, player.num_melds(), config.shanten_type));
+    const int shanten_org = std::get<1>(ShantenCalculator::calc(
+        player.hand, player.num_melds(), config.shanten_type, round.mode));
     GraphBuilder graph_builder(config, round, player, hand_counts, wall_counts,
                                hand_org, shanten_org);
 
     if (num_tiles == 13) {
-        calc_draw_hand(config, player, wall, hand_counts, graph_builder, stats);
+        calc_draw_hand(config, player, round, wall, hand_counts, graph_builder, stats);
     }
     else {
-        calc_discard_hand(config, player, wall, hand_counts, wall_counts, graph_builder,
-                          stats);
+        calc_discard_hand(config, player, round, wall, hand_counts, wall_counts,
+                          graph_builder, stats);
     }
 
     const int searched = static_cast<int>(graph_builder.graph().num_vertices());

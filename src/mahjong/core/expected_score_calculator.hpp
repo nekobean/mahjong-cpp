@@ -234,11 +234,12 @@ class ExpectedScoreCalculator
     class GraphBuilder;
 
     static void calc_draw_hand(const Config &config, const Player &player,
-                               const MergedCount &wall,
+                               const Round &round, const MergedCount &wall,
                                const SeparatedCount &hand_counts,
                                GraphBuilder &graph_builder, std::vector<Stat> &stats);
     static void calc_discard_hand(const Config &config, Player &player,
-                                  const MergedCount &wall, SeparatedCount &hand_counts,
+                                  const Round &round, const MergedCount &wall,
+                                  SeparatedCount &hand_counts,
                                   SeparatedCount &wall_counts,
                                   GraphBuilder &graph_builder,
                                   std::vector<Stat> &stats);
