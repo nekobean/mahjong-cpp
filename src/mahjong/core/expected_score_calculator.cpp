@@ -25,29 +25,58 @@ MergedCount to_merged_count(const SeparatedCount &counts)
     return merged;
 }
 
-SeparatedCount to_separated_count(const MergedCount &counts, const bool enable_reddora)
+SeparatedCount to_separated_count(const MergedCount &counts)
 {
     SeparatedCount ret{0};
     for (int i = 0; i < 34; ++i) {
         ret[i] = counts[i];
     }
 
-    if (enable_reddora) {
-        if (counts[Tile::RedManzu5]) {
-            --ret[Tile::Manzu5];
-            ++ret[Tile::RedManzu5];
-        }
-        if (counts[Tile::RedPinzu5]) {
-            --ret[Tile::Pinzu5];
-            ++ret[Tile::RedPinzu5];
-        }
-        if (counts[Tile::RedSouzu5]) {
-            --ret[Tile::Souzu5];
-            ++ret[Tile::RedSouzu5];
-        }
+    if (counts[Tile::RedManzu5]) {
+        --ret[Tile::Manzu5];
+        ++ret[Tile::RedManzu5];
+    }
+    if (counts[Tile::RedPinzu5]) {
+        --ret[Tile::Pinzu5];
+        ++ret[Tile::RedPinzu5];
+    }
+    if (counts[Tile::RedSouzu5]) {
+        --ret[Tile::Souzu5];
+        ++ret[Tile::RedSouzu5];
     }
 
     return ret;
+}
+
+void normalize_red_fives(Player &player)
+{
+    player.hand[Tile::RedManzu5] = 0;
+    player.hand[Tile::RedPinzu5] = 0;
+    player.hand[Tile::RedSouzu5] = 0;
+
+    for (auto &meld : player.melds) {
+        for (auto &tile : meld.tiles) {
+            tile = to_no_reddora(tile);
+        }
+    }
+}
+
+void normalize_red_fives(Round &round)
+{
+    for (auto &tile : round.dora_indicators) {
+        tile = to_no_reddora(tile);
+    }
+    for (auto &tile : round.uradora_indicators) {
+        tile = to_no_reddora(tile);
+    }
+    round.rules &= ~RuleFlag::RedDora;
+}
+
+void normalize_red_fives(MergedCount &wall)
+{
+    wall[Tile::RedManzu5] = 0;
+    wall[Tile::RedPinzu5] = 0;
+    wall[Tile::RedSouzu5] = 0;
 }
 
 void draw(Player &player, SeparatedCount &hand_counts, SeparatedCount &wall_counts,
@@ -688,19 +717,28 @@ void ExpectedScoreCalculator::calc_discard_hand(const Config &config, Player &pl
 }
 
 std::tuple<std::vector<ExpectedScoreCalculator::Stat>, int>
-ExpectedScoreCalculator::calc(const Config &_config, const Round &round,
-                              const Player &_player, const MergedCount &wall)
+ExpectedScoreCalculator::calc(const Config &_config, const Round &_round,
+                              const Player &_player, const MergedCount &_wall)
 {
     Config config = _config;
+    Round round = _round;
+    Player player = _player;
+    MergedCount wall = _wall;
     assert(config.t_min >= 0);
     assert(config.t_max <= MaxTurn);
+
+    if (!config.enable_reddora) {
+        normalize_red_fives(round);
+        normalize_red_fives(player);
+        normalize_red_fives(wall);
+    }
+
     if (config.sum == 0) {
         config.sum = std::accumulate(wall.begin(), wall.begin() + 34, 0);
     }
 
-    Player player = _player;
-    SeparatedCount hand_counts = to_separated_count(player.hand, config.enable_reddora);
-    SeparatedCount wall_counts = to_separated_count(wall, config.enable_reddora);
+    SeparatedCount hand_counts = to_separated_count(player.hand);
+    SeparatedCount wall_counts = to_separated_count(wall);
     std::vector<Stat> stats;
     const int num_tiles = player.num_tiles() + player.num_melds() * 3;
 
