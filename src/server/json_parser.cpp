@@ -147,6 +147,9 @@ void validate_sanma_tiles(const Request &req)
     }
 
     for (const auto &meld : req.player.melds) {
+        if (meld.type == MeldType::Chow) {
+            throw std::runtime_error("Sanma hand contains a chow meld.");
+        }
         for (const auto tile : meld.tiles) {
             if (is_sanma_disabled_tile(tile)) {
                 throw std::runtime_error(
