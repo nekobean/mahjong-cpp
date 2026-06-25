@@ -1,85 +1,69 @@
 #include <chrono>
 #include <iostream>
-
-#include <spdlog/spdlog.h>
+#include <numeric>
 
 #include "mahjong/mahjong.hpp"
 
-int main(int argc, char *argv[])
+int main()
 {
     using namespace mahjong;
 
-    // Player information
-    //////////////////////////////////////////
-    Player player;
-    // Create hand by mpsz notation or vector of tiles.
-    //player.hand = from_mpsz("13m12457899p1367s");
-    player.hand = from_mpsz("222567m345p33667s");
-    // Hand hand = from_array({Tile::Manzu2, Tile::Manzu2, Tile::Manzu2, Tile::Manzu5,
-    //                         Tile::Manzu6, Tile::Manzu7, Tile::Pinzu3, Tile::Pinzu4,
-    //                         Tile::Souzu3, Tile::Souzu3, Tile::Souzu6, Tile::Souzu6,
-    //                         Tile::Souzu7, Tile::Souzu7});
+    TableConfig table_config;
+    table_config.rule_flags = RuleFlag::Default;
+    table_config.game_mode = GameMode::Yonma;
 
-    // player.hand = from_mpsz("1238p1345579s");
-    // player.melds = {
-    //     {MeldType::Daiminkan, {Tile::Manzu2, Tile::Manzu2, Tile::Manzu2, Tile::Manzu2}}};
-    player.wind = Tile::East;
-    if (player.num_tiles() + player.num_melds() * 3 != 14) {
-        spdlog::error("Number of tiles should be 14.");
-        return 1;
-    }
-
-    // Round information
-    //////////////////////////////////////////
-    Round round;
-    round.rules = RuleFlag::OpenTanyao | RuleFlag::RedDora;
-    round.wind = Tile::East;
-    round.kyoku = 1;
+    RoundState round;
+    round.round_wind = Tile::East;
+    round.round_number = 1;
     round.honba = 0;
-    round.kyotaku = 0;
-    round.dora_indicators = {Tile::East};
-    round.uradora_indicators = {};
 
-    // Calculation Settings
-    //////////////////////////////////////////
-    ExpectedScoreCalculator::Config config;
-    const MergedCount wall = create_wall(round, player, config.enable_reddora);
-    config.sum = std::accumulate(wall.begin(), wall.begin() + 34, 0);
+    TableState table;
+    table.kyotaku = 0;
+    table.dora_indicators = {Tile::East};
+    table.uradora_indicators = {};
 
-    // Calculation
-    //////////////////////////////////////////
-    const auto [type, shanten] = ShantenCalculator::calc(
-        player.hand, player.num_melds(), config.shanten_type, round.mode);
+    PlayerState player;
+    player.hand = from_mpsz("222567m345p33667s");
+    player.seat_wind = Tile::East;
+
+    ExpectedScoreCalculator::Config calc_config;
+    const MergedCount wall =
+        create_wall(table_config, table, player, calc_config.enable_reddora);
+    calc_config.sum = std::accumulate(wall.begin(), wall.begin() + 34, 0);
+
+    // Calculate the shanten number.
+    const int shanten = std::get<1>(
+        ShantenCalculator::calc(player.hand, player.num_melds(),
+                                calc_config.shanten_type, table_config.game_mode));
 
     // Calculate tenpai probability, win probability, and expected score.
     const auto start = std::chrono::steady_clock::now();
-    const auto [stats, searched] =
-        ExpectedScoreCalculator::calc(config, round, player, wall);
+    const auto [stats, searched] = ExpectedScoreCalculator::calc(
+        calc_config, table_config, round, table, player, wall);
     const auto end = std::chrono::steady_clock::now();
     const int elapsed_ms = static_cast<int>(
         std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
 
-    // Output
-    //////////////////////////////////////////
     std::cout << std::boolalpha;
     std::cout << "=== Config ===" << std::endl;
-    std::cout << fmt::format("{:>15}{}", "min turn: ", config.t_min) << std::endl;
-    std::cout << fmt::format("{:>15}{}", "max turn: ", config.t_max) << std::endl;
-    std::cout << fmt::format("{:>15}{}", "wall tiles: ", config.sum) << std::endl;
-    std::cout << fmt::format("{:>15}{}", "extra: ", config.extra) << std::endl;
-    std::cout << fmt::format("{:>15}{}", "shanten type: ", config.shanten_type)
+    std::cout << fmt::format("{:>15}{}", "min turn: ", calc_config.t_min) << std::endl;
+    std::cout << fmt::format("{:>15}{}", "max turn: ", calc_config.t_max) << std::endl;
+    std::cout << fmt::format("{:>15}{}", "wall tiles: ", calc_config.sum) << std::endl;
+    std::cout << fmt::format("{:>15}{}", "extra: ", calc_config.extra) << std::endl;
+    std::cout << fmt::format("{:>15}{}", "shanten type: ", calc_config.shanten_type)
               << std::endl;
-    std::cout << fmt::format("{:>15}{}", "reddora: ", config.enable_reddora)
+    std::cout << fmt::format("{:>15}{}", "red dora: ", calc_config.enable_reddora)
               << std::endl;
-    std::cout << fmt::format("{:>15}{}", "uradora: ", config.enable_uradora)
+    std::cout << fmt::format("{:>15}{}", "uradora: ", calc_config.enable_uradora)
               << std::endl;
-    std::cout << fmt::format("{:>15}{}", "shanten down: ", config.enable_shanten_down)
+    std::cout << fmt::format("{:>15}{}",
+                             "shanten down: ", calc_config.enable_shanten_down)
               << std::endl;
-    std::cout << fmt::format("{:>15}{}", "tegawari: ", config.enable_tegawari)
+    std::cout << fmt::format("{:>15}{}", "tegawari: ", calc_config.enable_tegawari)
               << std::endl;
 
     std::cout << "=== Round ===" << std::endl;
-    std::cout << to_string(round) << std::endl;
+    std::cout << to_string(table_config, round, table) << std::endl;
 
     std::cout << "=== Player ===" << std::endl;
     std::cout << to_string(player) << std::endl;
@@ -110,7 +94,7 @@ int main(int argc, char *argv[])
     std::cout << std::endl;
 
     std::cout << std::fixed;
-    for (int t = config.t_min; t <= config.t_max; ++t) {
+    for (int t = calc_config.t_min; t <= calc_config.t_max; ++t) {
         std::cout << fmt::format("{:>4}", t);
         for (const auto &stat : stats) {
             std::cout << fmt::format("{:>7.2f}%", stat.tenpai_prob[t] * 100);
@@ -127,7 +111,7 @@ int main(int argc, char *argv[])
     std::cout << std::endl;
 
     std::cout << std::fixed;
-    for (int t = config.t_min; t <= config.t_max; ++t) {
+    for (int t = calc_config.t_min; t <= calc_config.t_max; ++t) {
         std::cout << fmt::format("{:>4}", t);
         for (const auto &stat : stats) {
             std::cout << fmt::format("{:>7.2f}%", stat.win_prob[t] * 100);
@@ -144,7 +128,7 @@ int main(int argc, char *argv[])
     std::cout << std::endl;
 
     std::cout << std::fixed;
-    for (int t = config.t_min; t <= config.t_max; ++t) {
+    for (int t = calc_config.t_min; t <= calc_config.t_max; ++t) {
         std::cout << fmt::format("{:>4}", t);
         for (const auto &stat : stats) {
             std::cout << fmt::format("{:>9.2f}", stat.exp_score[t]);

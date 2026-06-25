@@ -2,68 +2,62 @@
 
 #include "mahjong/mahjong.hpp"
 
-int main(int argc, char *argv[])
+int main()
 {
     using namespace mahjong;
 
-    // Set round infomation.
-    /////////////////////////////////////////////////////
-    Round round;
-    // Set game rule.
-    round.rules = RuleFlag::RedDora | RuleFlag::OpenTanyao;
+    TableConfig table_config;
+    table_config.rule_flags = RuleFlag::RedDora | RuleFlag::OpenTanyao;
+
+    RoundState round_state;
     // Set round wind from Tile::East, Tile::South, Tile::West, Tile::North. (場風)
-    round.wind = Tile::East; // round wind
+    round_state.round_wind = Tile::East;
     // Set kyoku from 1 to 4. (局)
-    round.kyoku = 1;
+    round_state.round_number = 1;
     // Set honba. (本場)
-    round.honba = 0;
+    round_state.honba = 0;
+
+    TableState table_state;
     // Set kyotaku. (供託棒の数)
-    // ダブロン、トリロン有りのルールの場合、積み棒、供託棒を受け取らない和了者の
-    // 計算時には0に設定してください。
-    round.kyotaku = 1;
+    // For double-ron or triple-ron rules, set this to 0 when calculating a
+    // winner who does not receive honba sticks or kyotaku sticks.
+    table_state.kyotaku = 1;
+
     // Set dora indicators. (表ドラ表示牌)
-    round.dora_indicators = {Tile::North};
-    // If specifying dora, use set_dora().
-    // round.set_dora(Tile::East);
-    // Set uradora indicators. (裏ドラ表示牌)
-    round.uradora_indicators = {Tile::Pinzu9};
-    // If specifying dora, use set_dora().
-    // round.set_uradora({Tile::Pinzu1});
+    table_state.dora_indicators = {Tile::North};
+    // To pass dora tiles instead of indicator tiles, use TableState::set_dora().
+    // table_state.set_dora({Tile::East}, table_config.game_mode);
+
+    // Set uradora indicator tiles. (裏ドラ表示牌)
+    table_state.uradora_indicators = {Tile::Pinzu9};
+    // To pass uradora tiles instead of indicator tiles, use TableState::set_uradora().
+    // table_state.set_uradora({Tile::Pinzu1}, table_config.game_mode);
 
     // Set player information.
-    /////////////////////////////////////////////////////
-
-    // Create hand by mpsz notation or vector of tiles.
-    Hand hand = from_mpsz("11123m567p333z444z");
-    // Hand hand = from_array({Tile::Manzu2, Tile::Manzu2, Tile::Manzu2, Tile::Manzu5,
-    //                          Tile::Manzu6, Tile::Manzu7, Tile::Pinzu3, Tile::Pinzu4,
-    //                          Tile::Pinzu5, Tile::Souzu3, Tile::Souzu3, Tile::Souzu3,
-    //                          Tile::South, Tile::South});
-    Player player;
-    player.hand = hand;
-    player.melds = {};
+    PlayerState player;
+    player.hand = from_mpsz("11123m567p333z444z");
     // Set seat wind from Tile::East, Tile::South, Tile::West, Tile::North. (自風)
-    player.wind = Tile::East;
-    // Set win tile (和了牌)
+    player.seat_wind = Tile::East;
+    // Set winning tile. (和了牌)
     const int win_tile = Tile::Manzu1;
-    // Set win flag (フラグ)
-    // WinFlag::Tsumo           : Tsumo win (自摸和了)
-    // WinFlag::Riichi          : Riich established (立直成立)
-    // WinFlag::Ippatsu         : One-shot Win established (一発成立)
-    // WinFlag::RobbingAKan    : Robbing a Kong established (搶槓成立)
-    // WinFlag::AfterAKan      : After a Kong established (嶺上開花成立)
-    // WinFlag::UnderTheSea     : Under the Sea established (海底撈月成立)
-    // WinFlag::UnderTheRiver   : Under the River established (河底撈魚成立)
-    // WinFlag::DoubleRiichi    : Double Riichi established (ダブル立直成立)
-    // WinFlag::NagashiMangan   : Mangan at Draw established (流し満貫成立)
-    // WinFlag::HeavenlyHand: Heavenly Hand established (天和成立)
-    // WinFlag::EarthlyHand : Earthly Hand established (地和成立)
-    // WinFlag::HandOfMan       : Hand of Man established (人和成立)
+
+    // Set winning flags. (和了フラグ)
+    // WinFlag::Tsumo         : self-draw win (自摸和了)
+    // WinFlag::Riichi        : riichi (立直)
+    // WinFlag::Ippatsu       : ippatsu (一発)
+    // WinFlag::RobbingAKan   : robbing a kan (槍槓)
+    // WinFlag::AfterAKan     : after a kan (嶺上開花)
+    // WinFlag::UnderTheSea   : under the sea (海底摸月)
+    // WinFlag::UnderTheRiver : under the river (河底撈魚)
+    // WinFlag::DoubleRiichi  : double riichi (ダブル立直)
+    // WinFlag::NagashiMangan : nagashi mangan (流し満貫)
+    // WinFlag::HeavenlyHand  : heavenly hand (天和)
+    // WinFlag::EarthlyHand   : earthly hand (地和)
+    // WinFlag::HandOfMan     : hand of man (人和)
     const int flag = WinFlag::Tsumo | WinFlag::Riichi;
 
     // Calculate score.
-    /////////////////////////////////////////////////////
-    const Result result = ScoreCalculator::calc(round, player, win_tile, flag);
-    // Result stores score, han, fu, yaku, etc... Sea also src/mahjong/types/result.hpp
+    const ScoreResult result = ScoreCalculator::calc(
+        table_config, round_state, table_state, player, win_tile, flag);
     std::cout << to_string(result) << std::endl;
 }
