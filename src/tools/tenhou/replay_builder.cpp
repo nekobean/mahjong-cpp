@@ -56,6 +56,8 @@ TableLevel to_table_level(const MjlogGoEvent &event)
 
 int to_tile(const int tile136)
 {
+    assert(0 <= tile136 && tile136 < 136);
+
     switch (tile136) {
     case 16:
         return Tile::RedManzu5;
@@ -99,11 +101,12 @@ std::vector<int> to_score_deltas(const std::vector<int> &sc)
     return ret;
 }
 
-int to_score_limit(const MjlogAgariEvent &event, const bool is_yakuman,
-                   const int yakuman_multiplier)
+int to_score_limit(const MjlogAgariEvent &event, const bool is_yakuman)
 {
+    assert(event.ten.size() >= 3);
+
     if (is_yakuman) {
-        switch (yakuman_multiplier) {
+        switch (event.yakuman.size()) {
         case 1:
             return ScoreLimit::Yakuman;
         case 2:
@@ -117,6 +120,7 @@ int to_score_limit(const MjlogAgariEvent &event, const bool is_yakuman,
         case 6:
             return ScoreLimit::SextupleYakuman;
         default:
+            assert(false);
             return ScoreLimit::Null;
         }
     }
@@ -175,6 +179,7 @@ int to_win_flags(const MjlogAgariEvent &event)
         return ret;
     }
 
+    assert(event.yaku.size() % 2 == 0);
     for (size_t i = 0; i + 1 < event.yaku.size(); i += 2) {
         ret |= to_win_flag(event.yaku[i]);
     }
@@ -334,6 +339,8 @@ void sort_yaku_list(std::vector<YakuEntry> &yaku_list)
 std::vector<YakuEntry> to_yaku_entries(const std::vector<int> &raw_yaku,
                                        const int nuki_count)
 {
+    assert(raw_yaku.size() % 2 == 0);
+
     std::vector<YakuEntry> ret;
     for (size_t i = 0; i + 1 < raw_yaku.size(); i += 2) {
         const int yaku_id = raw_yaku[i];
@@ -387,6 +394,8 @@ int sum_han(const std::vector<YakuEntry> &yaku)
 
 int to_meld_from_seat(const int value)
 {
+    assert(0 <= value && value < 4);
+
     switch (value) {
     case 0:
         return SeatType::Self;
@@ -449,6 +458,7 @@ std::optional<Meld> decode_meld(const int value)
                 tile_ids[index++] = base + i;
             }
         }
+        assert(index == 3);
 
         return Meld{
             MeldType::Pon,
@@ -530,6 +540,11 @@ Hand make_hand(const std::vector<int> &tiles136)
 
 std::vector<PlayerProfile> make_players(const MjlogUnEvent &event)
 {
+    assert(event.names.size() == 4);
+    assert(event.dan.size() == 4);
+    assert(event.rate.size() == 4);
+    assert(event.sx.size() == 4);
+
     const int num_players = event.names[3].empty() ? 3 : 4;
 
     std::vector<PlayerProfile> ret;
@@ -551,6 +566,11 @@ std::vector<PlayerProfile> make_players(const MjlogUnEvent &event)
 std::vector<PlayerState> make_player_states(const MjlogInitEvent &event,
                                             const int num_players)
 {
+    assert(num_players == 3 || num_players == 4);
+    assert(0 <= event.oya && event.oya < num_players);
+    assert(event.hands.size() >= static_cast<size_t>(num_players));
+    assert(event.ten.size() >= static_cast<size_t>(num_players));
+
     std::vector<PlayerState> ret;
     ret.reserve(num_players);
 
@@ -568,6 +588,8 @@ std::vector<PlayerState> make_player_states(const MjlogInitEvent &event,
 
 RoundRecord make_round_record(const MjlogInitEvent &event, const int num_players)
 {
+    assert(event.seed.size() == 6);
+
     const int round_id = event.seed[0];
 
     RoundRecord record;
@@ -585,6 +607,7 @@ RoundRecord make_round_record(const MjlogInitEvent &event, const int num_players
 CallEvent make_call_event(const MjlogMeldEvent &event)
 {
     const auto meld = decode_meld(event.m);
+    assert(meld);
     return {event.who, *meld};
 }
 
@@ -592,6 +615,11 @@ WinResult make_win_result(const RoundSnapshot &state, const MjlogAgariEvent &eve
 {
     const bool is_yakuman = !event.yakuman.empty();
     const auto [melds, nuki_count] = decode_melds(event.m);
+    assert(event.ten.size() >= 3);
+    assert(event.sc.size() % 2 == 0);
+    assert(event.who >= 0 && event.who < static_cast<int>(state.players.size()));
+    assert(event.from_who >= 0 &&
+           event.from_who < static_cast<int>(state.players.size()));
 
     WinResult result;
     result.result_round = state.round;
@@ -612,7 +640,7 @@ WinResult make_win_result(const RoundSnapshot &state, const MjlogAgariEvent &eve
                              : to_yaku_entries(event.yaku, nuki_count);
     result.han = is_yakuman ? 0 : sum_han(result.yaku);
     result.fu = is_yakuman ? 0 : event.ten[0];
-    result.score_limit = to_score_limit(event, is_yakuman, sum_han(result.yaku));
+    result.score_limit = to_score_limit(event, is_yakuman);
     result.score_deltas = to_score_deltas(event.sc);
     result.pao = std::nullopt;
     return result;
@@ -621,16 +649,20 @@ WinResult make_win_result(const RoundSnapshot &state, const MjlogAgariEvent &eve
 RyukyokuResult make_ryukyoku_result(const RoundSnapshot &state,
                                     const MjlogRyukyokuEvent &event, const int type)
 {
+    assert(event.sc.size() % 2 == 0);
     return {state.round, state.table, type, to_score_deltas(event.sc)};
 }
 
 void add_tile(PlayerState &player, const int tile)
 {
+    assert(0 <= tile && tile < Tile::Length);
     ++player.hand[tile];
 }
 
 void remove_tile(PlayerState &player, const int tile)
 {
+    assert(0 <= tile && tile < Tile::Length);
+    assert(player.hand[tile] > 0);
     --player.hand[tile];
 }
 
@@ -660,6 +692,7 @@ void remove_meld_tiles(PlayerState &player, const Meld &meld)
 
 void apply_call_event(RoundRecord &record, const CallEvent &event)
 {
+    assert(event.actor >= 0 && event.actor < static_cast<int>(record.last.players.size()));
     PlayerState &player = record.last.players[event.actor];
     remove_meld_tiles(player, event.meld);
     player.melds.push_back(event.meld);
@@ -667,6 +700,7 @@ void apply_call_event(RoundRecord &record, const CallEvent &event)
 
 void apply_nuki_event(RoundRecord &record, const MjlogMeldEvent &event)
 {
+    assert(event.who >= 0 && event.who < static_cast<int>(record.last.players.size()));
     PlayerState &player = record.last.players[event.who];
     remove_tile(player, Tile::North);
     ++player.nuki_count;
@@ -678,6 +712,8 @@ void apply_event(RoundRecord &record, const MjlogEvent &event)
     constexpr int NukiValue = 0x0020;
 
     if (const auto *draw = std::get_if<MjlogDrawEvent>(&event)) {
+        assert(draw->player >= 0 &&
+               draw->player < static_cast<int>(record.last.players.size()));
         const int tile = to_tile(draw->tile136);
         add_tile(record.last.players[draw->player], tile);
         record.events.push_back(DrawEvent{draw->player, tile});
@@ -685,6 +721,8 @@ void apply_event(RoundRecord &record, const MjlogEvent &event)
     }
 
     if (const auto *discard = std::get_if<MjlogDiscardEvent>(&event)) {
+        assert(discard->player >= 0 &&
+               discard->player < static_cast<int>(record.last.players.size()));
         const int tile = to_tile(discard->tile136);
         remove_tile(record.last.players[discard->player], tile);
         record.events.push_back(DiscardEvent{discard->player, tile, false});
@@ -719,6 +757,10 @@ void apply_event(RoundRecord &record, const MjlogEvent &event)
 
     if (const auto *agari = std::get_if<MjlogAgariEvent>(&event)) {
         const int win_tile = to_tile(agari->machi);
+        assert(agari->who >= 0 &&
+               agari->who < static_cast<int>(record.last.players.size()));
+        assert(agari->from_who >= 0 &&
+               agari->from_who < static_cast<int>(record.last.players.size()));
         if (agari->who == agari->from_who) {
             record.events.push_back(TsumoEvent{agari->who, win_tile});
         }
@@ -757,6 +799,7 @@ GameRecord build_replay(const Mjlog &log)
         }
 
         if (const auto *init = std::get_if<MjlogInitEvent>(&event)) {
+            assert(!game.players.empty());
             game.rounds.push_back(
                 make_round_record(*init, static_cast<int>(game.players.size())));
             continue;
