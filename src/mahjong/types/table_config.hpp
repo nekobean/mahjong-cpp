@@ -12,10 +12,7 @@ namespace mahjong
 struct TableConfig
 {
     /*! Rule flags. */
-    RuleFlags rule_flags = RuleFlag::RedDora | RuleFlag::UraDora |
-                            RuleFlag::OpenTanyao | RuleFlag::BankruptcyEnd |
-                            RuleFlag::DoubleRon | RuleFlag::TripleRon |
-                            RuleFlag::NagashiMangan;
+    RuleFlags rule_flags = RuleFlag::Default;
 
     /*! Mahjong game mode. */
     int game_mode = GameMode::Yonma;
