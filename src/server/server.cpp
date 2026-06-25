@@ -55,7 +55,7 @@ void Server::log_request(const Request &req)
     // std::string dora_indicators = "";
     // for (const auto &tile : req.dora_indicators)
     //     dora_indicators +=
-    //         Tile::Name.at(tile) + (&tile != &req.dora_indicators.back() ? " " : "");
+    //         Tile::name(tile) + (&tile != &req.dora_indicators.back() ? " " : "");
 
     // std::string counts = "";
     // for (const auto &count : req.counts)
@@ -63,9 +63,9 @@ void Server::log_request(const Request &req)
 
     using namespace mahjong;
 
-    const std::string round_wind = Tile::Name.at(req.round.wind);
-    const std::string seat_wind = Tile::Name.at(req.player.wind);
-    const char *mode = req.round.mode == MahjongMode::Sanma ? "sanma" : "yonma";
+    const std::string round_wind(Tile::name(req.round.wind));
+    const std::string seat_wind(Tile::name(req.player.wind));
+    const char *mode = req.round.mode == GameMode::Sanma ? "sanma" : "yonma";
     const std::string hand = to_mpsz(req.player.hand);
     std::string melds;
     for (const auto &meld : req.player.melds) {

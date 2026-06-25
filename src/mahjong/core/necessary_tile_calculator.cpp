@@ -33,7 +33,7 @@ namespace mahjong
  */
 std::tuple<int, int, std::vector<int>>
 NecessaryTileCalculator::select(const Hand &hand, const int num_melds, const int type,
-                                const MahjongMode mode)
+                                const int mode)
 {
     const auto ret = calc(hand, num_melds, type, mode);
 
@@ -59,7 +59,7 @@ NecessaryTileCalculator::select(const Hand &hand, const int num_melds, const int
 std::tuple<int, int, int64_t> NecessaryTileCalculator::calc(const Hand &hand,
                                                             const int num_melds,
                                                             const int type,
-                                                            const MahjongMode mode)
+                                                            const int mode)
 {
 #ifdef CHECK_ARGUMENTS
     int num_tiles = std::accumulate(hand.begin(), hand.end(), 0) + num_melds * 3;
@@ -79,32 +79,31 @@ std::tuple<int, int, int64_t> NecessaryTileCalculator::calc(const Hand &hand,
         throw std::invalid_argument(fmt::format(u8"Invalid type {} passed.", type));
     }
 
-    if (mode == MahjongMode::Sanma && has_sanma_disabled_tiles(hand)) {
+    if (mode == GameMode::Sanma && has_sanma_disabled_tiles(hand)) {
         throw std::invalid_argument(
             fmt::format(u8"Invalid Sanma hand {} passed.", to_mpsz(hand)));
     }
 #endif // CHECK_ARGUMENTS
 
-    std::tuple<int, int, int64_t> ret = {ShantenFlag::Null, 100, 0LL};
+    std::tuple<int, int, int64_t> ret = {ShantenFlag::None, 100, 0LL};
 
-    if (type & ShantenFlag::Regular) {
+    if (type & ShantenFlag::StandardHand) {
         const auto [shanten, wait] =
-            mode == MahjongMode::Sanma
-                ? calc_regular<MahjongMode::Sanma>(hand, num_melds)
-                : calc_regular<MahjongMode::Yonma>(hand, num_melds);
+            mode == GameMode::Sanma ? calc_regular<GameMode::Sanma>(hand, num_melds)
+                                    : calc_regular<GameMode::Yonma>(hand, num_melds);
         if (shanten < std::get<1>(ret)) {
-            ret = {ShantenFlag::Regular, shanten, wait};
+            ret = {ShantenFlag::StandardHand, shanten, wait};
         }
         else if (shanten == std::get<1>(ret)) {
-            std::get<0>(ret) |= ShantenFlag::Regular;
+            std::get<0>(ret) |= ShantenFlag::StandardHand;
             std::get<2>(ret) |= wait;
         }
     }
 
     if ((type & ShantenFlag::SevenPairs) && num_melds == 0) {
-        const auto [shanten, wait] = mode == MahjongMode::Sanma
-                                         ? calc_seven_pairs<MahjongMode::Sanma>(hand)
-                                         : calc_seven_pairs<MahjongMode::Yonma>(hand);
+        const auto [shanten, wait] = mode == GameMode::Sanma
+                                         ? calc_seven_pairs<GameMode::Sanma>(hand)
+                                         : calc_seven_pairs<GameMode::Yonma>(hand);
         if (shanten < std::get<1>(ret)) {
             ret = {ShantenFlag::SevenPairs, shanten, wait};
         }
@@ -136,12 +135,12 @@ std::tuple<int, int, int64_t> NecessaryTileCalculator::calc(const Hand &hand,
  * @param[in] mode Mahjong game mode
  * @return list of (shanten flag, shanten number, necessary tiles)
  */
-template <MahjongMode Mode>
+template <int Mode>
 std::tuple<int, int64_t> NecessaryTileCalculator::calc_regular(const Hand &hand,
                                                                const int num_melds)
 {
     const Table::TableType *manzu_ptr;
-    if constexpr (Mode == MahjongMode::Sanma) {
+    if constexpr (Mode == GameMode::Sanma) {
         manzu_ptr = &Table::sanma_manzu_table_[Table::sanma_manzu_hash(
             hand[Tile::Manzu1], hand[Tile::Manzu9])];
     }
@@ -181,7 +180,7 @@ std::tuple<int, int64_t> NecessaryTileCalculator::calc_regular(const Hand &hand,
  * @param[in] mode Mahjong game mode
  * @return list of (shanten flag, shanten number, necessary tiles)
  */
-template <MahjongMode Mode>
+template <int Mode>
 std::tuple<int, int64_t> NecessaryTileCalculator::calc_seven_pairs(const Hand &hand)
 {
     int num_pairs = 0;
@@ -190,7 +189,7 @@ std::tuple<int, int64_t> NecessaryTileCalculator::calc_seven_pairs(const Hand &h
     int64_t count1_flag = 0;
 
     for (int i = 0; i < 34; ++i) {
-        if constexpr (Mode == MahjongMode::Sanma) {
+        if constexpr (Mode == GameMode::Sanma) {
             if (is_sanma_disabled_tile(i)) {
                 continue;
             }
@@ -234,9 +233,10 @@ std::tuple<int, int64_t>
 NecessaryTileCalculator::calc_thirteen_orphans(const Hand &hand)
 {
     static const auto yaochuu_tiles = {
-        Tile::Manzu1, Tile::Manzu9, Tile::Pinzu1, Tile::Pinzu9, Tile::Souzu1,
-        Tile::Souzu9, Tile::East,   Tile::South,  Tile::West,   Tile::North,
-        Tile::White,  Tile::Green,  Tile::Red};
+        Tile::Manzu1,   Tile::Manzu9, Tile::Pinzu1,      Tile::Pinzu9,
+        Tile::Souzu1,   Tile::Souzu9, Tile::East,        Tile::South,
+        Tile::West,     Tile::North,  Tile::WhiteDragon, Tile::GreenDragon,
+        Tile::RedDragon};
 
     int num_pairs = 0;
     int num_types = 0;

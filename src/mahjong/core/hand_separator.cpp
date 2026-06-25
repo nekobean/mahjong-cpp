@@ -55,14 +55,14 @@ HandSeparator::separate(const Player &player, const int win_tile, const int win_
 
     // 副露ブロックをブロック一覧に追加する。
     for (const auto &melded_block : player.melds) {
-        if (melded_block.type == MeldType::Pong)
+        if (melded_block.type == MeldType::Pon)
             blocks[i].type = BlockType::Triplet | BlockType::Open;
-        else if (melded_block.type == MeldType::Chow)
+        else if (melded_block.type == MeldType::Chi)
             blocks[i].type = BlockType::Sequence | BlockType::Open;
-        else if (melded_block.type == MeldType::ClosedKong)
-            blocks[i].type = BlockType::Kong;
+        else if (melded_block.type == MeldType::Ankan)
+            blocks[i].type = BlockType::Kan;
         else // 明槓、加槓
-            blocks[i].type = BlockType::Kong | BlockType::Open;
+            blocks[i].type = BlockType::Kan | BlockType::Open;
         blocks[i].min_tile = to_no_reddora(melded_block.tiles.front());
 
         ++i;
@@ -164,7 +164,7 @@ std::vector<Block> HandSeparator::get_blocks(const std::string &s)
  * @param[in] win_tile 和了牌
  * @param[in] flag 成立フラグ
  * @param[in] syanten_type 和了形の種類
- * @return YakuList 成立した役一覧
+ * @return YakuFlags 成立した役一覧
  */
 void HandSeparator::create_block_patterns(
     const int win_tile, const bool tsumo,
@@ -183,11 +183,11 @@ void HandSeparator::create_block_patterns(
             if ((block.type & BlockType::Triplet) && block.min_tile == win_tile) {
                 // 双ポン待ち
                 if (tsumo) {
-                    pattern.emplace_back(blocks, WaitType::TripletWait);
+                    pattern.emplace_back(blocks, WaitType::DoublePairWait);
                 }
                 else {
                     block.type |= BlockType::Open;
-                    pattern.emplace_back(blocks, WaitType::TripletWait);
+                    pattern.emplace_back(blocks, WaitType::DoublePairWait);
                     block.type &= ~BlockType::Open;
                 }
             }
@@ -195,11 +195,11 @@ void HandSeparator::create_block_patterns(
                      block.min_tile + 1 == win_tile) {
                 // 嵌張待ち
                 if (tsumo) {
-                    pattern.emplace_back(blocks, WaitType::ClosedWait);
+                    pattern.emplace_back(blocks, WaitType::MiddleWait);
                 }
                 else {
                     block.type |= BlockType::Open;
-                    pattern.emplace_back(blocks, WaitType::ClosedWait);
+                    pattern.emplace_back(blocks, WaitType::MiddleWait);
                     block.type &= ~BlockType::Open;
                 }
             }
@@ -236,22 +236,22 @@ void HandSeparator::create_block_patterns(
                      (block.min_tile == win_tile || block.min_tile + 2 == win_tile)) {
                 // 両面待ち
                 if (tsumo) {
-                    pattern.emplace_back(blocks, WaitType::DoubleEdgeWait);
+                    pattern.emplace_back(blocks, WaitType::TwoSidedWait);
                 }
                 else {
                     block.type |= BlockType::Open;
-                    pattern.emplace_back(blocks, WaitType::DoubleEdgeWait);
+                    pattern.emplace_back(blocks, WaitType::TwoSidedWait);
                     block.type &= ~BlockType::Open;
                 }
             }
             else if (block.type == BlockType::Pair && block.min_tile == win_tile) {
                 // 双ポン待ち
                 if (tsumo) {
-                    pattern.emplace_back(blocks, WaitType::PairWait);
+                    pattern.emplace_back(blocks, WaitType::SingleTileWait);
                 }
                 else {
                     block.type |= BlockType::Open;
-                    pattern.emplace_back(blocks, WaitType::PairWait);
+                    pattern.emplace_back(blocks, WaitType::SingleTileWait);
                     block.type &= ~BlockType::Open;
                 }
             }

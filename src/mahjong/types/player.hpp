@@ -6,7 +6,7 @@
 #include <stdexcept> // invalid_argument
 #include <vector>
 
-#include "mahjong/types/const.hpp"
+#include "mahjong/types/constants.hpp"
 #include "mahjong/types/meld.hpp"
 
 namespace mahjong
@@ -94,7 +94,7 @@ class Player
     bool is_closed() const
     {
         for (const auto &meld : melds) {
-            if (meld.type != MeldType::ClosedKong) {
+            if (meld.type != MeldType::Ankan) {
                 return false;
             }
         }

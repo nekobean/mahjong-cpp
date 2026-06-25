@@ -1,7 +1,7 @@
 #ifndef MAHJONG_CPP_BLOCK
 #define MAHJONG_CPP_BLOCK
 
-#include "mahjong/types/const.hpp"
+#include "mahjong/types/constants.hpp"
 
 namespace mahjong
 {
@@ -11,7 +11,7 @@ namespace mahjong
  */
 struct Block
 {
-    Block() : type(BlockType::Null), min_tile(Tile::Null)
+    Block() : type(BlockType::None), min_tile(Tile::Null)
     {
     }
 
@@ -28,4 +28,4 @@ struct Block
 
 } // namespace mahjong
 
-#endif /* MAHJONG_CPP_BLOCK */
+#endif // MAHJONG_CPP_BLOCK

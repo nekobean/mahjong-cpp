@@ -50,7 +50,7 @@ Request make_request(const rapidjson::Value &doc)
 {
     Request req;
     if (doc.HasMember("mode")) {
-        req.round.mode = static_cast<MahjongMode>(doc["mode"].GetInt());
+        req.round.mode = doc["mode"].GetInt();
     }
     req.round.wind = doc["round_wind"].GetInt();
     req.player.wind = doc["seat_wind"].GetInt();
@@ -120,8 +120,8 @@ void validate_tile_counts(const Request &req)
     for (int i = 0; i < 37; ++i) {
         if (wall[i] < 0) {
             throw std::runtime_error(
-                fmt::format("Too many tiles are used: tile={}, count={}",
-                            Tile::Name.at(i), 4 - wall[i]));
+                fmt::format("Too many tiles are used: tile={}, count={}", Tile::name(i),
+                            4 - wall[i]));
         }
     }
 
@@ -130,7 +130,7 @@ void validate_tile_counts(const Request &req)
             throw std::runtime_error(
                 fmt::format("More tiles are requested than remain in the wall: "
                             "tile={}, wall={}, used={}",
-                            Tile::Name.at(i), req.wall[i], 4 - wall[i]));
+                            Tile::name(i), req.wall[i], 4 - wall[i]));
         }
     }
 
@@ -142,7 +142,7 @@ void validate_tile_counts(const Request &req)
 
 void validate_sanma_tiles(const Request &req)
 {
-    if (req.round.mode != MahjongMode::Sanma) {
+    if (req.round.mode != GameMode::Sanma) {
         if (req.player.num_nuki > 0) {
             throw std::runtime_error("Nuki dora is only allowed in sanma.");
         }
@@ -154,14 +154,13 @@ void validate_sanma_tiles(const Request &req)
     }
 
     for (const auto &meld : req.player.melds) {
-        if (meld.type == MeldType::Chow) {
+        if (meld.type == MeldType::Chi) {
             throw std::runtime_error("Sanma hand contains a chow meld.");
         }
         for (const auto tile : meld.tiles) {
             if (is_sanma_disabled_tile(tile)) {
-                throw std::runtime_error(
-                    fmt::format("Sanma meld contains a disabled tile: tile={}.",
-                                Tile::Name.at(tile)));
+                throw std::runtime_error(fmt::format(
+                    "Sanma meld contains a disabled tile: tile={}.", Tile::name(tile)));
             }
         }
     }
@@ -170,7 +169,7 @@ void validate_sanma_tiles(const Request &req)
         if (is_sanma_disabled_tile(tile)) {
             throw std::runtime_error(
                 fmt::format("Sanma dora indicator contains a disabled tile: tile={}.",
-                            Tile::Name.at(tile)));
+                            Tile::name(tile)));
         }
     }
 
@@ -178,7 +177,7 @@ void validate_sanma_tiles(const Request &req)
         if (is_sanma_disabled_tile(tile) && req.wall[tile] > 0) {
             throw std::runtime_error(
                 fmt::format("Sanma wall contains disabled tiles: tile={}, count={}.",
-                            Tile::Name.at(tile), req.wall[tile]));
+                            Tile::name(tile), req.wall[tile]));
         }
     }
 }

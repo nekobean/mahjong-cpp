@@ -18,14 +18,14 @@ class NecessaryTileCalculator
 
   public:
     static std::tuple<int, int, std::vector<int>>
-    select(const Hand &hand, const int num_melds, const int type, MahjongMode mode);
+    select(const Hand &hand, const int num_melds, const int type, int mode);
     static std::tuple<int, int, int64_t> calc(const Hand &hand, const int num_melds,
-                                              const int type, MahjongMode mode);
+                                              const int type, int mode);
 
   private:
-    template <MahjongMode Mode>
+    template <int Mode>
     static std::tuple<int, int64_t> calc_regular(const Hand &hand, const int num_melds);
-    template <MahjongMode Mode>
+    template <int Mode>
     static std::tuple<int, int64_t> calc_seven_pairs(const Hand &hand);
     static std::tuple<int, int64_t> calc_thirteen_orphans(const Hand &hand);
     static void add1(ResultType &lhs, const Table::TableType &rhs, const int m);

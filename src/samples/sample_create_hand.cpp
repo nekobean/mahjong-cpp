@@ -10,7 +10,8 @@ int main(int argc, char *argv[])
     // 1m~9m: manzu, 0m: red5m
     // 1p~9p: pinzu, 0p: red5p
     // 1s~9s: souzu, 0s: red5s
-    // 1z=East, 2z=South, 3z=West, 4z=North, 5z=White, 6z=Green, 7z=Red
+    // 1z=East, 2z=South, 3z=West, 4z=North, 5z=WhiteDragon,
+    // 6z=GreenDragon, 7z=RedDragon
     Hand hand1 = from_mpsz("222567345p333s22z");
     // Convert hand to mpsz notation string by to_string().
     std::cout << to_mpsz(hand1) << std::endl;
@@ -23,14 +24,14 @@ int main(int argc, char *argv[])
     std::cout << to_mpsz(hand2) << std::endl;
 
     // Create melds by specifying meld type and tiles.
-    // MeldType::Pong      : pong (ポン)
-    // MeldType::Chow      : chow (チー)
-    // MeldType::ClosedKong: closed kong (暗槓)
-    // MeldType::OpenKong  : open kong (明槓)
-    // MeldType::AddedKong : added kong (加槓)
+    // MeldType::Pon      : pong (ポン)
+    // MeldType::Chi      : chow (チー)
+    // MeldType::Ankan: closed kong (暗槓)
+    // MeldType::Daiminkan  : open kong (明槓)
+    // MeldType::Kakan : added kong (加槓)
     std::vector<Meld> melds = {
-        {MeldType::AddedKong, {Tile::East, Tile::East, Tile::East, Tile::East}},
-        {MeldType::Pong, {Tile::Manzu1, Tile::Manzu1, Tile::Manzu1}},
+        {MeldType::Kakan, {Tile::East, Tile::East, Tile::East, Tile::East}},
+        {MeldType::Pon, {Tile::Manzu1, Tile::Manzu1, Tile::Manzu1}},
     };
 
     for (const auto &meld : melds) {

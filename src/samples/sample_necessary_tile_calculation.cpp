@@ -17,11 +17,11 @@ int main(int argc, char *argv[])
 
     // Calculate necessary tiles.
     const auto [shanten_type, shanten, tiles] = NecessaryTileCalculator::select(
-        hand, num_melds, ShantenFlag::All, MahjongMode::Yonma);
+        hand, num_melds, ShantenFlag::All, GameMode::Yonma);
 
     std::cout << "shanten: " << shanten << std::endl;
     for (auto tile : tiles) {
-        std::cout << Tile::Name.at(tile) + " ";
+        std::cout << Tile::name(tile) + " ";
     }
     std::cout << std::endl;
 }

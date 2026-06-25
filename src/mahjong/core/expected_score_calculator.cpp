@@ -131,7 +131,7 @@ double combination(const int n, const int r)
 std::array<double, 13> calc_uradora_distribution(const MergedCount &wall,
                                                  const MergedCount &hand_and_melds,
                                                  const int num_indicators,
-                                                 const MahjongMode mode)
+                                                 const int mode)
 {
     std::array<std::array<double, 13>, 6> dp{};
     dp[0][0] = 1.0;
@@ -227,7 +227,7 @@ double calc_score(const ExpectedScoreCalculator::Config &config, const Round &ro
     }
 
     // 役満以上は裏ドラで点数が変わらない。
-    if (result.score_title >= ScoreTitle::CountedYakuman) {
+    if (result.score_title >= ScoreLimit::CountedYakuman) {
         return result.score[0];
     }
 
@@ -262,7 +262,7 @@ int64_t add_red5_flags(int64_t tiles)
 
 std::tuple<int, std::vector<std::tuple<int, int>>>
 get_necessary_tiles(const ExpectedScoreCalculator::Config &config, const Player &player,
-                    const MergedCount &wall, const MahjongMode mode)
+                    const MergedCount &wall, const int mode)
 {
     const auto [shanten_type, shanten, tiles] = NecessaryTileCalculator::select(
         player.hand, player.num_melds(), config.shanten_type, mode);
@@ -282,7 +282,7 @@ MergedCount create_wall(const Round &round, const Player &player,
                         const bool enable_reddora)
 {
     MergedCount wall{0}, melds{0}, indicators{0};
-    const bool is_sanma = round.mode == MahjongMode::Sanma;
+    const bool is_sanma = round.mode == GameMode::Sanma;
 
     for (auto tile : round.dora_indicators) {
         ++indicators[to_no_reddora(tile)];

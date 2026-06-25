@@ -17,10 +17,10 @@ int main(int argc, char *argv[])
 
     {
         // Calculate minimum shanten number of regular hand, Seven Pairs and Thirteen Orphans.
-        const auto [shanten_type, shanten] = ShantenCalculator::calc(
-            hand, num_melds, ShantenFlag::All, MahjongMode::Yonma);
+        const auto [shanten_type, shanten] =
+            ShantenCalculator::calc(hand, num_melds, ShantenFlag::All, GameMode::Yonma);
         std::cout << "shanten type: ";
-        for (int type : {ShantenFlag::Regular, ShantenFlag::SevenPairs,
+        for (int type : {ShantenFlag::StandardHand, ShantenFlag::SevenPairs,
                          ShantenFlag::ThirteenOrphans}) {
             if (shanten_type & type) {
                 std::cout << ShantenFlag::Name.at(type) << " ";
@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
     {
         // Calculate shanten number for regular hand (exclude Seven Pairs, Thirteen Orphans).
         const auto [shanten_type, shanten] = ShantenCalculator::calc(
-            hand, num_melds, ShantenFlag::Regular, MahjongMode::Yonma);
+            hand, num_melds, ShantenFlag::StandardHand, GameMode::Yonma);
         std::cout << "shanten type: " << ShantenFlag::Name.at(shanten_type)
                   << std::endl;
         std::cout << "shanten: " << shanten << std::endl;
@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
     {
         // Calculate shanten number for Seven Pairs (七対子).
         const auto [shanten_type, shanten] = ShantenCalculator::calc(
-            hand, num_melds, ShantenFlag::SevenPairs, MahjongMode::Yonma);
+            hand, num_melds, ShantenFlag::SevenPairs, GameMode::Yonma);
         std::cout << "shanten type: " << ShantenFlag::Name.at(shanten_type)
                   << std::endl;
         std::cout << "shanten: " << shanten << std::endl;
@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
     {
         // Calculate shanten number for Thirteen Orphans (国士無双).
         const auto [shanten_type, shanten] = ShantenCalculator::calc(
-            hand, num_melds, ShantenFlag::ThirteenOrphans, MahjongMode::Yonma);
+            hand, num_melds, ShantenFlag::ThirteenOrphans, GameMode::Yonma);
         std::cout << "shanten type: " << ShantenFlag::Name.at(shanten_type)
                   << std::endl;
         std::cout << "shanten: " << shanten << std::endl;

@@ -3,7 +3,7 @@
 
 #include <vector>
 
-#include "const.hpp"
+#include "constants.hpp"
 
 namespace mahjong
 {
@@ -28,7 +28,7 @@ struct Result
      * @param[in] wait_type wait type
      */
     Result(const Player &player, int win_tile, int win_flag,
-           const std::vector<std::tuple<YakuList, int>> &yaku_list, int han, int fu,
+           const std::vector<std::tuple<YakuFlags, int>> &yaku_list, int han, int fu,
            int score_title, const std::vector<int> &score,
            const std::vector<Block> &blocks, int wait_type)
         : success(true)
@@ -56,7 +56,7 @@ struct Result
      * @param[in] score score
      */
     Result(const Player &player, int win_tile, int win_flag,
-           const std::vector<std::tuple<YakuList, int>> &yaku_list, int score_title,
+           const std::vector<std::tuple<YakuFlags, int>> &yaku_list, int score_title,
            const std::vector<int> &score)
         : success(true)
         , player(player)
@@ -85,10 +85,10 @@ struct Result
         , player(player)
         , win_tile(win_tile)
         , win_flag(win_flag)
-        , yaku_list(Yaku::Null)
+        , yaku_list(Yaku::None)
         , han(0)
         , fu(0)
-        , score_title(ScoreTitle::Null)
+        , score_title(ScoreLimit::Null)
         , wait_type(WaitType::Null)
     {
     }
@@ -118,7 +118,7 @@ struct Result
     ////////////////////////
 
     /* list of (yaku, han) */
-    std::vector<std::tuple<YakuList, int>> yaku_list;
+    std::vector<std::tuple<YakuFlags, int>> yaku_list;
 
     /* han */
     int han;
@@ -141,4 +141,4 @@ struct Result
 
 } // namespace mahjong
 
-#endif /* MAHJONG_CPP_RESULT */
+#endif // MAHJONG_CPP_RESULT

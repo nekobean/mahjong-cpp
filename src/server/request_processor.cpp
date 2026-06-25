@@ -23,8 +23,9 @@ CalculationResult calculate_result(const Request &req)
     result.config.shanten_type = ShantenFlag::All;
     result.shanten = std::get<1>(ShantenCalculator::calc(
         req.player.hand, req.player.num_melds(), ShantenFlag::All, req.round.mode));
-    result.regular_shanten = std::get<1>(ShantenCalculator::calc(
-        req.player.hand, req.player.num_melds(), ShantenFlag::Regular, req.round.mode));
+    result.regular_shanten =
+        std::get<1>(ShantenCalculator::calc(req.player.hand, req.player.num_melds(),
+                                            ShantenFlag::StandardHand, req.round.mode));
     result.seven_pairs_shanten =
         std::get<1>(ShantenCalculator::calc(req.player.hand, req.player.num_melds(),
                                             ShantenFlag::SevenPairs, req.round.mode));

@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
 
     // player.hand = from_mpsz("1238p1345579s");
     // player.melds = {
-    //     {MeldType::OpenKong, {Tile::Manzu2, Tile::Manzu2, Tile::Manzu2, Tile::Manzu2}}};
+    //     {MeldType::Daiminkan, {Tile::Manzu2, Tile::Manzu2, Tile::Manzu2, Tile::Manzu2}}};
     player.wind = Tile::East;
     if (player.num_tiles() + player.num_melds() * 3 != 14) {
         spdlog::error("Number of tiles should be 14.");
@@ -86,7 +86,7 @@ int main(int argc, char *argv[])
 
     std::cout << "=== Necessary Tiles ===" << std::endl;
     for (const auto &stat : stats) {
-        std::cout << fmt::format("{:>2} ", Tile::Name.at(stat.tile));
+        std::cout << fmt::format("{:>2} ", Tile::name(stat.tile));
 
         int sum =
             std::accumulate(stat.necessary_tiles.begin(), stat.necessary_tiles.end(), 0,
@@ -96,7 +96,7 @@ int main(int argc, char *argv[])
                                  stat.shanten);
 
         for (const auto [tile, count] : stat.necessary_tiles) {
-            std::cout << fmt::format("{}({}) ", Tile::Name.at(tile), count);
+            std::cout << fmt::format("{}({}) ", Tile::name(tile), count);
         }
         std::cout << std::endl;
     }
@@ -105,7 +105,7 @@ int main(int argc, char *argv[])
     std::cout << "=== Tenpai Probability ===" << std::endl;
     std::cout << fmt::format("{:>4}", "turn");
     for (const auto &stat : stats) {
-        std::cout << fmt::format("{:>8}", Tile::Name.at(stat.tile));
+        std::cout << fmt::format("{:>8}", Tile::name(stat.tile));
     }
     std::cout << std::endl;
 
@@ -122,7 +122,7 @@ int main(int argc, char *argv[])
     std::cout << "=== Win Probability ===" << std::endl;
     std::cout << fmt::format("{:>4}", "turn");
     for (const auto &stat : stats) {
-        std::cout << fmt::format("{:>8}", Tile::Name.at(stat.tile));
+        std::cout << fmt::format("{:>8}", Tile::name(stat.tile));
     }
     std::cout << std::endl;
 
@@ -139,7 +139,7 @@ int main(int argc, char *argv[])
     std::cout << "=== Expected Score ===" << std::endl;
     std::cout << fmt::format("{:>4}", "turn");
     for (const auto &stat : stats) {
-        std::cout << fmt::format("{:>9}", Tile::Name.at(stat.tile));
+        std::cout << fmt::format("{:>9}", Tile::name(stat.tile));
     }
     std::cout << std::endl;
 

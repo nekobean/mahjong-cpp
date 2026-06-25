@@ -32,7 +32,7 @@ namespace mahjong
  * @return std::tuple<int, int> (Type of shanten number, shanten number)
  */
 std::tuple<int, int> ShantenCalculator::calc(const Hand &hand, const int num_melds,
-                                             int type, const MahjongMode mode)
+                                             int type, const int mode)
 {
 #ifdef CHECK_ARGUMENTS
     int num_tiles = std::accumulate(hand.begin(), hand.end(), 0) + num_melds * 3;
@@ -50,30 +50,29 @@ std::tuple<int, int> ShantenCalculator::calc(const Hand &hand, const int num_mel
         throw std::invalid_argument(fmt::format(u8"Invalid type passed."));
     }
 
-    if (mode == MahjongMode::Sanma && has_sanma_disabled_tiles(hand)) {
+    if (mode == GameMode::Sanma && has_sanma_disabled_tiles(hand)) {
         throw std::invalid_argument(fmt::format(u8"Invalid Sanma hand passed."));
     }
 #endif // CHECK_ARGUMENTS
 
-    std::tuple<int, int> ret = {ShantenFlag::Null, 100};
+    std::tuple<int, int> ret = {ShantenFlag::None, 100};
 
-    if (type & ShantenFlag::Regular) {
-        int shanten = mode == MahjongMode::Sanma
-                          ? calc_regular<MahjongMode::Sanma>(hand, num_melds)
-                          : calc_regular<MahjongMode::Yonma>(hand, num_melds);
+    if (type & ShantenFlag::StandardHand) {
+        int shanten = mode == GameMode::Sanma
+                          ? calc_regular<GameMode::Sanma>(hand, num_melds)
+                          : calc_regular<GameMode::Yonma>(hand, num_melds);
         if (shanten < std::get<1>(ret)) {
-            ret = {ShantenFlag::Regular, shanten};
+            ret = {ShantenFlag::StandardHand, shanten};
         }
         else if (shanten == std::get<1>(ret)) {
-            std::get<0>(ret) |= ShantenFlag::Regular;
+            std::get<0>(ret) |= ShantenFlag::StandardHand;
         }
     }
 
     if ((type & ShantenFlag::SevenPairs) && num_melds == 0) {
         // closed hand only
-        int shanten = mode == MahjongMode::Sanma
-                          ? calc_seven_pairs<MahjongMode::Sanma>(hand)
-                          : calc_seven_pairs<MahjongMode::Yonma>(hand);
+        int shanten = mode == GameMode::Sanma ? calc_seven_pairs<GameMode::Sanma>(hand)
+                                              : calc_seven_pairs<GameMode::Yonma>(hand);
         if (shanten < std::get<1>(ret)) {
             ret = {ShantenFlag::SevenPairs, shanten};
         }
@@ -96,11 +95,11 @@ std::tuple<int, int> ShantenCalculator::calc(const Hand &hand, const int num_mel
     return ret;
 }
 
-template <MahjongMode Mode>
+template <int Mode>
 int ShantenCalculator::calc_regular(const Hand &hand, const int num_melds)
 {
     const Table::TableType *manzu_ptr;
-    if constexpr (Mode == MahjongMode::Sanma) {
+    if constexpr (Mode == GameMode::Sanma) {
         manzu_ptr = &Table::sanma_manzu_table_[Table::sanma_manzu_hash(
             hand[Tile::Manzu1], hand[Tile::Manzu9])];
     }
@@ -135,12 +134,12 @@ int ShantenCalculator::calc_regular(const Hand &hand, const int num_melds)
  * @param[in] mode Mahjong game mode
  * @return int The shanten number
  */
-template <MahjongMode Mode> int ShantenCalculator::calc_seven_pairs(const Hand &hand)
+template <int Mode> int ShantenCalculator::calc_seven_pairs(const Hand &hand)
 {
     int num_types = 0;
     int num_pairs = 0;
     for (size_t i = 0; i < 34; ++i) {
-        if constexpr (Mode == MahjongMode::Sanma) {
+        if constexpr (Mode == GameMode::Sanma) {
             if (is_sanma_disabled_tile(static_cast<int>(i))) {
                 continue;
             }
@@ -165,7 +164,7 @@ int ShantenCalculator::calc_thirteen_orphans(const Hand &hand)
     bool has_toitsu = false;
     for (int i : {Tile::Manzu1, Tile::Manzu9, Tile::Pinzu1, Tile::Pinzu9, Tile::Souzu1,
                   Tile::Souzu9, Tile::East, Tile::South, Tile::West, Tile::North,
-                  Tile::White, Tile::Green, Tile::Red}) {
+                  Tile::WhiteDragon, Tile::GreenDragon, Tile::RedDragon}) {
         num_types += hand[i] > 0;
         has_toitsu |= hand[i] >= 2;
     }

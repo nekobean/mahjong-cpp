@@ -1,48 +1,47 @@
 #ifndef MAHJONG_CPP_MELD
 #define MAHJONG_CPP_MELD
 
+#include <utility>
 #include <vector>
 
-#include "mahjong/types/const.hpp"
+#include "mahjong/types/constants.hpp"
 
 namespace mahjong
 {
 
 /**
- * @brief 副露ブロック
+ * @brief Meld block.
  */
 struct Meld
 {
-    Meld() : type(MeldType::Null), discarded_tile(Tile::Null), from(PlayerType::Null)
+    Meld() = default;
+
+    Meld(const int type, std::vector<int> tiles) : type(type), tiles(std::move(tiles))
     {
     }
 
-    Meld(int type, std::vector<int> tiles)
+    Meld(const int type, std::vector<int> tiles, const int discarded_tile,
+         const int from)
         : type(type)
-        , tiles(tiles)
-        , discarded_tile(!tiles.empty() ? tiles.front() : Tile::Null)
-        , from(PlayerType::Null)
+        , tiles(std::move(tiles))
+        , discarded_tile(discarded_tile)
+        , from(from)
     {
     }
 
-    Meld(int type, std::vector<int> tiles, int discarded_tile, int from)
-        : type(type), tiles(tiles), discarded_tile(discarded_tile), from(from)
-    {
-    }
+    /*! Meld type. */
+    int type = MeldType::Null;
 
-    /*! 副露の種類 */
-    int type;
-
-    /*! 構成牌 */
+    /*! Tiles contained in the meld. */
     std::vector<int> tiles;
 
-    /*! 鳴いた牌 */
-    int discarded_tile;
+    /*! Discarded tile used for the call. */
+    int discarded_tile = Tile::Null;
 
-    /*! 鳴かれたプレイヤー */
-    int from;
+    /*! Relative seat of the player who discarded the called tile. */
+    int from = SeatType::Null;
 };
 
 } // namespace mahjong
 
-#endif /* MAHJONG_CPP_MELD */
+#endif // MAHJONG_CPP_MELD

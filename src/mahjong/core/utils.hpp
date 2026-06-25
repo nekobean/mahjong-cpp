@@ -43,7 +43,7 @@ inline void check_hand(const Hand &hand)
         if (hand[i] < 0 || hand[i] > 4) {
             throw std::invalid_argument(
                 fmt::format(u8"Invalid tile count found. (tile: {}, count: {})",
-                            Tile::Name.at(i), hand[i]));
+                            Tile::name(i), hand[i]));
         }
     }
 
@@ -51,7 +51,7 @@ inline void check_hand(const Hand &hand)
         if (hand[i] < 0 || hand[i] > 1) {
             throw std::invalid_argument(
                 fmt::format(u8"Invalid red flag found. (tile: {}, count: {})",
-                            Tile::Name.at(i), hand[i]));
+                            Tile::name(i), hand[i]));
         }
     }
 
@@ -112,7 +112,7 @@ inline Hand from_array(const std::vector<int> &tiles)
  */
 inline int to_no_reddora(int tile)
 {
-    if (tile <= Tile::Red) {
+    if (tile <= Tile::RedDragon) {
         return tile;
     }
     else if (tile == Tile::RedManzu5) {
@@ -205,7 +205,7 @@ inline bool is_suits(int tile)
  */
 inline bool is_honor(int tile)
 {
-    return Tile::East <= tile && tile <= Tile::Red;
+    return Tile::East <= tile && tile <= Tile::RedDragon;
 }
 
 inline bool is_terminal(int tile)
@@ -217,7 +217,7 @@ inline bool is_terminal(int tile)
 inline bool is_terminal_or_honor(int tile)
 {
     const int n = tile % 9;
-    return tile <= Tile::Red && (n == 0 || n == 8 || Tile::East <= tile);
+    return tile <= Tile::RedDragon && (n == 0 || n == 8 || Tile::East <= tile);
 }
 
 inline bool is_simples(int tile)

@@ -3,7 +3,7 @@
 
 #include <vector>
 
-#include "mahjong/types/const.hpp"
+#include "mahjong/types/constants.hpp"
 
 namespace mahjong
 {
@@ -15,7 +15,7 @@ class Round
 {
   public:
     Round()
-        : mode(MahjongMode::Yonma)
+        : mode(GameMode::Yonma)
         , rules(RuleFlag::RedDora | RuleFlag::OpenTanyao)
         , wind(Tile::Null)
         , kyoku(1)
@@ -40,9 +40,9 @@ class Round
 
   public:
     /* Mahjong game mode */
-    MahjongMode mode;
+    int mode;
     /* Game rule */
-    int rules;
+    RuleFlags rules;
     /* Round wind (場風) */
     int wind;
     /* Kyoku (局) */

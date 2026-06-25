@@ -141,19 +141,19 @@ std::string to_string(const Block &block)
         tiles[block.min_tile + 1] = 1;
         tiles[block.min_tile + 2] = 1;
     }
-    else if (block.type & BlockType::Kong) {
+    else if (block.type & BlockType::Kan) {
         tiles[block.min_tile] = 4;
     }
     else if (block.type & BlockType::Pair) {
         tiles[block.min_tile] = 2;
     }
 
-    return fmt::format("[{} {}]", to_mpsz(tiles), BlockType::Name.at(block.type));
+    return fmt::format("[{} {}]", to_mpsz(tiles), BlockType::name(block.type));
 }
 
 std::string to_string(const Meld &meld)
 {
-    return fmt::format("[{} {}]", to_mpsz(meld.tiles), MeldType::Name.at(meld.type));
+    return fmt::format("[{} {}]", to_mpsz(meld.tiles), MeldType::name(meld.type));
 }
 
 std::string to_string(const Round &round)
@@ -162,7 +162,7 @@ std::string to_string(const Round &round)
 #ifdef LANG_EN
     s += u8"[Rule]\n";
     for (auto rule : {RuleFlag::RedDora, RuleFlag::OpenTanyao}) {
-        s += fmt::format(u8"  {}: {}\n", RuleFlag::Name.at(rule),
+        s += fmt::format(u8"  {}: {}\n", RuleFlag::name(rule),
                          (round.rules & rule) ? u8"On" : u8"Off");
     }
 
@@ -186,7 +186,7 @@ std::string to_string(const Round &round)
 #else
     s += u8"[ルール]\n";
     for (auto rule : {RuleFlag::RedDora, RuleFlag::OpenTanyao}) {
-        s += fmt::format(u8"  {}: {}\n", RuleFlag::Name.at(rule),
+        s += fmt::format(u8"  {}: {}\n", RuleFlag::name(rule),
                          (round.rules & rule) ? u8"有り" : u8"無し");
     }
 
@@ -223,7 +223,7 @@ std::string to_string(const Player &player)
         s += to_string(meld);
     }
     s += u8"\n";
-    s += fmt::format(u8"Seat wind: {}\n", Tile::Name.at(player.wind));
+    s += fmt::format(u8"Seat wind: {}\n", Tile::name(player.wind));
 #else
     s += fmt::format(u8"手牌: {}\n", to_mpsz(player.hand));
     s += u8"副露牌: ";
@@ -231,7 +231,7 @@ std::string to_string(const Player &player)
         s += to_string(meld);
     }
     s += u8"\n";
-    s += fmt::format(u8"自風: {}\n", Tile::Name.at(player.wind));
+    s += fmt::format(u8"自風: {}\n", Tile::name(player.wind));
 #endif
 
     return s;
@@ -258,26 +258,26 @@ std::string to_string(const Result &result)
             s += to_string(block);
         }
         s += u8"\n";
-        s += fmt::format(u8"Wait: {}\n", WaitType::Name.at(result.wait_type));
+        s += fmt::format(u8"Wait: {}\n", WaitType::name(result.wait_type));
 
         // 役
         s += u8"Yaku:\n";
         for (auto &[yaku, han] : result.yaku_list) {
-            s += fmt::format(u8" {} {}fan\n", Yaku::Name[yaku], han);
+            s += fmt::format(u8" {} {}fan\n", Yaku::name(yaku), han);
         }
 
         // 飜、符
         s += fmt::format("{}fu{}han {}\n", result.fu, result.han,
-                         result.score_title != ScoreTitle::Null
-                             ? ScoreTitle::Name.at(result.score_title)
+                         result.score_title != ScoreLimit::Null
+                             ? ScoreLimit::name(result.score_title)
                              : "");
     }
     else {
         // 流し満貫、役満
         s += "Yaku:\n";
         for (auto &[yaku, _] : result.yaku_list)
-            s += fmt::format(" {}\n", Yaku::Name[yaku]);
-        s += ScoreTitle::Name[result.score_title] + "\n";
+            s += fmt::format(" {}\n", Yaku::name(yaku));
+        s += fmt::format("{}\n", ScoreLimit::name(result.score_title));
     }
 
     if (result.score.size() == 3) {
@@ -309,26 +309,26 @@ std::string to_string(const Result &result)
             s += to_string(block);
         }
         s += u8"\n";
-        s += fmt::format(u8"待ち: {}\n", WaitType::Name.at(result.wait_type));
+        s += fmt::format(u8"待ち: {}\n", WaitType::name(result.wait_type));
 
         // 役
         s += u8"役:\n";
         for (auto &[yaku, han] : result.yaku_list) {
-            s += fmt::format(u8" {} {}翻\n", Yaku::Name[yaku], han);
+            s += fmt::format(u8" {} {}翻\n", Yaku::name(yaku), han);
         }
 
         // 飜、符
         s += fmt::format("{}符{}翻 {}\n", result.fu, result.han,
-                         result.score_title != ScoreTitle::Null
-                             ? ScoreTitle::Name.at(result.score_title)
+                         result.score_title != ScoreLimit::Null
+                             ? ScoreLimit::name(result.score_title)
                              : "");
     }
     else {
         // 流し満貫、役満
         s += "役:\n";
         for (auto &[yaku, _] : result.yaku_list)
-            s += fmt::format(" {}\n", Yaku::Name[yaku]);
-        s += ScoreTitle::Name[result.score_title] + "\n";
+            s += fmt::format(" {}\n", Yaku::name(yaku));
+        s += fmt::format("{}\n", ScoreLimit::name(result.score_title));
     }
 
     if (result.score.size() == 3) {

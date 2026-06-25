@@ -1,6 +1,10 @@
 #ifndef MAHJONG_CPP_HAND_SEPARATOR
 #define MAHJONG_CPP_HAND_SEPARATOR
 
+#include <map>
+#include <tuple>
+#include <vector>
+
 #include "mahjong/types/types.hpp"
 
 namespace mahjong
