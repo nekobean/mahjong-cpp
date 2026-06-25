@@ -16,7 +16,8 @@ namespace mahjong
 using MergedCount = std::array<int, 37>;
 using SeparatedCount = std::array<int, 37>;
 
-MergedCount create_wall(const Round &round, const Player &player, bool enable_reddora);
+MergedCount create_wall(const TableConfig &table_config, const TableState &table_state,
+                        const PlayerState &player, bool enable_reddora);
 
 class ExpectedScoreCalculator
 {
@@ -222,23 +223,34 @@ class ExpectedScoreCalculator
   public:
     ExpectedScoreCalculator() = default;
 
-    static std::tuple<std::vector<Stat>, int>
-    calc(const Config &config, const Round &round, const Player &player);
+    static std::tuple<std::vector<Stat>, int> calc(const Config &config,
+                                                   const TableConfig &table_config,
+                                                   const RoundState &round_state,
+                                                   const TableState &table_state,
+                                                   const PlayerState &player);
 
     static std::tuple<std::vector<Stat>, int> calc(const Config &config,
-                                                   const Round &round,
-                                                   const Player &player,
+                                                   const TableConfig &table_config,
+                                                   const RoundState &round_state,
+                                                   const TableState &table_state,
+                                                   const PlayerState &player,
                                                    const MergedCount &wall);
 
   private:
     class GraphBuilder;
 
-    static void calc_draw_hand(const Config &config, const Player &player,
-                               const Round &round, const MergedCount &wall,
+    static void calc_draw_hand(const Config &config, const PlayerState &player,
+                               const TableConfig &table_config,
+                               const RoundState &round_state,
+                               const TableState &table_state,
+                               const MergedCount &wall,
                                const SeparatedCount &hand_counts,
                                GraphBuilder &graph_builder, std::vector<Stat> &stats);
-    static void calc_discard_hand(const Config &config, Player &player,
-                                  const Round &round, const MergedCount &wall,
+    static void calc_discard_hand(const Config &config, PlayerState &player,
+                                  const TableConfig &table_config,
+                                  const RoundState &round_state,
+                                  const TableState &table_state,
+                                  const MergedCount &wall,
                                   SeparatedCount &hand_counts,
                                   SeparatedCount &wall_counts,
                                   GraphBuilder &graph_builder,

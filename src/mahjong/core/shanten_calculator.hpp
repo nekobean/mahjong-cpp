@@ -22,7 +22,7 @@ class ShantenCalculator
 
   public:
     static std::tuple<int, int> calc(const Hand &hand, const int num_melds, int type,
-                                     int mode);
+                                     int game_mode);
 
   private:
     template <int Mode> static int calc_regular(const Hand &hand, const int num_melds);

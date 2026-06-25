@@ -1,31 +1,24 @@
-#ifndef MAHJONG_CPP_BLOCK
-#define MAHJONG_CPP_BLOCK
+#ifndef MAHJONG_CPP_BLOCK_HPP
+#define MAHJONG_CPP_BLOCK_HPP
 
 #include "mahjong/types/constants.hpp"
+#include "mahjong/types/tile.hpp"
 
 namespace mahjong
 {
 
 /**
- * @brief Block that composes a hand
+ * @brief Block in a hand decomposition.
  */
 struct Block
 {
-    Block() : type(BlockType::None), min_tile(Tile::Null)
-    {
-    }
+    /*! Block type. */
+    BlockFlags type = BlockType::None;
 
-    Block(int type, int min_tile) : type(type), min_tile(min_tile)
-    {
-    }
-
-    /*! block type */
-    int type;
-
-    /*! The smallest tile that composes the block */
-    int min_tile;
+    /*! Lowest tile in the block. */
+    int min_tile = Tile::Null;
 };
 
 } // namespace mahjong
 
-#endif // MAHJONG_CPP_BLOCK
+#endif // MAHJONG_CPP_BLOCK_HPP

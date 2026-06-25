@@ -19,7 +19,7 @@ class HandSeparator
     HandSeparator();
     static bool initialize();
     static std::vector<std::tuple<std::vector<Block>, int>>
-    separate(const Player &player, const int win_tile, const int win_flag);
+    separate(const PlayerState &player, const int win_tile, const int win_flag);
 
   private:
     static bool make_table(const std::string &path,

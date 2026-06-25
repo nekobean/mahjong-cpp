@@ -48,7 +48,7 @@ SeparatedCount to_separated_count(const MergedCount &counts)
     return ret;
 }
 
-void normalize_red_fives(Player &player)
+void normalize_red_fives(PlayerState &player)
 {
     player.hand[Tile::RedManzu5] = 0;
     player.hand[Tile::RedPinzu5] = 0;
@@ -56,20 +56,20 @@ void normalize_red_fives(Player &player)
 
     for (auto &meld : player.melds) {
         for (auto &tile : meld.tiles) {
-            tile = to_no_reddora(tile);
+            tile = Tile::to_normal(tile);
         }
     }
 }
 
-void normalize_red_fives(Round &round)
+void normalize_red_fives(TableConfig &table_config, TableState &table_state)
 {
-    for (auto &tile : round.dora_indicators) {
-        tile = to_no_reddora(tile);
+    for (auto &tile : table_state.dora_indicators) {
+        tile = Tile::to_normal(tile);
     }
-    for (auto &tile : round.uradora_indicators) {
-        tile = to_no_reddora(tile);
+    for (auto &tile : table_state.uradora_indicators) {
+        tile = Tile::to_normal(tile);
     }
-    round.rules &= ~RuleFlag::RedDora;
+    table_config.rule_flags &= ~RuleFlag::RedDora;
 }
 
 void normalize_red_fives(MergedCount &wall)
@@ -79,7 +79,7 @@ void normalize_red_fives(MergedCount &wall)
     wall[Tile::RedSouzu5] = 0;
 }
 
-void draw(Player &player, SeparatedCount &hand_counts, SeparatedCount &wall_counts,
+void draw(PlayerState &player, SeparatedCount &hand_counts, SeparatedCount &wall_counts,
           const int tile)
 {
     ++hand_counts[tile];
@@ -96,8 +96,8 @@ void draw(Player &player, SeparatedCount &hand_counts, SeparatedCount &wall_coun
     }
 }
 
-void discard(Player &player, SeparatedCount &hand_counts, SeparatedCount &wall_counts,
-             const int tile)
+void discard(PlayerState &player, SeparatedCount &hand_counts,
+             SeparatedCount &wall_counts, const int tile)
 {
     --hand_counts[tile];
     ++wall_counts[tile];
@@ -131,13 +131,13 @@ double combination(const int n, const int r)
 std::array<double, 13> calc_uradora_distribution(const MergedCount &wall,
                                                  const MergedCount &hand_and_melds,
                                                  const int num_indicators,
-                                                 const int mode)
+                                                 const int game_mode)
 {
     std::array<std::array<double, 13>, 6> dp{};
     dp[0][0] = 1.0;
 
     for (int tile = 0; tile < 34; ++tile) {
-        const int count = wall[to_indicator(tile, mode)];
+        const int count = wall[Tile::to_indicator(tile, game_mode)];
         const int gain = hand_and_melds[tile];
         if (count == 0) {
             continue;
@@ -174,27 +174,30 @@ std::array<double, 13> calc_uradora_distribution(const MergedCount &wall,
 }
 
 double calc_uradora_score(const ExpectedScoreCalculator::Config &config,
-                          const Round &round, const Player &player,
+                          const TableConfig &table_config,
+                          const RoundState &round_state,
+                          const TableState &table_state, const PlayerState &player,
                           const SeparatedCount &hand_counts,
-                          const SeparatedCount &wall_counts, const Result &result,
+                          const SeparatedCount &wall_counts, const ScoreResult &result,
                           const int win_flag)
 {
-    const int num_indicators = round.dora_indicators.size();
+    const int num_indicators = table_state.dora_indicators.size();
 
     // 裏ドラ表示牌の抽選では、赤5と通常5を同じ牌として扱う。
     const MergedCount wall = to_merged_count(wall_counts);
     MergedCount hand_and_melds = to_merged_count(hand_counts);
     for (const auto &meld : player.melds) {
         for (auto tile : meld.tiles) {
-            ++hand_and_melds[to_no_reddora(tile)];
+            ++hand_and_melds[Tile::to_normal(tile)];
         }
     }
 
     // 裏ドラ枚数ごとの確率と、各枚数での点数を掛け合わせる。
     const auto uradora_probabilities =
-        calc_uradora_distribution(wall, hand_and_melds, num_indicators, round.mode);
-    const std::vector<int> up_scores =
-        ScoreCalculator::get_up_scores(round, player, result, win_flag, 12);
+        calc_uradora_distribution(wall, hand_and_melds, num_indicators,
+                                  table_config.game_mode);
+    const std::vector<int> up_scores = ScoreCalculator::get_up_scores(
+        table_config, round_state, table_state, player, result, win_flag, 12);
 
     double score = 0;
     for (int i = 0; i <= 12; ++i) {
@@ -204,16 +207,19 @@ double calc_uradora_score(const ExpectedScoreCalculator::Config &config,
     return score;
 }
 
-double calc_score(const ExpectedScoreCalculator::Config &config, const Round &round,
-                  Player &player, SeparatedCount &hand_counts,
+double calc_score(const ExpectedScoreCalculator::Config &config,
+                  const TableConfig &table_config, const RoundState &round_state,
+                  const TableState &table_state,
+                  PlayerState &player, SeparatedCount &hand_counts,
                   SeparatedCount &wall_counts, const int shanten_type,
                   const int win_tile, const bool riichi)
 {
     // 期待値計算では和了を自摸和了として評価する。
     int win_flag = riichi ? (WinFlag::Tsumo | WinFlag::Riichi) : WinFlag::Tsumo;
 
-    Result result =
-        ScoreCalculator::calc_fast(round, player, win_tile, win_flag, shanten_type);
+    ScoreResult result = ScoreCalculator::calc_fast(
+        table_config, round_state, table_state, player, win_tile, win_flag,
+        shanten_type);
 
     // 役なしの場合は0点とする。
     if (!result.success) {
@@ -222,17 +228,17 @@ double calc_score(const ExpectedScoreCalculator::Config &config, const Round &ro
 
     // 裏ドラ期待値を計算しない場合は、通常の和了点を返す。
     if (!config.enable_uradora || !(win_flag & WinFlag::Riichi) ||
-        round.dora_indicators.empty()) {
-        return result.score[0];
+        table_state.dora_indicators.empty()) {
+        return result.payments[0];
     }
 
     // 役満以上は裏ドラで点数が変わらない。
-    if (result.score_title >= ScoreLimit::CountedYakuman) {
-        return result.score[0];
+    if (result.score_limit >= ScoreLimit::CountedYakuman) {
+        return result.payments[0];
     }
 
-    return calc_uradora_score(config, round, player, hand_counts, wall_counts, result,
-                              win_flag);
+    return calc_uradora_score(config, table_config, round_state, table_state, player,
+                              hand_counts, wall_counts, result, win_flag);
 }
 
 template <std::size_t N>
@@ -261,11 +267,12 @@ int64_t add_red5_flags(int64_t tiles)
 }
 
 std::tuple<int, std::vector<std::tuple<int, int>>>
-get_necessary_tiles(const ExpectedScoreCalculator::Config &config, const Player &player,
-                    const MergedCount &wall, const int mode)
+get_necessary_tiles(const ExpectedScoreCalculator::Config &config,
+                    const PlayerState &player, const MergedCount &wall,
+                    const int game_mode)
 {
     const auto [shanten_type, shanten, tiles] = NecessaryTileCalculator::select(
-        player.hand, player.num_melds(), config.shanten_type, mode);
+        player.hand, player.num_melds(), config.shanten_type, game_mode);
 
     std::vector<std::tuple<int, int>> necessary_tiles;
     necessary_tiles.reserve(tiles.size());
@@ -278,37 +285,37 @@ get_necessary_tiles(const ExpectedScoreCalculator::Config &config, const Player 
 
 } // namespace
 
-MergedCount create_wall(const Round &round, const Player &player,
-                        const bool enable_reddora)
+MergedCount create_wall(const TableConfig &table_config, const TableState &table_state,
+                        const PlayerState &player, const bool enable_reddora)
 {
     MergedCount wall{0}, melds{0}, indicators{0};
-    const bool is_sanma = round.mode == GameMode::Sanma;
+    const bool is_sanma = table_config.game_mode == GameMode::Sanma;
 
-    for (auto tile : round.dora_indicators) {
-        ++indicators[to_no_reddora(tile)];
-        if (is_reddora(tile)) {
+    for (auto tile : table_state.dora_indicators) {
+        ++indicators[Tile::to_normal(tile)];
+        if (Tile::is_red(tile)) {
             ++indicators[tile];
         }
     }
 
     for (const auto &meld : player.melds) {
         for (auto tile : meld.tiles) {
-            ++melds[to_no_reddora(tile)];
-            if (is_reddora(tile)) {
+            ++melds[Tile::to_normal(tile)];
+            if (Tile::is_red(tile)) {
                 ++melds[tile];
             }
         }
     }
 
     for (int i = 0; i < 34; ++i) {
-        if (is_sanma && is_sanma_disabled_tile(i)) {
+        if (is_sanma && Tile::is_sanma_disabled(i)) {
             continue;
         }
         wall[i] = 4 - (player.hand[i] + melds[i] + indicators[i]);
     }
     if (enable_reddora) {
         for (int i = 34; i < 37; ++i) {
-            if (is_sanma && is_sanma_disabled_tile(i)) {
+            if (is_sanma && Tile::is_sanma_disabled(i)) {
                 continue;
             }
             wall[i] = 1 - (player.hand[i] + melds[i] + indicators[i]);
@@ -316,7 +323,7 @@ MergedCount create_wall(const Round &round, const Player &player,
     }
 
     // Extracted north tiles (nuki dora) are removed from the wall.
-    wall[Tile::North] -= player.num_nuki;
+    wall[Tile::North] -= player.nuki_count;
 
     return wall;
 }
@@ -324,11 +331,15 @@ MergedCount create_wall(const Round &round, const Player &player,
 class ExpectedScoreCalculator::GraphBuilder
 {
   public:
-    GraphBuilder(const Config &config, const Round &round, Player &player,
+    GraphBuilder(const Config &config, const TableConfig &table_config,
+                 const RoundState &round_state, const TableState &table_state,
+                 PlayerState &player,
                  SeparatedCount &hand_counts, SeparatedCount &wall_counts,
                  const SeparatedCount &hand_org, const int shanten_org)
         : config_(config)
-        , round_(round)
+        , table_config_(table_config)
+        , round_state_(round_state)
+        , table_state_(table_state)
         , player_(player)
         , hand_counts_(hand_counts)
         , wall_counts_(wall_counts)
@@ -363,8 +374,10 @@ class ExpectedScoreCalculator::GraphBuilder
 
   private:
     const Config &config_;
-    const Round &round_;
-    Player &player_;
+    const TableConfig &table_config_;
+    const RoundState &round_state_;
+    const TableState &table_state_;
+    PlayerState &player_;
     SeparatedCount &hand_counts_;
     SeparatedCount &wall_counts_;
     const SeparatedCount &hand_org_;
@@ -385,7 +398,8 @@ ExpectedScoreCalculator::GraphBuilder::draw_node(const bool riichi)
     }
 
     auto [type, shanten, wait] = NecessaryTileCalculator::calc(
-        player_.hand, player_.num_melds(), config_.shanten_type, round_.mode);
+        player_.hand, player_.num_melds(), config_.shanten_type,
+        table_config_.game_mode);
 
     const bool can_extend_search =
         distance(hand_counts_, hand_org_) + shanten < shanten_org_ + config_.extra;
@@ -411,8 +425,9 @@ ExpectedScoreCalculator::GraphBuilder::draw_node(const bool riichi)
                 // 自摸前の時点で聴牌の場合、有効牌自摸後は和了形のため、点数計算を行う
                 double score = 0.0;
                 if (shanten == 0 && is_wait) {
-                    score = calc_score(config_, round_, player_, hand_counts_,
-                                       wall_counts_, type, i, riichi);
+                    score = calc_score(config_, table_config_, round_state_,
+                                       table_state_, player_, hand_counts_, wall_counts_,
+                                       type, i, riichi);
                 }
                 graph_.add_edge(vertex, target, weight, score);
             }
@@ -433,7 +448,8 @@ ExpectedScoreCalculator::GraphBuilder::discard_node(const bool riichi)
     }
 
     auto [type, shanten, disc] = UnnecessaryTileCalculator::calc(
-        player_.hand, player_.num_melds(), config_.shanten_type, round_.mode);
+        player_.hand, player_.num_melds(), config_.shanten_type,
+        table_config_.game_mode);
 
     const bool can_extend_search =
         distance(hand_counts_, hand_org_) + shanten < shanten_org_ + config_.extra;
@@ -464,8 +480,9 @@ ExpectedScoreCalculator::GraphBuilder::discard_node(const bool riichi)
                 // 打牌前の時点で向聴数が-1の場合、和了形のため、点数計算を行う
                 double score = 0.0;
                 if (shanten == -1) {
-                    score = calc_score(config_, round_, player_, hand_counts_,
-                                       wall_counts_, type, i, riichi);
+                    score = calc_score(config_, table_config_, round_state_,
+                                       table_state_, player_, hand_counts_, wall_counts_,
+                                       type, i, riichi);
                 }
                 graph_.add_edge(source, vertex, weight, score);
             }
@@ -647,20 +664,21 @@ void ExpectedScoreCalculator::calc_stats(const Config &config, Graph &graph,
 }
 
 std::tuple<std::vector<ExpectedScoreCalculator::Stat>, int>
-ExpectedScoreCalculator::calc(const Config &config, const Round &round,
-                              const Player &player)
+ExpectedScoreCalculator::calc(const Config &config, const TableConfig &table_config,
+                              const RoundState &round_state,
+                              const TableState &table_state, const PlayerState &player)
 {
-    const MergedCount wall = create_wall(round, player, config.enable_reddora);
+    const MergedCount wall =
+        create_wall(table_config, table_state, player, config.enable_reddora);
 
-    return calc(config, round, player, wall);
+    return calc(config, table_config, round_state, table_state, player, wall);
 }
 
-void ExpectedScoreCalculator::calc_draw_hand(const Config &config, const Player &player,
-                                             const Round &round,
-                                             const MergedCount &wall,
-                                             const SeparatedCount &hand_counts,
-                                             GraphBuilder &graph_builder,
-                                             std::vector<Stat> &stats)
+void ExpectedScoreCalculator::calc_draw_hand(
+    const Config &config, const PlayerState &player, const TableConfig &table_config,
+    const RoundState &round_state, const TableState &table_state,
+    const MergedCount &wall, const SeparatedCount &hand_counts,
+    GraphBuilder &graph_builder, std::vector<Stat> &stats)
 {
     // 13枚の場合は自摸を起点に手牌遷移のグラフを作成する。
     const Vertex vertex = graph_builder.draw_node(false);
@@ -675,7 +693,7 @@ void ExpectedScoreCalculator::calc_draw_hand(const Config &config, const Player 
 
     // 有効牌の一覧を計算する。
     const auto [shanten2, necessary_tiles] =
-        get_necessary_tiles(config, player, wall, round.mode);
+        get_necessary_tiles(config, player, wall, table_config.game_mode);
 
     stats.emplace_back(Stat{Tile::Null, to_vector(state.tenpai_prob, config.t_max),
                             to_vector(state.win_prob, config.t_max),
@@ -684,8 +702,9 @@ void ExpectedScoreCalculator::calc_draw_hand(const Config &config, const Player 
 }
 
 void ExpectedScoreCalculator::calc_discard_hand(
-    const Config &config, Player &player, const Round &round, const MergedCount &wall,
-    SeparatedCount &hand_counts, SeparatedCount &wall_counts,
+    const Config &config, PlayerState &player, const TableConfig &table_config,
+    const RoundState &round_state, const TableState &table_state,
+    const MergedCount &wall, SeparatedCount &hand_counts, SeparatedCount &wall_counts,
     GraphBuilder &graph_builder, std::vector<Stat> &stats)
 {
     // 14枚の場合は打牌を起点に手牌遷移のグラフを作成する。
@@ -699,7 +718,7 @@ void ExpectedScoreCalculator::calc_discard_hand(
     // 結果を取得する。
     auto [discard_type, discard_shanten, discard_tiles] =
         UnnecessaryTileCalculator::calc(player.hand, player.num_melds(),
-                                        config.shanten_type, round.mode);
+                                        config.shanten_type, table_config.game_mode);
     discard_tiles = add_red5_flags(discard_tiles);
 
     for (int i = 0; i < 37; ++i) {
@@ -715,7 +734,7 @@ void ExpectedScoreCalculator::calc_discard_hand(
                 const VertexData &state = graph_builder.graph()[itr->second];
 
                 const auto [shanten2, necessary_tiles] =
-                    get_necessary_tiles(config, player, wall, round.mode);
+                    get_necessary_tiles(config, player, wall, table_config.game_mode);
 
                 stats.emplace_back(Stat{i, to_vector(state.tenpai_prob, config.t_max),
                                         to_vector(state.win_prob, config.t_max),
@@ -728,18 +747,22 @@ void ExpectedScoreCalculator::calc_discard_hand(
 }
 
 std::tuple<std::vector<ExpectedScoreCalculator::Stat>, int>
-ExpectedScoreCalculator::calc(const Config &_config, const Round &_round,
-                              const Player &_player, const MergedCount &_wall)
+ExpectedScoreCalculator::calc(const Config &_config, const TableConfig &_table_config,
+                              const RoundState &_round_state,
+                              const TableState &_table_state,
+                              const PlayerState &_player, const MergedCount &_wall)
 {
     Config config = _config;
-    Round round = _round;
-    Player player = _player;
+    TableConfig table_config = _table_config;
+    RoundState round_state = _round_state;
+    TableState table_state = _table_state;
+    PlayerState player = _player;
     MergedCount wall = _wall;
     assert(config.t_min >= 0);
     assert(config.t_max <= MaxTurn);
 
     if (!config.enable_reddora) {
-        normalize_red_fives(round);
+        normalize_red_fives(table_config, table_state);
         normalize_red_fives(player);
         normalize_red_fives(wall);
     }
@@ -756,7 +779,7 @@ ExpectedScoreCalculator::calc(const Config &_config, const Round &_round,
     if (!config.calc_stats) {
         if (num_tiles == 13) {
             const auto [shanten, necessary_tiles] =
-                get_necessary_tiles(config, player, wall, round.mode);
+                get_necessary_tiles(config, player, wall, table_config.game_mode);
             stats.emplace_back(Stat{Tile::Null, {}, {}, {}, necessary_tiles, shanten});
         }
         else {
@@ -764,7 +787,8 @@ ExpectedScoreCalculator::calc(const Config &_config, const Round &_round,
                 if (hand_counts[i] > 0) {
                     discard(player, hand_counts, wall_counts, i);
                     const auto [shanten, necessary_tiles] =
-                        get_necessary_tiles(config, player, wall, round.mode);
+                        get_necessary_tiles(config, player, wall,
+                                            table_config.game_mode);
                     stats.emplace_back(Stat{i, {}, {}, {}, necessary_tiles, shanten});
                     draw(player, hand_counts, wall_counts, i);
                 }
@@ -776,16 +800,17 @@ ExpectedScoreCalculator::calc(const Config &_config, const Round &_round,
 
     const SeparatedCount hand_org = hand_counts;
     const int shanten_org = std::get<1>(ShantenCalculator::calc(
-        player.hand, player.num_melds(), config.shanten_type, round.mode));
-    GraphBuilder graph_builder(config, round, player, hand_counts, wall_counts,
-                               hand_org, shanten_org);
+        player.hand, player.num_melds(), config.shanten_type, table_config.game_mode));
+    GraphBuilder graph_builder(config, table_config, round_state, table_state, player,
+                               hand_counts, wall_counts, hand_org, shanten_org);
 
     if (num_tiles == 13) {
-        calc_draw_hand(config, player, round, wall, hand_counts, graph_builder, stats);
+        calc_draw_hand(config, player, table_config, round_state, table_state, wall,
+                       hand_counts, graph_builder, stats);
     }
     else {
-        calc_discard_hand(config, player, round, wall, hand_counts, wall_counts,
-                          graph_builder, stats);
+        calc_discard_hand(config, player, table_config, round_state, table_state, wall,
+                          hand_counts, wall_counts, graph_builder, stats);
     }
 
     const int searched = static_cast<int>(graph_builder.graph().num_vertices());

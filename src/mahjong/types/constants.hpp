@@ -1,7 +1,6 @@
-#ifndef MAHJONG_CPP_CONSTANTS
-#define MAHJONG_CPP_CONSTANTS
+#ifndef MAHJONG_CPP_CONSTANTS_HPP
+#define MAHJONG_CPP_CONSTANTS_HPP
 
-#include <array>
 #include <cstdint>
 #include <string_view>
 
@@ -25,9 +24,9 @@ inline constexpr int Sanma = 0; /*! 三人麻雀 */
 inline constexpr int Yonma = 1; /*! 四人麻雀 */
 inline constexpr int Length = 2;
 
-inline constexpr std::string_view name(int mode) noexcept
+inline constexpr std::string_view name(int game_mode) noexcept
 {
-    switch (mode) {
+    switch (game_mode) {
     case Null:
         return "Null";
     case Sanma:
@@ -69,141 +68,7 @@ inline constexpr std::string_view name(int length) noexcept
 } // namespace GameLength
 
 /**
- * @brief Tile types
- */
-namespace Tile
-{
-
-inline constexpr int Null = -1;
-inline constexpr int Manzu1 = 0;       /*! 一萬 */
-inline constexpr int Manzu2 = 1;       /*! 二萬 */
-inline constexpr int Manzu3 = 2;       /*! 三萬 */
-inline constexpr int Manzu4 = 3;       /*! 四萬 */
-inline constexpr int Manzu5 = 4;       /*! 五萬 */
-inline constexpr int Manzu6 = 5;       /*! 六萬 */
-inline constexpr int Manzu7 = 6;       /*! 七萬 */
-inline constexpr int Manzu8 = 7;       /*! 八萬 */
-inline constexpr int Manzu9 = 8;       /*! 九萬 */
-inline constexpr int Pinzu1 = 9;       /*! 一筒 */
-inline constexpr int Pinzu2 = 10;      /*! 二筒 */
-inline constexpr int Pinzu3 = 11;      /*! 三筒 */
-inline constexpr int Pinzu4 = 12;      /*! 四筒 */
-inline constexpr int Pinzu5 = 13;      /*! 五筒 */
-inline constexpr int Pinzu6 = 14;      /*! 六筒 */
-inline constexpr int Pinzu7 = 15;      /*! 七筒 */
-inline constexpr int Pinzu8 = 16;      /*! 八筒 */
-inline constexpr int Pinzu9 = 17;      /*! 九筒 */
-inline constexpr int Souzu1 = 18;      /*! 一索 */
-inline constexpr int Souzu2 = 19;      /*! 二索 */
-inline constexpr int Souzu3 = 20;      /*! 三索 */
-inline constexpr int Souzu4 = 21;      /*! 四索 */
-inline constexpr int Souzu5 = 22;      /*! 五索 */
-inline constexpr int Souzu6 = 23;      /*! 六索 */
-inline constexpr int Souzu7 = 24;      /*! 七索 */
-inline constexpr int Souzu8 = 25;      /*! 八索 */
-inline constexpr int Souzu9 = 26;      /*! 九索 */
-inline constexpr int East = 27;        /*! 東 */
-inline constexpr int South = 28;       /*! 南 */
-inline constexpr int West = 29;        /*! 西 */
-inline constexpr int North = 30;       /*! 北 */
-inline constexpr int WhiteDragon = 31; /*! 白 */
-inline constexpr int GreenDragon = 32; /*! 發 */
-inline constexpr int RedDragon = 33;   /*! 中 */
-inline constexpr int RedManzu5 = 34;   /*! 赤五萬 */
-inline constexpr int RedPinzu5 = 35;   /*! 赤五筒 */
-inline constexpr int RedSouzu5 = 36;   /*! 赤五索 */
-inline constexpr int Length = 37;
-
-inline constexpr std::string_view name(int tile) noexcept
-{
-    switch (tile) {
-    case Null:
-        return "Null";
-    case Manzu1:
-        return "1m";
-    case Manzu2:
-        return "2m";
-    case Manzu3:
-        return "3m";
-    case Manzu4:
-        return "4m";
-    case Manzu5:
-        return "5m";
-    case Manzu6:
-        return "6m";
-    case Manzu7:
-        return "7m";
-    case Manzu8:
-        return "8m";
-    case Manzu9:
-        return "9m";
-    case Pinzu1:
-        return "1p";
-    case Pinzu2:
-        return "2p";
-    case Pinzu3:
-        return "3p";
-    case Pinzu4:
-        return "4p";
-    case Pinzu5:
-        return "5p";
-    case Pinzu6:
-        return "6p";
-    case Pinzu7:
-        return "7p";
-    case Pinzu8:
-        return "8p";
-    case Pinzu9:
-        return "9p";
-    case Souzu1:
-        return "1s";
-    case Souzu2:
-        return "2s";
-    case Souzu3:
-        return "3s";
-    case Souzu4:
-        return "4s";
-    case Souzu5:
-        return "5s";
-    case Souzu6:
-        return "6s";
-    case Souzu7:
-        return "7s";
-    case Souzu8:
-        return "8s";
-    case Souzu9:
-        return "9s";
-    case East:
-        return "1z";
-    case South:
-        return "2z";
-    case West:
-        return "3z";
-    case North:
-        return "4z";
-    case WhiteDragon:
-        return "5z";
-    case GreenDragon:
-        return "6z";
-    case RedDragon:
-        return "7z";
-    case RedManzu5:
-        return "0m";
-    case RedPinzu5:
-        return "0p";
-    case RedSouzu5:
-        return "0s";
-    default:
-        return "Unknown";
-    }
-}
-
-} // namespace Tile
-
-using Hand = std::array<int, Tile::Length>;
-
-/**
- * @brief Player types
+ * @brief Player index types.
  */
 namespace PlayerIndex
 {
@@ -236,7 +101,7 @@ inline constexpr std::string_view name(int type) noexcept
 } // namespace PlayerIndex
 
 /**
- * @brief Seat types
+ * @brief Seat types.
  */
 namespace SeatType
 {
@@ -271,7 +136,7 @@ inline constexpr std::string_view name(int type) noexcept
 using BlockFlags = std::uint32_t;
 
 /**
- * @brief Block types
+ * @brief Block types.
  */
 namespace BlockType
 {
@@ -315,7 +180,7 @@ inline constexpr std::string_view name(BlockFlags type) noexcept
 } // namespace BlockType
 
 /**
- * @brief Meld types
+ * @brief Meld types.
  */
 namespace MeldType
 {
@@ -351,7 +216,7 @@ inline constexpr std::string_view name(int type) noexcept
 } // namespace MeldType
 
 /**
- * @brief Wait types
+ * @brief Wait types.
  */
 namespace WaitType
 {
@@ -389,7 +254,7 @@ inline constexpr std::string_view name(int type) noexcept
 using RuleFlags = std::uint32_t;
 
 /**
- * @brief Flags related to rules
+ * @brief Flags related to rules.
  */
 namespace RuleFlag
 {
@@ -414,7 +279,7 @@ inline constexpr std::string_view name(RuleFlags type) noexcept
     case RedDora:
         return MAHJONG_NAME("Red Dora", "赤ドラ有り");
     case UraDora:
-        return MAHJONG_NAME("Ura Dora", "裏ドラ有り");
+        return MAHJONG_NAME("Uradora", "裏ドラ有り");
     case OpenTanyao:
         return MAHJONG_NAME("Open Tanyao", "喰い断有り");
     case BankruptcyEnd:
@@ -435,7 +300,7 @@ inline constexpr std::string_view name(RuleFlags type) noexcept
 using ShantenFlags = std::uint32_t;
 
 /**
- * @brief Flags related to which winning form to calculate shanten number for
+ * @brief Flags related to which winning form to calculate shanten number for.
  */
 namespace ShantenFlag
 {
@@ -650,7 +515,7 @@ inline constexpr std::string_view name(YakuFlags yaku) noexcept
     case Dora:
         return MAHJONG_NAME("Dora", "ドラ");
     case UraDora:
-        return MAHJONG_NAME("Ura Dora", "裏ドラ");
+        return MAHJONG_NAME("Uradora", "裏ドラ");
     case RedDora:
         return MAHJONG_NAME("Red Dora", "赤ドラ");
     case WhiteDragon:
@@ -749,7 +614,7 @@ inline constexpr std::string_view name(YakuFlags yaku) noexcept
 } // namespace Yaku
 
 /**
- * @brief Score limit types
+ * @brief Score limit types.
  */
 namespace ScoreLimit
 {
@@ -803,7 +668,7 @@ inline constexpr std::string_view name(int type) noexcept
 } // namespace ScoreLimit
 
 /**
- * @brief Ryukyoku types
+ * @brief Ryukyoku types.
  */
 namespace RyukyokuType
 {
@@ -838,91 +703,9 @@ inline constexpr std::string_view name(int type) noexcept
 
 } // namespace RyukyokuType
 
-/**
- * @brief Dora conversion tables.
- */
-using DoraTable = std::array<int, Tile::Length>;
-
-inline constexpr DoraTable DoraToIndicatorYonma = {
-    Tile::Manzu9, Tile::Manzu1,    Tile::Manzu2,      Tile::Manzu3,      Tile::Manzu4,
-    Tile::Manzu5, Tile::Manzu6,    Tile::Manzu7,      Tile::Manzu8,      Tile::Pinzu9,
-    Tile::Pinzu1, Tile::Pinzu2,    Tile::Pinzu3,      Tile::Pinzu4,      Tile::Pinzu5,
-    Tile::Pinzu6, Tile::Pinzu7,    Tile::Pinzu8,      Tile::Souzu9,      Tile::Souzu1,
-    Tile::Souzu2, Tile::Souzu3,    Tile::Souzu4,      Tile::Souzu5,      Tile::Souzu6,
-    Tile::Souzu7, Tile::Souzu8,    Tile::North,       Tile::East,        Tile::South,
-    Tile::West,   Tile::RedDragon, Tile::WhiteDragon, Tile::GreenDragon, Tile::Manzu4,
-    Tile::Pinzu4, Tile::Souzu4,
-};
-
-inline constexpr DoraTable IndicatorToDoraYonma = {
-    Tile::Manzu2, Tile::Manzu3,      Tile::Manzu4,    Tile::Manzu5,      Tile::Manzu6,
-    Tile::Manzu7, Tile::Manzu8,      Tile::Manzu9,    Tile::Manzu1,      Tile::Pinzu2,
-    Tile::Pinzu3, Tile::Pinzu4,      Tile::Pinzu5,    Tile::Pinzu6,      Tile::Pinzu7,
-    Tile::Pinzu8, Tile::Pinzu9,      Tile::Pinzu1,    Tile::Souzu2,      Tile::Souzu3,
-    Tile::Souzu4, Tile::Souzu5,      Tile::Souzu6,    Tile::Souzu7,      Tile::Souzu8,
-    Tile::Souzu9, Tile::Souzu1,      Tile::South,     Tile::West,        Tile::North,
-    Tile::East,   Tile::GreenDragon, Tile::RedDragon, Tile::WhiteDragon, Tile::Manzu6,
-    Tile::Pinzu6, Tile::Souzu6,
-};
-
-// In sanma, 2m-8m and red 5m are invalid tiles. They map to Null.
-// The valid manzu dora cycle is 1m <-> 9m.
-inline constexpr DoraTable DoraToIndicatorSanma = {
-    Tile::Manzu9, Tile::Null,      Tile::Null,        Tile::Null,        Tile::Null,
-    Tile::Null,   Tile::Null,      Tile::Null,        Tile::Manzu1,      Tile::Pinzu9,
-    Tile::Pinzu1, Tile::Pinzu2,    Tile::Pinzu3,      Tile::Pinzu4,      Tile::Pinzu5,
-    Tile::Pinzu6, Tile::Pinzu7,    Tile::Pinzu8,      Tile::Souzu9,      Tile::Souzu1,
-    Tile::Souzu2, Tile::Souzu3,    Tile::Souzu4,      Tile::Souzu5,      Tile::Souzu6,
-    Tile::Souzu7, Tile::Souzu8,    Tile::North,       Tile::East,        Tile::South,
-    Tile::West,   Tile::RedDragon, Tile::WhiteDragon, Tile::GreenDragon, Tile::Null,
-    Tile::Pinzu4, Tile::Souzu4,
-};
-
-inline constexpr DoraTable IndicatorToDoraSanma = {
-    Tile::Manzu9, Tile::Null,        Tile::Null,      Tile::Null,        Tile::Null,
-    Tile::Null,   Tile::Null,        Tile::Null,      Tile::Manzu1,      Tile::Pinzu2,
-    Tile::Pinzu3, Tile::Pinzu4,      Tile::Pinzu5,    Tile::Pinzu6,      Tile::Pinzu7,
-    Tile::Pinzu8, Tile::Pinzu9,      Tile::Pinzu1,    Tile::Souzu2,      Tile::Souzu3,
-    Tile::Souzu4, Tile::Souzu5,      Tile::Souzu6,    Tile::Souzu7,      Tile::Souzu8,
-    Tile::Souzu9, Tile::Souzu1,      Tile::South,     Tile::West,        Tile::North,
-    Tile::East,   Tile::GreenDragon, Tile::RedDragon, Tile::WhiteDragon, Tile::Null,
-    Tile::Pinzu6, Tile::Souzu6,
-};
-
-inline constexpr int to_indicator_yonma(int dora) noexcept
-{
-    return DoraToIndicatorYonma[dora];
-}
-
-inline constexpr int to_indicator_sanma(int dora) noexcept
-{
-    return DoraToIndicatorSanma[dora];
-}
-
-inline constexpr int to_dora_yonma(int indicator) noexcept
-{
-    return IndicatorToDoraYonma[indicator];
-}
-
-inline constexpr int to_dora_sanma(int indicator) noexcept
-{
-    return IndicatorToDoraSanma[indicator];
-}
-
-inline constexpr int to_indicator(int dora, int mode) noexcept
-{
-    return mode == GameMode::Sanma ? DoraToIndicatorSanma[dora]
-                                   : DoraToIndicatorYonma[dora];
-}
-
-inline constexpr int to_dora(int indicator, int mode) noexcept
-{
-    return mode == GameMode::Sanma ? IndicatorToDoraSanma[indicator]
-                                   : IndicatorToDoraYonma[indicator];
-}
 
 } // namespace mahjong
 
 #undef MAHJONG_NAME
 
-#endif // MAHJONG_CPP_CONSTANTS
+#endif // MAHJONG_CPP_CONSTANTS_HPP

@@ -28,11 +28,11 @@ namespace mahjong
  *
  * @param[in] hand The hand
  * @param[in] type The type of shanten number to calculate
- * @param[in] mode Mahjong game mode
+ * @param[in] game_mode Mahjong game mode
  * @return std::tuple<int, int> (Type of shanten number, shanten number)
  */
 std::tuple<int, int> ShantenCalculator::calc(const Hand &hand, const int num_melds,
-                                             int type, const int mode)
+                                             int type, const int game_mode)
 {
 #ifdef CHECK_ARGUMENTS
     int num_tiles = std::accumulate(hand.begin(), hand.end(), 0) + num_melds * 3;
@@ -50,7 +50,7 @@ std::tuple<int, int> ShantenCalculator::calc(const Hand &hand, const int num_mel
         throw std::invalid_argument(fmt::format(u8"Invalid type passed."));
     }
 
-    if (mode == GameMode::Sanma && has_sanma_disabled_tiles(hand)) {
+    if (game_mode == GameMode::Sanma && has_sanma_disabled_tiles(hand)) {
         throw std::invalid_argument(fmt::format(u8"Invalid Sanma hand passed."));
     }
 #endif // CHECK_ARGUMENTS
@@ -58,7 +58,7 @@ std::tuple<int, int> ShantenCalculator::calc(const Hand &hand, const int num_mel
     std::tuple<int, int> ret = {ShantenFlag::None, 100};
 
     if (type & ShantenFlag::StandardHand) {
-        int shanten = mode == GameMode::Sanma
+        int shanten = game_mode == GameMode::Sanma
                           ? calc_regular<GameMode::Sanma>(hand, num_melds)
                           : calc_regular<GameMode::Yonma>(hand, num_melds);
         if (shanten < std::get<1>(ret)) {
@@ -71,7 +71,7 @@ std::tuple<int, int> ShantenCalculator::calc(const Hand &hand, const int num_mel
 
     if ((type & ShantenFlag::SevenPairs) && num_melds == 0) {
         // closed hand only
-        int shanten = mode == GameMode::Sanma ? calc_seven_pairs<GameMode::Sanma>(hand)
+        int shanten = game_mode == GameMode::Sanma ? calc_seven_pairs<GameMode::Sanma>(hand)
                                               : calc_seven_pairs<GameMode::Yonma>(hand);
         if (shanten < std::get<1>(ret)) {
             ret = {ShantenFlag::SevenPairs, shanten};
@@ -131,7 +131,7 @@ int ShantenCalculator::calc_regular(const Hand &hand, const int num_melds)
  * @brief Calculate the shanten number for Seven Pairs.
  *
  * @param[in] hand The hand
- * @param[in] mode Mahjong game mode
+ * @param[in] game_mode Mahjong game mode
  * @return int The shanten number
  */
 template <int Mode> int ShantenCalculator::calc_seven_pairs(const Hand &hand)
@@ -140,7 +140,7 @@ template <int Mode> int ShantenCalculator::calc_seven_pairs(const Hand &hand)
     int num_pairs = 0;
     for (size_t i = 0; i < 34; ++i) {
         if constexpr (Mode == GameMode::Sanma) {
-            if (is_sanma_disabled_tile(static_cast<int>(i))) {
+            if (Tile::is_sanma_disabled(static_cast<int>(i))) {
                 continue;
             }
         }

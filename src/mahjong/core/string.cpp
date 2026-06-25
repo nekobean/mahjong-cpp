@@ -156,63 +156,66 @@ std::string to_string(const Meld &meld)
     return fmt::format("[{} {}]", to_mpsz(meld.tiles), MeldType::name(meld.type));
 }
 
-std::string to_string(const Round &round)
+std::string to_string(const TableConfig &table_config, const RoundState &round_state,
+                      const TableState &table_state)
 {
     std::string s;
 #ifdef LANG_EN
     s += u8"[Rule]\n";
     for (auto rule : {RuleFlag::RedDora, RuleFlag::OpenTanyao}) {
         s += fmt::format(u8"  {}: {}\n", RuleFlag::name(rule),
-                         (round.rules & rule) ? u8"On" : u8"Off");
+                         (table_config.rule_flags & rule) ? u8"On" : u8"Off");
     }
 
     std::string round_wind;
-    if (round.wind == Tile::East) {
+    if (round_state.round_wind == Tile::East) {
         round_wind = u8"East";
     }
-    else if (round.wind == Tile::South) {
+    else if (round_state.round_wind == Tile::South) {
         round_wind = u8"South";
     }
-    else if (round.wind == Tile::West) {
+    else if (round_state.round_wind == Tile::West) {
         round_wind = u8"West";
     }
-    else if (round.wind == Tile::North) {
+    else if (round_state.round_wind == Tile::North) {
         round_wind = u8"North";
     }
     s += u8"[Round]\n";
-    s += fmt::format(u8"{} {}Kyoku {}Honba\n", round_wind, round.kyoku, round.honba);
-    s += fmt::format(u8"Kyotaku: {}\n", round.kyotaku);
-    s += fmt::format(u8"Dora Indicators: {}\n", to_mpsz(round.dora_indicators));
+    s += fmt::format(u8"{} {}Kyoku {}Honba\n", round_wind, round_state.round_number,
+                     round_state.honba);
+    s += fmt::format(u8"Kyotaku: {}\n", table_state.kyotaku);
+    s += fmt::format(u8"Dora Indicators: {}\n", to_mpsz(table_state.dora_indicators));
 #else
     s += u8"[ルール]\n";
     for (auto rule : {RuleFlag::RedDora, RuleFlag::OpenTanyao}) {
         s += fmt::format(u8"  {}: {}\n", RuleFlag::name(rule),
-                         (round.rules & rule) ? u8"有り" : u8"無し");
+                         (table_config.rule_flags & rule) ? u8"有り" : u8"無し");
     }
 
     std::string round_wind;
-    if (round.wind == Tile::East) {
+    if (round_state.round_wind == Tile::East) {
         round_wind = u8"東";
     }
-    else if (round.wind == Tile::South) {
+    else if (round_state.round_wind == Tile::South) {
         round_wind = u8"南";
     }
-    else if (round.wind == Tile::West) {
+    else if (round_state.round_wind == Tile::West) {
         round_wind = u8"西";
     }
-    else if (round.wind == Tile::North) {
+    else if (round_state.round_wind == Tile::North) {
         round_wind = u8"北";
     }
     s += u8"[場]\n";
-    s += fmt::format(u8"{}{}局{}本場\n", round_wind, round.kyoku, round.honba);
-    s += fmt::format(u8"供託棒: {}本\n", round.kyotaku);
-    s += fmt::format(u8"ドラ表示牌: {}\n", to_mpsz(round.dora_indicators));
+    s += fmt::format(u8"{}{}局{}本場\n", round_wind, round_state.round_number,
+                     round_state.honba);
+    s += fmt::format(u8"供託棒: {}本\n", table_state.kyotaku);
+    s += fmt::format(u8"ドラ表示牌: {}\n", to_mpsz(table_state.dora_indicators));
 #endif
 
     return s;
 }
 
-std::string to_string(const Player &player)
+std::string to_string(const PlayerState &player)
 {
     std::string s;
 
@@ -223,7 +226,7 @@ std::string to_string(const Player &player)
         s += to_string(meld);
     }
     s += u8"\n";
-    s += fmt::format(u8"Seat wind: {}\n", Tile::name(player.wind));
+    s += fmt::format(u8"Seat wind: {}\n", Tile::name(player.seat_wind));
 #else
     s += fmt::format(u8"手牌: {}\n", to_mpsz(player.hand));
     s += u8"副露牌: ";
@@ -231,13 +234,13 @@ std::string to_string(const Player &player)
         s += to_string(meld);
     }
     s += u8"\n";
-    s += fmt::format(u8"自風: {}\n", Tile::name(player.wind));
+    s += fmt::format(u8"自風: {}\n", Tile::name(player.seat_wind));
 #endif
 
     return s;
 }
 
-std::string to_string(const Result &result)
+std::string to_string(const ScoreResult &result)
 {
     std::string s;
 
@@ -247,10 +250,7 @@ std::string to_string(const Result &result)
         return s;
     }
 
-    s += u8"[Input]\n";
-    s += to_string(result.player);
-    s += ((result.win_flag & WinFlag::Tsumo) ? u8"Tsumo\n" : u8"Ron\n");
-    s += u8"[Result]\n";
+    s += u8"[ScoreResult]\n";
 
     if (result.han > 0) {
         s += u8"Blocks: ";
@@ -268,8 +268,8 @@ std::string to_string(const Result &result)
 
         // 飜、符
         s += fmt::format("{}fu{}han {}\n", result.fu, result.han,
-                         result.score_title != ScoreLimit::Null
-                             ? ScoreLimit::name(result.score_title)
+                         result.score_limit != ScoreLimit::Null
+                             ? ScoreLimit::name(result.score_limit)
                              : "");
     }
     else {
@@ -277,20 +277,20 @@ std::string to_string(const Result &result)
         s += "Yaku:\n";
         for (auto &[yaku, _] : result.yaku_list)
             s += fmt::format(" {}\n", Yaku::name(yaku));
-        s += fmt::format("{}\n", ScoreLimit::name(result.score_title));
+        s += fmt::format("{}\n", ScoreLimit::name(result.score_limit));
     }
 
-    if (result.score.size() == 3) {
-        s += fmt::format(u8"Winner socre: {}, Dealer payment: {}, player payment: {}\n",
-                         result.score[0], result.score[1], result.score[2]);
+    if (result.payments.size() == 3) {
+        s += fmt::format(u8"Winner score: {}, Dealer payment: {}, Non-dealer payment: {}\n",
+                         result.payments[0], result.payments[1], result.payments[2]);
     }
-    else if ((result.win_flag & WinFlag::Tsumo) && result.score.size() == 2) {
-        s += fmt::format(u8"Winner socre: {}, player payment: {}\n", result.score[0],
-                         result.score[1]);
+    else if (result.payments.size() == 2) {
+        s += fmt::format(u8"Winner score: {}, Payment: {}\n", result.payments[0],
+                         result.payments[1]);
     }
     else {
-        s += fmt::format(u8"Winner socre: {}, Discarder payment: {}\n", result.score[0],
-                         result.score[1]);
+        s += fmt::format(u8"Winner score: {}, Discarder payment: {}\n", result.payments[0],
+                         result.payments[1]);
     }
 #else
     if (!result.success) {
@@ -298,9 +298,6 @@ std::string to_string(const Result &result)
         return s;
     }
 
-    s += u8"[入力]\n";
-    s += to_string(result.player);
-    s += ((result.win_flag & WinFlag::Tsumo) ? u8"自摸\n" : u8"ロン\n");
     s += u8"[結果]\n";
 
     if (result.han > 0) {
@@ -319,8 +316,8 @@ std::string to_string(const Result &result)
 
         // 飜、符
         s += fmt::format("{}符{}翻 {}\n", result.fu, result.han,
-                         result.score_title != ScoreLimit::Null
-                             ? ScoreLimit::name(result.score_title)
+                         result.score_limit != ScoreLimit::Null
+                             ? ScoreLimit::name(result.score_limit)
                              : "");
     }
     else {
@@ -328,21 +325,21 @@ std::string to_string(const Result &result)
         s += "役:\n";
         for (auto &[yaku, _] : result.yaku_list)
             s += fmt::format(" {}\n", Yaku::name(yaku));
-        s += fmt::format("{}\n", ScoreLimit::name(result.score_title));
+        s += fmt::format("{}\n", ScoreLimit::name(result.score_limit));
     }
 
-    if (result.score.size() == 3) {
+    if (result.payments.size() == 3) {
         s += fmt::format(
             u8"和了者の獲得点数: {}点, 親の支払い点数: {}点, 子の支払い点数: {}点\n",
-            result.score[0], result.score[1], result.score[2]);
+            result.payments[0], result.payments[1], result.payments[2]);
     }
-    else if ((result.win_flag & WinFlag::Tsumo) && result.score.size() == 2) {
-        s += fmt::format(u8"和了者の獲得点数: {}点, 子の支払い点数: {}点\n",
-                         result.score[0], result.score[1]);
+    else if (result.payments.size() == 2) {
+        s += fmt::format(u8"和了者の獲得点数: {}点, 支払い点数: {}点\n",
+                         result.payments[0], result.payments[1]);
     }
     else {
         s += fmt::format(u8"和了者の獲得点数: {}点, 放銃者の支払い点数: {}点\n",
-                         result.score[0], result.score[1]);
+                         result.payments[0], result.payments[1]);
     }
 #endif
 

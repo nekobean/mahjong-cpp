@@ -18,9 +18,9 @@ class NecessaryTileCalculator
 
   public:
     static std::tuple<int, int, std::vector<int>>
-    select(const Hand &hand, const int num_melds, const int type, int mode);
+    select(const Hand &hand, const int num_melds, const int type, int game_mode);
     static std::tuple<int, int, int64_t> calc(const Hand &hand, const int num_melds,
-                                              const int type, int mode);
+                                              const int type, int game_mode);
 
   private:
     template <int Mode>

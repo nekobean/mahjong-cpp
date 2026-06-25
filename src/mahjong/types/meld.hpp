@@ -1,41 +1,26 @@
-#ifndef MAHJONG_CPP_MELD
-#define MAHJONG_CPP_MELD
+#ifndef MAHJONG_CPP_MELD_HPP
+#define MAHJONG_CPP_MELD_HPP
 
-#include <utility>
 #include <vector>
 
 #include "mahjong/types/constants.hpp"
+#include "mahjong/types/tile.hpp"
 
 namespace mahjong
 {
 
 /**
- * @brief Meld block.
+ * @brief Meld.
  */
 struct Meld
 {
-    Meld() = default;
-
-    Meld(const int type, std::vector<int> tiles) : type(type), tiles(std::move(tiles))
-    {
-    }
-
-    Meld(const int type, std::vector<int> tiles, const int discarded_tile,
-         const int from)
-        : type(type)
-        , tiles(std::move(tiles))
-        , discarded_tile(discarded_tile)
-        , from(from)
-    {
-    }
-
     /*! Meld type. */
     int type = MeldType::Null;
 
-    /*! Tiles contained in the meld. */
+    /*! Tiles in the meld. */
     std::vector<int> tiles;
 
-    /*! Discarded tile used for the call. */
+    /*! Discarded tile used to make the call. */
     int discarded_tile = Tile::Null;
 
     /*! Relative seat of the player who discarded the called tile. */
@@ -44,4 +29,4 @@ struct Meld
 
 } // namespace mahjong
 
-#endif // MAHJONG_CPP_MELD
+#endif // MAHJONG_CPP_MELD_HPP

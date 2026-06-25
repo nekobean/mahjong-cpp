@@ -47,7 +47,7 @@ bool HandSeparator::initialize()
  * @return std::vector<std::vector<Block>> 面子構成の一覧
  */
 std::vector<std::tuple<std::vector<Block>, int>>
-HandSeparator::separate(const Player &player, const int win_tile, const int win_flag)
+HandSeparator::separate(const PlayerState &player, const int win_tile, const int win_flag)
 {
     std::vector<std::tuple<std::vector<Block>, int>> pattern;
     std::vector<Block> blocks(5);
@@ -63,7 +63,7 @@ HandSeparator::separate(const Player &player, const int win_tile, const int win_
             blocks[i].type = BlockType::Kan;
         else // 明槓、加槓
             blocks[i].type = BlockType::Kan | BlockType::Open;
-        blocks[i].min_tile = to_no_reddora(melded_block.tiles.front());
+        blocks[i].min_tile = Tile::to_normal(melded_block.tiles.front());
 
         ++i;
     }
@@ -86,7 +86,7 @@ HandSeparator::separate(const Player &player, const int win_tile, const int win_
     const std::vector<std::vector<Block>> &honors = z_tbl_[honors_hash];
 
     // 手牌の切り分けパターンを列挙する。
-    const int nored_win_tile = to_no_reddora(win_tile);
+    const int nored_win_tile = Tile::to_normal(win_tile);
     create_block_patterns(nored_win_tile, win_flag & WinFlag::Tsumo, pattern, blocks, i,
                           0, manzu, pinzu, souzu, honors);
 

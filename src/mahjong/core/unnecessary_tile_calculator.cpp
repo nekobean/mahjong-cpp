@@ -28,14 +28,14 @@ namespace mahjong
  *
  * @param[in] hand hand
  * @param[in] type shanten number type
- * @param[in] mode Mahjong game mode
+ * @param[in] game_mode Mahjong game mode
  * @return list of (shanten flag, shanten number, unnecessary tiles)
  */
 std::tuple<int, int, std::vector<int>>
 UnnecessaryTileCalculator::select(const Hand &hand, const int num_melds, const int type,
-                                  const int mode)
+                                  const int game_mode)
 {
-    const auto ret = calc(hand, num_melds, type, mode);
+    const auto ret = calc(hand, num_melds, type, game_mode);
 
     std::vector<int> tiles;
     tiles.reserve(34);
@@ -53,13 +53,13 @@ UnnecessaryTileCalculator::select(const Hand &hand, const int num_melds, const i
  *
  * @param[in] hand hand
  * @param[in] type shanten number type
- * @param[in] mode Mahjong game mode
+ * @param[in] game_mode Mahjong game mode
  * @return list of (shanten flag, shanten number, unnecessary tiles)
  */
 std::tuple<int, int, int64_t> UnnecessaryTileCalculator::calc(const Hand &hand,
                                                               const int num_melds,
                                                               const int type,
-                                                              const int mode)
+                                                              const int game_mode)
 {
 #ifdef CHECK_ARGUMENTS
     int num_tiles = std::accumulate(hand.begin(), hand.end(), 0) + num_melds * 3;
@@ -79,7 +79,7 @@ std::tuple<int, int, int64_t> UnnecessaryTileCalculator::calc(const Hand &hand,
         throw std::invalid_argument(fmt::format(u8"Invalid type {} passed.", type));
     }
 
-    if (mode == GameMode::Sanma && has_sanma_disabled_tiles(hand)) {
+    if (game_mode == GameMode::Sanma && has_sanma_disabled_tiles(hand)) {
         throw std::invalid_argument(
             fmt::format(u8"Invalid Sanma hand {} passed.", to_mpsz(hand)));
     }
@@ -89,7 +89,7 @@ std::tuple<int, int, int64_t> UnnecessaryTileCalculator::calc(const Hand &hand,
 
     if (type & ShantenFlag::StandardHand) {
         const auto [shanten, disc] =
-            mode == GameMode::Sanma ? calc_regular<GameMode::Sanma>(hand, num_melds)
+            game_mode == GameMode::Sanma ? calc_regular<GameMode::Sanma>(hand, num_melds)
                                     : calc_regular<GameMode::Yonma>(hand, num_melds);
         if (shanten < std::get<1>(ret)) {
             ret = {ShantenFlag::StandardHand, shanten, disc};
@@ -101,7 +101,7 @@ std::tuple<int, int, int64_t> UnnecessaryTileCalculator::calc(const Hand &hand,
     }
 
     if ((type & ShantenFlag::SevenPairs) && num_melds == 0) {
-        const auto [shanten, disc] = mode == GameMode::Sanma
+        const auto [shanten, disc] = game_mode == GameMode::Sanma
                                          ? calc_seven_pairs<GameMode::Sanma>(hand)
                                          : calc_seven_pairs<GameMode::Yonma>(hand);
         if (shanten < std::get<1>(ret)) {
@@ -132,7 +132,7 @@ std::tuple<int, int, int64_t> UnnecessaryTileCalculator::calc(const Hand &hand,
  *
  * @param[in] hand hand
  * @param[in] type shanten number type
- * @param[in] mode Mahjong game mode
+ * @param[in] game_mode Mahjong game mode
  * @return list of (shanten flag, shanten number, unnecessary tiles)
  */
 template <int Mode>
@@ -177,7 +177,7 @@ std::tuple<int, int64_t> UnnecessaryTileCalculator::calc_regular(const Hand &han
  *
  * @param[in] hand hand
  * @param[in] type shanten number type
- * @param[in] mode Mahjong game mode
+ * @param[in] game_mode Mahjong game mode
  * @return list of (shanten flag, shanten number, unnecessary tiles)
  */
 template <int Mode>
@@ -190,7 +190,7 @@ std::tuple<int, int64_t> UnnecessaryTileCalculator::calc_seven_pairs(const Hand 
 
     for (int i = 0; i < 34; ++i) {
         if constexpr (Mode == GameMode::Sanma) {
-            if (is_sanma_disabled_tile(i)) {
+            if (Tile::is_sanma_disabled(i)) {
                 continue;
             }
         }
