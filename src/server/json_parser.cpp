@@ -50,15 +50,15 @@ Request make_request(const rapidjson::Value &doc)
 {
     Request req;
     if (doc.HasMember("mode")) {
-        req.round.mode = doc["mode"].GetInt();
+        req.table_config.game_mode = doc["mode"].GetInt();
     }
-    req.round.wind = doc["round_wind"].GetInt();
-    req.player.wind = doc["seat_wind"].GetInt();
+    req.round_state.round_wind = doc["round_wind"].GetInt();
+    req.player.seat_wind = doc["seat_wind"].GetInt();
 
     const auto dora_indicators = doc["dora_indicators"].GetArray();
-    req.round.dora_indicators.reserve(dora_indicators.Size());
+    req.table_state.dora_indicators.reserve(dora_indicators.Size());
     for (const auto &x : dora_indicators) {
-        req.round.dora_indicators.push_back(x.GetInt());
+        req.table_state.dora_indicators.push_back(x.GetInt());
     }
 
     std::vector<int> hand;
@@ -79,11 +79,11 @@ Request make_request(const rapidjson::Value &doc)
         for (const auto &x : meld_tile_array) {
             meld_tiles.push_back(x.GetInt());
         }
-        req.player.melds.emplace_back(meld_type, meld_tiles);
+        req.player.melds.push_back(Meld{meld_type, meld_tiles});
     }
 
     if (doc.HasMember("nuki")) {
-        req.player.num_nuki = doc["nuki"].GetInt();
+        req.player.nuki_count = doc["nuki"].GetInt();
     }
 
     req.config.enable_reddora = doc["enable_reddora"].GetBool();
@@ -99,7 +99,7 @@ Request make_request(const rapidjson::Value &doc)
         }
     }
     else {
-        req.wall = create_wall(req.round, req.player, req.config.enable_reddora);
+        req.wall = create_wall(req.table_config, req.table_state, req.player, req.config.enable_reddora);
     }
 
     if (doc.HasMember("ip")) {
@@ -115,7 +115,7 @@ Request make_request(const rapidjson::Value &doc)
 
 void validate_tile_counts(const Request &req)
 {
-    MergedCount wall = create_wall(req.round, req.player, req.config.enable_reddora);
+    MergedCount wall = create_wall(req.table_config, req.table_state, req.player, req.config.enable_reddora);
 
     for (int i = 0; i < 37; ++i) {
         if (wall[i] < 0) {
@@ -142,8 +142,8 @@ void validate_tile_counts(const Request &req)
 
 void validate_sanma_tiles(const Request &req)
 {
-    if (req.round.mode != GameMode::Sanma) {
-        if (req.player.num_nuki > 0) {
+    if (req.table_config.game_mode != GameMode::Sanma) {
+        if (req.player.nuki_count > 0) {
             throw std::runtime_error("Nuki dora is only allowed in sanma.");
         }
         return;
@@ -158,15 +158,15 @@ void validate_sanma_tiles(const Request &req)
             throw std::runtime_error("Sanma hand contains a chow meld.");
         }
         for (const auto tile : meld.tiles) {
-            if (is_sanma_disabled_tile(tile)) {
+            if (Tile::is_sanma_disabled(tile)) {
                 throw std::runtime_error(fmt::format(
                     "Sanma meld contains a disabled tile: tile={}.", Tile::name(tile)));
             }
         }
     }
 
-    for (const auto tile : req.round.dora_indicators) {
-        if (is_sanma_disabled_tile(tile)) {
+    for (const auto tile : req.table_state.dora_indicators) {
+        if (Tile::is_sanma_disabled(tile)) {
             throw std::runtime_error(
                 fmt::format("Sanma dora indicator contains a disabled tile: tile={}.",
                             Tile::name(tile)));
@@ -174,7 +174,7 @@ void validate_sanma_tiles(const Request &req)
     }
 
     for (int tile = 0; tile < Tile::Length; ++tile) {
-        if (is_sanma_disabled_tile(tile) && req.wall[tile] > 0) {
+        if (Tile::is_sanma_disabled(tile) && req.wall[tile] > 0) {
             throw std::runtime_error(
                 fmt::format("Sanma wall contains disabled tiles: tile={}, count={}.",
                             Tile::name(tile), req.wall[tile]));
@@ -254,12 +254,12 @@ rapidjson::Value serialize_input(const Request &req, rapidjson::Document &doc)
     auto &allocator = doc.GetAllocator();
     rapidjson::Value input_val(rapidjson::kObjectType);
 
-    input_val.AddMember("mode", static_cast<int>(req.round.mode), allocator);
-    input_val.AddMember("round_wind", req.round.wind, allocator);
-    input_val.AddMember("seat_wind", req.player.wind, allocator);
+    input_val.AddMember("mode", static_cast<int>(req.table_config.game_mode), allocator);
+    input_val.AddMember("round_wind", req.round_state.round_wind, allocator);
+    input_val.AddMember("seat_wind", req.player.seat_wind, allocator);
 
     rapidjson::Value dora_indicators(rapidjson::kArrayType);
-    for (const auto tile : req.round.dora_indicators) {
+    for (const auto tile : req.table_state.dora_indicators) {
         dora_indicators.PushBack(tile, allocator);
     }
     input_val.AddMember("dora_indicators", dora_indicators, allocator);
@@ -297,7 +297,7 @@ rapidjson::Value serialize_input(const Request &req, rapidjson::Document &doc)
     }
     input_val.AddMember("melds", melds, allocator);
 
-    input_val.AddMember("nuki", req.player.num_nuki, allocator);
+    input_val.AddMember("nuki", req.player.nuki_count, allocator);
 
     rapidjson::Value wall(rapidjson::kArrayType);
     for (const auto count : req.wall) {

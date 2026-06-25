@@ -40,11 +40,15 @@ std::string build_error_json(const std::string &message)
     return dump_json(doc);
 }
 
+Server &get_server()
+{
+    static Server server;
+    return server;
+}
+
 } // namespace
 
 constexpr size_t MaxWaitingRequests = 20;
-
-Server server;
 
 Server::Server() : pool_(3, MaxWaitingRequests)
 {
@@ -63,15 +67,16 @@ void Server::log_request(const Request &req)
 
     using namespace mahjong;
 
-    const std::string round_wind(Tile::name(req.round.wind));
-    const std::string seat_wind(Tile::name(req.player.wind));
-    const char *mode = req.round.mode == GameMode::Sanma ? "sanma" : "yonma";
+    const std::string round_wind(Tile::name(req.round_state.round_wind));
+    const std::string wind(Tile::name(req.player.seat_wind));
+    const char *game_mode =
+        req.table_config.game_mode == GameMode::Sanma ? "sanma" : "yonma";
     const std::string hand = to_mpsz(req.player.hand);
     std::string melds;
     for (const auto &meld : req.player.melds) {
         melds += to_string(meld);
     }
-    std::string dora_indicators = to_mpsz(req.round.dora_indicators);
+    std::string dora_indicators = to_mpsz(req.table_state.dora_indicators);
     std::string wall;
     for (const auto c : req.wall) {
         wall += std::to_string(c);
@@ -81,7 +86,7 @@ void Server::log_request(const Request &req)
                        "mode={}, round={}, seat={}, indicators={}, "
                        "hand={}, melds={}, wall={}, "
                        "red_dora={}, ura_dora={}, shanten_down={}, tegawari={}",
-                       req.ip, req.version, mode, round_wind, seat_wind,
+                       req.ip, req.version, game_mode, round_wind, wind,
                        dora_indicators, hand, melds, wall, req.config.enable_reddora,
                        req.config.enable_uradora, req.config.enable_shanten_down,
                        req.config.enable_tegawari);
@@ -124,7 +129,7 @@ Server::HttpResponse Server::process_http_post(const std::string &json)
 {
     try {
         ThreadPool::EnqueueResult<std::string> queued =
-            pool_.enqueue_with_status([&] { return process_request(json); });
+            pool_.enqueue_with_status([this, json] { return process_request(json); });
 
         if (queued.will_wait) {
             get_logger()->warn(
@@ -197,7 +202,7 @@ void handle_request(beast::string_view doc_root,
         req.target().find("..") != beast::string_view::npos)
         return send(bad_request("Illegal request-target"));
 
-    const Server::HttpResponse response = server.process_http_post(req.body());
+    const Server::HttpResponse response = get_server().process_http_post(req.body());
 
     // Respond to GET request
     http::response<http::string_body> res{
@@ -333,6 +338,6 @@ int main(int argc, char *argv[])
 
     get_logger()->info("Starting {} version {}", PROJECT_NAME, PROJECT_VERSION);
 
-    return server.run(port);
+    return get_server().run(port);
 }
 #endif

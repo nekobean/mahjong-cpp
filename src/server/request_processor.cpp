@@ -22,16 +22,16 @@ CalculationResult calculate_result(const Request &req)
     result.config.extra = 1;
     result.config.shanten_type = ShantenFlag::All;
     result.shanten = std::get<1>(ShantenCalculator::calc(
-        req.player.hand, req.player.num_melds(), ShantenFlag::All, req.round.mode));
+        req.player.hand, req.player.num_melds(), ShantenFlag::All, req.table_config.game_mode));
     result.regular_shanten =
         std::get<1>(ShantenCalculator::calc(req.player.hand, req.player.num_melds(),
-                                            ShantenFlag::StandardHand, req.round.mode));
+                                            ShantenFlag::StandardHand, req.table_config.game_mode));
     result.seven_pairs_shanten =
         std::get<1>(ShantenCalculator::calc(req.player.hand, req.player.num_melds(),
-                                            ShantenFlag::SevenPairs, req.round.mode));
+                                            ShantenFlag::SevenPairs, req.table_config.game_mode));
     result.thirteen_orphans_shanten = std::get<1>(
         ShantenCalculator::calc(req.player.hand, req.player.num_melds(),
-                                ShantenFlag::ThirteenOrphans, req.round.mode));
+                                ShantenFlag::ThirteenOrphans, req.table_config.game_mode));
     result.config.calc_stats = result.shanten <= 3;
 
     if (result.shanten == -1) {
@@ -39,8 +39,9 @@ CalculationResult calculate_result(const Request &req)
     }
 
     const auto start = std::chrono::steady_clock::now();
-    std::tie(result.stats, result.searched) =
-        ExpectedScoreCalculator::calc(result.config, req.round, req.player, req.wall);
+    std::tie(result.stats, result.searched) = ExpectedScoreCalculator::calc(
+        result.config, req.table_config, req.round_state, req.table_state, req.player,
+        req.wall);
     const auto end = std::chrono::steady_clock::now();
     result.time_us =
         std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();

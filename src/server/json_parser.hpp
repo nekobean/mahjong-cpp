@@ -8,8 +8,10 @@
 struct Request
 {
     mahjong::ExpectedScoreCalculator::Config config;
-    mahjong::Round round;
-    mahjong::Player player;
+    mahjong::TableConfig table_config;
+    mahjong::RoundState round_state;
+    mahjong::TableState table_state;
+    mahjong::PlayerState player;
     mahjong::MergedCount wall;
     int objective = 0;
     std::string ip;
