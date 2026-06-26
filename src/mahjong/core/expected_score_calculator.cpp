@@ -1,6 +1,5 @@
 #include "expected_score_calculator.hpp"
 
-#undef NDEBUG
 #include <algorithm> // max, fill
 #include <cassert>
 

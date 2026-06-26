@@ -10,7 +10,6 @@
 #include <tuple>
 #include <utility>
 #include <vector>
-#undef NDEBUG
 #include <cassert>
 
 #include <boost/filesystem.hpp>

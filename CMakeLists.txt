@@ -72,10 +72,18 @@ endif()
 option(BUILD_SERVER "build server programs." ON)
 option(BUILD_TEST "build test programs." OFF)
 option(BUILD_SAMPLES "build sample programs." ON)
+option(BUILD_TOOLS "build tool programs." ON)
 option(ENABLE_OPENMP "enable OpenMP parallel loops." OFF)
+option(ENABLE_ASSERT_IN_RELEASE "enable assert in release builds." OFF)
 
 if(ENABLE_OPENMP)
   find_package(OpenMP REQUIRED)
+endif()
+
+if(ENABLE_ASSERT_IN_RELEASE)
+  add_compile_options(
+    "$<$<AND:$<CONFIG:Release>,$<CXX_COMPILER_ID:MSVC>>:/UNDEBUG>"
+    "$<$<AND:$<CONFIG:Release>,$<NOT:$<CXX_COMPILER_ID:MSVC>>>:-UNDEBUG>")
 endif()
 
 # Build mahjong-cpp
@@ -110,18 +118,19 @@ if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 endif()
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/data/config/ DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
 
-# server program
 if(BUILD_SERVER)
   add_subdirectory(src/server)
 endif()
 
-# test programs
 if(BUILD_TEST)
   add_subdirectory(src/test)
   add_subdirectory(src/misc/shanten_table)
 endif()
 
-# sample programs
 if(BUILD_SAMPLES)
   add_subdirectory(src/samples)
+endif()
+
+if(BUILD_TOOLS)
+  add_subdirectory(src/tools)
 endif()

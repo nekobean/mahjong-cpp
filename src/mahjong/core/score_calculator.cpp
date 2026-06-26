@@ -1,5 +1,3 @@
-#undef NDEBUG
-
 #include "score_calculator.hpp"
 
 #include <algorithm>
