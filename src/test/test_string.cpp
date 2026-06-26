@@ -89,94 +89,95 @@ TEST_CASE("from_mpsz")
 
 TEST_CASE("to_string(Block)")
 {
-    Block block1(BlockType::Triplet, Tile::Manzu1);
-    REQUIRE(to_string(block1) == u8"[111m 暗刻子]");
+    Block block1{BlockType::Triplet, Tile::Manzu1};
+    REQUIRE(to_string(block1) == u8"[111m 暗刻]");
 
-    Block block2(BlockType::Triplet | BlockType::Open, Tile::Manzu1);
-    REQUIRE(to_string(block2) == u8"[111m 明刻子]");
+    Block block2{BlockType::Triplet | BlockType::Open, Tile::Manzu1};
+    REQUIRE(to_string(block2) == u8"[111m 明刻]");
 
-    Block block3(BlockType::Sequence, Tile::Manzu1);
-    REQUIRE(to_string(block3) == u8"[123m 暗順子]");
+    Block block3{BlockType::Sequence, Tile::Manzu1};
+    REQUIRE(to_string(block3) == u8"[123m 順子]");
 
-    Block block4(BlockType::Sequence | BlockType::Open, Tile::Manzu1);
+    Block block4{BlockType::Sequence | BlockType::Open, Tile::Manzu1};
     REQUIRE(to_string(block4) == u8"[123m 明順子]");
 
-    Block block5(BlockType::Kong, Tile::Manzu1);
-    REQUIRE(to_string(block5) == u8"[1111m 暗槓子]");
+    Block block5{BlockType::Kan, Tile::Manzu1};
+    REQUIRE(to_string(block5) == u8"[1111m 暗槓]");
 
-    Block block6(BlockType::Kong | BlockType::Open, Tile::Manzu1);
-    REQUIRE(to_string(block6) == u8"[1111m 明槓子]");
+    Block block6{BlockType::Kan | BlockType::Open, Tile::Manzu1};
+    REQUIRE(to_string(block6) == u8"[1111m 明槓]");
 
-    Block block7(BlockType::Pair, Tile::Manzu1);
-    REQUIRE(to_string(block7) == u8"[11m 暗対子]");
+    Block block7{BlockType::Pair, Tile::Manzu1};
+    REQUIRE(to_string(block7) == u8"[11m 対子]");
 
-    Block block8(BlockType::Pair | BlockType::Open, Tile::Manzu1);
-    REQUIRE(to_string(block8) == u8"[11m 明対子]");
+    Block block8{BlockType::Pair | BlockType::Open, Tile::Manzu1};
+    REQUIRE(to_string(block8) == u8"[11m 対子]");
 }
 
 TEST_CASE("to_string(Meld)")
 {
-    Meld meld1(MeldType::Pong, {Tile::Manzu1, Tile::Manzu1, Tile::Manzu1}, Tile::Manzu1,
-               PlayerType::Player1);
+    Meld meld1{MeldType::Pon, {Tile::Manzu1, Tile::Manzu1, Tile::Manzu1}, Tile::Manzu1, PlayerIndex::Player1};
     REQUIRE(to_string(meld1) == u8"[111m ポン]");
 
-    Meld meld2(MeldType::Chow, {Tile::Manzu1, Tile::Manzu2, Tile::Manzu3}, Tile::Manzu1,
-               PlayerType::Player1);
+    Meld meld2{MeldType::Chi, {Tile::Manzu1, Tile::Manzu2, Tile::Manzu3}, Tile::Manzu1, PlayerIndex::Player1};
     REQUIRE(to_string(meld2) == u8"[123m チー]");
 
-    Meld meld3(MeldType::ClosedKong,
-               {Tile::Manzu1, Tile::Manzu1, Tile::Manzu1, Tile::Manzu1}, Tile::Manzu1,
-               PlayerType::Player0);
+    Meld meld3{MeldType::Ankan, {Tile::Manzu1, Tile::Manzu1, Tile::Manzu1, Tile::Manzu1}, Tile::Manzu1, PlayerIndex::Player0};
     REQUIRE(to_string(meld3) == u8"[1111m 暗槓]");
 
-    Meld meld4(MeldType::OpenKong,
-               {Tile::Manzu1, Tile::Manzu1, Tile::Manzu1, Tile::Manzu1}, Tile::Manzu1,
-               PlayerType::Player1);
-    REQUIRE(to_string(meld4) == u8"[1111m 明槓]");
+    Meld meld4{MeldType::Daiminkan, {Tile::Manzu1, Tile::Manzu1, Tile::Manzu1, Tile::Manzu1}, Tile::Manzu1, PlayerIndex::Player1};
+    REQUIRE(to_string(meld4) == u8"[1111m 大明槓]");
 
-    Meld meld5(MeldType::AddedKong,
-               {Tile::Manzu1, Tile::Manzu1, Tile::Manzu1, Tile::Manzu1}, Tile::Manzu1,
-               PlayerType::Player1);
+    Meld meld5{MeldType::Kakan, {Tile::Manzu1, Tile::Manzu1, Tile::Manzu1, Tile::Manzu1}, Tile::Manzu1, PlayerIndex::Player1};
     REQUIRE(to_string(meld5) == u8"[1111m 加槓]");
 }
 
-TEST_CASE("to_string(Round)")
+TEST_CASE("to_string(table config, round state, table state)")
 {
-    Round round;
-    round.rules = RuleFlag::RedDora | RuleFlag::OpenTanyao;
-    round.wind = Tile::East;
-    round.kyoku = 1;
-    round.honba = 3;
-    round.kyotaku = 2;
-    round.dora_indicators = {Tile::Manzu1};
+    TableConfig table_config;
+    table_config.rule_flags = RuleFlag::RedDora | RuleFlag::OpenTanyao;
 
-    std::cout << to_string(round) << std::endl;
+    RoundState round_state;
+    round_state.round_wind = Tile::East;
+    round_state.round_number = 1;
+    round_state.honba = 3;
+
+    TableState table_state;
+    table_state.kyotaku = 2;
+    table_state.dora_indicators = {Tile::Manzu1};
+
+    std::cout << to_string(table_config, round_state, table_state) << std::endl;
 }
 
-TEST_CASE("to_string(Player)")
+TEST_CASE("to_string(player)")
 {
     Hand hand = from_mpsz(u8"222567m34p33667s1z");
-    std::vector<Meld> melds = {{MeldType::Pong,
+    std::vector<Meld> melds = {{MeldType::Pon,
                                 {Tile::Manzu1, Tile::Manzu1, Tile::Manzu1},
                                 Tile::Manzu1,
-                                PlayerType::Player0}};
-    Player player(hand, melds, Tile::East);
+                                PlayerIndex::Player0}};
+    PlayerState player{hand, melds, Tile::East};
 
     std::cout << to_string(player) << std::endl;
 }
 
-TEST_CASE("to_string(Result)")
+TEST_CASE("to_string(result)")
 {
-    Round round;
-    round.rules = RuleFlag::RedDora | RuleFlag::OpenTanyao;
-    round.wind = Tile::East;
-    round.kyoku = 1;
-    round.honba = 3;
-    round.kyotaku = 2;
-    round.dora_indicators = {Tile::Manzu1};
+    TableConfig table_config;
+    table_config.rule_flags = RuleFlag::RedDora | RuleFlag::OpenTanyao;
 
-    Player player(from_mpsz(u8"222345m345p345s11z"), Tile::East);
-    Result result = ScoreCalculator::calc(round, player, Tile::East, WinFlag::Tsumo);
+    RoundState round_state;
+    round_state.round_wind = Tile::East;
+    round_state.round_number = 1;
+    round_state.honba = 3;
+
+    TableState table_state;
+    table_state.kyotaku = 2;
+    table_state.dora_indicators = {Tile::Manzu1};
+
+    PlayerState player{from_mpsz(u8"222345m345p345s11z"), {}, Tile::East};
+    ScoreResult result = ScoreCalculator::calc(table_config, round_state, table_state,
+                                               player, Tile::East, WinFlag::Tsumo);
 
     std::cout << to_string(result) << std::endl;
 }

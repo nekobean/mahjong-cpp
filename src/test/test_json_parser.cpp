@@ -1,7 +1,7 @@
 #define CATCH_CONFIG_MAIN
 
-#include <functional>
 #include <fstream>
+#include <functional>
 #include <string>
 #include <vector>
 
@@ -46,6 +46,7 @@ rapidjson::Document make_valid_request_document(bool include_wall = true,
     doc.SetObject();
     auto &allocator = doc.GetAllocator();
 
+    doc.AddMember("mode", 1, allocator);
     doc.AddMember("round_wind", 27, allocator);
     doc.AddMember("seat_wind", 28, allocator);
 
@@ -90,18 +91,19 @@ rapidjson::Document make_valid_request_document(bool include_wall = true,
     doc.AddMember("melds", melds, allocator);
 
     if (include_wall) {
-        Round round;
-        round.wind = 27;
-        round.dora_indicators = {31, 32};
+        TableConfig table_config;
+        table_config.game_mode = GameMode::Yonma;
 
-        Player player;
-        player.wind = 28;
+        TableState table_state;
+        table_state.dora_indicators = {31, 32};
+
+        PlayerState player;
+        player.seat_wind = 28;
         player.hand = from_array({0, 0, 5, 11, 12, 20, 21, 22});
-        player.melds.emplace_back(1, std::vector<int>{1, 1, 1});
-        player.melds.emplace_back(2, std::vector<int>{4, 5, 6});
+        player.melds.push_back(Meld{1, {1, 1, 1}});
+        player.melds.push_back(Meld{2, {4, 5, 6}});
 
-        const MergedCount wall_counts =
-            create_wall(round, player, true);
+        const MergedCount wall_counts = create_wall(table_config, table_state, player, true);
 
         rapidjson::Value wall(rapidjson::kArrayType);
         for (const int count : wall_counts) {
@@ -121,7 +123,8 @@ rapidjson::Document make_valid_request_document(bool include_wall = true,
 
 std::string make_valid_request_json(bool include_wall = true, bool include_ip = true)
 {
-    const rapidjson::Document doc = make_valid_request_document(include_wall, include_ip);
+    const rapidjson::Document doc =
+        make_valid_request_document(include_wall, include_ip);
     return stringify_json(doc);
 }
 
@@ -209,16 +212,17 @@ Request make_sample_request()
     req.config.enable_shanten_down = true;
     req.config.enable_tegawari = false;
 
-    req.round.wind = 27;
-    req.round.dora_indicators = {31, 32};
+    req.table_config.game_mode = GameMode::Yonma;
+    req.round_state.round_wind = 27;
+    req.table_state.dora_indicators = {31, 32};
 
-    req.player.wind = 28;
+    req.player.seat_wind = 28;
     req.player.hand = from_array({0, 0, 5, 11, 12, 20, 21, 22});
-    req.player.melds.emplace_back(1, std::vector<int>{1, 1, 1});
-    req.player.melds.emplace_back(2, std::vector<int>{4, 5, 6});
+    req.player.melds.push_back(Meld{1, {1, 1, 1}});
+    req.player.melds.push_back(Meld{2, {4, 5, 6}});
 
-    req.wall =
-        create_wall(req.round, req.player, req.config.enable_reddora);
+    req.wall = create_wall(req.table_config, req.table_state, req.player,
+                           req.config.enable_reddora);
     req.objective = 2;
     req.ip = "127.0.0.1";
     req.version = PROJECT_VERSION;
@@ -310,9 +314,8 @@ TEST_CASE("parse_json rejects malformed or invalid requests")
     SECTION("invalid JSON syntax")
     {
         rapidjson::Document doc;
-        require_runtime_error_contains(
-            [&] { parse_json("{\"round_wind\":27", doc); },
-            "Failed to parse JSON string");
+        require_runtime_error_contains([&] { parse_json("{\"round_wind\":27", doc); },
+                                       "Failed to parse JSON string");
     }
 
     SECTION("missing a required field")
@@ -354,9 +357,10 @@ TEST_CASE("deserialize_request maps validated JSON to Request")
 
         const Request req = deserialize_request(doc);
 
-        REQUIRE(req.round.wind == 27);
-        REQUIRE(req.player.wind == 28);
-        REQUIRE(req.round.dora_indicators == std::vector<int>({31, 32}));
+        REQUIRE(req.table_config.game_mode == GameMode::Yonma);
+        REQUIRE(req.round_state.round_wind == 27);
+        REQUIRE(req.player.seat_wind == 28);
+        REQUIRE(req.table_state.dora_indicators == std::vector<int>({31, 32}));
         REQUIRE(req.player.hand == from_array({0, 0, 5, 11, 12, 20, 21, 22}));
         REQUIRE(req.player.melds.size() == 2);
         REQUIRE(req.player.melds[0].type == 1);
@@ -370,8 +374,9 @@ TEST_CASE("deserialize_request maps validated JSON to Request")
         REQUIRE(req.objective == 2);
         REQUIRE(req.ip == "127.0.0.1");
         REQUIRE(req.version == PROJECT_VERSION);
-        REQUIRE(req.wall == create_wall(
-            req.round, req.player, req.config.enable_reddora));
+        REQUIRE(req.wall ==
+                create_wall(req.table_config, req.table_state, req.player,
+                            req.config.enable_reddora));
     }
 
     SECTION("builds the wall when it is omitted")
@@ -381,10 +386,24 @@ TEST_CASE("deserialize_request maps validated JSON to Request")
 
         const Request req = deserialize_request(doc);
         const MergedCount expected_wall =
-            create_wall(req.round, req.player, req.config.enable_reddora);
+            create_wall(req.table_config, req.table_state, req.player,
+                        req.config.enable_reddora);
 
         REQUIRE(req.wall == expected_wall);
         REQUIRE(req.ip.empty());
+    }
+
+    SECTION("defaults to Yonma when mode is omitted")
+    {
+        rapidjson::Document doc;
+        parse_json(make_request_json([](rapidjson::Document &request) {
+                       request.RemoveMember("mode");
+                   }),
+                   doc);
+
+        const Request req = deserialize_request(doc);
+
+        REQUIRE(req.table_config.game_mode == GameMode::Yonma);
     }
 }
 
@@ -419,19 +438,96 @@ TEST_CASE("deserialize_request rejects inconsistent tile counts")
     SECTION("total tile count is invalid")
     {
         rapidjson::Document doc;
-        parse_json(make_request_json([](rapidjson::Document &request) {
-                       rapidjson::Value hand(rapidjson::kArrayType);
-                       for (const int tile : {0, 0, 5, 11, 12, 20, 21, 22, 30, 31,
-                                              32}) {
-                           hand.PushBack(tile, request.GetAllocator());
-                       }
-                       request["hand"] = hand;
-                   },
-                   false),
+        parse_json(make_request_json(
+                       [](rapidjson::Document &request) {
+                           rapidjson::Value hand(rapidjson::kArrayType);
+                           for (const int tile :
+                                {0, 0, 5, 11, 12, 20, 21, 22, 30, 31, 32}) {
+                               hand.PushBack(tile, request.GetAllocator());
+                           }
+                           request["hand"] = hand;
+                       },
+                       false),
                    doc);
 
         require_runtime_error_contains([&] { deserialize_request(doc); },
                                        "Invalid tile count");
+    }
+
+    SECTION("sanma request contains disabled hand tiles")
+    {
+        rapidjson::Document doc;
+        parse_json(make_request_json(
+                       [](rapidjson::Document &request) { request["mode"].SetInt(0); }),
+                   doc);
+
+        require_runtime_error_contains([&] { deserialize_request(doc); },
+                                       "Sanma hand contains disabled tiles");
+    }
+
+    SECTION("sanma request contains disabled dora indicators")
+    {
+        rapidjson::Document doc;
+        parse_json(make_request_json(
+                       [](rapidjson::Document &request) {
+                           auto &allocator = request.GetAllocator();
+                           request["mode"].SetInt(0);
+
+                           rapidjson::Value hand(rapidjson::kArrayType);
+                           for (const int tile :
+                                {Tile::Manzu1, Tile::Manzu9, Tile::Pinzu1, Tile::Pinzu2,
+                                 Tile::Souzu1, Tile::Souzu2, Tile::East, Tile::South}) {
+                               hand.PushBack(tile, allocator);
+                           }
+                           request["hand"] = hand;
+
+                           rapidjson::Value melds(rapidjson::kArrayType);
+                           request["melds"] = melds;
+
+                           rapidjson::Value dora_indicators(rapidjson::kArrayType);
+                           dora_indicators.PushBack(Tile::Manzu5, allocator);
+                           request["dora_indicators"] = dora_indicators;
+                       },
+                       false),
+                   doc);
+
+        require_runtime_error_contains([&] { deserialize_request(doc); },
+                                       "Sanma dora indicator contains a disabled tile");
+    }
+
+    SECTION("sanma request contains a chow meld")
+    {
+        rapidjson::Document doc;
+        parse_json(make_request_json(
+                       [](rapidjson::Document &request) {
+                           auto &allocator = request.GetAllocator();
+                           request["mode"].SetInt(0);
+
+                           rapidjson::Value hand(rapidjson::kArrayType);
+                           for (const int tile :
+                                {Tile::Manzu1, Tile::Manzu9, Tile::Pinzu4, Tile::Pinzu5,
+                                 Tile::Souzu1, Tile::Souzu2, Tile::East, Tile::South}) {
+                               hand.PushBack(tile, allocator);
+                           }
+                           request["hand"] = hand;
+
+                           rapidjson::Value melds(rapidjson::kArrayType);
+                           rapidjson::Value meld(rapidjson::kObjectType);
+                           meld.AddMember("type", MeldType::Chi, allocator);
+                           rapidjson::Value tiles(rapidjson::kArrayType);
+                           for (const int tile :
+                                {Tile::Pinzu1, Tile::Pinzu2, Tile::Pinzu3}) {
+                               tiles.PushBack(tile, allocator);
+                           }
+                           meld.AddMember("tiles", tiles, allocator);
+                           melds.PushBack(meld, allocator);
+                           request["melds"] = melds;
+                       },
+                       false),
+                   doc);
+
+        require_runtime_error_contains([&] { deserialize_request(doc); },
+                                       "Sanma hand contains a chow meld");
     }
 }
 
@@ -452,20 +548,21 @@ TEST_CASE("build_error_response creates a schema-compliant error document")
 TEST_CASE("build_success_response serializes red fives without duplicate normal fives")
 {
     Request req = make_sample_request();
-    req.player.hand = from_array({Tile::Pinzu5, Tile::RedPinzu5, Tile::Manzu1,
-                                  Tile::Manzu2, Tile::Manzu3, Tile::Souzu1,
-                                  Tile::Souzu2, Tile::Souzu3});
-    req.wall = create_wall(req.round, req.player, req.config.enable_reddora);
+    req.player.hand =
+        from_array({Tile::Pinzu5, Tile::RedPinzu5, Tile::Manzu1, Tile::Manzu2,
+                    Tile::Manzu3, Tile::Souzu1, Tile::Souzu2, Tile::Souzu3});
+    req.wall =
+        create_wall(req.table_config, req.table_state, req.player, req.config.enable_reddora);
 
     const CalculationResult result = make_sample_result();
 
     rapidjson::Document doc;
     build_success_response(req, result, doc);
 
-    REQUIRE(to_int_vector(doc["input"]["hand"]) ==
-            std::vector<int>({Tile::Manzu1, Tile::Manzu2, Tile::Manzu3,
-                              Tile::Pinzu5, Tile::Souzu1, Tile::Souzu2,
-                              Tile::Souzu3, Tile::RedPinzu5}));
+    REQUIRE(
+        to_int_vector(doc["input"]["hand"]) ==
+        std::vector<int>({Tile::Manzu1, Tile::Manzu2, Tile::Manzu3, Tile::Pinzu5,
+                          Tile::Souzu1, Tile::Souzu2, Tile::Souzu3, Tile::RedPinzu5}));
 }
 
 TEST_CASE("build_success_response creates a schema-compliant success document")
@@ -483,16 +580,19 @@ TEST_CASE("build_success_response creates a schema-compliant success document")
     REQUIRE(doc["success"].GetBool());
 
     const rapidjson::Value &input = doc["input"];
-    REQUIRE(input.MemberCount() == 6);
+    REQUIRE(input.MemberCount() == 8);
+    REQUIRE(input["mode"].GetInt() == 1);
     REQUIRE(input["round_wind"].GetInt() == 27);
     REQUIRE(input["seat_wind"].GetInt() == 28);
     REQUIRE(to_int_vector(input["dora_indicators"]) == std::vector<int>({31, 32}));
-    REQUIRE(to_int_vector(input["hand"]) == std::vector<int>({0, 0, 5, 11, 12, 20, 21, 22}));
+    REQUIRE(to_int_vector(input["hand"]) ==
+            std::vector<int>({0, 0, 5, 11, 12, 20, 21, 22}));
     REQUIRE(input["melds"].Size() == 2);
     REQUIRE(input["melds"][0]["type"].GetInt() == 1);
     REQUIRE(to_int_vector(input["melds"][0]["tiles"]) == std::vector<int>({1, 1, 1}));
     REQUIRE(input["melds"][1]["type"].GetInt() == 2);
     REQUIRE(to_int_vector(input["melds"][1]["tiles"]) == std::vector<int>({4, 5, 6}));
+    REQUIRE(input["nuki"].GetInt() == 0);
     REQUIRE(input["wall"].Size() == 37);
 
     const rapidjson::Value &config = doc["config"];
