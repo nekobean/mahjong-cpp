@@ -1,0 +1,10 @@
+set(TENHOU_SCORE_TESTCASE_SRC score_testcase_converter.cpp)
+
+add_library(tenhou_score_testcase STATIC ${TENHOU_SCORE_TESTCASE_SRC})
+target_link_libraries(tenhou_score_testcase PUBLIC tenhou_mjlog)
+
+add_executable(create_score_testdata create_score_testdata.cpp)
+target_link_libraries(create_score_testdata PRIVATE tenhou_score_testcase)
+add_dependencies(create_score_testdata ${LIB_NAME})
+
+install(TARGETS create_score_testdata)

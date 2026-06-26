@@ -70,6 +70,16 @@ int to_tile(const int tile136)
     }
 }
 
+std::vector<int> to_tiles(const std::vector<int> &tiles136)
+{
+    std::vector<int> ret;
+    ret.reserve(tiles136.size());
+    for (const int tile136 : tiles136) {
+        ret.push_back(to_tile(tile136));
+    }
+    return ret;
+}
+
 Gender to_gender(const std::string &sx)
 {
     if (sx == "M") {
@@ -89,16 +99,71 @@ int to_seat_wind(const int player_id, const int dealer, const int num_players)
     return Tile::East + ((player_id - dealer + num_players) % num_players);
 }
 
-std::vector<int> to_score_deltas(const std::vector<int> &sc)
+std::vector<int> to_score_deltas(const std::vector<int> &sc, const int num_players)
 {
     assert(sc.size() % 2 == 0);
+    assert(num_players == 3 || num_players == 4);
+    assert(sc.size() / 2 >= static_cast<size_t>(num_players));
 
     std::vector<int> ret;
-    ret.reserve(sc.size() / 2);
-    for (size_t i = 1; i < sc.size(); i += 2) {
-        ret.push_back(sc[i] * 100);
+    ret.reserve(num_players);
+    for (int i = 0; i < num_players; ++i) {
+        const size_t delta_index = static_cast<size_t>(i) * 2 + 1;
+        assert(delta_index < sc.size());
+        ret.push_back(sc[delta_index] * 100);
     }
     return ret;
+}
+
+void assert_normal_score_deltas(const std::vector<int> &score_deltas,
+                                const int winner, const std::optional<int> loser,
+                                const int dealer)
+{
+    const int num_players = static_cast<int>(score_deltas.size());
+    assert(3 <= num_players && num_players <= 4);
+    assert(0 <= winner && winner < num_players);
+    assert(0 <= dealer && dealer < num_players);
+
+    if (loser) {
+        assert(0 <= *loser && *loser < num_players);
+        assert(winner != *loser);
+        return;
+    }
+
+    if (winner == dealer) {
+        int payment = 0;
+        bool has_payment = false;
+        for (int i = 0; i < num_players; ++i) {
+            if (i == winner) {
+                continue;
+            }
+            const int current_payment = -score_deltas[i];
+            if (!has_payment) {
+                payment = current_payment;
+                has_payment = true;
+                continue;
+            }
+            assert(current_payment == payment);
+        }
+        assert(has_payment);
+        return;
+    }
+
+    int child_payment = 0;
+    bool has_child_payment = false;
+    for (int i = 0; i < num_players; ++i) {
+        if (i == winner || i == dealer) {
+            continue;
+        }
+        const int current_payment = -score_deltas[i];
+        if (!has_child_payment) {
+            child_payment = current_payment;
+            has_child_payment = true;
+            continue;
+        }
+        assert(current_payment == child_payment);
+    }
+    assert(has_child_payment);
 }
 
 int to_score_limit(const MjlogAgariEvent &event, const bool is_yakuman)
@@ -620,18 +685,29 @@ WinResult make_win_result(const RoundSnapshot &state, const MjlogAgariEvent &eve
     assert(event.who >= 0 && event.who < static_cast<int>(state.players.size()));
     assert(event.from_who >= 0 &&
            event.from_who < static_cast<int>(state.players.size()));
+    assert(event.ba.size() >= 2);
+    assert(state.round.round_wind >= Tile::East && state.round.round_wind <= Tile::North);
+    assert(state.round.round_number >= 1);
+    assert(state.round.dealer >= 0 &&
+           state.round.dealer < static_cast<int>(state.players.size()));
 
     WinResult result;
     result.result_round = state.round;
+    result.result_round.honba = event.ba[0];
     result.result_table = state.table;
+    result.result_table.kyotaku = event.ba[1];
+    result.result_table.uradora_indicators = to_tiles(event.dora_hai_ura);
     result.player = state.players[event.who];
     result.player.hand = make_hand(event.hai);
     result.player.melds = melds;
     result.player.nuki_count = nuki_count;
+    assert(result.player.seat_wind >= Tile::East &&
+           result.player.seat_wind <= Tile::North);
     result.winner = event.who;
     result.loser =
         event.who == event.from_who ? std::nullopt : std::optional<int>{event.from_who};
     result.winning_tile = to_tile(event.machi);
+    assert(result.winning_tile != Tile::Null);
     result.win_flags = to_win_flags(event);
     if (event.who == event.from_who) {
         result.win_flags |= WinFlag::Tsumo;
@@ -641,7 +717,11 @@ WinResult make_win_result(const RoundSnapshot &state, const MjlogAgariEvent &eve
     result.han = is_yakuman ? 0 : sum_han(result.yaku);
     result.fu = is_yakuman ? 0 : event.ten[0];
     result.score_limit = to_score_limit(event, is_yakuman);
-    result.score_deltas = to_score_deltas(event.sc);
+    result.score_deltas =
+        to_score_deltas(event.sc, static_cast<int>(state.players.size()));
+    assert(result.score_deltas.size() == state.players.size());
+    assert_normal_score_deltas(result.score_deltas, result.winner, result.loser,
+                               state.round.dealer);
     result.pao = std::nullopt;
     return result;
 }
@@ -649,8 +729,15 @@ WinResult make_win_result(const RoundSnapshot &state, const MjlogAgariEvent &eve
 RyukyokuResult make_ryukyoku_result(const RoundSnapshot &state,
                                     const MjlogRyukyokuEvent &event, const int type)
 {
+    assert(event.ba.size() >= 2);
     assert(event.sc.size() % 2 == 0);
-    return {state.round, state.table, type, to_score_deltas(event.sc)};
+    RyukyokuResult result{
+        state.round, state.table, type,
+        to_score_deltas(event.sc, static_cast<int>(state.players.size()))};
+    result.result_round.honba = event.ba[0];
+    result.result_table.kyotaku = event.ba[1];
+    assert(result.score_deltas.size() == state.players.size());
+    return result;
 }
 
 void add_tile(PlayerState &player, const int tile)
@@ -778,6 +865,69 @@ void apply_event(RoundRecord &record, const MjlogEvent &event)
     }
 }
 
+bool has_sanma_disabled_tiles(const Hand &hand)
+{
+    for (int tile = 0; tile < Tile::Length; ++tile) {
+        if (hand[tile] > 0 && Tile::is_sanma_disabled(tile)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool has_sanma_disabled_tiles(const std::vector<int> &tiles)
+{
+    return std::any_of(tiles.begin(), tiles.end(), Tile::is_sanma_disabled);
+}
+
+void assert_sanma_valid(const PlayerState &player)
+{
+    assert(!has_sanma_disabled_tiles(player.hand));
+    for (const auto &meld : player.melds) {
+        assert(!has_sanma_disabled_tiles(meld.tiles));
+        assert(meld.discarded_tile == Tile::Null ||
+               !Tile::is_sanma_disabled(meld.discarded_tile));
+    }
+}
+
+void assert_sanma_valid(const TableState &table)
+{
+    for (const int indicator : table.dora_indicators) {
+        assert(Tile::to_dora(indicator, GameMode::Sanma) != Tile::Null);
+    }
+    for (const int indicator : table.uradora_indicators) {
+        assert(Tile::to_dora(indicator, GameMode::Sanma) != Tile::Null);
+    }
+}
+
+void assert_replay_valid(const GameRecord &game)
+{
+    if (game.table.game_mode != GameMode::Sanma) {
+        return;
+    }
+
+    for (const auto &round : game.rounds) {
+        assert_sanma_valid(round.initial.table);
+        assert_sanma_valid(round.last.table);
+        for (const auto &player : round.initial.players) {
+            assert_sanma_valid(player);
+        }
+        for (const auto &player : round.last.players) {
+            assert_sanma_valid(player);
+        }
+        for (const auto &result : round.results) {
+            if (const auto *win = std::get_if<WinResult>(&result)) {
+                assert_sanma_valid(win->result_table);
+                assert_sanma_valid(win->player);
+                assert(!Tile::is_sanma_disabled(win->winning_tile));
+            }
+            else if (const auto *ryukyoku = std::get_if<RyukyokuResult>(&result)) {
+                assert_sanma_valid(ryukyoku->result_table);
+            }
+        }
+    }
+}
+
 } // namespace
 
 GameRecord build_replay(const Mjlog &log)
@@ -810,6 +960,7 @@ GameRecord build_replay(const Mjlog &log)
         }
     }
 
+    assert_replay_valid(game);
     return game;
 }
 
