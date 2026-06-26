@@ -19,6 +19,15 @@ std::vector<int> hand_to_tiles(const Hand &hand)
     return ret;
 }
 
+RoundState to_testcase_round_state(const RoundState &round, const int win_index)
+{
+    RoundState ret = round;
+    if (win_index != 0) {
+        ret.honba = 0;
+    }
+    return ret;
+}
+
 void write_int_array(JsonWriter &writer, const std::vector<int> &values)
 {
     writer.StartArray();
@@ -121,12 +130,13 @@ void write_player_state(JsonWriter &writer, const PlayerState &player)
 
 } // namespace
 
-ScoreTestcase convert_score_testcase(const GameRecord &game, const WinResult &result)
+ScoreTestcase convert_score_testcase(const GameRecord &game, const WinResult &result,
+                                     const int win_index)
 {
     ScoreTestcase testcase;
     testcase.source = game.meta.source_file;
     testcase.table_config = {game.table.rule_flags, game.table.game_mode};
-    testcase.round_state = result.result_round;
+    testcase.round_state = to_testcase_round_state(result.result_round, win_index);
     testcase.table_state = result.result_table;
     testcase.player_state = result.player;
     testcase.win.winner = result.winner;

@@ -115,9 +115,8 @@ std::vector<int> to_score_deltas(const std::vector<int> &sc, const int num_playe
     return ret;
 }
 
-void assert_normal_score_deltas(const std::vector<int> &score_deltas,
-                                const int winner, const std::optional<int> loser,
-                                const int dealer)
+void assert_score_deltas(const std::vector<int> &score_deltas, const int winner,
+                         const std::optional<int> loser, const int dealer)
 {
     const int num_players = static_cast<int>(score_deltas.size());
     assert(3 <= num_players && num_players <= 4);
@@ -129,41 +128,53 @@ void assert_normal_score_deltas(const std::vector<int> &score_deltas,
         assert(winner != *loser);
         return;
     }
+}
 
-    if (winner == dealer) {
-        int payment = 0;
-        bool has_payment = false;
-        for (int i = 0; i < num_players; ++i) {
-            if (i == winner) {
-                continue;
-            }
-            const int current_payment = -score_deltas[i];
-            if (!has_payment) {
-                payment = current_payment;
-                has_payment = true;
-                continue;
-            }
-            assert(current_payment == payment);
+YakuFlags to_pao_yaku(const std::vector<YakuEntry> &yaku_list)
+{
+    for (const auto &entry : yaku_list) {
+        if (entry.yaku == Yaku::BigThreeDragons ||
+            entry.yaku == Yaku::BigFourWinds || entry.yaku == Yaku::FourKans) {
+            return entry.yaku;
         }
-        assert(has_payment);
-        return;
+    }
+    return Yaku::None;
+}
+
+std::optional<PaoInfo> to_pao_info(const std::vector<int> &score_deltas,
+                                   const int winner, const std::optional<int> loser,
+                                   const std::vector<YakuEntry> &yaku_list)
+{
+    const YakuFlags yaku = to_pao_yaku(yaku_list);
+    if (yaku == Yaku::None) {
+        return std::nullopt;
     }
 
-    int child_payment = 0;
-    bool has_child_payment = false;
-    for (int i = 0; i < num_players; ++i) {
-        if (i == winner || i == dealer) {
-            continue;
+    if (loser) {
+        for (int player = 0; player < static_cast<int>(score_deltas.size());
+             ++player) {
+            if (player != winner && player != *loser && score_deltas[player] < 0) {
+                return PaoInfo{player, yaku};
+            }
         }
-        const int current_payment = -score_deltas[i];
-        if (!has_child_payment) {
-            child_payment = current_payment;
-            has_child_payment = true;
-            continue;
-        }
-        assert(current_payment == child_payment);
+        return std::nullopt;
     }
-    assert(has_child_payment);
+
+    int payer = PlayerIndex::Null;
+    for (int player = 0; player < static_cast<int>(score_deltas.size()); ++player) {
+        if (player == winner || score_deltas[player] >= 0) {
+            continue;
+        }
+        if (payer != PlayerIndex::Null) {
+            return std::nullopt;
+        }
+        payer = player;
+    }
+
+    if (payer == PlayerIndex::Null) {
+        return std::nullopt;
+    }
+    return PaoInfo{payer, yaku};
 }
 
 int to_score_limit(const MjlogAgariEvent &event, const bool is_yakuman)
@@ -720,9 +731,10 @@ WinResult make_win_result(const RoundSnapshot &state, const MjlogAgariEvent &eve
     result.score_deltas =
         to_score_deltas(event.sc, static_cast<int>(state.players.size()));
     assert(result.score_deltas.size() == state.players.size());
-    assert_normal_score_deltas(result.score_deltas, result.winner, result.loser,
-                               state.round.dealer);
-    result.pao = std::nullopt;
+    assert_score_deltas(result.score_deltas, result.winner, result.loser,
+                        state.round.dealer);
+    result.pao = to_pao_info(result.score_deltas, result.winner, result.loser,
+                             result.yaku);
     return result;
 }
 

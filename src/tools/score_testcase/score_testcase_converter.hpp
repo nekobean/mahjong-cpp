@@ -49,9 +49,11 @@ struct ScoreTestcase
  * @brief Converts a replay result into a score calculator test case.
  * @param game Reconstructed mjlog game record.
  * @param replay_result Win result to convert.
+ * @param win_index Index in a consecutive AGARI group.
  * @return Converted test case.
  */
-ScoreTestcase convert_score_testcase(const GameRecord &game, const WinResult &result);
+ScoreTestcase convert_score_testcase(const GameRecord &game, const WinResult &result,
+                                     int win_index);
 
 /**
  * @brief Writes a score calculator test case as JSON.

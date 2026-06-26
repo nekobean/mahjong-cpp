@@ -161,8 +161,9 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
-build/
+build*/
 .vscode/
 __pycache__/
 compare/
 AGENTS.md
+test_score_mjlog.json

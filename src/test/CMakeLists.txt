@@ -17,11 +17,16 @@ file(GLOB_RECURSE SRC_FILES ../mahjong/*.cpp ../compare/*.cpp ../server/json_par
 set(CMAKE_TESTCASE_DIR ${CMAKE_SOURCE_DIR}/data/testcase)
 add_definitions("-DCMAKE_TESTCASE_DIR=\"${CMAKE_TESTCASE_DIR}\"")
 
-file(GLOB ENTRY_FILES ${CMAKE_CURRENT_SOURCE_DIR}/test_*.cpp)
+add_custom_target(copy_test_config
+                  COMMAND ${CMAKE_COMMAND} -E copy_directory
+                  ${CMAKE_SOURCE_DIR}/data/config/
+                  ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>)
+
+file(GLOB_RECURSE ENTRY_FILES ${CMAKE_CURRENT_SOURCE_DIR}/test_*.cpp)
 foreach(ENTRY_FILE ${ENTRY_FILES})
   get_filename_component(EXE_NAME ${ENTRY_FILE} NAME_WE)
   add_executable(${EXE_NAME} ${SRC_FILES} ${ENTRY_FILE})
-  add_dependencies(${EXE_NAME} ${LIB_NAME})
+  add_dependencies(${EXE_NAME} ${LIB_NAME} copy_test_config)
   target_compile_definitions(${EXE_NAME} PRIVATE MAHJONG_CPP_DISABLE_SERVER_MAIN)
   if (MSVC)
     target_link_libraries(${EXE_NAME} ${LIB_NAME} ${CMAKE_DL_LIBS}
@@ -31,7 +36,4 @@ foreach(ENTRY_FILE ${ENTRY_FILES})
                           Boost::filesystem Boost::system spdlog::spdlog
                           Catch2::Catch2 -static-libgcc -static-libstdc++ -static)
   endif()
-  add_custom_command(TARGET ${EXE_NAME} PRE_BUILD
-                     COMMAND ${CMAKE_COMMAND} -E copy_directory
-                     ${CMAKE_SOURCE_DIR}/data/config/ $<TARGET_FILE_DIR:${EXE_NAME}>)
 endforeach(ENTRY_FILE ${ENTRY_FILES})

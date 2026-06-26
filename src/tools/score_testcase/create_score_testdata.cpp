@@ -140,13 +140,15 @@ int main(int argc, char **argv)
                 ++stats.files;
 
                 for (const auto &round : replay.rounds) {
+                    int win_index = 0;
                     for (const auto &result : round.results) {
                         if (const auto *win_result =
                                 std::get_if<mahjong::WinResult>(&result)) {
                             ++stats.agari;
-                            cases.push_back(
-                                tenhou::convert_score_testcase(replay, *win_result));
+                            cases.push_back(tenhou::convert_score_testcase(
+                                replay, *win_result, win_index));
                             ++stats.written;
+                            ++win_index;
                         }
                     }
                 }
