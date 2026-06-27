@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <array>
+#include <cassert>
 #include <chrono>
 #include <execution>
 #include <fstream>
@@ -10,7 +11,6 @@
 #include <tuple>
 #include <utility>
 #include <vector>
-#include <cassert>
 
 #include <boost/filesystem.hpp>
 #include <cppitertools/combinations_with_replacement.hpp>

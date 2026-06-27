@@ -124,7 +124,6 @@ endif()
 
 if(BUILD_TEST)
   add_subdirectory(src/test)
-  add_subdirectory(src/misc/shanten_table)
 endif()
 
 if(BUILD_SAMPLES)

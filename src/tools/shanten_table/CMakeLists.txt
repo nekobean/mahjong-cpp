@@ -1,5 +1,3 @@
-
-
 file(GLOB_RECURSE SRC_FILES ../../mahjong/*.cpp)
 
 FetchContent_Declare(
@@ -7,9 +5,9 @@ FetchContent_Declare(
 GIT_REPOSITORY https://github.com/ryanhaining/cppitertools)
 FetchContent_GetProperties(cppitertools)
 if(NOT cppitertools_POPULATED)
-FetchContent_Populate(cppitertools)
-add_subdirectory(${cppitertools_SOURCE_DIR} ${cppitertools_BINARY_DIR})
-INCLUDE_DIRECTORIES(${cppitertools_SOURCE_DIR})
+  FetchContent_Populate(cppitertools)
+  add_subdirectory(${cppitertools_SOURCE_DIR} ${cppitertools_BINARY_DIR})
+  include_directories(${cppitertools_SOURCE_DIR})
 endif()
 
 set(CMAKE_CONFIG_DIR ${CMAKE_SOURCE_DIR}/data/config)
