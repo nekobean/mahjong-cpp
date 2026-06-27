@@ -4,6 +4,7 @@
 #include <cstring>
 #include <fstream>
 #include <string>
+#include <vector>
 
 #include <boost/dll.hpp>
 #include <rapidjson/istreamwrapper.h>
@@ -137,6 +138,69 @@ void validate_tile_counts(const Request &req)
     int total_count = req.player.num_tiles() + req.player.num_melds() * 3;
     if (total_count % 3 == 0 || total_count > 14) {
         throw std::runtime_error("Invalid tile count.");
+    }
+}
+
+bool is_same_tile_meld(const Meld &meld)
+{
+    if (meld.tiles.empty()) {
+        return false;
+    }
+
+    const int tile = Tile::to_normal(meld.tiles.front());
+    return std::all_of(meld.tiles.begin(), meld.tiles.end(),
+                       [tile](const int x) { return Tile::to_normal(x) == tile; });
+}
+
+bool is_chow_meld(const Meld &meld)
+{
+    if (meld.tiles.size() != 3) {
+        return false;
+    }
+
+    std::vector<int> tiles;
+    tiles.reserve(meld.tiles.size());
+    for (const auto tile : meld.tiles) {
+        tiles.push_back(Tile::to_normal(tile));
+    }
+    std::sort(tiles.begin(), tiles.end());
+
+    return Tile::is_suit(tiles[0]) && Tile::is_suit(tiles[1]) &&
+           Tile::is_suit(tiles[2]) &&
+           ((Tile::is_manzu(tiles[0]) && Tile::is_manzu(tiles[1]) &&
+             Tile::is_manzu(tiles[2])) ||
+            (Tile::is_pinzu(tiles[0]) && Tile::is_pinzu(tiles[1]) &&
+             Tile::is_pinzu(tiles[2])) ||
+            (Tile::is_souzu(tiles[0]) && Tile::is_souzu(tiles[1]) &&
+             Tile::is_souzu(tiles[2]))) &&
+           tiles[1] == tiles[0] + 1 && tiles[2] == tiles[1] + 1;
+}
+
+void validate_melds(const Request &req)
+{
+    for (const auto &meld : req.player.melds) {
+        switch (meld.type) {
+        case MeldType::Pon:
+            if (meld.tiles.size() != 3 || !is_same_tile_meld(meld)) {
+                throw std::runtime_error("Invalid pon meld.");
+            }
+            break;
+        case MeldType::Chi:
+            if (!is_chow_meld(meld)) {
+                throw std::runtime_error("Invalid chow meld.");
+            }
+            break;
+        case MeldType::Ankan:
+        case MeldType::Daiminkan:
+        case MeldType::Kakan:
+            if (meld.tiles.size() != 4 || !is_same_tile_meld(meld)) {
+                throw std::runtime_error("Invalid kong meld.");
+            }
+            break;
+        default:
+            throw std::runtime_error(
+                fmt::format("Invalid meld type: type={}.", meld.type));
+        }
     }
 }
 
@@ -376,6 +440,7 @@ Request deserialize_request(const rapidjson::Document &doc)
 {
     Request req = make_request(doc);
 
+    validate_melds(req);
     validate_sanma_tiles(req);
     validate_tile_counts(req);
 

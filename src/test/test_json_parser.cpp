@@ -70,7 +70,7 @@ rapidjson::Document make_valid_request_document(bool include_wall = true,
     rapidjson::Value melds(rapidjson::kArrayType);
     {
         rapidjson::Value meld(rapidjson::kObjectType);
-        meld.AddMember("type", 1, allocator);
+        meld.AddMember("type", MeldType::Pon, allocator);
         rapidjson::Value tiles(rapidjson::kArrayType);
         for (const int tile : {1, 1, 1}) {
             tiles.PushBack(tile, allocator);
@@ -80,7 +80,7 @@ rapidjson::Document make_valid_request_document(bool include_wall = true,
     }
     {
         rapidjson::Value meld(rapidjson::kObjectType);
-        meld.AddMember("type", 2, allocator);
+        meld.AddMember("type", MeldType::Chi, allocator);
         rapidjson::Value tiles(rapidjson::kArrayType);
         for (const int tile : {4, 5, 6}) {
             tiles.PushBack(tile, allocator);
@@ -100,8 +100,8 @@ rapidjson::Document make_valid_request_document(bool include_wall = true,
         PlayerState player;
         player.seat_wind = 28;
         player.hand = from_array({0, 0, 5, 11, 12, 20, 21, 22});
-        player.melds.push_back(Meld{1, {1, 1, 1}});
-        player.melds.push_back(Meld{2, {4, 5, 6}});
+        player.melds.push_back(Meld{MeldType::Pon, {1, 1, 1}});
+        player.melds.push_back(Meld{MeldType::Chi, {4, 5, 6}});
 
         const MergedCount wall_counts =
             create_wall(table_config, table_state, player, true);
@@ -219,8 +219,8 @@ Request make_sample_request()
 
     req.player.seat_wind = 28;
     req.player.hand = from_array({0, 0, 5, 11, 12, 20, 21, 22});
-    req.player.melds.push_back(Meld{1, {1, 1, 1}});
-    req.player.melds.push_back(Meld{2, {4, 5, 6}});
+    req.player.melds.push_back(Meld{MeldType::Pon, {1, 1, 1}});
+    req.player.melds.push_back(Meld{MeldType::Chi, {4, 5, 6}});
 
     req.wall = create_wall(req.table_config, req.table_state, req.player,
                            req.config.enable_reddora);
@@ -373,9 +373,9 @@ TEST_CASE("deserialize_request maps validated JSON to Request")
         REQUIRE(req.table_state.dora_indicators == std::vector<int>({31, 32}));
         REQUIRE(req.player.hand == from_array({0, 0, 5, 11, 12, 20, 21, 22}));
         REQUIRE(req.player.melds.size() == 2);
-        REQUIRE(req.player.melds[0].type == 1);
+        REQUIRE(req.player.melds[0].type == MeldType::Pon);
         REQUIRE(req.player.melds[0].tiles == std::vector<int>({1, 1, 1}));
-        REQUIRE(req.player.melds[1].type == 2);
+        REQUIRE(req.player.melds[1].type == MeldType::Chi);
         REQUIRE(req.player.melds[1].tiles == std::vector<int>({4, 5, 6}));
         REQUIRE(req.config.enable_reddora);
         REQUIRE_FALSE(req.config.enable_uradora);
@@ -447,6 +447,64 @@ TEST_CASE("deserialize_request rejects inconsistent tile counts")
 
         require_runtime_error_contains([&] { deserialize_request(doc); },
                                        "Invalid tile count");
+    }
+
+    SECTION("pon meld must contain three identical tiles")
+    {
+        rapidjson::Document doc;
+        parse_json(make_request_json(
+                       [](rapidjson::Document &request) {
+                           auto &tiles = request["melds"][0]["tiles"];
+                           tiles[2].SetInt(Tile::Manzu3);
+                       },
+                       false),
+                   doc);
+
+        require_runtime_error_contains([&] { deserialize_request(doc); },
+                                       "Invalid pon meld");
+    }
+
+    SECTION("chow meld must contain three consecutive suited tiles")
+    {
+        rapidjson::Document doc;
+        parse_json(make_request_json(
+                       [](rapidjson::Document &request) {
+                           auto &tiles = request["melds"][1]["tiles"];
+                           tiles[0].SetInt(Tile::Pinzu1);
+                           tiles[1].SetInt(Tile::Pinzu3);
+                           tiles[2].SetInt(Tile::Pinzu5);
+                       },
+                       false),
+                   doc);
+
+        require_runtime_error_contains([&] { deserialize_request(doc); },
+                                       "Invalid chow meld");
+    }
+
+    SECTION("kong meld must contain four identical tiles")
+    {
+        rapidjson::Document doc;
+        parse_json(make_request_json(
+                       [](rapidjson::Document &request) {
+                           auto &allocator = request.GetAllocator();
+                           rapidjson::Value meld(rapidjson::kObjectType);
+                           meld.AddMember("type", MeldType::Ankan, allocator);
+                           rapidjson::Value tiles(rapidjson::kArrayType);
+                           for (const int tile :
+                                {Tile::Pinzu1, Tile::Pinzu1, Tile::Pinzu1}) {
+                               tiles.PushBack(tile, allocator);
+                           }
+                           meld.AddMember("tiles", tiles, allocator);
+
+                           rapidjson::Value melds(rapidjson::kArrayType);
+                           melds.PushBack(meld, allocator);
+                           request["melds"] = melds;
+                       },
+                       false),
+                   doc);
+
+        require_runtime_error_contains([&] { deserialize_request(doc); },
+                                       "Invalid kong meld");
     }
 
     SECTION("sanma request contains disabled hand tiles")
@@ -584,9 +642,9 @@ TEST_CASE("build_success_response creates a schema-compliant success document")
     REQUIRE(to_int_vector(input["hand"]) ==
             std::vector<int>({0, 0, 5, 11, 12, 20, 21, 22}));
     REQUIRE(input["melds"].Size() == 2);
-    REQUIRE(input["melds"][0]["type"].GetInt() == 1);
+    REQUIRE(input["melds"][0]["type"].GetInt() == MeldType::Pon);
     REQUIRE(to_int_vector(input["melds"][0]["tiles"]) == std::vector<int>({1, 1, 1}));
-    REQUIRE(input["melds"][1]["type"].GetInt() == 2);
+    REQUIRE(input["melds"][1]["type"].GetInt() == MeldType::Chi);
     REQUIRE(to_int_vector(input["melds"][1]["tiles"]) == std::vector<int>({4, 5, 6}));
     REQUIRE(input["nuki_count"].GetInt() == 0);
     REQUIRE(input["wall"].Size() == 37);
