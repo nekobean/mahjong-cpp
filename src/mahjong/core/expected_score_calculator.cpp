@@ -136,7 +136,12 @@ std::array<double, 13> calc_uradora_distribution(const MergedCount &wall,
     dp[0][0] = 1.0;
 
     for (int tile = 0; tile < 34; ++tile) {
-        const int count = wall[Tile::to_indicator(tile, game_mode)];
+        const int indicator = Tile::to_indicator(tile, game_mode);
+        if (indicator == Tile::Null) {
+            continue;
+        }
+
+        const int count = wall[indicator];
         const int gain = hand_and_melds[tile];
         if (count == 0) {
             continue;
@@ -174,9 +179,8 @@ std::array<double, 13> calc_uradora_distribution(const MergedCount &wall,
 
 double calc_uradora_score(const ExpectedScoreCalculator::Config &config,
                           const TableConfig &table_config,
-                          const RoundState &round_state,
-                          const TableState &table_state, const PlayerState &player,
-                          const SeparatedCount &hand_counts,
+                          const RoundState &round_state, const TableState &table_state,
+                          const PlayerState &player, const SeparatedCount &hand_counts,
                           const SeparatedCount &wall_counts, const ScoreResult &result,
                           const int win_flag)
 {
@@ -192,9 +196,8 @@ double calc_uradora_score(const ExpectedScoreCalculator::Config &config,
     }
 
     // 裏ドラ枚数ごとの確率と、各枚数での点数を掛け合わせる。
-    const auto uradora_probabilities =
-        calc_uradora_distribution(wall, hand_and_melds, num_indicators,
-                                  table_config.game_mode);
+    const auto uradora_probabilities = calc_uradora_distribution(
+        wall, hand_and_melds, num_indicators, table_config.game_mode);
     const std::vector<int> up_scores = ScoreCalculator::get_up_scores(
         table_config, round_state, table_state, player, result, win_flag, 12);
 
@@ -208,17 +211,16 @@ double calc_uradora_score(const ExpectedScoreCalculator::Config &config,
 
 double calc_score(const ExpectedScoreCalculator::Config &config,
                   const TableConfig &table_config, const RoundState &round_state,
-                  const TableState &table_state,
-                  PlayerState &player, SeparatedCount &hand_counts,
-                  SeparatedCount &wall_counts, const int shanten_type,
-                  const int win_tile, const bool riichi)
+                  const TableState &table_state, PlayerState &player,
+                  SeparatedCount &hand_counts, SeparatedCount &wall_counts,
+                  const int shanten_type, const int win_tile, const bool riichi)
 {
     // 期待値計算では和了を自摸和了として評価する。
     int win_flag = riichi ? (WinFlag::Tsumo | WinFlag::Riichi) : WinFlag::Tsumo;
 
-    ScoreResult result = ScoreCalculator::calc_fast(
-        table_config, round_state, table_state, player, win_tile, win_flag,
-        shanten_type);
+    ScoreResult result =
+        ScoreCalculator::calc_fast(table_config, round_state, table_state, player,
+                                   win_tile, win_flag, shanten_type);
 
     // 役なしの場合は0点とする。
     if (!result.success) {
@@ -332,9 +334,9 @@ class ExpectedScoreCalculator::GraphBuilder
   public:
     GraphBuilder(const Config &config, const TableConfig &table_config,
                  const RoundState &round_state, const TableState &table_state,
-                 PlayerState &player,
-                 SeparatedCount &hand_counts, SeparatedCount &wall_counts,
-                 const SeparatedCount &hand_org, const int shanten_org)
+                 PlayerState &player, SeparatedCount &hand_counts,
+                 SeparatedCount &wall_counts, const SeparatedCount &hand_org,
+                 const int shanten_org)
         : config_(config)
         , table_config_(table_config)
         , round_state_(round_state)
@@ -396,9 +398,9 @@ ExpectedScoreCalculator::GraphBuilder::draw_node(const bool riichi)
         return itr->second;
     }
 
-    auto [type, shanten, wait] = NecessaryTileCalculator::calc(
-        player_.hand, player_.num_melds(), config_.shanten_type,
-        table_config_.game_mode);
+    auto [type, shanten, wait] =
+        NecessaryTileCalculator::calc(player_.hand, player_.num_melds(),
+                                      config_.shanten_type, table_config_.game_mode);
 
     const bool can_extend_search =
         distance(hand_counts_, hand_org_) + shanten < shanten_org_ + config_.extra;
@@ -425,8 +427,8 @@ ExpectedScoreCalculator::GraphBuilder::draw_node(const bool riichi)
                 double score = 0.0;
                 if (shanten == 0 && is_wait) {
                     score = calc_score(config_, table_config_, round_state_,
-                                       table_state_, player_, hand_counts_, wall_counts_,
-                                       type, i, riichi);
+                                       table_state_, player_, hand_counts_,
+                                       wall_counts_, type, i, riichi);
                 }
                 graph_.add_edge(vertex, target, weight, score);
             }
@@ -446,9 +448,9 @@ ExpectedScoreCalculator::GraphBuilder::discard_node(const bool riichi)
         return itr->second;
     }
 
-    auto [type, shanten, disc] = UnnecessaryTileCalculator::calc(
-        player_.hand, player_.num_melds(), config_.shanten_type,
-        table_config_.game_mode);
+    auto [type, shanten, disc] =
+        UnnecessaryTileCalculator::calc(player_.hand, player_.num_melds(),
+                                        config_.shanten_type, table_config_.game_mode);
 
     const bool can_extend_search =
         distance(hand_counts_, hand_org_) + shanten < shanten_org_ + config_.extra;
@@ -480,8 +482,8 @@ ExpectedScoreCalculator::GraphBuilder::discard_node(const bool riichi)
                 double score = 0.0;
                 if (shanten == -1) {
                     score = calc_score(config_, table_config_, round_state_,
-                                       table_state_, player_, hand_counts_, wall_counts_,
-                                       type, i, riichi);
+                                       table_state_, player_, hand_counts_,
+                                       wall_counts_, type, i, riichi);
                 }
                 graph_.add_edge(source, vertex, weight, score);
             }
@@ -785,9 +787,8 @@ ExpectedScoreCalculator::calc(const Config &_config, const TableConfig &_table_c
             for (int i = 0; i < 37; ++i) {
                 if (hand_counts[i] > 0) {
                     discard(player, hand_counts, wall_counts, i);
-                    const auto [shanten, necessary_tiles] =
-                        get_necessary_tiles(config, player, wall,
-                                            table_config.game_mode);
+                    const auto [shanten, necessary_tiles] = get_necessary_tiles(
+                        config, player, wall, table_config.game_mode);
                     stats.emplace_back(Stat{i, {}, {}, {}, necessary_tiles, shanten});
                     draw(player, hand_counts, wall_counts, i);
                 }
