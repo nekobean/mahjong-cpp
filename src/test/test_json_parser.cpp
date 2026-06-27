@@ -325,7 +325,7 @@ TEST_CASE("parse_json rejects malformed or invalid requests")
         const std::string json = make_request_json(
             [](rapidjson::Document &request) { request.RemoveMember("seat_wind"); });
         require_runtime_error_contains([&] { parse_json(json, doc); },
-                                       "JSON schema validation failed");
+                                       "ページを更新してから、もう一度お試しください");
     }
 
     SECTION("missing game_mode")
@@ -354,7 +354,7 @@ TEST_CASE("parse_json rejects malformed or invalid requests")
             request["version"].SetString("0.0.0", request.GetAllocator());
         });
         require_runtime_error_contains([&] { parse_json(json, doc); },
-                                       "Request version mismatch");
+                                       "ページを更新してから、もう一度お試しください");
     }
 }
 

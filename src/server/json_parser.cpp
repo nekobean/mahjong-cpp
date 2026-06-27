@@ -351,14 +351,16 @@ void parse_json(const std::string &json, rapidjson::Document &doc)
         validator.GetInvalidDocumentPointer().StringifyUriFragment(sb);
         const std::string invalid_doc = sb.GetString();
 
-        throw std::runtime_error(
-            fmt::format("JSON schema validation failed: schema={}, keyword={}, doc={}",
-                        invalid_schema, invalid_keyword, invalid_doc));
+        throw std::runtime_error(fmt::format(
+            u8"JSON schema validation failed: schema={}, keyword={}, doc={}. "
+            "ページを更新してから、もう一度お試しください。",
+            invalid_schema, invalid_keyword, invalid_doc));
     }
 
     if (std::strcmp(doc["version"].GetString(), PROJECT_VERSION) != 0) {
         throw std::runtime_error(
-            fmt::format("Request version mismatch: expected={}, actual={}.",
+            fmt::format(u8"Request version mismatch: expected={}, actual={}. "
+                        "ページを更新してから、もう一度お試しください。",
                         PROJECT_VERSION, doc["version"].GetString()));
     }
 }
