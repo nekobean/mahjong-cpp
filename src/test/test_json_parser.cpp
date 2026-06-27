@@ -46,7 +46,7 @@ rapidjson::Document make_valid_request_document(bool include_wall = true,
     doc.SetObject();
     auto &allocator = doc.GetAllocator();
 
-    doc.AddMember("mode", 1, allocator);
+    doc.AddMember("game_mode", 1, allocator);
     doc.AddMember("round_wind", 27, allocator);
     doc.AddMember("seat_wind", 28, allocator);
 
@@ -103,7 +103,8 @@ rapidjson::Document make_valid_request_document(bool include_wall = true,
         player.melds.push_back(Meld{1, {1, 1, 1}});
         player.melds.push_back(Meld{2, {4, 5, 6}});
 
-        const MergedCount wall_counts = create_wall(table_config, table_state, player, true);
+        const MergedCount wall_counts =
+            create_wall(table_config, table_state, player, true);
 
         rapidjson::Value wall(rapidjson::kArrayType);
         for (const int count : wall_counts) {
@@ -327,6 +328,15 @@ TEST_CASE("parse_json rejects malformed or invalid requests")
                                        "JSON schema validation failed");
     }
 
+    SECTION("missing game_mode")
+    {
+        rapidjson::Document doc;
+        const std::string json = make_request_json(
+            [](rapidjson::Document &request) { request.RemoveMember("game_mode"); });
+        require_runtime_error_contains([&] { parse_json(json, doc); },
+                                       "JSON schema validation failed");
+    }
+
     SECTION("contains an unknown field")
     {
         rapidjson::Document doc;
@@ -374,9 +384,8 @@ TEST_CASE("deserialize_request maps validated JSON to Request")
         REQUIRE(req.objective == 2);
         REQUIRE(req.ip == "127.0.0.1");
         REQUIRE(req.version == PROJECT_VERSION);
-        REQUIRE(req.wall ==
-                create_wall(req.table_config, req.table_state, req.player,
-                            req.config.enable_reddora));
+        REQUIRE(req.wall == create_wall(req.table_config, req.table_state, req.player,
+                                        req.config.enable_reddora));
     }
 
     SECTION("builds the wall when it is omitted")
@@ -385,25 +394,11 @@ TEST_CASE("deserialize_request maps validated JSON to Request")
         parse_json(make_valid_request_json(false, false), doc);
 
         const Request req = deserialize_request(doc);
-        const MergedCount expected_wall =
-            create_wall(req.table_config, req.table_state, req.player,
-                        req.config.enable_reddora);
+        const MergedCount expected_wall = create_wall(
+            req.table_config, req.table_state, req.player, req.config.enable_reddora);
 
         REQUIRE(req.wall == expected_wall);
         REQUIRE(req.ip.empty());
-    }
-
-    SECTION("defaults to Yonma when mode is omitted")
-    {
-        rapidjson::Document doc;
-        parse_json(make_request_json([](rapidjson::Document &request) {
-                       request.RemoveMember("mode");
-                   }),
-                   doc);
-
-        const Request req = deserialize_request(doc);
-
-        REQUIRE(req.table_config.game_mode == GameMode::Yonma);
     }
 }
 
@@ -457,8 +452,9 @@ TEST_CASE("deserialize_request rejects inconsistent tile counts")
     SECTION("sanma request contains disabled hand tiles")
     {
         rapidjson::Document doc;
-        parse_json(make_request_json(
-                       [](rapidjson::Document &request) { request["mode"].SetInt(0); }),
+        parse_json(make_request_json([](rapidjson::Document &request) {
+                       request["game_mode"].SetInt(0);
+                   }),
                    doc);
 
         require_runtime_error_contains([&] { deserialize_request(doc); },
@@ -471,7 +467,7 @@ TEST_CASE("deserialize_request rejects inconsistent tile counts")
         parse_json(make_request_json(
                        [](rapidjson::Document &request) {
                            auto &allocator = request.GetAllocator();
-                           request["mode"].SetInt(0);
+                           request["game_mode"].SetInt(0);
 
                            rapidjson::Value hand(rapidjson::kArrayType);
                            for (const int tile :
@@ -501,7 +497,7 @@ TEST_CASE("deserialize_request rejects inconsistent tile counts")
         parse_json(make_request_json(
                        [](rapidjson::Document &request) {
                            auto &allocator = request.GetAllocator();
-                           request["mode"].SetInt(0);
+                           request["game_mode"].SetInt(0);
 
                            rapidjson::Value hand(rapidjson::kArrayType);
                            for (const int tile :
@@ -551,8 +547,8 @@ TEST_CASE("build_success_response serializes red fives without duplicate normal 
     req.player.hand =
         from_array({Tile::Pinzu5, Tile::RedPinzu5, Tile::Manzu1, Tile::Manzu2,
                     Tile::Manzu3, Tile::Souzu1, Tile::Souzu2, Tile::Souzu3});
-    req.wall =
-        create_wall(req.table_config, req.table_state, req.player, req.config.enable_reddora);
+    req.wall = create_wall(req.table_config, req.table_state, req.player,
+                           req.config.enable_reddora);
 
     const CalculationResult result = make_sample_result();
 
@@ -581,7 +577,7 @@ TEST_CASE("build_success_response creates a schema-compliant success document")
 
     const rapidjson::Value &input = doc["input"];
     REQUIRE(input.MemberCount() == 8);
-    REQUIRE(input["mode"].GetInt() == 1);
+    REQUIRE(input["game_mode"].GetInt() == 1);
     REQUIRE(input["round_wind"].GetInt() == 27);
     REQUIRE(input["seat_wind"].GetInt() == 28);
     REQUIRE(to_int_vector(input["dora_indicators"]) == std::vector<int>({31, 32}));
@@ -592,7 +588,7 @@ TEST_CASE("build_success_response creates a schema-compliant success document")
     REQUIRE(to_int_vector(input["melds"][0]["tiles"]) == std::vector<int>({1, 1, 1}));
     REQUIRE(input["melds"][1]["type"].GetInt() == 2);
     REQUIRE(to_int_vector(input["melds"][1]["tiles"]) == std::vector<int>({4, 5, 6}));
-    REQUIRE(input["nuki"].GetInt() == 0);
+    REQUIRE(input["nuki_count"].GetInt() == 0);
     REQUIRE(input["wall"].Size() == 37);
 
     const rapidjson::Value &config = doc["config"];

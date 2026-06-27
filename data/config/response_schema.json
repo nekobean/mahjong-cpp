@@ -74,18 +74,18 @@
     "input": {
       "type": "object",
       "required": [
-        "mode",
+        "game_mode",
         "round_wind",
         "seat_wind",
         "dora_indicators",
         "hand",
         "melds",
-        "nuki",
+        "nuki_count",
         "wall"
       ],
       "additionalProperties": false,
       "properties": {
-        "mode": {
+        "game_mode": {
           "type": "integer",
           "enum": [0, 1]
         },
@@ -121,7 +121,7 @@
           "minItems": 0,
           "maxItems": 4
         },
-        "nuki": {
+        "nuki_count": {
           "type": "integer",
           "minimum": 0,
           "maximum": 4

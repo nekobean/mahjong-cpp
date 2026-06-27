@@ -49,9 +49,7 @@ const rapidjson::SchemaDocument &get_request_schema()
 Request make_request(const rapidjson::Value &doc)
 {
     Request req;
-    if (doc.HasMember("mode")) {
-        req.table_config.game_mode = doc["mode"].GetInt();
-    }
+    req.table_config.game_mode = doc["game_mode"].GetInt();
     req.round_state.round_wind = doc["round_wind"].GetInt();
     req.player.seat_wind = doc["seat_wind"].GetInt();
 
@@ -82,8 +80,8 @@ Request make_request(const rapidjson::Value &doc)
         req.player.melds.push_back(Meld{meld_type, meld_tiles});
     }
 
-    if (doc.HasMember("nuki")) {
-        req.player.nuki_count = doc["nuki"].GetInt();
+    if (doc.HasMember("nuki_count")) {
+        req.player.nuki_count = doc["nuki_count"].GetInt();
     }
 
     req.config.enable_reddora = doc["enable_reddora"].GetBool();
@@ -99,7 +97,8 @@ Request make_request(const rapidjson::Value &doc)
         }
     }
     else {
-        req.wall = create_wall(req.table_config, req.table_state, req.player, req.config.enable_reddora);
+        req.wall = create_wall(req.table_config, req.table_state, req.player,
+                               req.config.enable_reddora);
     }
 
     if (doc.HasMember("ip")) {
@@ -115,7 +114,8 @@ Request make_request(const rapidjson::Value &doc)
 
 void validate_tile_counts(const Request &req)
 {
-    MergedCount wall = create_wall(req.table_config, req.table_state, req.player, req.config.enable_reddora);
+    MergedCount wall = create_wall(req.table_config, req.table_state, req.player,
+                                   req.config.enable_reddora);
 
     for (int i = 0; i < 37; ++i) {
         if (wall[i] < 0) {
@@ -254,7 +254,8 @@ rapidjson::Value serialize_input(const Request &req, rapidjson::Document &doc)
     auto &allocator = doc.GetAllocator();
     rapidjson::Value input_val(rapidjson::kObjectType);
 
-    input_val.AddMember("mode", static_cast<int>(req.table_config.game_mode), allocator);
+    input_val.AddMember("game_mode", static_cast<int>(req.table_config.game_mode),
+                        allocator);
     input_val.AddMember("round_wind", req.round_state.round_wind, allocator);
     input_val.AddMember("seat_wind", req.player.seat_wind, allocator);
 
@@ -297,7 +298,7 @@ rapidjson::Value serialize_input(const Request &req, rapidjson::Document &doc)
     }
     input_val.AddMember("melds", melds, allocator);
 
-    input_val.AddMember("nuki", req.player.nuki_count, allocator);
+    input_val.AddMember("nuki_count", req.player.nuki_count, allocator);
 
     rapidjson::Value wall(rapidjson::kArrayType);
     for (const auto count : req.wall) {
