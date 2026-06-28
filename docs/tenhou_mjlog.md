@@ -4,6 +4,19 @@
 
 本資料は、オンライン麻雀「天鳳」が出力する牌譜ファイル `mjlog` の形式と、その読み解き方をまとめたものである。点数計算の検証やテストデータの生成にあたり、牌譜から局の進行・手牌・和了内容を復元する際の参照資料として用いることを想定している。
 
+## 謝辞
+
+仕様理解にあたり、以下のページを参考にさせていただきました。
+
+- [天鳳牌譜 mjlog形式について - みちのいに!!](https://m77.hatenablog.com/entry/2017/05/21/214529)
+- [天鳳の牌譜形式を解析する(1) - koba::blog](https://blog.kobalab.net/entry/20170225/1488036549)
+- [天鳳の牌譜形式を解析する(2) - koba::blog](https://blog.kobalab.net/entry/20170228/1488294993)
+- [天鳳の牌譜形式を解析する(3) - koba::blog](https://blog.kobalab.net/entry/20170312/1489315432)
+- [天鳳の牌譜形式を解析する(4) - koba::blog](https://blog.kobalab.net/entry/20170720/1500479235)
+- [天鳳の牌譜（mjlog） - Project Re:Now](https://kyphd.github.io/renow-docs/renow/mjlog/)
+- [天鳳ルール](https://tenhou.net/man/#RULE)
+- [天鳳マニュアル](https://cdn.tenhou.net/man/)
+
 ## ファイル構造
 
 `mjlog` は XML のタグ列で構成される。1つのファイルが東風戦または東南戦1試合に対応し、配信時には gzip で圧縮されていることがある。
@@ -779,14 +792,3 @@ nuki_tile = raw
 | ------ | ---- |
 | 1m     | 9m   |
 | 9m     | 1m   |
-
-## 参考資料
-
-- [天鳳牌譜 mjlog形式について - みちのいに!!](https://m77.hatenablog.com/entry/2017/05/21/214529)
-- [天鳳の牌譜形式を解析する(1) - koba::blog](https://blog.kobalab.net/entry/20170225/1488036549)
-- [天鳳の牌譜形式を解析する(2) - koba::blog](https://blog.kobalab.net/entry/20170228/1488294993)
-- [天鳳の牌譜形式を解析する(3) - koba::blog](https://blog.kobalab.net/entry/20170312/1489315432)
-- [天鳳の牌譜形式を解析する(4) - koba::blog](https://blog.kobalab.net/entry/20170720/1500479235)
-- [天鳳の牌譜（mjlog） - Project Re:Now](https://kyphd.github.io/renow-docs/renow/mjlog/)
-- [天鳳ルール](https://tenhou.net/man/#RULE)
-- [天鳳マニュアル](https://cdn.tenhou.net/man/)
