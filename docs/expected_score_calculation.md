@@ -157,8 +157,8 @@ p_t^s =
   p_{t + 1}^{s}
       + \displaystyle\sum_{s'} \frac{w_{s \to s'}}{S}
         \left( p_{t + 1}^{s'} - p_{t + 1}^{s} \right)
-      & \text{if } t < t_{max} \\[2ex]
-  1 & \text{if } t = t_{max} \text{ かつ } s \text{ が聴牌形} \\[1ex]
+      & \text{if } t < t_{max} \\
+  1 & \text{if } t = t_{max} \text{ かつ } s \text{ が聴牌形} \\
   0 & \text{if } t = t_{max} \text{ かつ } s \text{ が聴牌形以外}
 \end{cases}
 ```
@@ -170,7 +170,7 @@ p_t^s =
 ```math
 p_t^s =
 \begin{cases}
-  1                           & \text{if } s \text{ が聴牌形} \\[1ex]
+  1                           & \text{if } s \text{ が聴牌形} \\
   \max\limits_{s'} p_t^{s'}   & \text{if } s \text{ が聴牌形以外}
 \end{cases}
 ```
@@ -193,7 +193,7 @@ p_t^s =
   p_{t + 1}^{s}
       + \displaystyle\sum_{s'} \frac{w_{s \to s'}}{S}
         \left( p_{t + 1}^{s'} - p_{t + 1}^{s} \right)
-      & \text{if } t < t_{max} \\[2ex]
+      & \text{if } t < t_{max} \\
   0 & \text{if } t = t_{max}
 \end{cases}
 ```
@@ -203,7 +203,7 @@ p_t^s =
 ```math
 p_t^s =
 \begin{cases}
-  1                           & \text{if } s \text{ が役ありで和了できる形} \\[1ex]
+  1                           & \text{if } s \text{ が役ありで和了できる形} \\
   \max\limits_{s'} p_t^{s'}   & \text{それ以外}
 \end{cases}
 ```
@@ -231,7 +231,7 @@ e_t^s =
           \max\bigl(\text{score}_{s \to s'},\ e_{t + 1}^{s'}\bigr)
           - e_{t + 1}^{s}
         \right)
-      & \text{if } t < t_{max} \\[2ex]
+      & \text{if } t < t_{max} \\
   0 & \text{if } t = t_{max}
 \end{cases}
 ```
