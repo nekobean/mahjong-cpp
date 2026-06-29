@@ -85,19 +85,10 @@ Build and run container.
 
 ```bash
 docker build . --tag mahjong-cpp
-docker run -itP --name mahjong-cpp mahjong-cpp
+docker run -p 8002:50000 -d --name mahjong-cpp mahjong-cpp
 ```
 
-Build program on the created container.
-
-```bash
-git clone https://github.com/nekobean/mahjong-cpp.git
-cd mahjong-cpp
-mkdir build && cd build
-cmake ..
-make -j$(nproc)
-make install
-```
+Container accessible through http://127.0.0.1:8002
 
 ## Usage
 
