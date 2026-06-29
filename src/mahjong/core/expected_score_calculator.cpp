@@ -621,9 +621,7 @@ void ExpectedScoreCalculator::calc_stats(const Config &config, Graph &graph,
                  ei < edge_csr.selection_edge_offsets[vi + 1]; ++ei) {
                 const SelectionEdge &edge = edge_csr.selection_edges[ei];
                 const VertexData &s2 = graph[edge.source];
-                if (s2.tenpai_prob[t] > best_tenpai_prob) {
-                    best_tenpai_prob = s2.tenpai_prob[t];
-                }
+                best_tenpai_prob = std::max(best_tenpai_prob, s2.tenpai_prob[t]);
                 best_win_prob = std::max(best_win_prob, s2.win_prob[t]);
                 best_exp_score = std::max(best_exp_score, s2.exp_score[t]);
             }
