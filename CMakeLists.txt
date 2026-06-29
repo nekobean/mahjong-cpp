@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(mahjong-cpp VERSION 0.9.7)
+project(mahjong-cpp VERSION 0.9.8)
 
 if(POLICY CMP0167)
   cmake_policy(SET CMP0167 NEW)
