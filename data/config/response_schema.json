@@ -165,7 +165,6 @@
         "enable_uradora",
         "enable_shanten_down",
         "enable_tegawari",
-        "objective",
         "t_min",
         "t_max",
         "sum",
@@ -191,10 +190,6 @@
           "type": "integer",
           "minimum": 0,
           "maximum": 1
-        },
-        "objective": {
-          "type": "integer",
-          "enum": [0, 1, 2]
         },
         "t_min": {
           "type": "integer",

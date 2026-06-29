@@ -30,6 +30,7 @@ void initialize_test_logger()
 std::string make_valid_request_json()
 {
     return R"({
+        "game_mode": 0,
         "round_wind": 27,
         "seat_wind": 27,
         "dora_indicators": [31],
@@ -37,7 +38,6 @@ std::string make_valid_request_json()
         "enable_uradora": true,
         "enable_shanten_down": true,
         "enable_tegawari": true,
-        "objective": 0,
         "hand": [0, 0, 0, 1, 1, 1, 2, 3, 5, 7, 8, 9, 9],
         "melds": [],
         "version": "0.9.1"
@@ -49,8 +49,6 @@ std::string make_valid_request_json()
 TEST_CASE("process_http_post returns service unavailable when the queue is full")
 {
     initialize_test_logger();
-
-    Server test_server;
 
     std::promise<void> release_promise;
     std::shared_future<void> release_future = release_promise.get_future().share();
@@ -68,6 +66,8 @@ TEST_CASE("process_http_post returns service unavailable when the queue is full"
         release_future.wait();
         return std::string("done");
     };
+
+    Server test_server;
 
     for (int i = 0; i < 3; ++i) {
         test_server.pool_.enqueue(blocking_task);

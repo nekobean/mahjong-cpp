@@ -59,7 +59,6 @@ rapidjson::Document make_valid_request_document(bool include_wall = true,
     doc.AddMember("enable_uradora", false, allocator);
     doc.AddMember("enable_shanten_down", true, allocator);
     doc.AddMember("enable_tegawari", false, allocator);
-    doc.AddMember("objective", 2, allocator);
 
     rapidjson::Value hand(rapidjson::kArrayType);
     for (const int tile : {0, 0, 5, 11, 12, 20, 21, 22}) {
@@ -224,7 +223,6 @@ Request make_sample_request()
 
     req.wall = create_wall(req.table_config, req.table_state, req.player,
                            req.config.enable_reddora);
-    req.objective = 2;
     req.ip = "127.0.0.1";
     req.version = PROJECT_VERSION;
 
@@ -381,7 +379,6 @@ TEST_CASE("deserialize_request maps validated JSON to Request")
         REQUIRE_FALSE(req.config.enable_uradora);
         REQUIRE(req.config.enable_shanten_down);
         REQUIRE_FALSE(req.config.enable_tegawari);
-        REQUIRE(req.objective == 2);
         REQUIRE(req.ip == "127.0.0.1");
         REQUIRE(req.version == PROJECT_VERSION);
         REQUIRE(req.wall == create_wall(req.table_config, req.table_state, req.player,
@@ -650,12 +647,11 @@ TEST_CASE("build_success_response creates a schema-compliant success document")
     REQUIRE(input["wall"].Size() == 37);
 
     const rapidjson::Value &config = doc["config"];
-    REQUIRE(config.MemberCount() == 12);
+    REQUIRE(config.MemberCount() == 11);
     REQUIRE(config["enable_reddora"].GetBool());
     REQUIRE_FALSE(config["enable_uradora"].GetBool());
     REQUIRE(config["enable_shanten_down"].GetBool());
     REQUIRE_FALSE(config["enable_tegawari"].GetBool());
-    REQUIRE(config["objective"].GetInt() == 2);
     REQUIRE(config["t_min"].GetInt() == 1);
     REQUIRE(config["t_max"].GetInt() == 18);
     REQUIRE(config["sum"].GetInt() == 62);

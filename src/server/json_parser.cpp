@@ -90,8 +90,6 @@ Request make_request(const rapidjson::Value &doc)
     req.config.enable_tegawari = doc["enable_tegawari"].GetBool();
     req.config.enable_uradora = doc["enable_uradora"].GetBool();
 
-    req.objective = doc["objective"].GetInt();
-
     if (doc.HasMember("wall")) {
         for (int i = 0; i < 37; ++i) {
             req.wall[i] = doc["wall"][i].GetInt();
@@ -479,7 +477,6 @@ void build_success_response(const Request &req, const CalculationResult &result,
     config_val.AddMember("enable_shanten_down", result.config.enable_shanten_down,
                          allocator);
     config_val.AddMember("enable_tegawari", result.config.enable_tegawari, allocator);
-    config_val.AddMember("objective", req.objective, allocator);
     config_val.AddMember("t_min", result.config.t_min, allocator);
     config_val.AddMember("t_max", result.config.t_max, allocator);
     config_val.AddMember("sum", result.config.sum, allocator);

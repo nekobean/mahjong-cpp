@@ -562,29 +562,6 @@ void ExpectedScoreCalculator::calc_stats(const Config &config, Graph &graph,
                                          const std::vector<Vertex> &discard_vertices,
                                          const EdgeCsr &edge_csr)
 {
-    const auto objective_value = [&](const VertexData &state, const int turn) {
-        switch (config.objective) {
-        case Objective::TenpaiProbability:
-            return state.tenpai_prob[turn];
-        case Objective::WinProbability:
-            return state.win_prob[turn];
-        case Objective::ExpectedScore:
-            return state.exp_score[turn];
-        }
-        return state.exp_score[turn];
-    };
-
-    const auto win_objective_value = [&](const double score) {
-        switch (config.objective) {
-        case Objective::TenpaiProbability:
-        case Objective::WinProbability:
-            return 1.0;
-        case Objective::ExpectedScore:
-            return score;
-        }
-        return score;
-    };
-
     for (int t = config.t_max; t >= config.t_min; --t) {
         // draw node
 #ifdef _OPENMP
@@ -611,11 +588,10 @@ void ExpectedScoreCalculator::calc_stats(const Config &config, Graph &graph,
                 double tenpai_prob = s2.tenpai_prob[t + 1];
                 double win_prob = s2.win_prob[t + 1];
                 double exp_score = s2.exp_score[t + 1];
-                if (edge.score > 0.0 &&
-                    win_objective_value(edge.score) >= objective_value(s2, t + 1)) {
+                if (edge.score > 0.0) {
                     tenpai_prob = 1.0;
                     win_prob = 1.0;
-                    exp_score = edge.score;
+                    exp_score = std::max(edge.score, exp_score);
                 }
 
                 s1.tenpai_prob[t] +=
@@ -641,7 +617,9 @@ void ExpectedScoreCalculator::calc_stats(const Config &config, Graph &graph,
              ++i) {
             const Vertex vertex = discard_vertices[i];
             VertexData &s1 = graph[vertex];
-            const VertexData *best = nullptr;
+            const VertexData *best_tenpai = nullptr;
+            const VertexData *best_win = nullptr;
+            const VertexData *best_score = nullptr;
 
             const std::size_t vertex_index = static_cast<std::size_t>(vertex);
             for (std::uint32_t edge_index =
@@ -650,15 +628,25 @@ void ExpectedScoreCalculator::calc_stats(const Config &config, Graph &graph,
                  ++edge_index) {
                 const SelectionEdge &edge = edge_csr.selection_edges[edge_index];
                 const VertexData &s2 = graph[edge.source];
-                if (!best || objective_value(s2, t) > objective_value(*best, t)) {
-                    best = &s2;
+                if (!best_tenpai || s2.tenpai_prob[t] > best_tenpai->tenpai_prob[t]) {
+                    best_tenpai = &s2;
+                }
+                if (!best_win || s2.win_prob[t] > best_win->win_prob[t]) {
+                    best_win = &s2;
+                }
+                if (!best_score || s2.exp_score[t] > best_score->exp_score[t]) {
+                    best_score = &s2;
                 }
             }
 
-            if (best) {
-                s1.tenpai_prob[t] = best->tenpai_prob[t];
-                s1.win_prob[t] = best->win_prob[t];
-                s1.exp_score[t] = best->exp_score[t];
+            if (best_tenpai) {
+                s1.tenpai_prob[t] = best_tenpai->tenpai_prob[t];
+            }
+            if (best_win) {
+                s1.win_prob[t] = best_win->win_prob[t];
+            }
+            if (best_score) {
+                s1.exp_score[t] = best_score->exp_score[t];
             }
         }
     }

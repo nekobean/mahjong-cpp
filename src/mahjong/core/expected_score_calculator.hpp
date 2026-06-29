@@ -22,13 +22,6 @@ MergedCount create_wall(const TableConfig &table_config, const TableState &table
 class ExpectedScoreCalculator
 {
   public:
-    enum class Objective
-    {
-        TenpaiProbability = 0,
-        WinProbability = 1,
-        ExpectedScore = 2,
-    };
-
     struct Config
     {
         /* min turn to be calculated */
@@ -49,8 +42,6 @@ class ExpectedScoreCalculator
         bool enable_shanten_down = true;
         /* allow tegawari */
         bool enable_tegawari = true;
-        /* objective used to select the best discard */
-        Objective objective = Objective::ExpectedScore;
         /* calculate value */
         bool calc_stats = true;
     };
