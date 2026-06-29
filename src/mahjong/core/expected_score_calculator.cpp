@@ -513,22 +513,20 @@ ExpectedScoreCalculator::build_edge_csr(const Graph &graph)
     edge_csr.draw_edge_offsets.assign(vertex_count + 1, 0);
     edge_csr.selection_edge_offsets.assign(vertex_count + 1, 0);
 
-    for (std::size_t vertex_index = 0; vertex_index < vertex_count; ++vertex_index) {
-        for (std::uint32_t edge = graph.first_out_edges[vertex_index];
-             edge != Graph::NoEdge; edge = graph.edges[edge].next_out) {
-            ++edge_csr.draw_edge_offsets[vertex_index + 1];
+    for (std::size_t vi = 0; vi < vertex_count; ++vi) {
+        for (std::uint32_t edge = graph.first_out_edges[vi]; edge != Graph::NoEdge;
+             edge = graph.edges[edge].next_out) {
+            ++edge_csr.draw_edge_offsets[vi + 1];
         }
-        for (std::uint32_t edge = graph.first_in_edges[vertex_index];
-             edge != Graph::NoEdge; edge = graph.edges[edge].next_in) {
-            ++edge_csr.selection_edge_offsets[vertex_index + 1];
+        for (std::uint32_t edge = graph.first_in_edges[vi]; edge != Graph::NoEdge;
+             edge = graph.edges[edge].next_in) {
+            ++edge_csr.selection_edge_offsets[vi + 1];
         }
     }
 
-    for (std::size_t vertex_index = 0; vertex_index < vertex_count; ++vertex_index) {
-        edge_csr.draw_edge_offsets[vertex_index + 1] +=
-            edge_csr.draw_edge_offsets[vertex_index];
-        edge_csr.selection_edge_offsets[vertex_index + 1] +=
-            edge_csr.selection_edge_offsets[vertex_index];
+    for (std::size_t vi = 0; vi < vertex_count; ++vi) {
+        edge_csr.draw_edge_offsets[vi + 1] += edge_csr.draw_edge_offsets[vi];
+        edge_csr.selection_edge_offsets[vi + 1] += edge_csr.selection_edge_offsets[vi];
     }
 
     edge_csr.draw_edges.resize(edge_csr.draw_edge_offsets.back());
@@ -537,19 +535,17 @@ ExpectedScoreCalculator::build_edge_csr(const Graph &graph)
     std::vector<std::uint32_t> draw_positions = edge_csr.draw_edge_offsets;
     std::vector<std::uint32_t> selection_positions = edge_csr.selection_edge_offsets;
 
-    for (std::size_t vertex_index = 0; vertex_index < vertex_count; ++vertex_index) {
-        for (std::uint32_t edge_index = graph.first_out_edges[vertex_index];
-             edge_index != Graph::NoEdge;
-             edge_index = graph.edges[edge_index].next_out) {
-            const EdgeData &edge = graph.edges[edge_index];
-            edge_csr.draw_edges[draw_positions[vertex_index]++] =
+    for (std::size_t vi = 0; vi < vertex_count; ++vi) {
+        for (std::uint32_t ei = graph.first_out_edges[vi]; ei != Graph::NoEdge;
+             ei = graph.edges[ei].next_out) {
+            const EdgeData &edge = graph.edges[ei];
+            edge_csr.draw_edges[draw_positions[vi]++] =
                 DrawEdge{edge.target, edge.weight, edge.score};
         }
-        for (std::uint32_t edge_index = graph.first_in_edges[vertex_index];
-             edge_index != Graph::NoEdge;
-             edge_index = graph.edges[edge_index].next_in) {
-            const EdgeData &edge = graph.edges[edge_index];
-            edge_csr.selection_edges[selection_positions[vertex_index]++] =
+        for (std::uint32_t ei = graph.first_in_edges[vi]; ei != Graph::NoEdge;
+             ei = graph.edges[ei].next_in) {
+            const EdgeData &edge = graph.edges[ei];
+            edge_csr.selection_edges[selection_positions[vi]++] =
                 SelectionEdge{edge.source};
         }
     }
@@ -578,11 +574,10 @@ void ExpectedScoreCalculator::calc_stats(const Config &config, Graph &graph,
                 continue;
             }
 
-            const std::size_t vertex_index = static_cast<std::size_t>(vertex);
-            for (std::uint32_t edge_index = edge_csr.draw_edge_offsets[vertex_index];
-                 edge_index < edge_csr.draw_edge_offsets[vertex_index + 1];
-                 ++edge_index) {
-                const DrawEdge &edge = edge_csr.draw_edges[edge_index];
+            const std::size_t vi = static_cast<std::size_t>(vertex);
+            for (std::uint32_t ei = edge_csr.draw_edge_offsets[vi];
+                 ei < edge_csr.draw_edge_offsets[vi + 1]; ++ei) {
+                const DrawEdge &edge = edge_csr.draw_edges[ei];
                 const VertexData &s2 = graph[edge.target];
 
                 double tenpai_prob = s2.tenpai_prob[t + 1];
@@ -617,37 +612,25 @@ void ExpectedScoreCalculator::calc_stats(const Config &config, Graph &graph,
              ++i) {
             const Vertex vertex = discard_vertices[i];
             VertexData &s1 = graph[vertex];
-            const VertexData *best_tenpai = nullptr;
-            const VertexData *best_win = nullptr;
-            const VertexData *best_score = nullptr;
+            double best_tenpai_prob = 0.0;
+            double best_win_prob = 0.0;
+            double best_exp_score = 0.0;
 
-            const std::size_t vertex_index = static_cast<std::size_t>(vertex);
-            for (std::uint32_t edge_index =
-                     edge_csr.selection_edge_offsets[vertex_index];
-                 edge_index < edge_csr.selection_edge_offsets[vertex_index + 1];
-                 ++edge_index) {
-                const SelectionEdge &edge = edge_csr.selection_edges[edge_index];
+            const std::size_t vi = static_cast<std::size_t>(vertex);
+            for (std::uint32_t ei = edge_csr.selection_edge_offsets[vi];
+                 ei < edge_csr.selection_edge_offsets[vi + 1]; ++ei) {
+                const SelectionEdge &edge = edge_csr.selection_edges[ei];
                 const VertexData &s2 = graph[edge.source];
-                if (!best_tenpai || s2.tenpai_prob[t] > best_tenpai->tenpai_prob[t]) {
-                    best_tenpai = &s2;
+                if (s2.tenpai_prob[t] > best_tenpai_prob) {
+                    best_tenpai_prob = s2.tenpai_prob[t];
                 }
-                if (!best_win || s2.win_prob[t] > best_win->win_prob[t]) {
-                    best_win = &s2;
-                }
-                if (!best_score || s2.exp_score[t] > best_score->exp_score[t]) {
-                    best_score = &s2;
-                }
+                best_win_prob = std::max(best_win_prob, s2.win_prob[t]);
+                best_exp_score = std::max(best_exp_score, s2.exp_score[t]);
             }
 
-            if (best_tenpai) {
-                s1.tenpai_prob[t] = best_tenpai->tenpai_prob[t];
-            }
-            if (best_win) {
-                s1.win_prob[t] = best_win->win_prob[t];
-            }
-            if (best_score) {
-                s1.exp_score[t] = best_score->exp_score[t];
-            }
+            s1.tenpai_prob[t] = best_tenpai_prob;
+            s1.win_prob[t] = best_win_prob;
+            s1.exp_score[t] = best_exp_score;
         }
     }
 }
